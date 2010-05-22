@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<makefile>
+  <include file="presets/wx.bkl" />
+
+  <exe id="querytool" template="wx">
+    <debug-info>on</debug-info>
+    <runtime-libs>dynamic</runtime-libs>
+
+    <sources>querytool.cpp</sources>
+    <sources>querytool_frame.cpp</sources>
+
+    <wx-lib>core</wx-lib>
+    <wx-lib>base</wx-lib>
+  </exe>
+</makefile>

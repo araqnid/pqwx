@@ -1,0 +1,4 @@
+*.d
+GNUmakefile
+*.o
+/querytool

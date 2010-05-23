@@ -23,7 +23,7 @@ QueryToolFrame::QueryToolFrame(const wxString& title)
   SetIcon(wxICON(querytool_appicon));
 
   wxMenu *fileMenu = new wxMenu;
-  fileMenu->Append(QueryTool_Quit, _T("E&xit\tAlt-X"), _T("Exit Query Tool"));
+  fileMenu->Append(QueryTool_Quit, _T("E&xit\tCtrl-Q"), _T("Exit Query Tool"));
 
   wxMenu *helpMenu = new wxMenu;
   helpMenu->Append(QueryTool_About, _T("&About...\tF1"), _T("Show information about Query Tool"));

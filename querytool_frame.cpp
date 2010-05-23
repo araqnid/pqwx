@@ -81,5 +81,12 @@ void QueryToolFrame::OnNew(wxCommandEvent& event)
 
 void QueryToolFrame::OnOpen(wxCommandEvent& event)
 {
-  wxLogStatus(_T("Open script file here..."));
+  wxFileDialog *openFileDialog = new wxFileDialog(this);
+
+  openFileDialog->SetWildcard(_T("SQL files (*.sql)|*.sql"));
+
+  if (openFileDialog->ShowModal() == wxID_OK) {
+    wxString filename = openFileDialog->GetPath();
+    wxLogStatus(_T("Load file %s..."), filename.c_str());
+  }
 }

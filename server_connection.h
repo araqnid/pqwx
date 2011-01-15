@@ -31,6 +31,14 @@ public:
   std::string name;
 };
 
+class RelationInfo {
+public:
+  int oid;
+  std::string schema;
+  std::string name;
+  enum { VIEW, TABLE, SEQUENCE } type;
+};
+
 class ServerConnection {
 public:
   ServerConnection() {
@@ -64,6 +72,24 @@ private:
   const char *pgVersion;
 
   int initialise();
+};
+
+class DatabaseConnection {
+public:
+  DatabaseConnection(ServerConnection *server_, const char *dbname_) {
+    server = server_;
+    dbname = dbname_;
+    connected = 0;
+  }
+
+  int connect();
+  int listRelations(std::vector<RelationInfo>&);
+
+private:
+  const char *dbname;
+  PGconn *conn;
+  ServerConnection *server;
+  int connected;
 };
 
 #endif

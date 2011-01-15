@@ -13,6 +13,11 @@ using namespace std;
 
 class DatabaseModel : public wxTreeItemData {
 public:
+  DatabaseModel() {
+    conn = NULL;
+  }
+  DatabaseConnection *conn;
+  ServerConnection *server;
   int oid;
   int isTemplate : 1;
   int allowConnections : 1;
@@ -36,6 +41,14 @@ public:
 class ServerModel : public wxTreeItemData {
 public:
   ServerConnection *conn;
+  vector<DatabaseModel*> databases;
+  DatabaseModel *findDatabase(int oid) {
+    for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+      if ((*iter)->oid == oid)
+	return *iter;
+    }
+    return NULL;
+  }
 };
 
 class TablespaceModel : public wxTreeItemData {
@@ -49,7 +62,7 @@ public:
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
 
   void AddServerConnection(ServerConnection *conn);
-  void LoadDatabase(ServerModel *server, int oid);
+  void LoadDatabase(DatabaseModel *);
 
 private:
   DECLARE_EVENT_TABLE();
@@ -65,20 +78,18 @@ public:
 
 class DatabaseLoader : public LazyLoader {
 public:
-  DatabaseLoader(ObjectBrowser *objectBrowser_, ServerModel *server_, int oid_) {
+  DatabaseLoader(ObjectBrowser *objectBrowser_, DatabaseModel *db_) {
     objectBrowser = objectBrowser_;
-    server = server_;
-    oid = oid_;
+    db = db_;
   }
 
   void load() {
-    objectBrowser->LoadDatabase(server, oid);
+    objectBrowser->LoadDatabase(db);
   }
   
 private:
-  int oid;
+  DatabaseModel *db;
   ObjectBrowser *objectBrowser;
-  ServerModel *server;
 };
 
 #endif

@@ -67,11 +67,13 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 
   for (vector<DatabaseInfo>::iterator iter = databaseList.begin(); iter != databaseList.end(); iter++) {
     DatabaseModel *databaseModel = new DatabaseModel();
+    databaseModel->server = serverModel->conn;
     databaseModel->oid = iter->oid;
     databaseModel->isTemplate = iter->isTemplate;
     databaseModel->allowConnections = iter->allowConnections;
     databaseModel->havePrivsToConnect = iter->havePrivsToConnect;
     databaseModel->name = wxString(iter->name.c_str(), wxConvUTF8);
+    serverModel->databases.push_back(databaseModel);
     if (iter->name.compare("postgres") == 0 || iter->name.compare("template0") == 0 || iter->name.compare("template1") == 0) {
       systemDatabases.push_back(databaseModel);
     }
@@ -98,7 +100,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   for (vector<DatabaseModel*>::iterator iter = userDatabases.begin(); iter != userDatabases.end(); iter++) {
     wxTreeItemId databaseItem = AppendItem(serverItem, (*iter)->name);
     SetItemData(databaseItem, *iter);
-    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, serverModel, (*iter)->oid));
+    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, *iter));
   }
 
   for (vector<TablespaceModel*>::iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
@@ -130,7 +132,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   for (vector<DatabaseModel*>::iterator iter = systemDatabases.begin(); iter != systemDatabases.end(); iter++) {
     wxTreeItemId databaseItem = AppendItem(sysDatabasesItem, (*iter)->name);
     SetItemData(databaseItem, *iter);
-    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, serverModel, (*iter)->oid));
+    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, *iter));
   }
 
   for (vector<TablespaceModel*>::iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
@@ -160,5 +162,21 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   }
 }
 
-void ObjectBrowser::LoadDatabase(ServerModel *server, int databaseOid) {
+void ObjectBrowser::LoadDatabase(DatabaseModel *database) {
+  if (database->conn == NULL) {
+    const wxCharBuffer dbnameBuf = database->name.utf8_str();
+    DatabaseConnection *conn = new DatabaseConnection(database->server, dbnameBuf);
+    if (!conn->connect()) {
+      delete conn;
+      fprintf(stderr, "Failed to connect to database\n");
+      return;
+    }
+    database->conn = conn;
+  }
+
+  vector<RelationInfo> relationList;
+  database->conn->listRelations(relationList);
+  for (vector<RelationInfo>::iterator iter = relationList.begin(); iter != relationList.end(); iter++) {
+    fprintf(stderr, "Found %d\n", iter->oid);
+  }
 }

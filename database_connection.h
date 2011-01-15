@@ -5,9 +5,8 @@
 
 class DatabaseConnection {
 public:
-  DatabaseConnection(ServerConnection *server_, const char *dbname_, PGconn *conn_) {
+  DatabaseConnection(ServerConnection *server_, PGconn *conn_) {
     server = server_;
-    dbname = dbname_;
     connected = 1;
     conn = conn_;
   }
@@ -23,7 +22,6 @@ public:
   void dispose();
 
 private:
-  const char *dbname;
   PGconn *conn;
   ServerConnection *server;
   int connected;

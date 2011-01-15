@@ -9,7 +9,6 @@ void DatabaseConnection::dispose() {
   if (!connected)
     return;
 
-  fprintf(stderr, "Closing connection to %s\n", dbname);
   PQfinish(conn);
   connected = 0;
 }

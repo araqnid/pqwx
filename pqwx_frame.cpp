@@ -22,6 +22,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(Pqwx_About, PqwxFrame::OnAbout)
   EVT_MENU(Pqwx_New, PqwxFrame::OnNew)
   EVT_MENU(Pqwx_Open, PqwxFrame::OnOpen)
+  EVT_CLOSE(PqwxFrame::OnCloseFrame)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -96,4 +97,9 @@ void PqwxFrame::OnOpen(wxCommandEvent& event)
 
 void PqwxFrame::AddServerConnection(ServerConnection *conn) {
   objectBrowser->AddServerConnection(conn);
+}
+
+void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
+  objectBrowser->dispose();
+  Destroy();
 }

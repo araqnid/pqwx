@@ -47,6 +47,12 @@ void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
   RefreshDatabaseList(serverItem);
 }
 
+void ObjectBrowser::dispose() {
+  for (vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    (*iter)->conn->dispose();
+  }
+}
+
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
 

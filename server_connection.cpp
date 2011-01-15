@@ -44,7 +44,7 @@ int ServerConnection::connect() {
       connected = 1;
       globalDbName = globalDbNames[i];
       fprintf(stderr, "Caching connection to initial database %s\n", globalDbName);
-      databaseConnections[globalDbName] = new DatabaseConnection(this, globalDbName, conn);
+      databaseConnections[globalDbName] = new DatabaseConnection(this, conn);
       return 1;
     }
     else {
@@ -59,6 +59,10 @@ int ServerConnection::connect() {
 void ServerConnection::dispose() {
   if (!connected)
     return;
+
+  for (map<string,DatabaseConnection*>::iterator iter = databaseConnections.begin(); iter != databaseConnections.end(); iter++) {
+    iter->second->dispose();
+  }
 
   connected = 0;
 }
@@ -86,7 +90,11 @@ DatabaseConnection *ServerConnection::makeConnection(const char *dbname) {
   ConnStatusType status = PQstatus(conn);
 
   if (status == CONNECTION_OK) {
-    return new DatabaseConnection(this, dbname, conn);
+    std::string key(dbname);
+    DatabaseConnection *db = new DatabaseConnection(this, conn);
+    databaseConnections[key] = db;
+
+    return db;
   }
   else {
     fprintf(stderr, "Failed to connect to %s: %s\n", values[5], PQerrorMessage(conn));

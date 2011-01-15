@@ -61,9 +61,14 @@ public:
 class ObjectBrowser : public wxTreeCtrl {
 public:
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
+  ~ObjectBrowser() {
+    dispose();
+  }
 
   void AddServerConnection(ServerConnection *conn);
   void LoadDatabase(DatabaseModel *);
+
+  void dispose();
 
 private:
   DECLARE_EVENT_TABLE();

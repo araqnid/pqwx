@@ -12,6 +12,8 @@ public:
   void OnNew(wxCommandEvent& event);
   void OnOpen(wxCommandEvent& event);
 
+  void OnCloseFrame(wxCloseEvent& event);
+
   void AddServerConnection(ServerConnection *conn);
 private:
   DECLARE_EVENT_TABLE();

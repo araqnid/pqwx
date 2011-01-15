@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class DatabaseInfo {
 public:
@@ -39,6 +40,8 @@ public:
   enum { VIEW, TABLE, SEQUENCE } type;
 };
 
+class DatabaseConnection;
+
 class ServerConnection {
 public:
   ServerConnection() {
@@ -61,35 +64,26 @@ public:
   int port;
   const char *username;
   const char *password;
-  int listDatabases(std::vector<DatabaseInfo>&);
-  int listRoles(std::vector<RoleInfo>&);
-  int listTablespaces(std::vector<TablespaceInfo>&);
 
-private:
-  int connected;
-  PGconn *conn;
-  const char *globalDbName;
-  const char *pgVersion;
-
-  int initialise();
-};
-
-class DatabaseConnection {
-public:
-  DatabaseConnection(ServerConnection *server_, const char *dbname_) {
-    server = server_;
-    dbname = dbname_;
-    connected = 0;
+  DatabaseConnection *getConnection(const char *dbname) {
+    std::string key(dbname);
+    DatabaseConnection *conn = databaseConnections[key];
+    if (conn) {
+      return conn;
+    }
+    return makeConnection(dbname);
   }
 
-  int connect();
-  int listRelations(std::vector<RelationInfo>&);
+  DatabaseConnection *getConnection() {
+    return getConnection(globalDbName);
+  }
 
 private:
-  const char *dbname;
-  PGconn *conn;
-  ServerConnection *server;
   int connected;
+  std::map<std::string, DatabaseConnection*> databaseConnections;
+  const char *globalDbName;
+  const char *pgVersion;
+  DatabaseConnection *makeConnection(const char *dbname);
 };
 
 #endif

@@ -5,6 +5,7 @@
 
 #include "wx/treectrl.h"
 #include "server_connection.h"
+#include "database_connection.h"
 
 #include <string>
 #include <vector>

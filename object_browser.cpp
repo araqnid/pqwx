@@ -51,13 +51,13 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
 
   vector<DatabaseInfo> databaseList;
-  serverModel->conn->listDatabases(databaseList);
+  serverModel->conn->getConnection()->listDatabases(databaseList);
 
   vector<RoleInfo> roleList;
-  serverModel->conn->listRoles(roleList);
+  serverModel->conn->getConnection()->listRoles(roleList);
 
   vector<TablespaceInfo> tablespaceList;
-  serverModel->conn->listTablespaces(tablespaceList);
+  serverModel->conn->getConnection()->listTablespaces(tablespaceList);
 
   vector<DatabaseModel*> userDatabases;
   vector<DatabaseModel*> templateDatabases;
@@ -163,20 +163,11 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::LoadDatabase(DatabaseModel *database) {
-  if (database->conn == NULL) {
-    const wxCharBuffer dbnameBuf = database->name.utf8_str();
-    DatabaseConnection *conn = new DatabaseConnection(database->server, dbnameBuf);
-    if (!conn->connect()) {
-      delete conn;
-      fprintf(stderr, "Failed to connect to database\n");
-      return;
-    }
-    database->conn = conn;
-  }
+  const wxCharBuffer dbnameBuf = database->name.utf8_str();
+  DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
 
   vector<RelationInfo> relationList;
-  database->conn->listRelations(relationList);
+  conn->listRelations(relationList);
   for (vector<RelationInfo>::iterator iter = relationList.begin(); iter != relationList.end(); iter++) {
-    fprintf(stderr, "Found %d\n", iter->oid);
   }
 }

@@ -1,3 +1,5 @@
+// -*- c++ -*-
+
 class PqwxFrame: public wxFrame {
 public:
   PqwxFrame(const wxString& title);

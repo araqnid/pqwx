@@ -9,6 +9,8 @@
     <sources>pqwx.cpp</sources>
     <sources>pqwx_frame.cpp</sources>
 
+    <sources>server_connection.cpp</sources>
+
     <wx-lib>core</wx-lib>
     <wx-lib>base</wx-lib>
 

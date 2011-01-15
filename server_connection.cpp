@@ -16,14 +16,6 @@ static const char *options[] = {
 
 static const char *globalDbNames[] = { "postgres", "template1" };
 
-ServerConnection::ServerConnection(const char *name_) : name(name_) {
-  connected = 0;
-  hostname = NULL;
-  username = NULL;
-  port = -1;
-  password = NULL;
-}
-
 int ServerConnection::connect() {
   const char *values[5];
   char portbuf[10];
@@ -40,7 +32,7 @@ int ServerConnection::connect() {
 
   values[2] = username;
   values[3] = password;
-  values[4] = name;
+  values[4] = "pqwx";
 
   int i;
   for (i = 0; i < 2; i++) {
@@ -51,7 +43,6 @@ int ServerConnection::connect() {
     if (status == CONNECTION_OK) {
       connected = 1;
       globalDbName = globalDbNames[i];
-      fprintf(stderr, "Connected to %s\n", values[5]);
       if (initialise()) {
 	return 1;
       }
@@ -74,8 +65,6 @@ void ServerConnection::dispose() {
   if (!connected)
     return;
 
-  fprintf(stderr, "Closing %s connection\n", name);
-
   connected = 0;
 
   PQfinish(conn);
@@ -85,6 +74,12 @@ void ServerConnection::dispose() {
 int ServerConnection::initialise() {
   PGresult *rs;
   ExecStatusType status;
+
+  if ((rs = PQexec(conn, "SET client_encoding TO 'UTF8'")) == NULL)
+    return 0;
+  status = PQresultStatus(rs);
+  if (status == PGRES_FATAL_ERROR) return 0;
+  if (status != PGRES_COMMAND_OK) return 0; // expected ok
 
   if ((rs = PQexec(conn, "SELECT version()")) == NULL)
     return 0;
@@ -99,12 +94,10 @@ int ServerConnection::initialise() {
 
   PQclear(rs);
 
-  fprintf(stderr, "Server version: %s\n", pgVersion);
-
   return 1;
 }
 
-int ServerConnection::listDatabases(vector<string>& databaseList) {
+int ServerConnection::listDatabases(vector<DatabaseInfo>& databaseList) {
   PGresult *rs;
   ExecStatusType status;
 
@@ -116,14 +109,65 @@ int ServerConnection::listDatabases(vector<string>& databaseList) {
 
   int databaseCount = PQntuples(rs);
   for (int rownum = 0; rownum < databaseCount; rownum++) {
-    char *oidstr = PQgetvalue(rs, rownum, 0);
-    char *datname = PQgetvalue(rs, rownum, 1);
-    char *datistemplate = PQgetvalue(rs, rownum, 2);
-    char *datallowconn = PQgetvalue(rs, rownum, 3);
-    char *canconnect = PQgetvalue(rs, rownum, 4);
+    DatabaseInfo db;
 
-    fprintf(stderr, "Found database: %s=%s template? %s can-connect? %s privs-to-connect? %s\n", oidstr, datname, datistemplate, datallowconn, canconnect);
-    databaseList.push_back(datname);
+    db.oid = atoi(PQgetvalue(rs, rownum, 0));
+    db.name = PQgetvalue(rs, rownum, 1);
+    db.isTemplate = !strcmp(PQgetvalue(rs, rownum, 2), "t");
+    db.allowConnections = !strcmp(PQgetvalue(rs, rownum, 3), "t");
+    db.havePrivsToConnect = !strcmp(PQgetvalue(rs, rownum, 4), "t");
+
+    databaseList.push_back(db);
+  }
+  PQclear(rs);
+
+  return 1;
+}
+
+int ServerConnection::listRoles(vector<RoleInfo>& roleList) {
+  PGresult *rs;
+  ExecStatusType status;
+
+  if ((rs = PQexec(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles")) == NULL)
+    return 0;
+  status = PQresultStatus(rs);
+  if (status == PGRES_FATAL_ERROR) return 0;
+  if (status != PGRES_TUPLES_OK) return 0; // expected data back
+
+  int databaseCount = PQntuples(rs);
+  for (int rownum = 0; rownum < databaseCount; rownum++) {
+    RoleInfo role;
+
+    role.oid = atoi(PQgetvalue(rs, rownum, 0));
+    role.name = PQgetvalue(rs, rownum, 1);
+    role.canLogin = !strcmp(PQgetvalue(rs, rownum, 2), "t");
+    role.isSuperuser = !strcmp(PQgetvalue(rs, rownum, 3), "t");
+
+    roleList.push_back(role);
+  }
+  PQclear(rs);
+
+  return 1;
+}
+
+int ServerConnection::listTablespaces(vector<TablespaceInfo>& tablespaceList) {
+  PGresult *rs;
+  ExecStatusType status;
+
+  if ((rs = PQexec(conn, "SELECT oid, spcname FROM pg_tablespace")) == NULL)
+    return 0;
+  status = PQresultStatus(rs);
+  if (status == PGRES_FATAL_ERROR) return 0;
+  if (status != PGRES_TUPLES_OK) return 0; // expected data back
+
+  int databaseCount = PQntuples(rs);
+  for (int rownum = 0; rownum < databaseCount; rownum++) {
+    TablespaceInfo tablespace;
+
+    tablespace.oid = atoi(PQgetvalue(rs, rownum, 0));
+    tablespace.name = PQgetvalue(rs, rownum, 1);
+
+    tablespaceList.push_back(tablespace);
   }
   PQclear(rs);
 

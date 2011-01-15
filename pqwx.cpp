@@ -25,17 +25,9 @@ bool PQWXApp::OnInit()
   PqwxFrame *frame = new PqwxFrame(_T("Query tool"));
   frame->Show(true);
 
-  ServerConnection conn("main");
-  if (conn.connect()) {
-    wxLogStatus(_T("Connected!"));
-    std::vector<std::string> databases;
-    conn.listDatabases(databases);
-    for (std::vector<std::string>::iterator it = databases.begin(); it != databases.end(); it++) {
-      std::cout << *it << std::endl;
-    }
-  }
-  else {
-    wxLogStatus(_T("Failed to connect"));
+  ServerConnection *conn = new ServerConnection();
+  if (conn->connect()) {
+    frame->AddServerConnection(conn);
   }
 
   return true;

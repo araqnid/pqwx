@@ -9,6 +9,7 @@
 #include "wx/toolbar.h"
 
 #include "pqwx_frame.h"
+#include "object_browser.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
     #include "pqwx-appicon.xpm"
@@ -52,6 +53,8 @@ PqwxFrame::PqwxFrame(const wxString& title)
   GetToolBar()->Realize();
 
   CreateStatusBar(2);
+
+  objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
 }
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
@@ -89,4 +92,8 @@ void PqwxFrame::OnOpen(wxCommandEvent& event)
     wxString filename = openFileDialog->GetPath();
     wxLogStatus(_T("Load file %s..."), filename.c_str());
   }
+}
+
+void PqwxFrame::AddServerConnection(ServerConnection *conn) {
+  objectBrowser->AddServerConnection(conn);
 }

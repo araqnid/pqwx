@@ -8,35 +8,35 @@
 
 #include "wx/toolbar.h"
 
-#include "querytool_frame.h"
+#include "pqwx_frame.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
-    #include "querytool-appicon.xpm"
+    #include "pqwx-appicon.xpm"
 #endif
 
 #include "toolbar-new.xpm"
 
-BEGIN_EVENT_TABLE(QueryToolFrame, wxFrame)
-  EVT_MENU(QueryTool_Quit, QueryToolFrame::OnQuit)
-  EVT_MENU(QueryTool_About, QueryToolFrame::OnAbout)
-  EVT_MENU(QueryTool_New, QueryToolFrame::OnNew)
-  EVT_MENU(QueryTool_Open, QueryToolFrame::OnOpen)
+BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
+  EVT_MENU(Pqwx_Quit, PqwxFrame::OnQuit)
+  EVT_MENU(Pqwx_About, PqwxFrame::OnAbout)
+  EVT_MENU(Pqwx_New, PqwxFrame::OnNew)
+  EVT_MENU(Pqwx_Open, PqwxFrame::OnOpen)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
 
-QueryToolFrame::QueryToolFrame(const wxString& title)
+PqwxFrame::PqwxFrame(const wxString& title)
   : wxFrame(NULL, wxID_ANY, title)
 {
-  SetIcon(wxICON(querytool_appicon));
+  SetIcon(wxICON(Pqwx_appicon));
 
   wxMenu *fileMenu = new wxMenu;
-  fileMenu->Append(QueryTool_New, _T("&New query\tCtrl-N"), _T("Create a new query"));
-  fileMenu->Append(QueryTool_Open, _T("&Open script\tCtrl-O"), _T("Open a SQL script"));
-  fileMenu->Append(QueryTool_Quit, _T("E&xit\tCtrl-Q"), _T("Exit Query Tool"));
+  fileMenu->Append(Pqwx_New, _T("&New query\tCtrl-N"), _T("Create a new query"));
+  fileMenu->Append(Pqwx_Open, _T("&Open script\tCtrl-O"), _T("Open a SQL script"));
+  fileMenu->Append(Pqwx_Quit, _T("E&xit\tCtrl-Q"), _T("Exit Query Tool"));
 
   wxMenu *helpMenu = new wxMenu;
-  helpMenu->Append(QueryTool_About, _T("&About...\tF1"), _T("Show information about Query Tool"));
+  helpMenu->Append(Pqwx_About, _T("&About...\tF1"), _T("Show information about Query Tool"));
 
   wxMenuBar *menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, _T("&File"));
@@ -54,12 +54,12 @@ QueryToolFrame::QueryToolFrame(const wxString& title)
   CreateStatusBar(2);
 }
 
-void QueryToolFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
   Close(true);
 }
 
-void QueryToolFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
+void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
   wxMessageBox(wxString::Format(_T("Welcome to Query Tool version %s\n")
 				_T("\n")
@@ -74,12 +74,12 @@ void QueryToolFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 	       );
 }
 
-void QueryToolFrame::OnNew(wxCommandEvent& event)
+void PqwxFrame::OnNew(wxCommandEvent& event)
 {
   wxLogStatus(_T("Create new script here..."));
 }
 
-void QueryToolFrame::OnOpen(wxCommandEvent& event)
+void PqwxFrame::OnOpen(wxCommandEvent& event)
 {
   wxFileDialog *openFileDialog = new wxFileDialog(this);
 

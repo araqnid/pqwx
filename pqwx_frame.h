@@ -1,6 +1,6 @@
-class QueryToolFrame: public wxFrame {
+class PqwxFrame: public wxFrame {
 public:
-  QueryToolFrame(const wxString& title);
+  PqwxFrame(const wxString& title);
 
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
@@ -13,9 +13,9 @@ private:
 
 // controls and menu commands
 enum {
-  QueryTool_Quit = wxID_EXIT,
-  QueryTool_About = wxID_ABOUT,
-  QueryTool_New = wxID_NEW,
-  QueryTool_Open = wxID_OPEN
+  Pqwx_Quit = wxID_EXIT,
+  Pqwx_About = wxID_ABOUT,
+  Pqwx_New = wxID_NEW,
+  Pqwx_Open = wxID_OPEN
 };
 

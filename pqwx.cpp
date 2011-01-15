@@ -6,21 +6,21 @@
     #include "wx/wx.h"
 #endif
 
-#include "querytool_frame.h"
+#include "pqwx_frame.h"
 
-class QueryToolApp: public wxApp {
+class PQWXApp: public wxApp {
 public:
   virtual bool OnInit();
 };
 
-IMPLEMENT_APP(QueryToolApp)
+IMPLEMENT_APP(PQWXApp)
 
-bool QueryToolApp::OnInit()
+bool PQWXApp::OnInit()
 {
   if (!wxApp::OnInit())
     return false;
 
-  QueryToolFrame *frame = new QueryToolFrame(_T("Query tool"));
+  PqwxFrame *frame = new PqwxFrame(_T("Query tool"));
   frame->Show(true);
 
   return true;

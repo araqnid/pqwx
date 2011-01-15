@@ -1,4 +1,4 @@
 *.d
 GNUmakefile
 *.o
-/querytool
+/pqwx

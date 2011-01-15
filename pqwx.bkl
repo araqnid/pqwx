@@ -11,5 +11,9 @@
 
     <wx-lib>core</wx-lib>
     <wx-lib>base</wx-lib>
+
+    <!-- this is all very unix-specific -->
+    <cxxflags>-I`pg_config --includedir`</cxxflags>
+    <ldflags>-L`pg_config --libdir` -lpq</ldflags>
   </exe>
 </makefile>

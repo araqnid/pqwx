@@ -176,8 +176,9 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
   DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
 
   vector< vector<wxString> > relations;
-  conn->ExecQuery("SELECT pg_class.oid, nspname, relname, relkind FROM pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE relkind IN ('r','v','S')", relations);
+  conn->ExecQuery("SELECT pg_class.oid, nspname, relname, relkind FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relations);
 
+  map<wxString, vector<RelationModel*> > relationMap;
   vector<RelationModel*> userRelations;
   vector<RelationModel*> systemRelations;
 
@@ -193,25 +194,26 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
       model->type = RelationModel::VIEW;
     else if (relkind.IsSameAs(_("S")))
       model->type = RelationModel::SEQUENCE;
-    if (model->schema.StartsWith(_T("pg_")) || model->schema.IsSameAs(_T("information_schema"))) {
-      systemRelations.push_back(model);
-    }
-    else {
-      userRelations.push_back(model);
-    }
-  }
-
-  for (vector<RelationModel*>::iterator iter = userRelations.begin(); iter != userRelations.end(); iter++) {
-    wxString name = (*iter)->schema + _T(".") + (*iter)->name;
-    wxTreeItemId relationItem = AppendItem(databaseItemId, name);
+    relationMap[model->schema].push_back(model);
   }
 
   wxTreeItemId systemRelationsItem = AppendItem(databaseItemId, _("System Relations"));
 
-  for (vector<RelationModel*>::iterator iter = systemRelations.begin(); iter != systemRelations.end(); iter++) {
-    wxString name = (*iter)->schema + _T(".") + (*iter)->name;
-    wxTreeItemId relationItem = AppendItem(systemRelationsItem, name);
-  }  
+  for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
+    wxString schema = iter->first;
+    vector<RelationModel*> schemaRelations = iter->second;
+    if (schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"))) {
+      AddSchemaItem(systemRelationsItem, schema, schemaRelations);
+    }
+    else {
+      if ((schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""))) || schemaRelations.size() > 10) {
+	AddSchemaItem(databaseItemId, schema, schemaRelations);
+      }
+      else {
+	AddRelationItems(databaseItemId, schemaRelations, true);
+      }
+    }
+  }
 }
 
 void ObjectBrowser::AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database) {
@@ -219,4 +221,23 @@ void ObjectBrowser::AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database
   SetItemData(databaseItem, database);
   if (database->usable())
     SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, database));
+}
+
+void ObjectBrowser::AddSchemaItem(wxTreeItemId parent, wxString schemaName, vector<RelationModel*> relations) {
+  wxTreeItemId schemaItem = AppendItem(parent, schemaName);
+  if (relations.size() == 1 && relations[0]->name.IsSameAs(_T(""))) {
+    return;
+  }
+  AddRelationItems(schemaItem, relations, false);
+}
+
+void ObjectBrowser::AddRelationItems(wxTreeItemId parent, vector<RelationModel*> relations, bool qualify) {
+  for (vector<RelationModel*>::iterator iter = relations.begin(); iter != relations.end(); iter++) {
+    wxString name;
+    if (qualify)
+      name = (*iter)->schema + _T(".") + (*iter)->name;
+    else
+      name = (*iter)->name;
+    AppendItem(parent, name);
+  }
 }

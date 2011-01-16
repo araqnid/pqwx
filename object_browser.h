@@ -87,6 +87,8 @@ private:
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database);
+  void AddSchemaItem(wxTreeItemId parent, wxString schemaName, vector<RelationModel*> relations);
+  void AddRelationItems(wxTreeItemId parent, vector<RelationModel*> relations, bool qualify);
 };
 
 class LazyLoader : public wxTreeItemData {

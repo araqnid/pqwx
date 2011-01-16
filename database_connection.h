@@ -10,6 +10,7 @@ public:
     server = server_;
     connected = 1;
     conn = conn_;
+    setup();
   }
 
   ~DatabaseConnection() {
@@ -18,9 +19,11 @@ public:
 
   void dispose();
 
-  int ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
+  bool ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
+  bool ExecCommand(const char *sql);
 
 private:
+  void setup();
   PGconn *conn;
   ServerConnection *server;
   int connected;

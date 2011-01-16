@@ -5,6 +5,10 @@
 
 using namespace std;
 
+void DatabaseConnection::setup() {
+  ExecCommand("SET client_encoding TO 'UTF8'");
+}
+
 void DatabaseConnection::dispose() {
   if (!connected)
     return;
@@ -13,14 +17,14 @@ void DatabaseConnection::dispose() {
   connected = 0;
 }
 
-int DatabaseConnection::ExecQuery(const char *sql, vector< vector<wxString> >& results) {
+bool DatabaseConnection::ExecQuery(const char *sql, vector< vector<wxString> >& results) {
   PGresult *rs = PQexec(conn, sql);
   if (!rs)
-    return 0;
+    return false;
 
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK)
-    return 0; // expected data back
+    return false; // expected data back
 
   int rowCount = PQntuples(rs);
   int colCount = PQnfields(rs);
@@ -35,5 +39,19 @@ int DatabaseConnection::ExecQuery(const char *sql, vector< vector<wxString> >& r
 
   PQclear(rs);
 
-  return 1;
+  return true;
+}
+
+bool DatabaseConnection::ExecCommand(const char *sql) {
+  PGresult *rs = PQexec(conn, sql);
+  if (!rs)
+    return false;
+
+  ExecStatusType status = PQresultStatus(rs);
+  if (status != PGRES_COMMAND_OK)
+    return false; // expected acknowledgement
+
+  PQclear(rs);
+
+  return true;
 }

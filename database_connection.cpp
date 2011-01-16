@@ -56,8 +56,14 @@ void DatabaseConnection::ExecCommandAsync(const char *sql, DatabaseWorkCompletio
 }
 
 void DatabaseConnection::ExecCommandsAsync(vector<const char *> sql, DatabaseWorkCompletionPort *completionPort) {
+  int countdown = sql.size();
   for (vector<const char *>::iterator iter = sql.begin(); iter != sql.end(); iter++) {
-    AddWork(new DatabaseCommandWork(*iter, completionPort));
+    if (--countdown == 0) {
+      AddWork(new DatabaseCommandWork(*iter, completionPort));
+    }
+    else {
+      AddWork(new DatabaseCommandWork(*iter));
+    }
   }
 }
 

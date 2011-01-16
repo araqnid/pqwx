@@ -43,7 +43,6 @@ int ServerConnection::connect() {
     if (status == CONNECTION_OK) {
       connected = 1;
       globalDbName = globalDbNames[i];
-      fprintf(stderr, "Caching connection to initial database %s\n", globalDbName);
       databaseConnections[globalDbName] = new DatabaseConnection(this, conn);
       return 1;
     }

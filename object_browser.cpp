@@ -63,10 +63,6 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 
   vector< vector<wxString> > databases;
   conn->ExecQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databases);
-  vector< vector<wxString> > roles;
-  conn->ExecQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roles);
-  vector< vector<wxString> > tablespaces;
-  conn->ExecQuery("SELECT oid, spcname FROM pg_tablespace", tablespaces);
 
   vector<DatabaseModel*> userDatabases;
   vector<DatabaseModel*> templateDatabases;
@@ -96,11 +92,13 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
     }
   }
 
+  vector< vector<wxString> > tablespaces;
+  conn->ExecQuery("SELECT oid, spcname FROM pg_tablespace", tablespaces);
   for (vector< vector<wxString> >::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
     TablespaceModel *tablespaceModel = new TablespaceModel();
     GET_OID(iter, 0, tablespaceModel->oid);
     GET_TEXT(iter, 1, tablespaceModel->name);
-    if (tablespaceModel->name.StartsWith(_T("pg_")) == 0) {
+    if (tablespaceModel->name.StartsWith(_T("pg_"))) {
       systemTablespaces.push_back(tablespaceModel);
     }
     else {
@@ -122,20 +120,22 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
   wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
 
+  vector< vector<wxString> > roles;
+  conn->ExecQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roles);
   for (vector< vector<wxString> >::iterator iter = roles.begin(); iter != roles.end(); iter++) {
     int canLogin;
     GET_BOOLEAN(iter, 2, canLogin);
     if (canLogin) {
       UserModel *userModel = new UserModel();
       GET_OID(iter, 0, userModel->oid);
-      GET_BOOLEAN(iter, 1, userModel->isSuperuser);
-      GET_TEXT(iter, 2, userModel->name);
+      GET_TEXT(iter, 1, userModel->name);
+      GET_BOOLEAN(iter, 3, userModel->isSuperuser);
       wxTreeItemId userItemId = AppendItem(usersItem, userModel->name);
     }
     else {
       GroupModel *groupModel = new GroupModel();
       GET_OID(iter, 0, groupModel->oid);
-      GET_TEXT(iter, 2, groupModel->name);
+      GET_TEXT(iter, 1, groupModel->name);
       wxTreeItemId groupItemId = AppendItem(groupsItem, groupModel->name);
     }
   }
@@ -171,6 +171,14 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   }
 }
 
+static inline bool systemSchema(wxString schema) {
+  return schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"));
+}
+
+static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
+  return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
+}
+
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *database) {
   const wxCharBuffer dbnameBuf = database->name.utf8_str();
   DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
@@ -182,6 +190,7 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
   vector<RelationModel*> userRelations;
   vector<RelationModel*> systemRelations;
 
+  int userRelationCount = 0;
   for (vector< vector<wxString> >::iterator iter = relations.begin(); iter != relations.end(); iter++) {
     RelationModel *model = new RelationModel();
     (*iter)[0].ToULong(&(model->oid));
@@ -194,24 +203,49 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
       model->type = RelationModel::VIEW;
     else if (relkind.IsSameAs(_("S")))
       model->type = RelationModel::SEQUENCE;
+    model->user = !systemSchema(model->schema);
+    if (model->user) {
+      userRelationCount++;
+    }
     relationMap[model->schema].push_back(model);
   }
 
-  wxTreeItemId systemRelationsItem = AppendItem(databaseItemId, _("System Relations"));
+  bool unfoldSchemas = userRelationCount < 50;
 
-  for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
-    wxString schema = iter->first;
-    vector<RelationModel*> schemaRelations = iter->second;
-    if (schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"))) {
-      AddSchemaItem(systemRelationsItem, schema, schemaRelations);
+  if (unfoldSchemas) {
+    for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
+      wxString schema = iter->first;
+      vector<RelationModel*> schemaRelations = iter->second;
+      if (systemSchema(schema)) {
+	continue;
+      }
+      if (schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""))) {
+	continue;
+      }
+      AddRelationItems(databaseItemId, schemaRelations, true);
     }
-    else {
-      if ((schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""))) || schemaRelations.size() > 10) {
-	AddSchemaItem(databaseItemId, schema, schemaRelations);
+    for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
+      wxString schema = iter->first;
+      vector<RelationModel*> schemaRelations = iter->second;
+      if (!systemSchema(schema) && emptySchema(schemaRelations)) {
+	AddSchemaItem(systemSchema(schema) ? databaseItemId : databaseItemId, schema, schemaRelations);
       }
-      else {
-	AddRelationItems(databaseItemId, schemaRelations, true);
+    }
+    wxTreeItemId systemRelationsItem = AppendItem(databaseItemId, _("System relations"));
+    for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
+      wxString schema = iter->first;
+      vector<RelationModel*> schemaRelations = iter->second;
+      if (systemSchema(schema)) {
+	AddSchemaItem(systemRelationsItem, schema, schemaRelations);
       }
+    }
+  }
+  else {
+    wxTreeItemId systemRelationsItem = AppendItem(databaseItemId, _("System relations"));
+    for (map<wxString, vector<RelationModel*> >::iterator iter = relationMap.begin(); iter != relationMap.end(); iter++) {
+      wxString schema = iter->first;
+      vector<RelationModel*> schemaRelations = iter->second;
+      AddSchemaItem(systemSchema(schema) ? systemRelationsItem : databaseItemId, schema, schemaRelations);
     }
   }
 }

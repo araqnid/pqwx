@@ -17,6 +17,7 @@ public:
   unsigned long oid;
   wxString schema;
   wxString name;
+  int user : 1;
   enum { TABLE, VIEW, SEQUENCE } type;
 };
 

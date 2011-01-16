@@ -35,10 +35,10 @@ PqwxFrame::PqwxFrame(const wxString& title)
   wxMenu *fileMenu = new wxMenu;
   fileMenu->Append(Pqwx_New, _T("&New query\tCtrl-N"), _T("Create a new query"));
   fileMenu->Append(Pqwx_Open, _T("&Open script\tCtrl-O"), _T("Open a SQL script"));
-  fileMenu->Append(Pqwx_Quit, _T("E&xit\tCtrl-Q"), _T("Exit Query Tool"));
+  fileMenu->Append(Pqwx_Quit, _T("E&xit\tCtrl-Q"), _T("Exit PQWX"));
 
   wxMenu *helpMenu = new wxMenu;
-  helpMenu->Append(Pqwx_About, _T("&About...\tF1"), _T("Show information about Query Tool"));
+  helpMenu->Append(Pqwx_About, _T("&About...\tF1"), _T("Show information about PQWX"));
 
   wxMenuBar *menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, _T("&File"));
@@ -65,14 +65,14 @@ void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-  wxMessageBox(wxString::Format(_T("Welcome to Query Tool version %s\n")
+  wxMessageBox(wxString::Format(_T("Welcome to PQWX version %s\n")
 				_T("\n")
 				_T("Using %s\n") _T("Running on %s."),
 				_T("0.1"),
 				wxVERSION_STRING,
 				wxGetOsDescription().c_str()
 				),
-	       _T("About Query Tool"),
+	       _T("About PQWX"),
 	       wxOK | wxICON_INFORMATION,
 	       this
 	       );

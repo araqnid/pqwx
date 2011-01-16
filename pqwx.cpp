@@ -22,7 +22,7 @@ bool PQWXApp::OnInit()
   if (!wxApp::OnInit())
     return false;
 
-  PqwxFrame *frame = new PqwxFrame(_T("Query tool"));
+  PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
   ServerConnection *conn = new ServerConnection();

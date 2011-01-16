@@ -53,17 +53,20 @@ void ObjectBrowser::dispose() {
   }
 }
 
+#define GET_OID(iter, index, result) (*iter)[index].ToULong(&(result))
+#define GET_BOOLEAN(iter, index, result) result = (*iter)[index].IsSameAs(_T("t"))
+#define GET_TEXT(iter, index, result) result = (*iter)[index]
+
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
+  DatabaseConnection *conn = serverModel->conn->getConnection();
 
-  vector<DatabaseInfo> databaseList;
-  serverModel->conn->getConnection()->listDatabases(databaseList);
-
-  vector<RoleInfo> roleList;
-  serverModel->conn->getConnection()->listRoles(roleList);
-
-  vector<TablespaceInfo> tablespaceList;
-  serverModel->conn->getConnection()->listTablespaces(tablespaceList);
+  vector< vector<wxString> > databases;
+  conn->ExecQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databases);
+  vector< vector<wxString> > roles;
+  conn->ExecQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roles);
+  vector< vector<wxString> > tablespaces;
+  conn->ExecQuery("SELECT oid, spcname FROM pg_tablespace", tablespaces);
 
   vector<DatabaseModel*> userDatabases;
   vector<DatabaseModel*> templateDatabases;
@@ -71,19 +74,21 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   vector<TablespaceModel*> userTablespaces;
   vector<TablespaceModel*> systemTablespaces;
 
-  for (vector<DatabaseInfo>::iterator iter = databaseList.begin(); iter != databaseList.end(); iter++) {
+  for (vector< vector<wxString> >::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *databaseModel = new DatabaseModel();
     databaseModel->server = serverModel->conn;
-    databaseModel->oid = iter->oid;
-    databaseModel->isTemplate = iter->isTemplate;
-    databaseModel->allowConnections = iter->allowConnections;
-    databaseModel->havePrivsToConnect = iter->havePrivsToConnect;
-    databaseModel->name = wxString(iter->name.c_str(), wxConvUTF8);
+    GET_OID(iter, 0, databaseModel->oid);
+    GET_TEXT(iter, 1, databaseModel->name);
+    GET_BOOLEAN(iter, 2, databaseModel->isTemplate);
+    GET_BOOLEAN(iter, 3, databaseModel->allowConnections);
+    GET_BOOLEAN(iter, 4, databaseModel->havePrivsToConnect);
     serverModel->databases.push_back(databaseModel);
-    if (iter->name.compare("postgres") == 0 || iter->name.compare("template0") == 0 || iter->name.compare("template1") == 0) {
+    if (databaseModel->name.IsSameAs(_T("postgres"))
+	|| databaseModel->name.IsSameAs(_T("template0"))
+	|| databaseModel->name.IsSameAs(_T("template1"))) {
       systemDatabases.push_back(databaseModel);
     }
-    else if (iter->isTemplate) {
+    else if (databaseModel->isTemplate) {
       templateDatabases.push_back(databaseModel);
     }
     else {
@@ -91,11 +96,11 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
     }
   }
 
-  for (vector<TablespaceInfo>::iterator iter = tablespaceList.begin(); iter != tablespaceList.end(); iter++) {
+  for (vector< vector<wxString> >::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
     TablespaceModel *tablespaceModel = new TablespaceModel();
-    tablespaceModel->oid = iter->oid;
-    tablespaceModel->name = wxString(iter->name.c_str(), wxConvUTF8);
-    if (iter->name.substr(0, 3).compare("pg_") == 0) {
+    GET_OID(iter, 0, tablespaceModel->oid);
+    GET_TEXT(iter, 1, tablespaceModel->name);
+    if (tablespaceModel->name.StartsWith(_T("pg_")) == 0) {
       systemTablespaces.push_back(tablespaceModel);
     }
     else {
@@ -104,9 +109,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   }
 
   for (vector<DatabaseModel*>::iterator iter = userDatabases.begin(); iter != userDatabases.end(); iter++) {
-    wxTreeItemId databaseItem = AppendItem(serverItem, (*iter)->name);
-    SetItemData(databaseItem, *iter);
-    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, *iter));
+    AddDatabaseItem(serverItem, *iter);
   }
 
   for (vector<TablespaceModel*>::iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
@@ -119,26 +122,26 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
   wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
 
-  for (vector<RoleInfo>::iterator iter = roleList.begin(); iter != roleList.end(); iter++) {
-    if (iter->canLogin) {
+  for (vector< vector<wxString> >::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+    int canLogin;
+    GET_BOOLEAN(iter, 2, canLogin);
+    if (canLogin) {
       UserModel *userModel = new UserModel();
-      userModel->oid = iter->oid;
-      userModel->isSuperuser = iter->isSuperuser;
-      userModel->name = wxString(iter->name.c_str(), wxConvUTF8);
+      GET_OID(iter, 0, userModel->oid);
+      GET_BOOLEAN(iter, 1, userModel->isSuperuser);
+      GET_TEXT(iter, 2, userModel->name);
       wxTreeItemId userItemId = AppendItem(usersItem, userModel->name);
     }
     else {
       GroupModel *groupModel = new GroupModel();
-      groupModel->oid = iter->oid;
-      groupModel->name = wxString(iter->name.c_str(), wxConvUTF8);
+      GET_OID(iter, 0, groupModel->oid);
+      GET_TEXT(iter, 2, groupModel->name);
       wxTreeItemId groupItemId = AppendItem(groupsItem, groupModel->name);
     }
   }
 
   for (vector<DatabaseModel*>::iterator iter = systemDatabases.begin(); iter != systemDatabases.end(); iter++) {
-    wxTreeItemId databaseItem = AppendItem(sysDatabasesItem, (*iter)->name);
-    SetItemData(databaseItem, *iter);
-    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, *iter));
+    AddDatabaseItem(sysDatabasesItem, *iter);
   }
 
   for (vector<TablespaceModel*>::iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
@@ -159,7 +162,7 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   if (itemData == NULL) return;
   LazyLoader *lazyLoader = dynamic_cast<LazyLoader*>(itemData);
   if (lazyLoader != NULL) {
-    lazyLoader->load();
+    lazyLoader->load(expandingItem);
     Delete(firstChildItem);
     // veto expand event if we did not produce any replacement items
     if (GetChildrenCount(expandingItem) == 0) {
@@ -168,12 +171,52 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   }
 }
 
-void ObjectBrowser::LoadDatabase(DatabaseModel *database) {
+void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *database) {
   const wxCharBuffer dbnameBuf = database->name.utf8_str();
   DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
 
-  vector<RelationInfo> relationList;
-  conn->listRelations(relationList);
-  for (vector<RelationInfo>::iterator iter = relationList.begin(); iter != relationList.end(); iter++) {
+  vector< vector<wxString> > relations;
+  conn->ExecQuery("SELECT pg_class.oid, nspname, relname, relkind FROM pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE relkind IN ('r','v','S')", relations);
+
+  vector<RelationModel*> userRelations;
+  vector<RelationModel*> systemRelations;
+
+  for (vector< vector<wxString> >::iterator iter = relations.begin(); iter != relations.end(); iter++) {
+    RelationModel *model = new RelationModel();
+    (*iter)[0].ToULong(&(model->oid));
+    model->schema = (*iter)[1];
+    model->name = (*iter)[2];
+    wxString relkind = (*iter)[3];
+    if (relkind.IsSameAs(_("r")))
+      model->type = RelationModel::TABLE;
+    else if (relkind.IsSameAs(_("v")))
+      model->type = RelationModel::VIEW;
+    else if (relkind.IsSameAs(_("S")))
+      model->type = RelationModel::SEQUENCE;
+    if (model->schema.StartsWith(_T("pg_")) || model->schema.IsSameAs(_T("information_schema"))) {
+      systemRelations.push_back(model);
+    }
+    else {
+      userRelations.push_back(model);
+    }
   }
+
+  for (vector<RelationModel*>::iterator iter = userRelations.begin(); iter != userRelations.end(); iter++) {
+    wxString name = (*iter)->schema + _T(".") + (*iter)->name;
+    wxTreeItemId relationItem = AppendItem(databaseItemId, name);
+  }
+
+  wxTreeItemId systemRelationsItem = AppendItem(databaseItemId, _("System Relations"));
+
+  for (vector<RelationModel*>::iterator iter = systemRelations.begin(); iter != systemRelations.end(); iter++) {
+    wxString name = (*iter)->schema + _T(".") + (*iter)->name;
+    wxTreeItemId relationItem = AppendItem(systemRelationsItem, name);
+  }  
+}
+
+void ObjectBrowser::AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database) {
+  wxTreeItemId databaseItem = AppendItem(parent, database->name);
+  SetItemData(databaseItem, database);
+  if (database->usable())
+    SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, database));
 }

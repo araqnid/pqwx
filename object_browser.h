@@ -12,6 +12,14 @@
 
 using namespace std;
 
+class RelationModel : public wxTreeItemData {
+public:
+  unsigned long oid;
+  wxString schema;
+  wxString name;
+  enum { TABLE, VIEW, SEQUENCE } type;
+};
+
 class DatabaseModel : public wxTreeItemData {
 public:
   DatabaseModel() {
@@ -19,23 +27,26 @@ public:
   }
   DatabaseConnection *conn;
   ServerConnection *server;
-  int oid;
+  unsigned long oid;
   int isTemplate : 1;
   int allowConnections : 1;
   int havePrivsToConnect : 1;
   wxString name;
+  int usable() {
+    return allowConnections && havePrivsToConnect;
+  }
 };
 
 class UserModel : public wxTreeItemData {
 public:
-  int oid;
+  unsigned long oid;
   int isSuperuser;
   wxString name;
 };
 
 class GroupModel : public wxTreeItemData {
 public:
-  int oid;
+  unsigned long oid;
   wxString name;
 };
 
@@ -43,7 +54,7 @@ class ServerModel : public wxTreeItemData {
 public:
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
-  DatabaseModel *findDatabase(int oid) {
+  DatabaseModel *findDatabase(unsigned long oid) {
     for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
       if ((*iter)->oid == oid)
 	return *iter;
@@ -54,7 +65,7 @@ public:
 
 class TablespaceModel : public wxTreeItemData {
 public:
-  int oid;
+  unsigned long oid;
   wxString name;
 };
 
@@ -66,7 +77,7 @@ public:
   }
 
   void AddServerConnection(ServerConnection *conn);
-  void LoadDatabase(DatabaseModel *);
+  void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
 
   void dispose();
 
@@ -75,11 +86,12 @@ private:
   vector<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
+  void AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database);
 };
 
 class LazyLoader : public wxTreeItemData {
 public:
-  virtual void load() = 0;
+  virtual void load(wxTreeItemId parent) = 0;
 };
 
 class DatabaseLoader : public LazyLoader {
@@ -89,8 +101,8 @@ public:
     db = db_;
   }
 
-  void load() {
-    objectBrowser->LoadDatabase(db);
+  void load(wxTreeItemId parent) {
+    objectBrowser->LoadDatabase(parent, db);
   }
   
 private:

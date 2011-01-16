@@ -1,6 +1,7 @@
 #ifndef __database_connection_h
 #define __database_connection_h
 
+#include "wx/string.h"
 #include "server_connection.h"
 
 class DatabaseConnection {
@@ -15,11 +16,9 @@ public:
     if (connected) dispose();
   }
 
-  int listDatabases(std::vector<DatabaseInfo>&);
-  int listRoles(std::vector<RoleInfo>&);
-  int listTablespaces(std::vector<TablespaceInfo>&);
-  int listRelations(std::vector<RelationInfo>&);
   void dispose();
+
+  int ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
 
 private:
   PGconn *conn;

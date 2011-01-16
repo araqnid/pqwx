@@ -15,8 +15,29 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
 END_EVENT_TABLE()
 
+class InvokeEventOnCompletion : DatabaseWorkCompletionPort {
+public:
+  InvokeEventOnCompletion(wxEvtHandler *dest) : dest(dest) { }
+  virtual void complete(bool result) {
+    dest->AddPendingEvent(event(result));
+  }
+  virtual wxEvent& event(bool result) = 0;
+private:
+  wxEvtHandler *dest;
+};
+
+class InvokeStaticEventOnCompletion : InvokeEventOnCompletion {
+public:
+  InvokeStaticEventOnCompletion(wxEvtHandler *dest, wxEvent& event) : InvokeEventOnCompletion(dest), theEvent(&event) { }
+  virtual wxEvent& event(bool result) {
+    return *theEvent;
+  }
+private:
+  wxEvent *theEvent;
+};
+
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
-  AddRoot(_("root"));
+  AddRoot(_T("root"));
 }
 
 static wxString nameOf(ServerConnection *conn) {

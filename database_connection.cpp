@@ -47,19 +47,28 @@ bool DatabaseConnection::ExecCommand(const char *sql) {
   return work->getResult();
 }
 
-void DatabaseConnection::ExecQueryAsync(const char *sql, vector< vector<wxString> >& results, DatabaseWorkCompletionPort *completionPort) {
-  AddWork(new DatabaseQueryWork(sql, &results, completionPort));
+void DatabaseConnection::ExecQueryAsync(const char *sql, vector< vector<wxString> >& results, DatabaseWorkCompletionPort *completion) {
+  AddWork(new DatabaseQueryWork(sql, &results, completion));
 }
 
-void DatabaseConnection::ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completionPort) {
-  AddWork(new DatabaseCommandWork(sql, completionPort));
+void DatabaseConnection::ExecQueriesAsync(std::vector<const char *> sql, std::vector< std::vector< std::vector<wxString> > >& results, DatabaseWorkCompletionPort *completion) {
+  for (int i = 0; i < sql.size(); i++) {
+    if (i == sql.size() - 1)
+      AddWork(new DatabaseQueryWork(sql[i], &results[i], completion));
+    else
+      AddWork(new DatabaseQueryWork(sql[i], &results[i]));
+  }
 }
 
-void DatabaseConnection::ExecCommandsAsync(vector<const char *> sql, DatabaseWorkCompletionPort *completionPort) {
+void DatabaseConnection::ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completion) {
+  AddWork(new DatabaseCommandWork(sql, completion));
+}
+
+void DatabaseConnection::ExecCommandsAsync(vector<const char *> sql, DatabaseWorkCompletionPort *completion) {
   int countdown = sql.size();
   for (vector<const char *>::iterator iter = sql.begin(); iter != sql.end(); iter++) {
     if (--countdown == 0) {
-      AddWork(new DatabaseCommandWork(*iter, completionPort));
+      AddWork(new DatabaseCommandWork(*iter, completion));
     }
     else {
       AddWork(new DatabaseCommandWork(*iter));

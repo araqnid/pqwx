@@ -40,6 +40,7 @@ private:
   void AddWork(DatabaseWork*);
 public:
   void ExecQueryAsync(const char *sql, std::vector< std::vector<wxString> >& results, DatabaseWorkCompletionPort *completion);
+  void ExecQueriesAsync(std::vector<const char *> sql, std::vector< std::vector< std::vector<wxString> > >& results, DatabaseWorkCompletionPort *completion);
   void ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completion);
   void ExecCommandsAsync(std::vector<const char *> sql, DatabaseWorkCompletionPort *completion);
   bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);

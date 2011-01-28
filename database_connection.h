@@ -47,7 +47,6 @@ public:
   bool ExecCommandSync(const char *sql);
 public:
   DatabaseWorkerThread *workerThread;
-  wxCriticalSection executing;
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
   wxCondition workCondition;

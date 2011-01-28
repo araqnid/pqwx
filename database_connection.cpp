@@ -21,7 +21,6 @@ void DatabaseConnection::dispose() {
 
   connected = 0;
 
-  wxCriticalSectionLocker enter(executing);
   PQfinish(conn);
 }
 
@@ -77,8 +76,6 @@ void DatabaseConnection::ExecCommandsAsync(vector<const char *> sql, DatabaseWor
 }
 
 bool DatabaseConnection::ExecQuerySync(const char *sql, vector< vector<wxString> >& results) {
-  wxCriticalSectionLocker locker(executing);
-
   PGresult *rs = PQexec(conn, sql);
   if (!rs)
     return false;
@@ -104,8 +101,6 @@ bool DatabaseConnection::ExecQuerySync(const char *sql, vector< vector<wxString>
 }
 
 bool DatabaseConnection::ExecCommandSync(const char *sql) {
-  wxCriticalSectionLocker locker(executing);
-
   PGresult *rs = PQexec(conn, sql);
   if (!rs)
     return false;

@@ -40,11 +40,12 @@ public:
   void ExecCommandsAsync(std::vector<const char *> sql, DatabaseWorkCompletionPort *completion);
   bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommandSync(const char *sql);
-public:
+private:
   DatabaseWorkerThread *workerThread;
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
   wxCondition workCondition;
+  friend class DatabaseWorkerThread;
 };
 
 class DatabaseWorkerThread : public wxThread {
@@ -58,6 +59,7 @@ public:
     db->workerThread = NULL;
   }
 
+private:
   std::vector<DatabaseWork*> work;
   bool finish;
 
@@ -66,6 +68,8 @@ protected:
 
 private:
   DatabaseConnection *db;
+
+  friend class DatabaseConnection;
 };
 
 #endif

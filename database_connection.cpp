@@ -46,14 +46,6 @@ bool DatabaseConnection::ExecCommand(const char *sql) {
   return work.getResult();
 }
 
-void DatabaseConnection::ExecQueryAsync(const char *sql, QueryResults& results, DatabaseWorkCompletionPort *completion) {
-  AddWork(new DatabaseQueryWork(sql, &results, completion));
-}
-
-void DatabaseConnection::ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completion) {
-  AddWork(new DatabaseCommandWork(sql, completion));
-}
-
 bool DatabaseConnection::ExecQuerySync(const char *sql, QueryResults& results) {
   PGresult *rs = PQexec(conn, sql);
   if (!rs)

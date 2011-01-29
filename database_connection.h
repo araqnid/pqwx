@@ -34,8 +34,6 @@ private:
   int connected;
   void AddWork(DatabaseWork*);
 public:
-  void ExecQueryAsync(const char *sql, std::vector< std::vector<wxString> >& results, DatabaseWorkCompletionPort *completion);
-  void ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completion);
   bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommandSync(const char *sql);
 private:

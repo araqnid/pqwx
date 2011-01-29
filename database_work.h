@@ -48,7 +48,6 @@ private:
   DatabaseWorkCompletionPort *completion;
   wxMutex mutex;
   wxCondition condition;
-  DatabaseQueryExecutor *db;
   bool done;
   bool result;
 };

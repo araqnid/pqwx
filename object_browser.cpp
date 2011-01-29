@@ -82,8 +82,12 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
   DatabaseConnection *conn = serverModel->conn->getConnection();
 
-  QueryResults databases;
-  conn->ExecQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databases);
+  DatabaseBatchWork batch;
+  batch.addQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database");
+  batch.addQuery("SELECT oid, spcname FROM pg_tablespace");
+  batch.addQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles");
+  conn->AddWork(&batch);
+  batch.await();
 
   vector<DatabaseModel*> userDatabases;
   vector<DatabaseModel*> templateDatabases;
@@ -91,7 +95,8 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   vector<TablespaceModel*> userTablespaces;
   vector<TablespaceModel*> systemTablespaces;
 
-  for (QueryResults::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+  QueryResults *databases = batch.getQueryResults(0);
+  for (QueryResults::iterator iter = databases->begin(); iter != databases->end(); iter++) {
     DatabaseModel *databaseModel = new DatabaseModel();
     databaseModel->server = serverModel->conn;
     GET_OID(iter, 0, databaseModel->oid);
@@ -112,10 +117,10 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
       userDatabases.push_back(databaseModel);
     }
   }
+  delete databases;
 
-  QueryResults tablespaces;
-  conn->ExecQuery("SELECT oid, spcname FROM pg_tablespace", tablespaces);
-  for (QueryResults::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+  QueryResults *tablespaces = batch.getQueryResults(1);
+  for (QueryResults::iterator iter = tablespaces->begin(); iter != tablespaces->end(); iter++) {
     TablespaceModel *tablespaceModel = new TablespaceModel();
     GET_OID(iter, 0, tablespaceModel->oid);
     GET_TEXT(iter, 1, tablespaceModel->name);
@@ -126,6 +131,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
       userTablespaces.push_back(tablespaceModel);
     }
   }
+  delete tablespaces;
 
   for (vector<DatabaseModel*>::iterator iter = userDatabases.begin(); iter != userDatabases.end(); iter++) {
     AddDatabaseItem(serverItem, *iter);
@@ -141,9 +147,8 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
   wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
 
-  QueryResults roles;
-  conn->ExecQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roles);
-  for (QueryResults::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+  QueryResults *roles = batch.getQueryResults(2);
+  for (QueryResults::iterator iter = roles->begin(); iter != roles->end(); iter++) {
     int canLogin;
     GET_BOOLEAN(iter, 2, canLogin);
     if (canLogin) {
@@ -160,6 +165,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
       wxTreeItemId groupItemId = AppendItem(groupsItem, groupModel->name);
     }
   }
+  delete roles;
 
   for (vector<DatabaseModel*>::iterator iter = systemDatabases.begin(); iter != systemDatabases.end(); iter++) {
     AddDatabaseItem(sysDatabasesItem, *iter);

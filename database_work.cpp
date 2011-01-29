@@ -5,9 +5,9 @@
 using namespace std;
 
 void DatabaseBatchWork::addQuery(const char *sql) {
-  QueryResults results;
+  QueryResults *results = new QueryResults();
   queryResults.push_back(results);
-  work.push_back(new DatabaseQueryWork(sql, &results));
+  work.push_back(new DatabaseQueryWork(sql, results));
 }
 
 void DatabaseBatchWork::addCommand(const char *sql) {

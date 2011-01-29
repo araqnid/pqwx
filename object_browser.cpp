@@ -82,7 +82,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
   DatabaseConnection *conn = serverModel->conn->getConnection();
 
-  vector< vector<wxString> > databases;
+  QueryResults databases;
   conn->ExecQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databases);
 
   vector<DatabaseModel*> userDatabases;
@@ -91,7 +91,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   vector<TablespaceModel*> userTablespaces;
   vector<TablespaceModel*> systemTablespaces;
 
-  for (vector< vector<wxString> >::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+  for (QueryResults::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *databaseModel = new DatabaseModel();
     databaseModel->server = serverModel->conn;
     GET_OID(iter, 0, databaseModel->oid);
@@ -113,9 +113,9 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
     }
   }
 
-  vector< vector<wxString> > tablespaces;
+  QueryResults tablespaces;
   conn->ExecQuery("SELECT oid, spcname FROM pg_tablespace", tablespaces);
-  for (vector< vector<wxString> >::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+  for (QueryResults::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
     TablespaceModel *tablespaceModel = new TablespaceModel();
     GET_OID(iter, 0, tablespaceModel->oid);
     GET_TEXT(iter, 1, tablespaceModel->name);
@@ -141,9 +141,9 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
   wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
 
-  vector< vector<wxString> > roles;
+  QueryResults roles;
   conn->ExecQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roles);
-  for (vector< vector<wxString> >::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+  for (QueryResults::iterator iter = roles.begin(); iter != roles.end(); iter++) {
     int canLogin;
     GET_BOOLEAN(iter, 2, canLogin);
     if (canLogin) {
@@ -204,7 +204,7 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
   const wxCharBuffer dbnameBuf = database->name.utf8_str();
   DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
 
-  vector< vector<wxString> > relations;
+  QueryResults relations;
   conn->ExecQuery("SELECT pg_class.oid, nspname, relname, relkind FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relations);
 
   map<wxString, vector<RelationModel*> > relationMap;
@@ -212,7 +212,7 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
   vector<RelationModel*> systemRelations;
 
   int userRelationCount = 0;
-  for (vector< vector<wxString> >::iterator iter = relations.begin(); iter != relations.end(); iter++) {
+  for (QueryResults::iterator iter = relations.begin(); iter != relations.end(); iter++) {
     RelationModel *model = new RelationModel();
     (*iter)[0].ToULong(&(model->oid));
     model->schema = (*iter)[1];

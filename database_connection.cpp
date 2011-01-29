@@ -90,12 +90,18 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
 
   do {
     if (finish) break;
-    for (vector<DatabaseWork*>::iterator iter = work.begin(); iter != work.end(); iter++) {
-      DatabaseWork *work = *iter;
-      bool result = work->execute(db);
-      work->finished(result);
+    if (work.size() > 0) {
+      vector<DatabaseWork*> workRun(work);
+      work.clear();
+      db->workConditionMutex.Unlock();
+      for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
+	DatabaseWork *work = *iter;
+	bool result = work->execute(db);
+	work->finished(result);
+      }
+      db->workConditionMutex.Lock();
+      continue;
     }
-    work.clear();
     db->workCondition.Wait();
   } while (true);
 }

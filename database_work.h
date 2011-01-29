@@ -80,6 +80,9 @@ public:
   void addQuery(const char *sql);
   void addCommand(const char *sql);
   bool execute(DatabaseQueryExecutor *db);
+  QueryResults *getQueryResults(int n) {
+    return &queryResults[n];
+  }
 private:
   std::vector<QueryResults> queryResults;
   std::vector<DatabaseWork*> work;

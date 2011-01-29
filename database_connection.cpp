@@ -86,7 +86,7 @@ bool DatabaseConnection::ExecCommandSync(const char *sql) {
 }
 
 wxThread::ExitCode DatabaseWorkerThread::Entry() {
-  db->workConditionMutex.Lock();
+  wxMutexLocker locker(db->workConditionMutex);
 
   do {
     if (finish) break;

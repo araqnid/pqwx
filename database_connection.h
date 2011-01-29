@@ -32,7 +32,7 @@ private:
   void setup();
   PGconn *conn;
   ServerConnection *server;
-  int connected;
+  bool connected;
   bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommandSync(const char *sql);
   DatabaseWorkerThread *workerThread;

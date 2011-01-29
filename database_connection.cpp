@@ -10,7 +10,7 @@ void DatabaseConnection::setup() {
   workerThread = new DatabaseWorkerThread(this);
   workerThread->Create();
   workerThread->Run();
-  connected = 1;
+  connected = true;
   AddWork(new DatabaseCommandWork("SET client_encoding TO 'UTF8'"));
   AddWork(new DatabaseCommandWork("SET DateStyle = 'ISO'"));
 }

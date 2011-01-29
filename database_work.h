@@ -3,9 +3,15 @@
 #ifndef __database_work_h
 #define __database_work_h
 
+#include <vector>
+#include "wx/string.h"
+#include "wx/thread.h"
+
+typedef std::vector< std::vector<wxString> > QueryResults;
+
 class DatabaseQueryExecutor {
 public:
-  virtual bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results) = 0;
+  virtual bool ExecQuerySync(const char *sql, QueryResults& results) = 0;
   virtual bool ExecCommandSync(const char *sql) = 0;
 };
 
@@ -49,12 +55,12 @@ private:
 
 class DatabaseQueryWork : public DatabaseWork {
 public:
-  DatabaseQueryWork(const char *sql, std::vector< std::vector<wxString> > *results, DatabaseWorkCompletionPort *completion = NULL) : DatabaseWork(completion), sql(sql), results(results) {}
+  DatabaseQueryWork(const char *sql, QueryResults *results, DatabaseWorkCompletionPort *completion = NULL) : DatabaseWork(completion), sql(sql), results(results) {}
   bool execute(DatabaseQueryExecutor *db) {
     return db->ExecQuerySync(sql, *results);
   }
 private:
-  std::vector< std::vector<wxString> > *results;
+  QueryResults *results;
   const char *sql;
 };
 
@@ -66,6 +72,18 @@ public:
   }
 private:
   const char *sql;
+};
+
+class DatabaseBatchWork : public DatabaseWork {
+public:
+  DatabaseBatchWork(DatabaseWorkCompletionPort *completion = NULL) : DatabaseWork(completion) {};
+  ~DatabaseBatchWork();
+  void addQuery(const char *sql);
+  void addCommand(const char *sql);
+  bool execute(DatabaseQueryExecutor *db);
+private:
+  std::vector<QueryResults> queryResults;
+  std::vector<DatabaseWork*> work;
 };
 
 #endif

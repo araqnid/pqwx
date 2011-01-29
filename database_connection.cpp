@@ -24,15 +24,15 @@ void DatabaseConnection::dispose() {
   PQfinish(conn);
 }
 
-bool DatabaseConnection::ExecQuery(const char *sql, vector< vector<wxString> >& results) {
+bool DatabaseConnection::ExecQuery(const char *sql, QueryResults& results) {
   if (!connected) {
     return ExecQuerySync(sql, results);
   }
 
-  DatabaseWork *work = new DatabaseQueryWork(sql, &results);
-  AddWork(work);
-  work->await();
-  return work->getResult();
+  DatabaseQueryWork work(sql, &results);
+  AddWork(&work);
+  work.await();
+  return work.getResult();
 }
 
 bool DatabaseConnection::ExecCommand(const char *sql) {
@@ -40,42 +40,21 @@ bool DatabaseConnection::ExecCommand(const char *sql) {
     return ExecCommandSync(sql);
   }
 
-  DatabaseWork *work = new DatabaseCommandWork(sql);
-  AddWork(work);
-  work->await();
-  return work->getResult();
+  DatabaseCommandWork work(sql);
+  AddWork(&work);
+  work.await();
+  return work.getResult();
 }
 
-void DatabaseConnection::ExecQueryAsync(const char *sql, vector< vector<wxString> >& results, DatabaseWorkCompletionPort *completion) {
+void DatabaseConnection::ExecQueryAsync(const char *sql, QueryResults& results, DatabaseWorkCompletionPort *completion) {
   AddWork(new DatabaseQueryWork(sql, &results, completion));
-}
-
-void DatabaseConnection::ExecQueriesAsync(std::vector<const char *> sql, std::vector< std::vector< std::vector<wxString> > >& results, DatabaseWorkCompletionPort *completion) {
-  for (int i = 0; i < sql.size(); i++) {
-    if (i == sql.size() - 1)
-      AddWork(new DatabaseQueryWork(sql[i], &results[i], completion));
-    else
-      AddWork(new DatabaseQueryWork(sql[i], &results[i]));
-  }
 }
 
 void DatabaseConnection::ExecCommandAsync(const char *sql, DatabaseWorkCompletionPort *completion) {
   AddWork(new DatabaseCommandWork(sql, completion));
 }
 
-void DatabaseConnection::ExecCommandsAsync(vector<const char *> sql, DatabaseWorkCompletionPort *completion) {
-  int countdown = sql.size();
-  for (vector<const char *>::iterator iter = sql.begin(); iter != sql.end(); iter++) {
-    if (--countdown == 0) {
-      AddWork(new DatabaseCommandWork(*iter, completion));
-    }
-    else {
-      AddWork(new DatabaseCommandWork(*iter));
-    }
-  }
-}
-
-bool DatabaseConnection::ExecQuerySync(const char *sql, vector< vector<wxString> >& results) {
+bool DatabaseConnection::ExecQuerySync(const char *sql, QueryResults& results) {
   PGresult *rs = PQexec(conn, sql);
   if (!rs)
     return false;

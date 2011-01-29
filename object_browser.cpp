@@ -11,29 +11,26 @@
 #include "object_browser.h"
 #include "pqwx_frame.h"
 
+const int EVENT_SERVER_LOADED = 10000;
+
 BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
+  EVT_COMMAND(EVENT_SERVER_LOADED, wxEVT_COMMAND_TEXT_UPDATED, ObjectBrowser::OnServerLoaded)
 END_EVENT_TABLE()
 
-class InvokeEventOnCompletion : DatabaseWorkCompletionPort {
+class InvokeServerLoadedOnCompletion : public DatabaseWorkCompletionPort {
 public:
-  InvokeEventOnCompletion(wxEvtHandler *dest) : dest(dest) { }
+  InvokeServerLoadedOnCompletion(wxEvtHandler *dest, DatabaseBatchWork *batch, wxTreeItemId serverItem, ServerModel *serverModel) : dest(dest), batch(batch), serverItem(serverItem), serverModel(serverModel) { }
   virtual void complete(bool result) {
-    dest->AddPendingEvent(event(result));
+    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_SERVER_LOADED);
+    event.SetClientData(this);
+    dest->AddPendingEvent(event);
   }
-  virtual wxEvent& event(bool result) = 0;
+  DatabaseBatchWork *batch;
+  wxTreeItemId serverItem;
+  ServerModel *serverModel;
 private:
   wxEvtHandler *dest;
-};
-
-class InvokeStaticEventOnCompletion : InvokeEventOnCompletion {
-public:
-  InvokeStaticEventOnCompletion(wxEvtHandler *dest, wxEvent& event) : InvokeEventOnCompletion(dest), theEvent(&event) { }
-  virtual wxEvent& event(bool result) {
-    return *theEvent;
-  }
-private:
-  wxEvent *theEvent;
 };
 
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
@@ -81,21 +78,29 @@ void ObjectBrowser::dispose() {
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
   DatabaseConnection *conn = serverModel->conn->getConnection();
+  DatabaseBatchWork *batch = new DatabaseBatchWork();
 
-  DatabaseBatchWork batch;
-  batch.addQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database");
-  batch.addQuery("SELECT oid, spcname FROM pg_tablespace");
-  batch.addQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles");
-  conn->AddWork(&batch);
-  batch.await();
+  batch->addQuery("SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database");
+  batch->addQuery("SELECT oid, spcname FROM pg_tablespace");
+  batch->addQuery("SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles");
+  batch->completion = new InvokeServerLoadedOnCompletion(this, batch, serverItem, serverModel);
+  conn->AddWork(batch);
+}
 
+void ObjectBrowser::OnServerLoaded(wxCommandEvent &e) {
   vector<DatabaseModel*> userDatabases;
   vector<DatabaseModel*> templateDatabases;
   vector<DatabaseModel*> systemDatabases;
   vector<TablespaceModel*> userTablespaces;
   vector<TablespaceModel*> systemTablespaces;
 
-  QueryResults *databases = batch.getQueryResults(0);
+  InvokeServerLoadedOnCompletion *data = static_cast<InvokeServerLoadedOnCompletion*>(e.GetClientData());
+
+  DatabaseBatchWork *batch = data->batch;
+  ServerModel *serverModel = data->serverModel;
+  wxTreeItemId serverItem = data->serverItem;
+
+  QueryResults *databases = batch->getQueryResults(0);
   for (QueryResults::iterator iter = databases->begin(); iter != databases->end(); iter++) {
     DatabaseModel *databaseModel = new DatabaseModel();
     databaseModel->server = serverModel->conn;
@@ -119,7 +124,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   }
   delete databases;
 
-  QueryResults *tablespaces = batch.getQueryResults(1);
+  QueryResults *tablespaces = batch->getQueryResults(1);
   for (QueryResults::iterator iter = tablespaces->begin(); iter != tablespaces->end(); iter++) {
     TablespaceModel *tablespaceModel = new TablespaceModel();
     GET_OID(iter, 0, tablespaceModel->oid);
@@ -147,7 +152,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
   wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
 
-  QueryResults *roles = batch.getQueryResults(2);
+  QueryResults *roles = batch->getQueryResults(2);
   for (QueryResults::iterator iter = roles->begin(); iter != roles->end(); iter++) {
     int canLogin;
     GET_BOOLEAN(iter, 2, canLogin);
@@ -179,6 +184,8 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   if (servers.size() == 1) {
     Expand(serverItem);
   }
+
+  delete data;
 }
 
 void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {

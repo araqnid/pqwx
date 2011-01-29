@@ -87,6 +87,7 @@ private:
   vector<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
+  void OnServerLoaded(wxCommandEvent&);
   void AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database);
   void AddSchemaItem(wxTreeItemId parent, wxString schemaName, vector<RelationModel*> relations);
   void AddRelationItems(wxTreeItemId parent, vector<RelationModel*> relations, bool qualify);

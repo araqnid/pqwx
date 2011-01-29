@@ -37,6 +37,7 @@ public:
     done = true;
     result = result_;
     condition.Signal();
+    if (completion) completion->complete(result_);
   }
   bool getResult() {
     wxMutexLocker locker(mutex);
@@ -44,8 +45,8 @@ public:
       fprintf(stderr, "requesting work result when it isn't finished!\n");
     return result;
   }
-private:
   DatabaseWorkCompletionPort *completion;
+private:
   wxMutex mutex;
   wxCondition condition;
   bool done;

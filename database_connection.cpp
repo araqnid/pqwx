@@ -11,8 +11,11 @@ void DatabaseConnection::setup() {
   workerThread->Create();
   workerThread->Run();
   connected = true;
-  AddWork(new DatabaseCommandWork("SET client_encoding TO 'UTF8'"));
-  AddWork(new DatabaseCommandWork("SET DateStyle = 'ISO'"));
+  initialCommands.push_back(new DatabaseCommandWork("SET client_encoding TO 'UTF8'"));
+  initialCommands.push_back(new DatabaseCommandWork("SET DateStyle = 'ISO'"));
+  for (vector<DatabaseWork*>::iterator iter = initialCommands.begin(); iter != initialCommands.end(); iter++) {
+    AddWork(*iter);
+  }
 }
 
 void DatabaseConnection::dispose() {
@@ -22,6 +25,10 @@ void DatabaseConnection::dispose() {
   connected = 0;
 
   PQfinish(conn);
+
+  for (vector<DatabaseWork*>::iterator iter = initialCommands.begin(); iter != initialCommands.end(); iter++) {
+    delete(*iter);
+  }
 }
 
 bool DatabaseConnection::ExecQuery(const char *sql, QueryResults& results) {

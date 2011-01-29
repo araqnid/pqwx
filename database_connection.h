@@ -27,16 +27,14 @@ public:
 
   bool ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommand(const char *sql);
+  void AddWork(DatabaseWork*);
 private:
   void setup();
   PGconn *conn;
   ServerConnection *server;
   int connected;
-  void AddWork(DatabaseWork*);
-public:
   bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommandSync(const char *sql);
-private:
   DatabaseWorkerThread *workerThread;
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;

@@ -78,12 +78,72 @@ my $indexing_finished = [gettimeofday];
 
 print "** Indexed ".scalar(@TERMS)." terms of ".scalar(@DOCUMENTS)." documents in ".sprintf("%.3f", tv_interval($indexing_start, $indexing_finished))." seconds\n";
 
+sub build_type_filter {
+    my $filter_spec = shift;
+    my $buildfilter_started = [gettimeofday];
+    $filter_spec =~ s/^\@//;
+    my @docs;
+    my %accept_types = map { ($_, 1) } split(/,/, $filter_spec);
+    for my $i (0..$#DOCUMENTS) {
+	$docs[$i] = 1 if ($accept_types{$DOCUMENTS[$i]->type});
+    }
+    my $buildfilter_finished = [gettimeofday];
+    print "** Built types<$filter_spec> filter in ".sprintf("%.3f", tv_interval($buildfilter_started, $buildfilter_finished))." seconds\n";
+    return \@docs;
+}
+
+sub build_nonsystem_filter {
+    my $buildfilter_started = [gettimeofday];
+    my @docs;
+    for my $i (0..$#DOCUMENTS) {
+	$docs[$i] = 1 if ($DOCUMENTS[$i]->symbol !~ /^(information_schema|pg_catalog)\./);
+    }
+    my $buildfilter_finished = [gettimeofday];
+    print "** Built non-system filter in ".sprintf("%.3f", tv_interval($buildfilter_started, $buildfilter_finished))." seconds\n";
+    return \@docs;
+}
+
+sub combine_filters {
+    if (@_ == 2) {
+	return combine_2filters(@_);
+    }
+    else {
+	my $filter1 = shift;
+	my $filter2 = shift;
+	return combine_filters(combine_2filters($filter1, $filter2), @_);
+    }
+}
+
+sub combine_2filters {
+    my $filter1 = shift;
+    my $filter2 = shift;
+
+    my $combinefilter_started = [gettimeofday];
+
+    my @output;
+    for my $i (0..$#DOCUMENTS) {
+	$output[$i] = $filter1->[$i] && $filter2->[$i];
+    }
+
+    my $combinefilter_finished = [gettimeofday];
+    print "** Combined 2 filters in ".sprintf("%.3f", tv_interval($combinefilter_started, $combinefilter_finished))." seconds\n";
+
+    return \@output;
+}
+
 sub match_terms {
     my $token = shift;
     return exists $PREFIXES{$token} ? @{$PREFIXES{$token}} : ();
 }
 
+my $nonsystem_filter = build_nonsystem_filter();
+my $filter = $nonsystem_filter;
 for my $input (@ARGV) {
+    if ($input =~ /^@/) {
+	$filter = combine_filters(build_type_filter($input), $nonsystem_filter);
+	next;
+    }
+
     my $search_started = [gettimeofday];
     my @query_tokens = analyse($input);
     my @term_matches;
@@ -99,6 +159,7 @@ for my $input (@ARGV) {
     my @score_docs;
     for my $first_term (values %{$term_matches[0]}) {
 	my $document_id = $first_term->document_id;
+	next if ($filter && !$filter->[$document_id]);
 	my $position = $first_term->position;
 	my @matched = ($first_term);
 	for my $offset (1..$#term_matches) {

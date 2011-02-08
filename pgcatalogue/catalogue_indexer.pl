@@ -103,6 +103,18 @@ sub build_nonsystem_filter {
     return \@docs;
 }
 
+sub build_schema_filter {
+    my $schema = shift;
+    my $buildfilter_started = [gettimeofday];
+    my @docs;
+    for my $i (0..$#DOCUMENTS) {
+	$docs[$i] = 1 if ($DOCUMENTS[$i]->symbol =~ /^$schema\./);
+    }
+    my $buildfilter_finished = [gettimeofday];
+    print "** Built schema<$schema> filter in ".sprintf("%.3f", tv_interval($buildfilter_started, $buildfilter_finished))." seconds\n";
+    return \@docs;
+}
+
 sub combine_filters {
     if (@_ == 2) {
 	return combine_2filters(@_);
@@ -137,11 +149,19 @@ sub match_terms {
 }
 
 my $nonsystem_filter = build_nonsystem_filter();
-my $filter = $nonsystem_filter;
+my $types_filter = undef;
+my %schema_filters;
 for my $input (@ARGV) {
     if ($input =~ /^@/) {
-	$filter = combine_filters(build_type_filter($input), $nonsystem_filter);
+	$types_filter = combine_filters(build_type_filter($input), $nonsystem_filter);
 	next;
+    }
+
+    my $filter = $types_filter || $nonsystem_filter;
+
+    if ($input =~ s/^([^.]+)\.//) {
+	my $schema_filter = ($schema_filters{$1} ||= build_schema_filter($1));
+	$filter = combine_filters($filter, $schema_filter);
     }
 
     my $search_started = [gettimeofday];

@@ -7,7 +7,7 @@ use utf8;
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-{ package Document; use base qw(Class::Accessor::Faster); Document->mk_accessors(qw|id type symbol|); sub new { my $class = shift; my $this = bless([], $class); $this->id(shift); $this->type(shift); $this->symbol(shift); return $this; } }
+{ package Document; use base qw(Class::Accessor::Faster); Document->mk_accessors(qw|id type symbol disambig|); sub new { my $class = shift; my $this = bless([], $class); $this->id(shift); $this->type(shift); $this->symbol(shift); $this->disambig(shift); return $this; } }
 { package Occurrence; use base qw(Class::Accessor::Faster); Occurrence->mk_accessors(qw|document_id term_id position|); sub new { my $class = shift; my $this = bless([], $class); $this->document_id(shift); $this->term_id(shift); $this->position(shift); return $this; } }
 { package Result; use base qw(Class::Accessor::Faster); Result->mk_accessors(qw|document score|); sub new { my $class = shift; my $this = bless([], $class); $this->document(shift); $this->score(shift); return $this; } }
 
@@ -41,7 +41,7 @@ sub index_entity {
     my $entity_type = shift;
     my $entity_symbol = shift;
 
-    push @DOCUMENTS, new Document($entity_id, $entity_type, $entity_symbol);
+    push @DOCUMENTS, new Document($entity_id, $entity_type, $entity_symbol, @_);
     my $document_id = int($#DOCUMENTS);
 
     my @tokens = analyse($entity_symbol);
@@ -70,8 +70,8 @@ my $indexing_start = [gettimeofday];
 
 while (<STDIN>) {
     chomp;
-    my($id, $type, $symbol) = split(/\|/);
-    index_entity(int($id), $type, $symbol);
+    my($id, $type, $symbol, $disambig) = split(/\|/);
+    index_entity(int($id), $type, $symbol, $disambig);
 }
 
 my $indexing_finished = [gettimeofday];
@@ -214,7 +214,9 @@ for my $input (@ARGV) {
     }
     #print Data::Dumper->new([$input, \@query_tokens, \@term_matches], [qw|input query_tokens term_matches|])->Dump;
     for my $result (sort { $b->score <=> $a->score || $a->document->symbol cmp $b->document->symbol } @score_docs) {
-	print $result->document->symbol . " " . $result->document->type . '#' . $result->document->id . " (".$result->score.")\n";
+      print $result->document->symbol . ($result->document->disambig ? "(" . $result->document->disambig . ")" : "")
+	  . " " . $result->document->type . '#' . $result->document->id
+	  . " (".$result->score.")\n";
     }
     my $search_finished = [gettimeofday];
     print "** Completed search in ".sprintf("%.3f", tv_interval($search_started, $search_finished))." seconds\n";

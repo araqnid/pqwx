@@ -96,7 +96,7 @@ sub build_nonsystem_filter {
     my $buildfilter_started = [gettimeofday];
     my @docs;
     for my $i (0..$#DOCUMENTS) {
-	$docs[$i] = 1 if ($DOCUMENTS[$i]->symbol !~ /^(information_schema|pg_catalog)\./);
+	$docs[$i] = 1 if ($DOCUMENTS[$i]->type !~ /S/);
     }
     my $buildfilter_finished = [gettimeofday];
     print "** Built non-system filter in ".sprintf("%.3f", tv_interval($buildfilter_started, $buildfilter_finished))." seconds\n";

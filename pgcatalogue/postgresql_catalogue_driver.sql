@@ -49,6 +49,14 @@ FROM pg_namespace
                         null AS objdisambig,
 			'x' AS objtype
                  FROM pg_extension
+                 -- collations (9.1 onwards)
+                 UNION ALL
+                 SELECT collnamespace AS nspoid,
+                        pg_collation.oid AS objid,
+                        collname AS name,
+                        null AS objdisambig,
+			'O' AS objtype
+                 FROM pg_collation
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3

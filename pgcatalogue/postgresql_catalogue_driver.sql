@@ -41,6 +41,14 @@ FROM pg_namespace
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
                        AND NOT typrelid > 0
+                 -- extensions (9.1 onwards)
+                 UNION ALL
+                 SELECT extnamespace AS nspoid,
+                        pg_extension.oid AS objid,
+                        extname AS name,
+                        null AS objdisambig,
+			'x' AS objtype
+                 FROM pg_extension
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3

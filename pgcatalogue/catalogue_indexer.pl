@@ -83,9 +83,12 @@ sub build_type_filter {
     my $buildfilter_started = [gettimeofday];
     $filter_spec =~ s/^\@//;
     my @docs;
-    my %accept_types = map { ($_, 1) } split(/,/, $filter_spec);
+    my @accept_types = split(/,/, $filter_spec);
     for my $i (0..$#DOCUMENTS) {
-	$docs[$i] = 1 if ($accept_types{$DOCUMENTS[$i]->type});
+	my $doctype = $DOCUMENTS[$i]->type;
+	for my $filtertype (@accept_types) {
+	    $docs[$i] = 1 if (substr($doctype, 0, length($filtertype)) eq $filtertype);
+	}
     }
     my $buildfilter_finished = [gettimeofday];
     print "** Built types<$filter_spec> filter in ".sprintf("%.3f", tv_interval($buildfilter_started, $buildfilter_finished))." seconds\n";
@@ -116,7 +119,10 @@ sub build_schema_filter {
 }
 
 sub combine_filters {
-    if (@_ == 2) {
+    if (@_ == 1) {
+	return $_[0];
+    }
+    elsif (@_ == 2) {
 	return combine_2filters(@_);
     }
     else {
@@ -148,20 +154,37 @@ sub match_terms {
     return exists $PREFIXES{$token} ? @{$PREFIXES{$token}} : ();
 }
 
-my $nonsystem_filter = build_nonsystem_filter();
+my $include_system;
+my $nonsystem_filter;
 my $types_filter = undef;
 my %schema_filters;
 for my $input (@ARGV) {
-    if ($input =~ /^@/) {
-	$types_filter = combine_filters(build_type_filter($input), $nonsystem_filter);
+    if ($input eq '+S') {
+	$include_system = 1;
+	next;
+    }
+    elsif ($input eq '-S') {
+	$include_system = 0;
 	next;
     }
 
-    my $filter = $types_filter || $nonsystem_filter;
+    if ($input =~ /^@/) {
+	$types_filter = build_type_filter($input);
+	next;
+    }
+
+    my @filters;
+    push @filters, $types_filter if ($types_filter);
+    push @filters, $nonsystem_filter ||= build_nonsystem_filter() unless ($include_system);
 
     if ($input =~ s/^([^.]+)\.//) {
-	my $schema_filter = ($schema_filters{$1} ||= build_schema_filter($1));
-	$filter = combine_filters($filter, $schema_filter);
+	push @filters, $schema_filters{$1} ||= build_schema_filter($1);
+    }
+
+    my $filter = @filters && combine_filters(@filters);
+    if ($filter && !grep { $_ } @$filter) {
+	warn "** Empty filter\n";
+	next;
     }
 
     my $search_started = [gettimeofday];

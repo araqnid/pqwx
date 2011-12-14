@@ -21,14 +21,13 @@ public:
       condition.Wait();
     } while (true);
   }
-  void finished() {
-    wxMutexLocker locker(mutex);
-    done = true;
-    condition.Signal();
-  }
   bool isDone() {
     wxMutexLocker locker(mutex);
     return done;
+  }
+  // Notify owner that work is finished (if more is required that signalling the condition).
+  // Called from the db execution context with the work mutex held.
+  virtual void notifyFinished() {
   }
 protected:
   void logSql(const char *sql) {
@@ -40,6 +39,13 @@ private:
   wxMutex mutex;
   wxCondition condition;
   bool done;
+  void finished() {
+    wxMutexLocker locker(mutex);
+    done = true;
+    condition.Signal();
+    notifyFinished();
+  }
+  friend class DatabaseWorkerThread;
 };
 
 class DatabaseCommandWork : public DatabaseWork {

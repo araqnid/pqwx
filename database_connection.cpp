@@ -55,7 +55,7 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
 	DatabaseWork *work = *iter;
 	work->execute(db->conn);
-	work->finished();
+	work->finished(); // after this method is called, don't touch work again.
       }
       db->workConditionMutex.Lock();
       continue;

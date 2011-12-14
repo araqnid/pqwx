@@ -56,12 +56,10 @@ public:
     executeInTransaction(conn);
 
     cmd(conn, "END");
-
-    notifyGuiOfCompletion();
   }
   virtual void loadResultsToGui(ObjectBrowser *browser) = 0;
 protected:
-  void notifyGuiOfCompletion() {
+  void notifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(this);
     dest->AddPendingEvent(event);

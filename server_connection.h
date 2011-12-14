@@ -3,75 +3,50 @@
 #ifndef __db__connection_manager_h
 #define __db__connection_manager_h
 
-#include "libpq-fe.h"
-
 #include <vector>
 #include <string>
 #include <map>
 
-class DatabaseInfo {
-public:
-  int oid;
-  std::string name;
-  int isTemplate : 1;
-  int allowConnections : 1;
-  int havePrivsToConnect : 1;
-};
-
-class RoleInfo {
-public:
-  int oid;
-  std::string name;
-  int canLogin : 1;
-  int isSuperuser : 1;
-};
-
-class TablespaceInfo {
-public:
-  int oid;
-  std::string name;
-};
-
-class RelationInfo {
-public:
-  int oid;
-  std::string schema;
-  std::string name;
-  enum { VIEW, TABLE, SEQUENCE } type;
-};
-
-class DatabaseConnection;
+#include "database_connection.h"
 
 class ServerConnection {
 public:
-  ServerConnection() {
-    connected = 0;
+  ServerConnection() : globalDbName(_T("postgres")) {
     hostname = NULL;
     username = NULL;
     port = -1;
     password = NULL;
   }
 
-  ~ServerConnection() {
-    if (connected) dispose();
+  void CloseAllSync() {
+    wxLogDebug(_T("%p: Closing all database connections for this server"), this);
+    for (std::map<std::string,DatabaseConnection*>::iterator iter = databaseConnections.begin(); iter != databaseConnections.end(); iter++) {
+      iter->second->CloseSync();
+    }
+    databaseConnections.clear();
   }
-
-  int connect();
-  void dispose();
 
   // connection parameters
   const char *hostname;
   int port;
   const char *username;
   const char *password;
+  const wxString globalDbName;
 
-  DatabaseConnection *getConnection(const char *dbname) {
-    std::string key(dbname);
+  DatabaseConnection *getConnection(const wxString& dbname) {
+    std::string key(dbname.utf8_str());
     DatabaseConnection *conn = databaseConnections[key];
+
     if (conn) {
       return conn;
     }
-    return makeConnection(dbname);
+
+    wxLogDebug(_T("%p: Opening new connection for database '%s'"), this, dbname.c_str());
+
+    conn = new DatabaseConnection(this, dbname);
+    databaseConnections[key] = conn;
+
+    return conn;
   }
 
   DatabaseConnection *getConnection() {
@@ -79,10 +54,7 @@ public:
   }
 
 private:
-  int connected;
   std::map<std::string, DatabaseConnection*> databaseConnections;
-  const char *globalDbName;
-  const char *pgVersion;
   DatabaseConnection *makeConnection(const char *dbname);
 };
 

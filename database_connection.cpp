@@ -41,31 +41,39 @@ void DatabaseConnection::setup() {
     sprintf(identification + strlen(identification), "%d", server->port);
   }
   strcat(identification, " ");
-  strcat(identification, dbname);
+  strcat(identification, dbname.utf8_str());
+}
 
+void DatabaseConnection::Connect() {
   wxCriticalSectionLocker enter(workerThreadPointer);
+  wxASSERT(workerThread == NULL);
   workerThread = new DatabaseWorkerThread(this);
   workerThread->Create();
   workerThread->Run();
-  connected = true;
 
-  LogConnect();
-
-  AddWork(new InitialiseWork());
+  wxMutexLocker locker(workConditionMutex);
+  workerThread->work.push_back(new InitialiseWork());
+  workCondition.Signal();
+  wxLogDebug(_T("thr#%lx: new database connection worker for '%s'"), workerThread->GetId(), dbname.c_str());
 }
 
-void DatabaseConnection::dispose() {
-  if (!connected)
-    return;
-
-  connected = 0;
-
+void DatabaseConnection::CloseSync() {
   DisconnectWork work;
-  AddWork(&work);
-  work.await();
+  if (AddWorkOnlyIfConnected(&work)) {
+    work.await();
+  }
+}
+
+bool DatabaseConnection::IsConnected() {
+  wxCriticalSectionLocker enter(workerThreadPointer);
+  return workerThread != NULL;
 }
 
 wxThread::ExitCode DatabaseWorkerThread::Entry() {
+  if (!Connect()) {
+    return 0;
+  }
+
   wxMutexLocker locker(db->workConditionMutex);
 
   do {
@@ -75,19 +83,70 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       db->workConditionMutex.Unlock();
       for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
 	DatabaseWork *work = *iter;
-	work->execute(db, db->conn);
+	work->execute(db, conn);
 	work->finished(); // after this method is called, don't touch work again.
       }
       db->workConditionMutex.Lock();
       continue;
     }
-    ConnStatusType connStatus = PQstatus(db->conn);
+    ConnStatusType connStatus = PQstatus(conn);
     if (connStatus == CONNECTION_BAD) {
-      db->connected = false;
       break;
     }
     db->workCondition.Wait();
   } while (true);
+
+  return 0;
+}
+
+static const char *options[] = {
+  "host",
+  "port",
+  "user",
+  "password",
+  "application_name",
+  "dbname",
+  NULL
+};
+
+bool DatabaseWorkerThread::Connect() {
+  const char *values[5];
+  char portbuf[10];
+
+  values[0] = db->server->hostname;
+
+  if (db->server->port > 0) {
+    values[1] = portbuf;
+    sprintf(portbuf, "%d", db->server->port);
+  }
+  else {
+    values[1] = NULL;
+  }
+
+  values[2] = db->server->username;
+  values[3] = db->server->password;
+  values[4] = "pqwx";
+  values[5] = dbname;
+
+#ifdef PQWX_DEBUG
+  fwprintf(stderr, wxT("thr#%lx connecting to server\n"), GetId());
+  for (int i = 0; options[i]; i++) {
+    fwprintf(stderr, wxT(" %s => %s\n"), options[i], values[i]);
+  }
+#endif
+
+  conn = PQconnectdbParams(options, values, 0);
+  ConnStatusType status = PQstatus(conn);
+
+  if (status == CONNECTION_OK) {
+    db->LogConnect();
+    return true;
+  }
+  else {
+    fwprintf(stderr, wxT("thr#%lx Failed to connect to %s: %s\n"), GetId(), values[5], PQerrorMessage(conn));
+    PQfinish(conn);
+    return false;
+  }
 }
 
 void DatabaseConnection::LogSql(const char *sql) {
@@ -109,7 +168,19 @@ void DatabaseConnection::LogDisconnect() {
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {
+  wxCriticalSectionLocker enter(workerThreadPointer);
   wxMutexLocker locker(workConditionMutex);
+  wxCHECK(workerThread != NULL, );
   workerThread->work.push_back(work);
   workCondition.Signal();
+}
+
+bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
+  wxCriticalSectionLocker enter(workerThreadPointer);
+  wxMutexLocker locker(workConditionMutex);
+  if (workerThread == NULL)
+    return false;
+  workerThread->work.push_back(work);
+  workCondition.Signal();
+  return true;
 }

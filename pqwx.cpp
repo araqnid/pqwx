@@ -26,9 +26,7 @@ bool PQWXApp::OnInit()
   frame->Show(true);
 
   ServerConnection *conn = new ServerConnection();
-  if (conn->connect()) {
-    frame->AddServerConnection(conn);
-  }
+  frame->objectBrowser->AddServerConnection(conn);
 
   return true;
 }

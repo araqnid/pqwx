@@ -1,6 +1,5 @@
 // -*- c++ -*-
 
-#include "server_connection.h"
 #include "object_browser.h"
 
 class PqwxFrame: public wxFrame {
@@ -14,11 +13,9 @@ public:
 
   void OnCloseFrame(wxCloseEvent& event);
 
-  void AddServerConnection(ServerConnection *conn);
+  ObjectBrowser *objectBrowser;
 private:
   DECLARE_EVENT_TABLE();
-
-  ObjectBrowser *objectBrowser;
 };
 
 // controls and menu commands

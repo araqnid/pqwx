@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <iostream>
+#include <libpq-fe.h>
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "sql_logger.h"

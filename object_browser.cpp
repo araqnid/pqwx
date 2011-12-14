@@ -336,6 +336,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
   wxString connName = nameOf(conn);
+  wxLogDebug(_T("Connection added to object browser: %s"), connName.c_str());
   wxTreeItemId serverItem = AppendItem(GetRootItem(), connName);
   SetItemText(serverItem, connName);
   SetItemData(serverItem, serverModel);
@@ -344,8 +345,8 @@ void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
 }
 
 void ObjectBrowser::dispose() {
-  for (vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    (*iter)->conn->dispose();
+  for (std::vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    (*iter)->conn->CloseAllSync();
   }
 }
 
@@ -356,6 +357,9 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 
 void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, DatabaseWork *work) {
   DatabaseConnection *conn = serverModel->conn->getConnection();
+  // bodge
+  if (!conn->IsConnected())
+    conn->Connect();
   conn->AddWork(work);
 }
 
@@ -396,8 +400,10 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *dat
 }
 
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
-  const wxCharBuffer dbnameBuf = database->name.utf8_str();
-  DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
+  DatabaseConnection *conn = database->server->getConnection(database->name);
+  // bodge
+  if (!conn->IsConnected())
+    conn->Connect();
   conn->AddWork(work);
 }
 

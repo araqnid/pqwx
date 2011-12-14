@@ -99,10 +99,6 @@ void PqwxFrame::OnOpen(wxCommandEvent& event)
   }
 }
 
-void PqwxFrame::AddServerConnection(ServerConnection *conn) {
-  objectBrowser->AddServerConnection(conn);
-}
-
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
   objectBrowser->dispose();
   Destroy();

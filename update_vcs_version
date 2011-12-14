@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# This method of taking a version stamp from git was practically
+# copied from git's own build system; it seems to have originally been
+# devised by Junio C Hamano.
+
+version_file=$1
+srcdir=$(dirname $0)
+cd "$srcdir"
+git=${GIT-git}
+
+if [ -f version ]; then
+    version=$(cat version)
+elif [ -d .git ]; then
+    version=$($git describe --always --match "v[0-9]*" --abbrev=4 HEAD 2>/dev/null | sed -e 's/^v//' | tr '-' '.')
+    if [ -n "$version" ]; then
+	$git update-index -q --refresh
+	changed=$($git diff-index --name-only HEAD --)
+	if [ -n "$changed" ]; then
+	    version="$version.dirty"
+	fi
+    fi
+else
+    version="unknown"
+fi
+
+if [ -r "$version_file" ]; then
+    old_version=$(sed -e 's/^PQWX_VERSION = //' < $version_file)
+else
+    old_version=unmarked
+fi
+
+if ! [ "$version" = "$old_version" ]; then
+    echo "PQWX_VERSION = $version"
+    echo "PQWX_VERSION = $version" > $version_file
+fi

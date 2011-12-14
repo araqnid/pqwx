@@ -2,3 +2,4 @@
 /pqwx
 *.d
 local_build.mk
+vcs_version.mk

@@ -67,8 +67,11 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
   wxMessageBox(wxString::Format(_T("Welcome to PQWX version %s\n")
 				_T("\n")
+#ifdef PQWX_DEBUG
+				_T("This is a debug build.\n")
+#endif
 				_T("Using %s\n") _T("Running on %s."),
-				_T("0.1"),
+				_T(PQWX_VERSION),
 				wxVERSION_STRING,
 				wxGetOsDescription().c_str()
 				),

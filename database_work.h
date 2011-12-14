@@ -57,11 +57,4 @@ public:
   }
 };
 
-class DisconnectWork : public DatabaseWork {
-public:
-  void execute(PGconn *conn) {
-    PQfinish(conn);
-  }
-};
-
 #endif

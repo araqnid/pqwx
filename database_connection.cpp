@@ -6,6 +6,13 @@
 
 using namespace std;
 
+class DisconnectWork : public DatabaseWork {
+public:
+  void execute(PGconn *conn) {
+    PQfinish(conn);
+  }
+};
+
 void DatabaseConnection::setup() {
   wxCriticalSectionLocker enter(workerThreadPointer);
   workerThread = new DatabaseWorkerThread(this);

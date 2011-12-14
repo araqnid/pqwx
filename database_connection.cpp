@@ -92,19 +92,19 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
 
 void DatabaseConnection::LogSql(const char *sql) {
 #ifdef PQWX_DEBUG
-  cerr << "[" << identification << "] SQL: " << sql << endl;
+  fwprintf(stderr, wxT("[%s] SQL: %s\n"), identification, sql);
 #endif
 }
 
 void DatabaseConnection::LogConnect() {
 #ifdef PQWX_DEBUG
-  cerr << "[" << identification << "] connected" << endl;
+  fwprintf(stderr, wxT("[%s] connected\n"), identification);
 #endif
 }
 
 void DatabaseConnection::LogDisconnect() {
 #ifdef PQWX_DEBUG
-  cerr << "[" << identification << "] disconnected" << endl;
+  fwprintf(stderr, wxT("[%s] disconnected\n"), identification);
 #endif
 }
 

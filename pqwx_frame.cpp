@@ -9,6 +9,7 @@
 #include "wx/toolbar.h"
 
 #include "pqwx_frame.h"
+#include "pqwx_version.h"
 #include "object_browser.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)

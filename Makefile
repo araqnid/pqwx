@@ -2,16 +2,16 @@
 
 all: pqwx
 
-vcs_version.mk: FORCE
-	@./update_vcs_version $@
+vcs_version.mk pqwx_version.h: FORCE
+	@./update_vcs_version vcs_version.mk pqwx_version.h
 -include vcs_version.mk
 
 ifdef DEBUG
 WX_CONFIG_FLAGS := --debug=yes
-LOCAL_CXXFLAGS := -DPQWX_VERSION='"$(PQWX_VERSION)"' -DPQWX_DEBUG -ggdb
+LOCAL_CXXFLAGS := -DPQWX_DEBUG -ggdb
 else
 WX_CONFIG_FLAGS :=
-LOCAL_CXXFLAGS := -DPQWX_VERSION='"$(PQWX_VERSION)"' -g -O
+LOCAL_CXXFLAGS := -g -O
 endif
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags)
@@ -23,13 +23,11 @@ pqwx: $(OBJS)
 
 -include $(OBJS:.o=.d)
 
-pqwx_frame.o: vcs_version.mk
-
 %.o: %.cpp
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp
 	@g++ $(CXXFLAGS) -MM -o $*.d $*.cpp
 
 clean:
-	rm -f *.o *.d pqwx vcs_version.mk
+	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h
 
 .PHONY: FORCE

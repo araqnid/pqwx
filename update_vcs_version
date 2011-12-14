@@ -5,6 +5,7 @@
 # devised by Junio C Hamano.
 
 version_file=$1
+version_header=$2
 srcdir=$(dirname $0)
 cd "$srcdir"
 git=${GIT-git}
@@ -33,4 +34,9 @@ fi
 if ! [ "$version" = "$old_version" ]; then
     echo "PQWX_VERSION = $version"
     echo "PQWX_VERSION = $version" > $version_file
+    cat <<EOF >$version_header
+#ifndef PQWX_VERSION
+#define PQWX_VERSION "$version"
+#endif
+EOF
 fi

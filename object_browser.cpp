@@ -59,7 +59,11 @@ void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
   serverModel->conn = conn;
   servers.push_back(serverModel);
 
-  wxTreeItemId serverItem = AppendItem(GetRootItem(), nameOf(conn));
+  // setting the text twice is a bug workaround for wx 2.8
+  // see http://trac.wxwidgets.org/ticket/10085
+  wxString connName = nameOf(conn);
+  wxTreeItemId serverItem = AppendItem(GetRootItem(), connName);
+  SetItemText(serverItem, connName);
   SetItemData(serverItem, serverModel);
 
   RefreshDatabaseList(serverItem);

@@ -7,12 +7,13 @@
 #include <iostream>
 #include "wx/string.h"
 #include "wx/thread.h"
+#include "sql_logger.h"
 
 class DatabaseWork {
 public:
   DatabaseWork() : condition(mutex), done(false) {}
   virtual ~DatabaseWork() {}
-  virtual void execute(PGconn *conn) = 0;
+  virtual void execute(SqlLogger *logger, PGconn *conn) = 0;
   void await() {
     wxMutexLocker locker(mutex);
     do {
@@ -30,11 +31,6 @@ public:
   virtual void notifyFinished() {
   }
 protected:
-  void logSql(const char *sql) {
-#ifdef PQWX_DEBUG
-    std::cerr << "SQL: " << sql << std::endl;
-#endif
-  }
 private:
   wxMutex mutex;
   wxCondition condition;
@@ -55,8 +51,8 @@ private:
   const char *command;
 public:
   bool successful;
-  void execute(PGconn *conn) {
-    logSql(command);
+  void execute(SqlLogger *logger, PGconn *conn) {
+    logger->LogSql(command);
 
     PGresult *rs = PQexec(conn, command);
     if (!rs)

@@ -8,10 +8,11 @@
 #include "wx/log.h"
 #include "server_connection.h"
 #include "database_work.h"
+#include "sql_logger.h"
 
 class DatabaseWorkerThread;
 
-class DatabaseConnection {
+class DatabaseConnection : public SqlLogger {
 public:
   DatabaseConnection(ServerConnection *server, const char *dbname, PGconn *conn) : server(server), dbname(dbname), conn(conn), workCondition(workConditionMutex) {
     connected = 0;
@@ -27,6 +28,8 @@ public:
   bool isConnected() { return connected; }
   void AddWork(DatabaseWork*);
   void LogSql(const char *sql);
+  void LogDisconnect();
+  void LogConnect();
 private:
   void setup();
   char identification[400];

@@ -8,18 +8,19 @@ using namespace std;
 
 class DisconnectWork : public DatabaseWork {
 public:
-  void execute(PGconn *conn) {
+  void execute(SqlLogger *logger, PGconn *conn) {
     PQfinish(conn);
+    logger->LogDisconnect();
   }
 };
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void execute(PGconn *conn) {
+  void execute(SqlLogger *logger, PGconn *conn) {
     DatabaseCommandWork encoding("SET client_encoding TO 'UTF8'");
-    encoding.execute(conn);
+    encoding.execute(logger, conn);
     DatabaseCommandWork datestyle("SET DateStyle = 'ISO'");
-    datestyle.execute(conn);
+    datestyle.execute(logger, conn);
   }
 };
 
@@ -39,7 +40,7 @@ void DatabaseConnection::setup() {
     strcat(identification, ":");
     sprintf(identification + strlen(identification), "%d", server->port);
   }
-  strcat(identification, "|");
+  strcat(identification, " ");
   strcat(identification, dbname);
 
   wxCriticalSectionLocker enter(workerThreadPointer);
@@ -47,6 +48,8 @@ void DatabaseConnection::setup() {
   workerThread->Create();
   workerThread->Run();
   connected = true;
+
+  LogConnect();
 
   AddWork(new InitialiseWork());
 }
@@ -72,7 +75,7 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       db->workConditionMutex.Unlock();
       for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
 	DatabaseWork *work = *iter;
-	work->execute(db->conn);
+	work->execute(db, db->conn);
 	work->finished(); // after this method is called, don't touch work again.
       }
       db->workConditionMutex.Lock();
@@ -88,7 +91,21 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
 }
 
 void DatabaseConnection::LogSql(const char *sql) {
-    std::cerr << "SQL[" << identification << "]: " << sql << std::endl;
+#ifdef PQWX_DEBUG
+  cerr << "[" << identification << "] SQL: " << sql << endl;
+#endif
+}
+
+void DatabaseConnection::LogConnect() {
+#ifdef PQWX_DEBUG
+  cerr << "[" << identification << "] connected" << endl;
+#endif
+}
+
+void DatabaseConnection::LogDisconnect() {
+#ifdef PQWX_DEBUG
+  cerr << "[" << identification << "] disconnected" << endl;
+#endif
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {

@@ -31,7 +31,7 @@ public:
   }
 protected:
   void logSql(const char *sql) {
-#ifdef __WXDEBUG__
+#ifdef PQWX_DEBUG
     std::cerr << "SQL: " << sql << std::endl;
 #endif
   }

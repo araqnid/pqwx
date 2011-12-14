@@ -72,17 +72,9 @@ protected:
     work.execute(conn);
     return work.successful;
   }
-private:
-  wxEvtHandler *dest;
-};
-
-#define GET_OID(iter, index, result) (*iter)[index].ToULong(&(result))
-#define GET_BOOLEAN(iter, index, result) result = (*iter)[index].IsSameAs(_T("t"))
-#define GET_TEXT(iter, index, result) result = (*iter)[index]
-
-class ObjectBrowserQueryParser {
-protected:
   bool doQuery(PGconn *conn, const char *sql, QueryResults &results) {
+    logSql(sql);
+
     PGresult *rs = PQexec(conn, sql);
     if (!rs)
       return false;
@@ -106,9 +98,15 @@ protected:
 
     return true;
   }
+private:
+  wxEvtHandler *dest;
 };
 
-class RefreshDatabaseListWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
+#define GET_OID(iter, index, result) (*iter)[index].ToULong(&(result))
+#define GET_BOOLEAN(iter, index, result) result = (*iter)[index].IsSameAs(_T("t"))
+#define GET_TEXT(iter, index, result) result = (*iter)[index]
+
+class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
   RefreshDatabaseListWork(wxEvtHandler *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
@@ -221,7 +219,7 @@ static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
   return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
 }
 
-class LoadDatabaseSchemaWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
+class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
   LoadDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItemId) : ObjectBrowserWork(owner), databaseStubModel(databaseModel), databaseItemId(databaseItemId) {
     wxLogDebug(_T("%p: work to load schema"), this);

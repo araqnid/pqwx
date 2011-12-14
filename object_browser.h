@@ -88,6 +88,8 @@ private:
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnWorkFinished(wxCommandEvent&);
+  void SubmitServerWork(ServerModel *server, DatabaseWork *work);
+  void SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work);
 public: // bodge to make these accessible... more refactoring needed
   void AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database);
   void AddSchemaItem(wxTreeItemId parent, wxString schemaName, vector<RelationModel*> relations);

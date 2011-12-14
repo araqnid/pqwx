@@ -351,8 +351,12 @@ void ObjectBrowser::dispose() {
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
+  SubmitServerWork(serverModel, new RefreshDatabaseListWork(this, serverModel, serverItem));
+}
+
+void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, DatabaseWork *work) {
   DatabaseConnection *conn = serverModel->conn->getConnection();
-  conn->AddWork(new RefreshDatabaseListWork(this, serverModel, serverItem));
+  conn->AddWork(work);
 }
 
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
@@ -386,9 +390,13 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItemId, DatabaseModel *database) {
+  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(this, database, databaseItemId));
+}
+
+void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
   const wxCharBuffer dbnameBuf = database->name.utf8_str();
   DatabaseConnection *conn = database->server->getConnection(dbnameBuf);
-  conn->AddWork(new LoadDatabaseSchemaWork(this, database, databaseItemId));
+  conn->AddWork(work);
 }
 
 void ObjectBrowser::AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database) {

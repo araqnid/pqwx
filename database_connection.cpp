@@ -27,11 +27,11 @@ public:
 void DatabaseConnection::setup() {
   identification[0] = '\0';
   if (server->username != NULL) {
-    strcat(identification, "USERNAME");
+    strcat(identification, server->username);
     strcat(identification, "@");
   }
   if (server->hostname != NULL) {
-    strcat(identification, "HOSTNAME");
+    strcat(identification, server->hostname);
   }
   else {
     strcat(identification, "<local>");

@@ -57,6 +57,9 @@ PqwxFrame::PqwxFrame(const wxString& title)
   CreateStatusBar(2);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
+
+  SetPosition(wxPoint(100,100));
+  SetSize(wxSize(1000,800));
 }
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))

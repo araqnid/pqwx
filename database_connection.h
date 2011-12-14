@@ -35,6 +35,8 @@ public:
   void LogSql(const char *sql);
   void LogDisconnect();
   void LogConnect();
+  void LogConnectFailed(const char *msg);
+  void LogConnectNeedsPassword();
   DatabaseConnectionState GetState();
   bool IsConnected();
 private:

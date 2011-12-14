@@ -142,8 +142,13 @@ bool DatabaseWorkerThread::Connect() {
     db->LogConnect();
     return true;
   }
+  else if (PQconnectionNeedsPassword(conn)) {
+    db->LogConnectNeedsPassword();
+    PQfinish(conn);
+    return false;
+  }
   else {
-    fwprintf(stderr, wxT("thr#%lx Failed to connect to %s: %s\n"), GetId(), values[5], PQerrorMessage(conn));
+    db->LogConnectFailed(PQerrorMessage(conn));
     PQfinish(conn);
     return false;
   }
@@ -158,6 +163,18 @@ void DatabaseConnection::LogSql(const char *sql) {
 void DatabaseConnection::LogConnect() {
 #ifdef PQWX_DEBUG
   fwprintf(stderr, wxT("thr#%lx [%s] connected\n"), wxThread::GetCurrentId(), identification);
+#endif
+}
+
+void DatabaseConnection::LogConnectFailed(const char *msg) {
+#ifdef PQWX_DEBUG
+  fwprintf(stderr, wxT("thr#%lx [%s] connection FAILED: %s\n"), wxThread::GetCurrentId(), identification, msg);
+#endif
+}
+
+void DatabaseConnection::LogConnectNeedsPassword() {
+#ifdef PQWX_DEBUG
+  fwprintf(stderr, wxT("thr#%lx [%s] connection needs password\n"), wxThread::GetCurrentId(), identification);
 #endif
 }
 

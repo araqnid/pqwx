@@ -79,21 +79,8 @@ private:
 #define GET_BOOLEAN(iter, index, result) result = (*iter)[index].IsSameAs(_T("t"))
 #define GET_TEXT(iter, index, result) result = (*iter)[index]
 
-// get rid of this... just build the model in the DatabaseWork
-class QueryListBatchHandler {
+class ObjectBrowserQueryParser {
 protected:
-  bool addQueryResults(PGconn *conn, const char *sql) {
-    QueryResults *results = new QueryResults();
-    bool result = doQuery(conn, sql, *results);
-
-    if (!result) {
-      delete results;
-      return false;
-    }
-
-    queryResults.push_back(results);
-    return true;
-  }
   bool doQuery(PGconn *conn, const char *sql, QueryResults &results) {
     PGresult *rs = PQexec(conn, sql);
     if (!rs)
@@ -118,21 +105,22 @@ protected:
 
     return true;
   }
-
-  std::vector<QueryResults*> queryResults;
 };
 
-class RefreshDatabaseListWork : public ObjectBrowserWork, private QueryListBatchHandler {
+class RefreshDatabaseListWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
 public:
   RefreshDatabaseListWork(wxEvtHandler *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {}
 private:
   ServerModel *serverModel;
   wxTreeItemId serverItem;
+  QueryResults databaseRows;
+  QueryResults tablespaceRows;
+  QueryResults roleRows;
 protected:
   void executeInTransaction(PGconn *conn) {
-    addQueryResults(conn, "SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database");
-    addQueryResults(conn, "SELECT oid, spcname FROM pg_tablespace");
-    addQueryResults(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles");
+    doQuery(conn, "SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databaseRows);
+    doQuery(conn, "SELECT oid, spcname FROM pg_tablespace", tablespaceRows);
+    doQuery(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roleRows);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
     vector<DatabaseModel*> userDatabases;
@@ -141,8 +129,7 @@ protected:
     vector<TablespaceModel*> userTablespaces;
     vector<TablespaceModel*> systemTablespaces;
 
-    QueryResults *databases = queryResults[0];
-    for (QueryResults::iterator iter = databases->begin(); iter != databases->end(); iter++) {
+    for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *databaseModel = new DatabaseModel();
       databaseModel->server = serverModel->conn;
       GET_OID(iter, 0, databaseModel->oid);
@@ -163,10 +150,8 @@ protected:
 	userDatabases.push_back(databaseModel);
       }
     }
-    delete databases;
 
-    QueryResults *tablespaces = queryResults[1];
-    for (QueryResults::iterator iter = tablespaces->begin(); iter != tablespaces->end(); iter++) {
+    for (QueryResults::iterator iter = tablespaceRows.begin(); iter != tablespaceRows.end(); iter++) {
       TablespaceModel *tablespaceModel = new TablespaceModel();
       GET_OID(iter, 0, tablespaceModel->oid);
       GET_TEXT(iter, 1, tablespaceModel->name);
@@ -177,7 +162,6 @@ protected:
 	userTablespaces.push_back(tablespaceModel);
       }
     }
-    delete tablespaces;
 
     for (vector<DatabaseModel*>::iterator iter = userDatabases.begin(); iter != userDatabases.end(); iter++) {
       ob->AddDatabaseItem(serverItem, *iter);
@@ -189,8 +173,7 @@ protected:
 
     ob->AddSystemItems(serverItem);
 
-    QueryResults *roles = queryResults[2];
-    for (QueryResults::iterator iter = roles->begin(); iter != roles->end(); iter++) {
+    for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       int canLogin;
       GET_BOOLEAN(iter, 2, canLogin);
       if (canLogin) {
@@ -207,7 +190,6 @@ protected:
 	ob->AddGroupItem(serverItem, groupModel);
       }
     }
-    delete roles;
 
     for (vector<DatabaseModel*>::iterator iter = systemDatabases.begin(); iter != systemDatabases.end(); iter++) {
       ob->AddSystemDatabaseItem(serverItem, *iter);
@@ -229,7 +211,7 @@ static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
   return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
 }
 
-class LoadDatabaseSchemaWork : public ObjectBrowserWork, private QueryListBatchHandler {
+class LoadDatabaseSchemaWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
 public:
   LoadDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItemId) : ObjectBrowserWork(owner), databaseStubModel(databaseModel), databaseItemId(databaseItemId) {}
 private:

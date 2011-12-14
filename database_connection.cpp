@@ -24,6 +24,24 @@ public:
 };
 
 void DatabaseConnection::setup() {
+  identification[0] = '\0';
+  if (server->username != NULL) {
+    strcat(identification, "USERNAME");
+    strcat(identification, "@");
+  }
+  if (server->hostname != NULL) {
+    strcat(identification, "HOSTNAME");
+  }
+  else {
+    strcat(identification, "<local>");
+  }
+  if (server->port > 0) {
+    strcat(identification, ":");
+    sprintf(identification + strlen(identification), "%d", server->port);
+  }
+  strcat(identification, "|");
+  strcat(identification, dbname);
+
   wxCriticalSectionLocker enter(workerThreadPointer);
   workerThread = new DatabaseWorkerThread(this);
   workerThread->Create();
@@ -67,6 +85,10 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
     }
     db->workCondition.Wait();
   } while (true);
+}
+
+void DatabaseConnection::LogSql(const char *sql) {
+    std::cerr << "SQL[" << identification << "]: " << sql << std::endl;
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {

@@ -44,7 +44,7 @@ int ServerConnection::connect() {
     if (status == CONNECTION_OK) {
       connected = 1;
       globalDbName = globalDbNames[i];
-      databaseConnections[globalDbName] = new DatabaseConnection(this, conn);
+      databaseConnections[globalDbName] = new DatabaseConnection(this, values[5], conn);
       return 1;
     }
     else {
@@ -91,7 +91,7 @@ DatabaseConnection *ServerConnection::makeConnection(const char *dbname) {
 
   if (status == CONNECTION_OK) {
     std::string key(dbname);
-    DatabaseConnection *db = new DatabaseConnection(this, conn);
+    DatabaseConnection *db = new DatabaseConnection(this, dbname, conn);
     databaseConnections[key] = db;
 
     return db;

@@ -13,9 +13,7 @@ class DatabaseWorkerThread;
 
 class DatabaseConnection {
 public:
-  DatabaseConnection(ServerConnection *server_, PGconn *conn_) : workCondition(workConditionMutex) {
-    server = server_;
-    conn = conn_;
+  DatabaseConnection(ServerConnection *server, const char *dbname, PGconn *conn) : server(server), dbname(dbname), conn(conn), workCondition(workConditionMutex) {
     connected = 0;
     setup();
   }
@@ -28,10 +26,13 @@ public:
 
   bool isConnected() { return connected; }
   void AddWork(DatabaseWork*);
+  void LogSql(const char *sql);
 private:
   void setup();
+  char identification[400];
   PGconn *conn;
   ServerConnection *server;
+  const char *dbname;
   bool connected;
   DatabaseWorkerThread *workerThread;
   wxCriticalSection workerThreadPointer;
@@ -48,7 +49,6 @@ public:
     wxCriticalSectionLocker enter(db->workerThreadPointer);
     db->workerThread = NULL;
   }
-
 private:
   std::vector<DatabaseWork*> work;
 

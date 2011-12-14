@@ -7,6 +7,7 @@
 #endif
 
 #include "wx/toolbar.h"
+#include "wx/regex.h"
 
 #include "object_browser.h"
 #include "pqwx_frame.h"
@@ -19,6 +20,8 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
 END_EVENT_TABLE()
 
 typedef std::vector< std::vector<wxString> > QueryResults;
+
+static wxRegEx serverVersionRegex(wxT("^PostgreSQL ([0-9]+)\\.([0-9]+)([0-9.a-z]*)"));
 
 static bool ExecQuerySync(PGconn *conn, const char *sql, QueryResults& results) {
   PGresult *rs = PQexec(conn, sql);
@@ -120,14 +123,23 @@ private:
   QueryResults databaseRows;
   QueryResults tablespaceRows;
   QueryResults roleRows;
+  QueryResults serverRows;
 protected:
   void executeInTransaction(PGconn *conn) {
+    doQuery(conn, "SELECT version()", serverRows);
     doQuery(conn, "SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databaseRows);
     doQuery(conn, "SELECT oid, spcname FROM pg_tablespace", tablespaceRows);
     doQuery(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roleRows);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
     wxLogDebug(_T("%p: loading database list into GUI"), this);
+
+    wxString serverVersion = serverRows[0][0];
+    if (serverVersionRegex.Matches(serverVersion)) {
+      serverModel->SetVersion(atoi(serverVersionRegex.GetMatch(serverVersion, 1).utf8_str()),
+			      atoi(serverVersionRegex.GetMatch(serverVersion, 2).utf8_str()),
+			      serverVersionRegex.GetMatch(serverVersion, 3));
+    }
 
     vector<DatabaseModel*> userDatabases;
     vector<DatabaseModel*> templateDatabases;

@@ -55,6 +55,14 @@ class ServerModel : public wxTreeItemData {
 public:
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
+  int majorVersion;
+  int minorVersion;
+  wxString versionSuffix;
+  void SetVersion(int major, int minor, wxString suffix) {
+    majorVersion = major;
+    minorVersion = minor;
+    versionSuffix = suffix;
+  }
   DatabaseModel *findDatabase(unsigned long oid) {
     for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
       if ((*iter)->oid == oid)

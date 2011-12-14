@@ -6,12 +6,12 @@ vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
 -include vcs_version.mk
 
-ifdef DEBUG
-WX_CONFIG_FLAGS := --debug=yes
-LOCAL_CXXFLAGS := -DPQWX_DEBUG -ggdb
-else
+ifdef RELEASE
 WX_CONFIG_FLAGS :=
 LOCAL_CXXFLAGS := -g -O
+else
+WX_CONFIG_FLAGS := --debug=yes
+LOCAL_CXXFLAGS := -DPQWX_DEBUG -ggdb
 endif
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags)

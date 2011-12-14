@@ -27,6 +27,8 @@ public:
 
   bool ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
   bool ExecCommand(const char *sql);
+  bool Disconnect();
+  bool isConnected() { return connected; }
   void AddWork(DatabaseWork*);
 private:
   void setup();

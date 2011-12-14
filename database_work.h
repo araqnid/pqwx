@@ -13,6 +13,7 @@ class DatabaseQueryExecutor {
 public:
   virtual bool ExecQuerySync(const char *sql, QueryResults& results) = 0;
   virtual bool ExecCommandSync(const char *sql) = 0;
+  virtual bool Disconnect() = 0;
 };
 
 class DatabaseWorkCompletionPort {
@@ -87,6 +88,13 @@ public:
 private:
   std::vector<QueryResults*> queryResults;
   std::vector<DatabaseWork*> work;
+};
+
+class DisconnectWork : public DatabaseWork {
+public:
+  bool execute(DatabaseQueryExecutor *db) {
+    return db->Disconnect();
+  }
 };
 
 #endif

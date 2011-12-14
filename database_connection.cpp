@@ -2,6 +2,7 @@
 #include <string.h>
 #include "server_connection.h"
 #include "database_connection.h"
+#include <wx/log.h>
 
 using namespace std;
 
@@ -24,7 +25,9 @@ void DatabaseConnection::dispose() {
 
   connected = 0;
 
-  PQfinish(conn);
+  DisconnectWork work;
+  AddWork(&work);
+  work.await();
 
   for (vector<DatabaseWork*>::iterator iter = initialCommands.begin(); iter != initialCommands.end(); iter++) {
     delete(*iter);
@@ -92,6 +95,13 @@ bool DatabaseConnection::ExecCommandSync(const char *sql) {
   return true;
 }
 
+bool DatabaseConnection::Disconnect() {
+  PQfinish(conn);
+  connected = false;
+
+  return true;
+}
+
 wxThread::ExitCode DatabaseWorkerThread::Entry() {
   wxMutexLocker locker(db->workConditionMutex);
 
@@ -109,6 +119,8 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       db->workConditionMutex.Lock();
       continue;
     }
+    if (!db->isConnected())
+      break;
     db->workCondition.Wait();
   } while (true);
 }

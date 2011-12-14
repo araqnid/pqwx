@@ -36,7 +36,6 @@ private:
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
   wxCondition workCondition;
-  std::vector<DatabaseWork*> initialCommands;
   friend class DatabaseWorkerThread;
 };
 

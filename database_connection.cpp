@@ -13,6 +13,16 @@ public:
   }
 };
 
+class InitialiseWork : public DatabaseWork {
+public:
+  void execute(PGconn *conn) {
+    DatabaseCommandWork encoding("SET client_encoding TO 'UTF8'");
+    encoding.execute(conn);
+    DatabaseCommandWork datestyle("SET DateStyle = 'ISO'");
+    datestyle.execute(conn);
+  }
+};
+
 void DatabaseConnection::setup() {
   wxCriticalSectionLocker enter(workerThreadPointer);
   workerThread = new DatabaseWorkerThread(this);
@@ -20,11 +30,7 @@ void DatabaseConnection::setup() {
   workerThread->Run();
   connected = true;
 
-  initialCommands.push_back(new DatabaseCommandWork("SET client_encoding TO 'UTF8'"));
-  initialCommands.push_back(new DatabaseCommandWork("SET DateStyle = 'ISO'"));
-  for (vector<DatabaseWork*>::iterator iter = initialCommands.begin(); iter != initialCommands.end(); iter++) {
-    AddWork(*iter);
-  }
+  AddWork(new InitialiseWork());
 }
 
 void DatabaseConnection::dispose() {
@@ -36,10 +42,6 @@ void DatabaseConnection::dispose() {
   DisconnectWork work;
   AddWork(&work);
   work.await();
-
-  for (vector<DatabaseWork*>::iterator iter = initialCommands.begin(); iter != initialCommands.end(); iter++) {
-    delete(*iter);
-  }
 }
 
 wxThread::ExitCode DatabaseWorkerThread::Entry() {

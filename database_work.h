@@ -4,6 +4,7 @@
 #define __database_work_h
 
 #include <vector>
+#include <iostream>
 #include "wx/string.h"
 #include "wx/thread.h"
 
@@ -29,6 +30,10 @@ public:
     wxMutexLocker locker(mutex);
     return done;
   }
+protected:
+  void logSql(const char *sql) {
+    std::cerr << "SQL: " << sql << std::endl;
+  }
 private:
   wxMutex mutex;
   wxCondition condition;
@@ -43,6 +48,8 @@ private:
 public:
   bool successful;
   void execute(PGconn *conn) {
+    logSql(command);
+
     PGresult *rs = PQexec(conn, command);
     if (!rs)
       return;

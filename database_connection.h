@@ -5,6 +5,7 @@
 
 #include "wx/string.h"
 #include "wx/thread.h"
+#include "wx/log.h"
 #include "server_connection.h"
 #include "database_work.h"
 

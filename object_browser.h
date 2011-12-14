@@ -122,8 +122,9 @@ public: // bodge to make these accessible... more refactoring needed
       Expand(serverItem);
     }
   }
-  void LoadedDatabase(wxTreeItemId databaseItem) {
+  void LoadedDatabase(wxTreeItemId databaseItem, DatabaseModel *database) {
     Expand(databaseItem);
+    SetItemText(databaseItem, database->name);
   }
 };
 

@@ -303,7 +303,7 @@ protected:
 
     wxLogDebug(_T("%p: finished loading database schema"), this);
 
-    ob->LoadedDatabase(databaseItemId);
+    ob->LoadedDatabase(databaseItemId, databaseStubModel);
   }
 };
 
@@ -383,6 +383,8 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   LazyLoader *lazyLoader = dynamic_cast<LazyLoader*>(itemData);
   if (lazyLoader != NULL) {
     lazyLoader->load(expandingItem);
+    wxString expandingItemText = GetItemText(expandingItem);
+    SetItemText(expandingItem, expandingItemText + _(" (loading...)"));
     Delete(firstChildItem);
     // veto expand event, for lazy loader to complete
     event.Veto();

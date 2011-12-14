@@ -10,6 +10,7 @@
 class DatabaseWork {
 public:
   DatabaseWork() : condition(mutex), done(false) {}
+  virtual ~DatabaseWork() {}
   virtual void execute(PGconn *conn) = 0;
   void await() {
     wxMutexLocker locker(mutex);

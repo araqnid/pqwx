@@ -48,6 +48,7 @@ static bool ExecQuerySync(PGconn *conn, const char *sql, QueryResults& results) 
 class ObjectBrowserWork : public DatabaseWork {
 public:
   ObjectBrowserWork(wxEvtHandler *owner) : dest(owner) {}
+  virtual ~ObjectBrowserWork() {}
   void execute(PGconn *conn) {
     if (!cmd(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
       return;
@@ -109,7 +110,12 @@ protected:
 
 class RefreshDatabaseListWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
 public:
-  RefreshDatabaseListWork(wxEvtHandler *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {}
+  RefreshDatabaseListWork(wxEvtHandler *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
+    wxLogDebug(_T("%p: work to load database list"), this);
+  }
+  ~RefreshDatabaseListWork() {
+    wxLogDebug(_T("%p: deallocating work"), this);
+  }
 private:
   ServerModel *serverModel;
   wxTreeItemId serverItem;
@@ -123,6 +129,8 @@ protected:
     doQuery(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roleRows);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
+    wxLogDebug(_T("%p: loading database list into GUI"), this);
+
     vector<DatabaseModel*> userDatabases;
     vector<DatabaseModel*> templateDatabases;
     vector<DatabaseModel*> systemDatabases;
@@ -199,6 +207,8 @@ protected:
       ob->AddSystemTablespaceItem(serverItem, *iter);
     }
 
+    wxLogDebug(_T("%p: finished loading database list"), this);
+
     ob->LoadedServer(serverItem);
   }
 };
@@ -213,7 +223,12 @@ static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
 
 class LoadDatabaseSchemaWork : public ObjectBrowserWork, private ObjectBrowserQueryParser {
 public:
-  LoadDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItemId) : ObjectBrowserWork(owner), databaseStubModel(databaseModel), databaseItemId(databaseItemId) {}
+  LoadDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItemId) : ObjectBrowserWork(owner), databaseStubModel(databaseModel), databaseItemId(databaseItemId) {
+    wxLogDebug(_T("%p: work to load schema"), this);
+  }
+  virtual ~LoadDatabaseSchemaWork() {
+    wxLogDebug(_T("%p: deallocating work"), this);
+  }
 private:
   DatabaseModel *databaseStubModel;
   wxTreeItemId databaseItemId;
@@ -223,6 +238,8 @@ protected:
     doQuery(conn, "SELECT pg_class.oid, nspname, relname, relkind FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relations);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
+    wxLogDebug(_T("%p: loading database schema into GUI"), this);
+
     map<wxString, vector<RelationModel*> > relationMap;
     vector<RelationModel*> userRelations;
     vector<RelationModel*> systemRelations;
@@ -286,6 +303,8 @@ protected:
       }
     }
 
+    wxLogDebug(_T("%p: finished loading database schema"), this);
+
     ob->LoadedDatabase(databaseItemId);
   }
 };
@@ -341,9 +360,14 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
-  wxLogDebug(_T("Database work finished: %p"), work);
-
-  work->loadResultsToGui(this);
+  if (work->isDone()) {
+    wxLogDebug(_T("%p: work finished"), work);
+    work->loadResultsToGui(this);
+  }
+  else {
+    wxLogDebug(_T("%p: work finished but not marked as done"), work);
+    // call a cleanup method?
+  }
 
   delete work;
 }

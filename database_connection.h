@@ -10,7 +10,7 @@
 
 class DatabaseWorkerThread;
 
-class DatabaseConnection : public DatabaseQueryExecutor {
+class DatabaseConnection {
 public:
   DatabaseConnection(ServerConnection *server_, PGconn *conn_) : workCondition(workConditionMutex) {
     server = server_;
@@ -25,9 +25,6 @@ public:
 
   void dispose();
 
-  bool ExecQuery(const char *sql, std::vector< std::vector<wxString> >& results);
-  bool ExecCommand(const char *sql);
-  bool Disconnect();
   bool isConnected() { return connected; }
   void AddWork(DatabaseWork*);
 private:
@@ -35,8 +32,6 @@ private:
   PGconn *conn;
   ServerConnection *server;
   bool connected;
-  bool ExecQuerySync(const char *sql, std::vector< std::vector<wxString> >& results);
-  bool ExecCommandSync(const char *sql);
   DatabaseWorkerThread *workerThread;
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
@@ -47,9 +42,7 @@ private:
 
 class DatabaseWorkerThread : public wxThread {
 public:
-  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) {
-    finish = false;
-  }
+  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) {}
 
   ~DatabaseWorkerThread() {
     wxCriticalSectionLocker enter(db->workerThreadPointer);
@@ -58,7 +51,6 @@ public:
 
 private:
   std::vector<DatabaseWork*> work;
-  bool finish;
 
 protected:
   virtual ExitCode Entry();

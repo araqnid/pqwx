@@ -87,10 +87,42 @@ private:
   vector<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
-  void OnServerLoaded(wxCommandEvent&);
+  void OnWorkFinished(wxCommandEvent&);
+public: // bodge to make these accessible... more refactoring needed
   void AddDatabaseItem(wxTreeItemId parent, DatabaseModel *database);
   void AddSchemaItem(wxTreeItemId parent, wxString schemaName, vector<RelationModel*> relations);
   void AddRelationItems(wxTreeItemId parent, vector<RelationModel*> relations, bool qualify);
+  void AddTablespaceItem(wxTreeItemId parent, TablespaceModel *tablespace) {
+      wxTreeItemId tablespaceItem = AppendItem(parent, tablespace->name);
+      SetItemData(tablespaceItem, tablespace);
+  }
+  void AddSystemItems(wxTreeItemId serverItem) {
+    wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
+    wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
+    wxTreeItemId sysDatabasesItem = AppendItem(serverItem, _("System databases"));
+    wxTreeItemId sysTablespacesItem = AppendItem(serverItem, _("System tablespaces"));
+  }
+  void AddUserItem(wxTreeItemId serverItem, UserModel *userModel) {
+    //wxTreeItemId userItemId = AppendItem(usersItem, userModel->name);
+  }
+  void AddGroupItem(wxTreeItemId serverItem, GroupModel *groupModel) {
+    //wxTreeItemId groupItemId = AppendItem(groupsItem, groupModel->name);
+  }
+  void AddSystemDatabaseItem(wxTreeItemId serverItem, DatabaseModel *databaseModel) {
+    AddDatabaseItem(serverItem, databaseModel); // should add to sysDatabasesItem
+  }
+  void AddSystemTablespaceItem(wxTreeItemId serverItem, TablespaceModel *tablespaceModel) {
+    wxTreeItemId tablespaceItem = AppendItem(serverItem, tablespaceModel->name); // should add to sysTablespacesItem
+    SetItemData(tablespaceItem, tablespaceModel);
+  }
+  void LoadedServer(wxTreeItemId serverItem) {
+    if (servers.size() == 1) {
+      Expand(serverItem);
+    }
+  }
+  void LoadedDatabase(wxTreeItemId databaseItem) {
+    Expand(databaseItem);
+  }
 };
 
 class LazyLoader : public wxTreeItemData {

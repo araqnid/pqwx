@@ -24,6 +24,33 @@ public:
   }
 };
 
+class DatabaseWorkerThread : public wxThread {
+public:
+  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) {
+    dbname = strdup(db->dbname.utf8_str());
+  }
+
+  ~DatabaseWorkerThread() {
+    wxCriticalSectionLocker enter(db->workerThreadPointer);
+    db->workerThread = NULL;
+    free((void*) dbname);
+  }
+private:
+  std::vector<DatabaseWork*> work;
+  PGconn *conn;
+
+protected:
+  virtual ExitCode Entry();
+
+private:
+  bool Connect();
+
+  DatabaseConnection *db;
+  const char *dbname;
+
+  friend class DatabaseConnection;
+};
+
 void DatabaseConnection::setup() {
   identification[0] = '\0';
   if (server->username != NULL) {

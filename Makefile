@@ -5,8 +5,11 @@ OBJS := server_connection.o pqwx.o pqwx_frame.o object_browser.o database_connec
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^
 
+-include $(OBJS:.o=.d)
+
 %.o: %.cpp
-	g++ $(CXXFLAGS) -c -o $@ $^
+	g++ $(CXXFLAGS) -c -o $@ $*.cpp
+	@g++ $(CXXFLAGS) -MM -o $*.d $*.cpp
 
 clean:
-	rm -f $(OBJS) pqwx
+	rm -f *.o *.d pqwx

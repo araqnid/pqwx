@@ -23,31 +23,6 @@ typedef std::vector< std::vector<wxString> > QueryResults;
 
 static wxRegEx serverVersionRegex(wxT("^([^ ]+ ([0-9]+)\\.([0-9]+)([0-9.a-z]*))"));
 
-static bool ExecQuerySync(PGconn *conn, const char *sql, QueryResults& results) {
-  PGresult *rs = PQexec(conn, sql);
-  if (!rs)
-    return false;
-
-  ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_TUPLES_OK)
-    return false; // expected data back
-
-  int rowCount = PQntuples(rs);
-  int colCount = PQnfields(rs);
-  for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-    vector<wxString> row;
-    for (int colNum = 0; colNum < colCount; colNum++) {
-      const char *value = PQgetvalue(rs, rowNum, colNum);
-      row.push_back(wxString(value, wxConvUTF8));
-    }
-    results.push_back(row);
-  }
-
-  PQclear(rs);
-
-  return true;
-}
-
 class ColumnModel : public wxTreeItemData {
 public:
   RelationModel *relation;

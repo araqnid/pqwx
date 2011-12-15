@@ -16,6 +16,7 @@ class ServerModel;
 class DatabaseModel;
 class RoleModel;
 class RelationModel;
+class ColumnModel;
 
 class ObjectBrowser : public wxTreeCtrl {
 public:
@@ -26,6 +27,7 @@ public:
 
   void AddServerConnection(ServerConnection *conn);
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
+  void LoadRelation(wxTreeItemId parent, RelationModel *);
 
   void dispose();
 
@@ -37,6 +39,8 @@ public:
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles);
 
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem, vector<RelationModel*> &relations);
+
+  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns);
 private:
   DECLARE_EVENT_TABLE();
   vector<ServerModel*> servers;
@@ -45,27 +49,6 @@ private:
   void OnWorkFinished(wxCommandEvent&);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendSchemaItems(wxTreeItemId parent, bool includeSchemaItem, const wxString &schemaName, vector<RelationModel*> &relations);
-};
-
-class LazyLoader : public wxTreeItemData {
-public:
-  virtual void load(wxTreeItemId parent) = 0;
-};
-
-class DatabaseLoader : public LazyLoader {
-public:
-  DatabaseLoader(ObjectBrowser *objectBrowser_, DatabaseModel *db_) {
-    objectBrowser = objectBrowser_;
-    db = db_;
-  }
-
-  void load(wxTreeItemId parent) {
-    objectBrowser->LoadDatabase(parent, db);
-  }
-  
-private:
-  DatabaseModel *db;
-  ObjectBrowser *objectBrowser;
 };
 
 #endif

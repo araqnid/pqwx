@@ -49,8 +49,18 @@ static bool ExecQuerySync(PGconn *conn, const char *sql, QueryResults& results) 
   return true;
 }
 
+class ColumnModel : public wxTreeItemData {
+public:
+  RelationModel *relation;
+  wxString name;
+  wxString type;
+  bool nullable;
+  bool hasDefault;
+};
+
 class RelationModel : public wxTreeItemData {
 public:
+  DatabaseModel *database;
   unsigned long oid;
   wxString schema;
   wxString name;
@@ -130,6 +140,27 @@ protected:
     work.execute(logger, conn);
     return work.successful;
   }
+  bool doQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
+    logger->LogSql(sql);
+
+    PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
+    if (!rs)
+      return false;
+
+    ExecStatusType status = PQresultStatus(rs);
+    if (status != PGRES_TUPLES_OK) {
+#ifdef PQWX_DEBUG
+      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+#endif
+      return false; // expected data back
+    }
+
+    loadResultSet(rs, results);
+
+    PQclear(rs);
+
+    return true;
+  }
   bool doQuery(PGconn *conn, const char *sql, QueryResults &results) {
     logger->LogSql(sql);
 
@@ -138,9 +169,20 @@ protected:
       return false;
 
     ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_TUPLES_OK)
+    if (status != PGRES_TUPLES_OK) {
+#ifdef PQWX_DEBUG
+      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+#endif
       return false; // expected data back
+    }
 
+    loadResultSet(rs, results);
+
+    PQclear(rs);
+
+    return true;
+  }
+  void loadResultSet(PGresult *rs, QueryResults &results) {
     int rowCount = PQntuples(rs);
     int colCount = PQnfields(rs);
     for (int rowNum = 0; rowNum < rowCount; rowNum++) {
@@ -151,10 +193,6 @@ protected:
       }
       results.push_back(row);
     }
-
-    PQclear(rs);
-
-    return true;
   }
 private:
   wxEvtHandler *dest;
@@ -244,6 +282,7 @@ protected:
     doQuery(conn, "SELECT pg_class.oid, nspname, relname, relkind FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
+      relation->database = databaseModel;
       (*iter)[0].ToULong(&(relation->oid));
       relation->schema = (*iter)[1];
       relation->name = (*iter)[2];
@@ -263,6 +302,75 @@ protected:
     ob->Expand(databaseItem);
     ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
   }
+};
+
+class LoadRelationWork : public ObjectBrowserWork {
+public:
+  LoadRelationWork(wxEvtHandler *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
+    wxLogDebug(_T("%p: work to load relation"), this);
+  }
+private:
+  RelationModel *relationModel;
+  wxTreeItemId relationItem;
+  vector<ColumnModel*> columns;
+protected:
+  void executeInTransaction(PGconn *conn) {
+    QueryResults attributeRows;
+    wxString oidValue;
+    oidValue.Printf(_T("%d"), relationModel->oid);
+    doQuery(conn, "SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef FROM pg_attribute WHERE attrelid = $1 AND NOT attisdropped AND attnum > 0 ORDER BY attnum", attributeRows, 23 /* int4 */, oidValue.utf8_str());
+    for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
+      ColumnModel *column = new ColumnModel();
+      column->relation = relationModel;
+      GET_TEXT(iter, 0, column->name);
+      GET_TEXT(iter, 1, column->type);
+      GET_BOOLEAN(iter, 2, column->nullable);
+      GET_BOOLEAN(iter, 3, column->hasDefault);
+      columns.push_back(column);
+    }
+  }
+  void loadResultsToGui(ObjectBrowser *ob) {
+    ob->FillInRelation(relationModel, relationItem, columns);
+    ob->Expand(relationItem);
+
+    // remove 'loading...' tag
+    wxString itemText = ob->GetItemText(relationItem);
+    int space = itemText.Find(_T(' '));
+    if (space != wxNOT_FOUND) {
+      ob->SetItemText(relationItem, itemText.Left(space));
+    }
+  }
+};
+
+class LazyLoader : public wxTreeItemData {
+public:
+  virtual void load(wxTreeItemId parent) = 0;
+};
+
+class DatabaseLoader : public LazyLoader {
+public:
+  DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : ob(ob), db(db) {}
+
+  void load(wxTreeItemId parent) {
+    ob->LoadDatabase(parent, db);
+  }
+  
+private:
+  DatabaseModel *db;
+  ObjectBrowser *ob;
+};
+
+class RelationLoader : public LazyLoader {
+public:
+  RelationLoader(ObjectBrowser *ob, RelationModel *rel) : ob(ob), rel(rel) {}
+
+  void load(wxTreeItemId parent) {
+    ob->LoadRelation(parent, rel);
+  }
+  
+private:
+  RelationModel *rel;
+  ObjectBrowser *ob;
 };
 
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
@@ -357,6 +465,11 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *datab
   SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(this, database, databaseItem));
 }
 
+void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
+  wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
+  SubmitDatabaseWork(relation->database, new LoadRelationWork(this, relation, relationItem));
+}
+
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
   DatabaseConnection *conn = database->server->conn->getConnection(database->name);
   // bodge
@@ -415,7 +528,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, vector<Database
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
     SetItemData(databaseItem, database);
     if (database->IsUsable())
-      SetItemData(AppendItem(databaseItem, _("Loading...")), new DatabaseLoader(this, database));
+      SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, database));
   }
 }
 
@@ -499,5 +612,28 @@ void ObjectBrowser::AppendSchemaItems(wxTreeItemId parent, bool includeSchemaIte
     RelationModel *relation = *iter;
     wxTreeItemId relationItem = AppendItem(parent, includeSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
     SetItemData(relationItem, relation);
+    if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
+      SetItemData(AppendItem(relationItem, _T("Loading...")), new RelationLoader(this, relation));
+  }
+}
+
+void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns) {
+  for (vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
+    ColumnModel *column = *iter;
+    wxString itemText = column->name + _T(" (") + column->type;
+
+    if (relation->type == RelationModel::TABLE) {
+      if (column->nullable)
+	itemText += _T(", null");
+      else
+	itemText += _T(", not null");
+      if (column->hasDefault)
+	itemText += _T(", default");
+    }
+
+    itemText += _T(")");
+
+    wxTreeItemId columnItem = AppendItem(relationItem, itemText);
+    SetItemData(columnItem, column);
   }
 }

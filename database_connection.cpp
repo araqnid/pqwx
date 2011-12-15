@@ -211,6 +211,12 @@ void DatabaseConnection::LogDisconnect() {
 #endif
 }
 
+void DatabaseConnection::LogSqlQueryFailed(const char *msg, ExecStatusType status) {
+#ifdef PQWX_DEBUG
+  fwprintf(stderr, wxT("thr#%lx [%s] query failed: %s | %s\n"), wxThread::GetCurrentId(), identification, PQresStatus(status), msg);
+#endif
+}
+
 void DatabaseConnection::AddWork(DatabaseWork *work) {
   wxCriticalSectionLocker enter(workerThreadPointer);
   wxMutexLocker locker(workConditionMutex);

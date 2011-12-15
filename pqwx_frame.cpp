@@ -11,6 +11,7 @@
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
 #include "object_browser.h"
+#include "connect_dialogue.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
     #include "pqwx-appicon.xpm"
@@ -87,7 +88,8 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnNew(wxCommandEvent& event)
 {
-  wxLogStatus(_T("Create new script here..."));
+  wxDialog *connect = new ConnectDialogue(NULL, objectBrowser);
+  connect->Show();
 }
 
 void PqwxFrame::OnOpen(wxCommandEvent& event)

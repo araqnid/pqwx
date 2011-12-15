@@ -7,8 +7,12 @@
 #endif
 
 #include "wx/cmdline.h"
+#include "wx/xrc/xmlres.h"
 #include "pqwx_frame.h"
 #include "server_connection.h"
+#include "connect_dialogue.h"
+
+extern void InitXmlResource(void);
 
 class PQWXApp: public wxApp {
 public:
@@ -26,11 +30,18 @@ bool PQWXApp::OnInit()
   if (!wxApp::OnInit())
     return false;
 
+  InitXmlResource();
+  wxXmlResource::Get()->InitAllHandlers();
+
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
   if (initialConnection)
     frame->objectBrowser->AddServerConnection(initialConnection);
+  else {
+    wxDialog *connect = new ConnectDialogue(NULL, frame->objectBrowser);
+    connect->Show();
+  }
 
   return true;
 }

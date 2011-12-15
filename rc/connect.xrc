@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource class="wxDialog">
+  <object class="wxDialog" name="connect">
+    <title>Connect to server</title>
+    
+    
+    
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Server &amp;hostname:</label>
+              <style>wxALIGN_RIGHT</style>
+            </object>
+            <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxComboBox" name="hostname_value">
+              <size>170,-1d</size>
+            </object>
+            <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Database &amp;username:</label>
+              <style>wxALIGN_RIGHT</style>
+            </object>
+            <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxComboBox" name="username_value">
+              <size>170,-1d</size>
+            </object>
+            <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>&amp;Password:</label>
+              <style>wxALIGN_RIGHT</style>
+            </object>
+            <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="password_value">
+              <size>170,-1d</size>
+              <style>wxTE_PASSWORD</style>
+            </object>
+            <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <style>wxALIGN_RIGHT</style>
+            </object>
+            <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="save_password_value">
+              <label>Re&amp;member password</label>
+            </object>
+            <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <cols>2</cols>
+          <rows>2</rows>
+          <vgap>4</vgap>
+          <hgap>2</hgap>
+          <growablecols>1</growablecols>
+          <growablerows/>
+        </object>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>4</border>
+        <minsize>420,420</minsize>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <label>Co&amp;nnect</label>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL"/>
+          </object>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="advanced_connect">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxNotebook">
+          <object class="notebookpage">
+            <object class="wxPanel" name="login_panel">
+              <object class="wxFlexGridSizer">
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Server &amp;hostname:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="hostname_value">
+                    <size>170,-1d</size>
+                  </object>
+                  <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Administrative &amp;database:</label>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="dbname">
+                    <size>170,-1d</size>
+                    <content>
+                      <item>postgres</item>
+                      <item>template1</item>
+                    </content>
+                    <selection>0</selection>
+                    <style>wxCB_DROPDOWN|wxCB_SORT</style>
+                  </object>
+                  <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Database &amp;username:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="username_value">
+                    <size>170,-1d</size>
+                  </object>
+                  <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>&amp;Password:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxTextCtrl" name="password_value">
+                    <size>170,-1d</size>
+                    <style>wxTE_PASSWORD</style>
+                  </object>
+                  <flag>wxRIGHT|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxCheckBox" name="save_password_value">
+                    <label>Re&amp;member password</label>
+                  </object>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <cols>2</cols>
+                <rows>2</rows>
+                <vgap>4</vgap>
+                <hgap>2</hgap>
+                <growablecols>1</growablecols>
+                <growablerows/>
+              </object>
+            </object>
+            <label>&amp;Login</label>
+          </object>
+          <object class="notebookpage">
+            <object class="wxPanel" name="network_panel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="keepalives">
+                        <label>Use TCP Keepalives?</label>
+                        <checked>1</checked>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText"/>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <cols>2</cols>
+                    <rows>2</rows>
+                    <vgap>4</vgap>
+                    <hgap>2</hgap>
+                    <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Idle time before first keepalive (seconds):</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxSpinCtrl" name="keepalives_idle">
+                        <value>0</value>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Interval between keepalives (seconds):</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxSpinCtrl" name="keepalives_interval">
+                        <value>0</value>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Permittable lost keepalives before giving up:</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxSpinCtrl" name="keepalives_count">
+                        <value>0</value>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                  </object>
+                </object>
+                <object class="spacer">
+                  <size>-1,8d</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Specify server port using &quot;:port&quot; as a hostname suffix</label>
+                  </object>
+                  <flag>wxALIGN_CENTRE</flag>
+                </object>
+              </object>
+            </object>
+            <label>Network</label>
+          </object>
+          <object class="notebookpage">
+            <object class="wxPanel" name="encryption_panel">
+              <object class="wxFlexGridSizer">
+                <rows>2</rows>
+                <cols>2</cols>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>SSL &amp;mode:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="ssl_mode">
+                    <content>
+                      <item>Disable</item>
+                      <item>Allow</item>
+                      <item>Prefer</item>
+                      <item>Require</item>
+                      <item>Verify CA</item>
+                      <item>Verify full</item>
+                    </content>
+                    <selection>1</selection>
+                    <style>wxCB_READONLY</style>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Cer&amp;tificate:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFilePickerCtrl" name="ssl_cert_file">
+                    <message>Certificate file</message>
+                    <wildcard>*.pem,*.der,*.crt</wildcard>
+                  </object>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>&amp;Key:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFilePickerCtrl" name="ssl_key_file">
+                    <message>Key file</message>
+                    <wildcard>*.pem,*.der,*.key</wildcard>
+                  </object>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>R&amp;oot certificate:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFilePickerCtrl" name="ssl_root_cert_file">
+                    <message>Root CA certificate:</message>
+                    <wildcard>*.pem,*.der,*.crt</wildcard>
+                  </object>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Re&amp;vocation list:</label>
+                    <style>wxALIGN_RIGHT</style>
+                  </object>
+                  <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFilePickerCtrl" name="ssl_crl_file">
+                    <message>Certificate revocation list</message>
+                    <wildcard>*.pem,*.der,*.crl</wildcard>
+                  </object>
+                </object>
+              </object>
+            </object>
+            <label>Encryption</label>
+          </object>
+          <object class="notebookpage">
+            <object class="wxPanel" name="properties_panel">
+              <object class="wxFlexGridSizer">
+                <cols>2</cols>
+                <rows>2</rows>
+                <vgap>4</vgap>
+                <hgap>2</hgap>
+                <growablecols>1</growablecols>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Server command &amp;options:</label>
+                  </object>
+                  <flag>wxALIGN_TOP</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxTextCtrl" name="options">
+                    <size>150,-1d</size>
+                    <style>wxTE_MULTILINE</style>
+                  </object>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Connection &amp;parameters:</label>
+                  </object>
+                  <flag>wxALIGN_TOP</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxTextCtrl" name="connparams">
+                    <size>150,-1d</size>
+                    <style>wxTE_MULTILINE</style>
+                  </object>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+              </object>
+            </object>
+            <label>Additional Pr&amp;operties</label>
+          </object>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <label>Co&amp;nnect</label>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL"/>
+          </object>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+    <title>Connect to server</title>
+    <centered>1</centered>
+  </object>
+</resource>

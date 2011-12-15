@@ -5,3 +5,5 @@ local_build.mk
 vcs_version.mk
 pqwx_version.h
 core
+resources.h
+resources.cpp

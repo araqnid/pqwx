@@ -16,7 +16,8 @@ endif
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags)
 LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs)
-OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o
+OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o
+XRC := rc/connect.xrc
 
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^
@@ -27,7 +28,13 @@ pqwx: $(OBJS)
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp
 	@g++ $(CXXFLAGS) -MM -o $*.d $*.cpp
 
+resources.cpp: $(XRC)
+	wxrc -c -o $*.cpp $(XRC)
+
+resources.h: $(XRC)
+	wxrc -c -e -o $*.cpp $(XRC)
+
 clean:
-	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h
+	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h resources.cpp
 
 .PHONY: FORCE

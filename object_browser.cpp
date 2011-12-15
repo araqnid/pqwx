@@ -6,7 +6,6 @@
     #include "wx/wx.h"
 #endif
 
-#include "wx/toolbar.h"
 #include "wx/regex.h"
 #include <algorithm>
 

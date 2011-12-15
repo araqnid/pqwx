@@ -70,14 +70,7 @@ bool PQWXApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   if (haveInitial) {
     initialConnection = new ServerConnection();
     if (!server.IsEmpty()) {
-      int colon = server.Find(_T(':'));
-      if (colon == wxNOT_FOUND) {
-	initialConnection->hostname = strdup(server.utf8_str());
-      }
-      else {
-	initialConnection->hostname = strdup(server.Mid(0, colon).utf8_str());
-	initialConnection->port = atoi(server.Mid(colon+1).utf8_str());
-      }
+      initialConnection->SetServerName(server);
     }
     if (!user.IsEmpty()) {
       initialConnection->username = strdup(user.utf8_str());

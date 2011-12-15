@@ -53,6 +53,20 @@ public:
     return getConnection(globalDbName);
   }
 
+  void SetServerName(wxString& serverName) {
+    int colon = serverName.Find(_T(':'));
+    if (colon == wxNOT_FOUND) {
+      hostname = strdup(serverName.utf8_str());
+    }
+    else {
+      if (colon > 0)
+	hostname = strdup(serverName.Mid(0, colon).utf8_str());
+      port = atoi(serverName.Mid(colon+1).utf8_str());
+      if (port == 5432)
+	port = 0;
+    }
+  }
+
 private:
   std::map<std::string, DatabaseConnection*> databaseConnections;
   DatabaseConnection *makeConnection(const char *dbname);

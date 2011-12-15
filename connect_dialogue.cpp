@@ -28,7 +28,7 @@ void ConnectDialogue::OnConnect(wxCommandEvent &event) {
     conn->password = strdup(password.utf8_str());
   }
   if (!hostname.IsEmpty()) {
-    conn->hostname = strdup(hostname.utf8_str());
+    conn->SetServerName(hostname);
   }
 
   objectBrowser->AddServerConnection(conn);

@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 
+#include "postgresql/pg_config.h"
 #include "database_connection.h"
 
 class ServerConnection {
@@ -62,7 +63,7 @@ public:
       if (colon > 0)
 	hostname = strdup(serverName.Mid(0, colon).utf8_str());
       port = atoi(serverName.Mid(colon+1).utf8_str());
-      if (port == 5432)
+      if (port == DEF_PGPORT)
 	port = 0;
     }
   }

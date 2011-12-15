@@ -21,7 +21,7 @@ END_EVENT_TABLE()
 
 typedef std::vector< std::vector<wxString> > QueryResults;
 
-static wxRegEx serverVersionRegex(wxT("^PostgreSQL ([0-9]+)\\.([0-9]+)([0-9.a-z]*)"));
+static wxRegEx serverVersionRegex(wxT("^([^ ]+ ([0-9]+)\\.([0-9]+)([0-9.a-z]*))"));
 
 static bool ExecQuerySync(PGconn *conn, const char *sql, QueryResults& results) {
   PGresult *rs = PQexec(conn, sql);
@@ -479,9 +479,13 @@ void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *wo
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, wxString& serverVersion) {
   if (serverVersionRegex.Matches(serverVersion)) {
-    serverModel->SetVersion(atoi(serverVersionRegex.GetMatch(serverVersion, 1).utf8_str()),
-			    atoi(serverVersionRegex.GetMatch(serverVersion, 2).utf8_str()),
-			    serverVersionRegex.GetMatch(serverVersion, 3));
+    serverModel->SetVersion(atoi(serverVersionRegex.GetMatch(serverVersion, 2).utf8_str()),
+			    atoi(serverVersionRegex.GetMatch(serverVersion, 3).utf8_str()),
+			    serverVersionRegex.GetMatch(serverVersion, 4));
+    SetItemText(serverItem, nameOf(serverModel->conn) + _T(" (") + serverVersionRegex.GetMatch(serverVersion, 1) + _T(")"));
+  }
+  else {
+    SetItemText(serverItem, nameOf(serverModel->conn));
   }
 }
 

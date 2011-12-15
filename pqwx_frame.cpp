@@ -7,6 +7,7 @@
 #endif
 
 #include "wx/toolbar.h"
+#include "wx/aboutdlg.h"
 
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
@@ -70,20 +71,16 @@ void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-  wxMessageBox(wxString::Format(_T("Welcome to PQWX version %s\n")
-				_T("\n")
+  wxAboutDialogInfo info;
+  info.SetName(_T("PQWX"));
+  info.SetVersion(_T(PQWX_VERSION));
+  info.SetDescription(_T("PostgreSQL query tool"
 #ifdef PQWX_DEBUG
-				_T("This is a debug build.\n")
+			 _T(" - Debug build")
 #endif
-				_T("Using %s\n") _T("Running on %s."),
-				_T(PQWX_VERSION),
-				wxVERSION_STRING,
-				wxGetOsDescription().c_str()
-				),
-	       _T("About PQWX"),
-	       wxOK | wxICON_INFORMATION,
-	       this
-	       );
+			 ));
+  info.SetCopyright(_T("(c) 2011 Steve Haslam"));
+  wxAboutBox(info);
 }
 
 void PqwxFrame::OnNew(wxCommandEvent& event)

@@ -588,7 +588,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   else {
     wxLogDebug(_T("Found %d user relations, keeping all schemas folded"), userRelationCount);
     for (map<wxString, vector<RelationModel*> >::iterator iter = userSchemas.begin(); iter != userSchemas.end(); iter++) {
-      AppendSchemaItems(databaseItem, true, iter->first, iter->second);
+      AppendSchemaItems(databaseItem, iter->second.size() > 1, iter->first, iter->second);
     }
   }
 

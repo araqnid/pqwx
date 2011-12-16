@@ -42,6 +42,18 @@ public:
   bool hasDefault;
 };
 
+class IndexModel : public ObjectModel {
+public:
+  RelationModel *relation;
+  vector<wxString> columns;
+  wxString type;
+};
+
+class TriggerModel : public ObjectModel {
+public:
+  RelationModel *relation;
+};
+
 class SchemaMemberModel : public ObjectModel {
 public:
   DatabaseModel *database;
@@ -343,12 +355,20 @@ private:
   RelationModel *relationModel;
   wxTreeItemId relationItem;
   vector<ColumnModel*> columns;
+  vector<IndexModel*> indices;
+  vector<TriggerModel*> triggers;
 protected:
   void executeInTransaction(PGconn *conn) {
+    loadColumns(conn);
+    loadIndices(conn);
+    loadTriggers(conn);
+  }
+private:
+  void loadColumns(PGconn *conn) {
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    doQuery(conn, SQL(Columns), attributeRows, 23 /* int4 */, oidValue.utf8_str());
+    doQuery(conn, SQL(Columns), attributeRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -360,8 +380,29 @@ protected:
       columns.push_back(column);
     }
   }
+  void loadIndices(PGconn *conn) {
+    wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
+    QueryResults indexRows;
+    doQuery(conn, "SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered FROM pg_index JOIN pg_class ON pg_class.oid = pg_index.indexrelid WHERE indrelid = $1", indexRows, 26 /* oid */, oidValue.utf8_str());
+    for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
+      IndexModel *index = new IndexModel();
+      GET_TEXT(iter, 0, index->name);
+      indices.push_back(index);
+    }
+  }
+  void loadTriggers(PGconn *conn) {
+    wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
+    QueryResults triggerRows;
+    doQuery(conn, "SELECT tgname, tgfoid::regprocedure, tgenabled FROM pg_trigger WHERE tgrelid = $1 AND NOT tgisinternal", triggerRows, 26 /* oid */, oidValue.utf8_str());
+    for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
+      TriggerModel *trigger = new TriggerModel();
+      GET_TEXT(iter, 0, trigger->name);
+      triggers.push_back(trigger);
+    }
+  }
+protected:
   void loadResultsToGui(ObjectBrowser *ob) {
-    ob->FillInRelation(relationModel, relationItem, columns);
+    ob->FillInRelation(relationModel, relationItem, columns, indices, triggers);
     ob->Expand(relationItem);
 
     // remove 'loading...' tag
@@ -689,7 +730,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
   }
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns) {
+void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers) {
   for (vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
@@ -707,6 +748,22 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
+  }
+
+  if (!indices.empty()) {
+    wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
+    for (vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
+      wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
+      SetItemData(indexItem, *iter);
+    }
+  }
+
+  if (!triggers.empty()) {
+    wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
+    for (vector<TriggerModel*>::iterator iter = triggers.begin(); iter != triggers.end(); iter++) {
+      wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
+      SetItemData(triggerItem, *iter);
+    }
   }
 }
 

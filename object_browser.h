@@ -17,6 +17,8 @@ class DatabaseModel;
 class RoleModel;
 class RelationModel;
 class ColumnModel;
+class IndexModel;
+class TriggerModel;
 class FunctionModel;
 class SchemaMemberModel;
 
@@ -42,7 +44,7 @@ public:
 
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions);
 
-  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns);
+  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers);
 private:
   DECLARE_EVENT_TABLE();
   vector<ServerModel*> servers;

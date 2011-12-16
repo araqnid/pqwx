@@ -47,21 +47,33 @@ private:
 
 class DatabaseCommandWork : public DatabaseWork {
 public:
-  DatabaseCommandWork(const char *command) : command(command), successful(true) {}
+  DatabaseCommandWork(const char *command) : command(command), successful(true), paramType(0) {}
+  DatabaseCommandWork(const char *command, Oid argtype, const char *argvalue) : command(command), successful(true), paramType(paramType), paramValue(paramValue) {}
 private:
   const char *command;
+  Oid paramType;
+  const char *paramValue;
 public:
   bool successful;
   void execute(SqlLogger *logger, PGconn *conn) {
     logger->LogSql(command);
 
-    PGresult *rs = PQexec(conn, command);
-    if (!rs)
+    PGresult *rs;
+    if (paramType)
+      rs = PQexecParams(conn, command, 1, &paramType, &paramValue, NULL, NULL, 0);
+    else
+      rs = PQexec(conn, command);
+
+    if (!rs) {
+      fwprintf(stderr, _T("No result from PQexec!\n"));
       return;
+    }
 
     ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_COMMAND_OK)
+    if (status != PGRES_COMMAND_OK) {
+      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
       return;
+    }
 
     PQclear(rs);
 

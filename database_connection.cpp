@@ -17,8 +17,11 @@ public:
 class InitialiseWork : public DatabaseWork {
 public:
   void execute(SqlLogger *logger, PGconn *conn) {
-    DatabaseCommandWork encoding("SET client_encoding TO 'UTF8'");
-    encoding.execute(logger, conn);
+    int clientEncoding = PQclientEncoding(conn);
+    const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
+    if (strcmp(clientEncodingName, "UTF8") != 0) {
+      PQsetClientEncoding(conn, "UTF8");
+    }
     DatabaseCommandWork datestyle("SET DateStyle = 'ISO'");
     datestyle.execute(logger, conn);
   }

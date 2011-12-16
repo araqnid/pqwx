@@ -26,15 +26,17 @@ class ObjectBrowser : public wxTreeCtrl {
 public:
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
   ~ObjectBrowser() {
-    dispose();
+    Dispose();
   }
 
   void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
   void LoadRelation(wxTreeItemId parent, RelationModel *);
 
-  void dispose();
+  void Dispose();
 
+  DatabaseConnection* GetServerAdminConnection(ServerModel *server);
+  DatabaseConnection* GetDatabaseConnection(ServerModel *server, const wxString &dbname);
   void SubmitServerWork(ServerModel *server, DatabaseWork *work);
   void SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work);
 

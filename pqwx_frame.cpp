@@ -102,6 +102,6 @@ void PqwxFrame::OnOpen(wxCommandEvent& event)
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
-  objectBrowser->dispose();
+  objectBrowser->Dispose();
   Destroy();
 }

@@ -65,7 +65,7 @@ void ConnectDialogue::StartConnection() {
 
   wxASSERT(connection == NULL);
 
-  DatabaseConnection *db = server->getConnection();
+  DatabaseConnection *db = new DatabaseConnection(server, server->globalDbName);
   connection = new ConnectionWork(this, server, db);
   db->Connect(connection);
   MarkBusy();

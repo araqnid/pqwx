@@ -47,6 +47,7 @@ public:
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
   DatabaseConnectionState GetState();
   bool IsConnected();
+  wxString DbName() { return dbname; }
 private:
   void Setup();
   wxString identification;

@@ -97,11 +97,16 @@ public:
 
 class ServerModel : public wxTreeItemData {
 public:
+  ServerModel() {}
+  ServerModel(DatabaseConnection *db) {
+    connections[db->DbName()] = db;
+  }
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
   int majorVersion;
   int minorVersion;
   wxString versionSuffix;
+  map<wxString, DatabaseConnection*> connections;
   void SetVersion(int major, int minor, wxString suffix) {
     majorVersion = major;
     minorVersion = minor;
@@ -116,6 +121,15 @@ public:
   }
   bool versionNotBefore(int major, int minor) {
     return majorVersion > major || majorVersion == major && minorVersion >= minor;
+  }
+  void Dispose() {
+    wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
+    for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+      DatabaseConnection *db = iter->second;
+      wxLogDebug(_T(" Closing connection to %s"), iter->first.c_str());
+      db->CloseSync();
+    }
+    connections.clear();
   }
 };
 
@@ -461,7 +475,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
     }
   }
 
-  ServerModel *serverModel = new ServerModel();
+  ServerModel *serverModel = new ServerModel(db);
   serverModel->conn = server;
   servers.push_back(serverModel);
 
@@ -475,9 +489,25 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
   RefreshDatabaseList(serverItem);
 }
 
-void ObjectBrowser::dispose() {
-  for (std::vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    (*iter)->conn->CloseAllSync();
+DatabaseConnection *ObjectBrowser::GetServerAdminConnection(ServerModel *server) {
+  return GetDatabaseConnection(server, server->conn->globalDbName);
+}
+
+DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, const wxString &dbname) {
+  DatabaseConnection *db = server->connections[dbname];
+  if (db == NULL) {
+    wxLogDebug(_T("Allocating connection to %s database %s"), server->conn->Identification().c_str(), dbname.c_str());
+    db = new DatabaseConnection(server->conn, dbname);
+    server->connections[dbname] = db;
+  }
+  return db;
+}
+
+void ObjectBrowser::Dispose() {
+  wxLogDebug(_T("Disposing of ObjectBrowser"));
+  for (vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    ServerModel *server = *iter;
+    server->Dispose();
   }
 }
 
@@ -487,7 +517,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 }
 
 void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, DatabaseWork *work) {
-  DatabaseConnection *conn = serverModel->conn->getConnection();
+  DatabaseConnection *conn = GetServerAdminConnection(serverModel);
   // bodge
   if (!conn->IsConnected())
     conn->Connect();
@@ -536,7 +566,7 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 }
 
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
-  DatabaseConnection *conn = database->server->conn->getConnection(database->name);
+  DatabaseConnection *conn = GetDatabaseConnection(database->server, database->name);
   // bodge
   if (!conn->IsConnected())
     conn->Connect();

@@ -16,41 +16,12 @@ public:
     port = -1;
   }
 
-  void CloseAllSync() {
-    wxLogDebug(_T("%p: Closing all database connections for this server"), this);
-    for (std::map<std::string,DatabaseConnection*>::iterator iter = databaseConnections.begin(); iter != databaseConnections.end(); iter++) {
-      iter->second->CloseSync();
-      delete iter->second;
-    }
-    databaseConnections.clear();
-  }
-
   // connection parameters
   wxString hostname;
   int port;
   wxString username;
   wxString password;
   const wxString globalDbName;
-
-  DatabaseConnection *getConnection(const wxString& dbname) {
-    std::string key(dbname.utf8_str());
-    DatabaseConnection *conn = databaseConnections[key];
-
-    if (conn) {
-      return conn;
-    }
-
-    wxLogDebug(_T("%p: Opening new connection for database '%s'"), this, dbname.c_str());
-
-    conn = new DatabaseConnection(this, dbname);
-    databaseConnections[key] = conn;
-
-    return conn;
-  }
-
-  DatabaseConnection *getConnection() {
-    return getConnection(globalDbName);
-  }
 
   void SetServerName(wxString& serverName) {
     int colon = serverName.Find(_T(':'));
@@ -89,8 +60,6 @@ public:
   }
 
 private:
-  std::map<std::string, DatabaseConnection*> databaseConnections;
-  DatabaseConnection *makeConnection(const char *dbname);
   wxString identification;
 };
 

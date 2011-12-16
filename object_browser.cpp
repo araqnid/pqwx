@@ -635,12 +635,12 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   }
 
   for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = userSchemas.begin(); iter != userSchemas.end(); iter++) {
-    AppendSchemaMembers(databaseItem, foldUserSchemas, iter->first, iter->second);
+    AppendSchemaMembers(databaseItem, foldUserSchemas && iter->second.size() > 1, iter->first, iter->second);
   }
 
   wxTreeItemId systemSchemaMember = AppendItem(databaseItem, _("System schemas"));
   for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = systemSchemas.begin(); iter != systemSchemas.end(); iter++) {
-    AppendSchemaMembers(systemSchemaMember, true, iter->first, iter->second);
+    AppendSchemaMembers(systemSchemaMember, iter->second.size() > 1, iter->first, iter->second);
   }
 }
 

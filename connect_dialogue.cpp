@@ -15,9 +15,8 @@ BEGIN_EVENT_TABLE(ConnectDialogue, wxDialog)
   EVT_BUTTON(wxID_CANCEL, ConnectDialogue::OnCancel)
 END_EVENT_TABLE()
 
-void ConnectDialogue::OnConnect(wxCommandEvent &event) {
+void ConnectDialogue::StartConnection() {
   ServerConnection *conn = new ServerConnection();
-
   wxString username = usernameInput->GetValue();
   wxString password = passwordInput->GetValue();
   wxString hostname = hostnameInput->GetValue();
@@ -37,4 +36,11 @@ void ConnectDialogue::OnConnect(wxCommandEvent &event) {
 
 void ConnectDialogue::OnCancel(wxCommandEvent &event) {
   Destroy();
+}
+
+void ConnectDialogue::DoInitialConnection(const wxString& server, const wxString& user, const wxString& password) {
+  hostnameInput->SetValue(server);
+  usernameInput->SetValue(user);
+  passwordInput->SetValue(password);
+  StartConnection();
 }

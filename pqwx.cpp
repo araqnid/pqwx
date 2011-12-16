@@ -9,7 +9,6 @@
 #include "wx/cmdline.h"
 #include "wx/xrc/xmlres.h"
 #include "pqwx_frame.h"
-#include "server_connection.h"
 #include "connect_dialogue.h"
 
 extern void InitXmlResource(void);
@@ -20,7 +19,10 @@ public:
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
 private:
-  ServerConnection *initialConnection;
+  bool haveInitial;
+  wxString initialServer;
+  wxString initialUser;
+  wxString initialPassword;
 };
 
 IMPLEMENT_APP(PQWXApp)
@@ -36,11 +38,10 @@ bool PQWXApp::OnInit()
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
-  if (initialConnection)
-    frame->objectBrowser->AddServerConnection(initialConnection);
-  else {
-    wxDialog *connect = new ConnectDialogue(NULL, frame->objectBrowser);
-    connect->Show();
+  ConnectDialogue *connect = new ConnectDialogue(NULL, frame->objectBrowser);
+  connect->Show();
+  if (haveInitial) {
+    connect->DoInitialConnection(initialServer, initialUser, initialPassword);
   }
 
   return true;
@@ -54,33 +55,16 @@ void PQWXApp::OnInitCmdLine(wxCmdLineParser &parser) {
 }
 
 bool PQWXApp::OnCmdLineParsed(wxCmdLineParser &parser) {
-  wxString server, user, password;
-  bool haveInitial = false;
+  haveInitial = false;
 
-  if (parser.Found(_T("S"), &server)) {
+  if (parser.Found(_T("S"), &initialServer)) {
     haveInitial = true;
   }
-  if (parser.Found(_T("U"), &user)) {
+  if (parser.Found(_T("U"), &initialUser)) {
     haveInitial = true;
   }
-  if (parser.Found(_T("P"), &password)) {
+  if (parser.Found(_T("P"), &initialPassword)) {
     haveInitial = true;
-  }
-
-  if (haveInitial) {
-    initialConnection = new ServerConnection();
-    if (!server.IsEmpty()) {
-      initialConnection->SetServerName(server);
-    }
-    if (!user.IsEmpty()) {
-      initialConnection->username = strdup(user.utf8_str());
-    }
-    if (!password.IsEmpty()) {
-      initialConnection->password = strdup(password.utf8_str());
-    }
-  }
-  else {
-    initialConnection = NULL;
   }
 
   return true;

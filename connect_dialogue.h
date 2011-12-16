@@ -13,8 +13,12 @@ public:
     InitXRC(parent);
   }
 
-  void OnConnect(wxCommandEvent& event);
+  void OnConnect(wxCommandEvent& event) {
+    StartConnection();
+  }
   void OnCancel(wxCommandEvent& event);
+
+  void DoInitialConnection(const wxString& server, const wxString& user, const wxString& password);
 
 protected:
   wxComboBox* hostnameInput;
@@ -31,6 +35,7 @@ private:
     passwordInput = XRCCTRL(*this, "password_value", wxTextCtrl);
     savePasswordInput = XRCCTRL(*this, "save_password_value", wxCheckBox);
   }
+  void StartConnection();
   DECLARE_EVENT_TABLE();
 };
 

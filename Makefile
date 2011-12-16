@@ -34,7 +34,12 @@ resources.cpp: $(XRC)
 resources.h: $(XRC)
 	wxrc -c -e -o $*.cpp $(XRC)
 
+object_browser_sql.h: object_browser.sql
+	./format_sql_header $^ $@
+
+object_browser.o: object_browser_sql.h
+
 clean:
-	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h resources.cpp
+	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h
 
 .PHONY: FORCE

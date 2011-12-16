@@ -7,3 +7,4 @@ pqwx_version.h
 core
 resources.h
 resources.cpp
+object_browser_sql.h

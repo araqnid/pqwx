@@ -1,0 +1,68 @@
+#!/usr/bin/perl
+
+require 5;
+use strict;
+use warnings;
+use utf8;
+use Getopt::Std;
+
+getopts('') or die "Syntax: $0 [infile [outfile]]";
+
+sub c_escape {
+    my $str = shift;
+    our %escape = ( "\"" => "\\\"", "\r" => "\\r", "\n" => "\\n", "\t" => "\\t", "\\" => "\\\\" );
+    $str =~ s/([\"\r\n\t\\])/$escape{$1}/ge;
+    return $str;
+}
+
+sub collapse_sql {
+    my $sql = shift;
+    $sql =~ s{-- (.+)}{/* $1 */};
+    $sql =~ s{\s+}{ }g;
+    return $sql;
+}
+
+sub flush_sql {
+    my($output, $tag, $buffer) = @_;
+    $buffer =~ s/\n+$//;
+    $buffer =~ s/^\n+//;
+    print $output "// $tag->[0] line $tag->[1]\n";
+    print $output "#define _SQL__$tag->[0] \"".c_escape(collapse_sql($buffer))."\"\n";
+}
+
+sub process_header {
+    my $input = shift;
+    my $output = shift;
+
+    my $tag;
+    my $buffer;
+    my $line = 0;
+    while (<$input>) {
+	++$line;
+	if (/^-- SQL :: (.+)/) {
+	    flush_sql($output, $tag, $buffer) if ($tag);
+	    $tag = [$1, $line];
+	    $buffer = '';
+	}
+	elsif ($tag) {
+	    $buffer .= $_;
+	}
+    }
+    flush_sql($output, $tag, $buffer) if ($tag);
+}
+
+if (@ARGV == 0) {
+    process_header(\*STDIN, \*STDOUT);
+}
+else {
+    my $infilename = shift;
+    open my $input, '<', $infilename or die "Unable to read '$infilename': $!\n";
+    my $outfilename = shift;
+    if (!$outfilename) {
+	$outfilename = $infilename;
+	$infilename =~ s/\.sql$/_sql/;
+	$outfilename .= ".h";
+    }
+    open my $output, '>', $outfilename or die "Unable to write '$outfilename': $!\n";
+    process_header($input, $output);
+}

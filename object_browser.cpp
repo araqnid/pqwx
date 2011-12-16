@@ -11,7 +11,10 @@
 #include <set>
 
 #include "object_browser.h"
+#include "object_browser_sql.h"
 #include "pqwx_frame.h"
+
+#define SQL(t) _SQL__##t
 
 const int EVENT_WORK_FINISHED = 10000;
 
@@ -218,12 +221,12 @@ private:
   wxString serverVersion;
   void loadServer(PGconn *conn) {
     QueryResults serverRows;
-    doQuery(conn, "SELECT version()", serverRows);
+    doQuery(conn, SQL(Server), serverRows);
     serverVersion = serverRows[0][0];
   }
   void loadDatabases(PGconn *conn) {
     QueryResults databaseRows;
-    doQuery(conn, "SELECT pg_database.oid, datname, datistemplate, datallowconn, has_database_privilege(pg_database.oid, 'connect') AS can_connect, pg_shdescription.description FROM pg_database LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_database'::regclass AND pg_shdescription.objoid = pg_database.oid", databaseRows);
+    doQuery(conn, SQL(Databases), databaseRows);
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -238,7 +241,7 @@ private:
   }
   void loadRoles(PGconn *conn) {
     QueryResults roleRows;
-    doQuery(conn, "SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper, pg_shdescription.description FROM pg_roles LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_authid'::regclass AND pg_shdescription.objoid = pg_roles.oid", roleRows);
+    doQuery(conn, SQL(Roles), roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       GET_OID(iter, 0, role->oid);
@@ -280,7 +283,7 @@ protected:
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    doQuery(conn, "SELECT pg_class.oid, nspname, relname, relkind, pg_description.description FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class LEFT JOIN pg_description ON pg_description.classoid = 'pg_class'::regclass AND pg_description.objoid = pg_class.oid AND pg_description.objsubid = 0 RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relationRows);
+    doQuery(conn, SQL(Relations), relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
@@ -302,7 +305,7 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    doQuery(conn, "SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure, CASE WHEN proretset THEN 'fs' WHEN prorettype = 'trigger'::regtype THEN 'ft' WHEN proisagg THEN 'fa' WHEN proiswindow THEN 'fw' ELSE 'f' END, pg_description.description FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass AND pg_description.objoid = pg_proc.oid", functionRows);
+    doQuery(conn, SQL(Functions), functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -339,7 +342,7 @@ protected:
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    doQuery(conn, "SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef, pg_description.description FROM pg_attribute LEFT JOIN pg_description ON pg_description.classoid = 'pg_attribute'::regclass AND pg_description.objoid = pg_attribute.attrelid AND pg_description.objsubid = pg_attribute.attnum WHERE attrelid = $1 AND NOT attisdropped AND attnum > 0 ORDER BY attnum", attributeRows, 23 /* int4 */, oidValue.utf8_str());
+    doQuery(conn, SQL(Columns), attributeRows, 23 /* int4 */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;

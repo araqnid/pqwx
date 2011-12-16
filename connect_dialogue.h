@@ -7,10 +7,14 @@
 
 #include "object_browser.h"
 
+class ConnectionWork;
+
 class ConnectDialogue : public wxDialog {
 public:
   ConnectDialogue(wxWindow *parent, ObjectBrowser *objectBrowser) : wxDialog(), objectBrowser(objectBrowser) {
     InitXRC(parent);
+    connection = NULL;
+    cancelling = false;
   }
 
   void OnConnect(wxCommandEvent& event) {
@@ -22,10 +26,12 @@ public:
   void DoInitialConnection(const wxString& server, const wxString& user, const wxString& password);
 
 protected:
-  wxComboBox* hostnameInput;
-  wxComboBox* usernameInput;
-  wxTextCtrl* passwordInput;
-  wxCheckBox* savePasswordInput;
+  wxComboBox *hostnameInput;
+  wxComboBox *usernameInput;
+  wxTextCtrl *passwordInput;
+  wxCheckBox *savePasswordInput;
+  wxButton *okButton;
+  wxButton *cancelButton;
 
 private:
   ObjectBrowser *objectBrowser;
@@ -35,8 +41,14 @@ private:
     usernameInput = XRCCTRL(*this, "username_value", wxComboBox);
     passwordInput = XRCCTRL(*this, "password_value", wxTextCtrl);
     savePasswordInput = XRCCTRL(*this, "save_password_value", wxCheckBox);
+    okButton = XRCCTRL(*this, "wxID_OK", wxButton);
+    cancelButton = XRCCTRL(*this, "wxID_CANCEL", wxButton);
   }
   void StartConnection();
+  void MarkBusy();
+  void UnmarkBusy();
+  ConnectionWork *connection;
+  bool cancelling;
   DECLARE_EVENT_TABLE();
 };
 

@@ -63,11 +63,23 @@ void ConnectDialogue::StartConnection() {
     server->SetServerName(hostname);
   }
 
+  wxASSERT(connection == NULL);
+
   DatabaseConnection *db = server->getConnection();
-  db->Connect(new ConnectionWork(this, server, db));
+  connection = new ConnectionWork(this, server, db);
+  db->Connect(connection);
+  MarkBusy();
 }
 
 void ConnectDialogue::OnCancel(wxCommandEvent &event) {
+  cancelButton->Disable();
+  cancelling = true;
+  if (connection != NULL) {
+    // TODO this merely waits (synchronously!) for the connection attempt to end, instead of actively cancelling it
+    connection->db->CloseSync();
+    delete connection;
+    connection = NULL;
+  }
   Destroy();
 }
 
@@ -80,6 +92,9 @@ void ConnectDialogue::DoInitialConnection(const wxString& server, const wxString
 
 void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
   ConnectionWork *work = static_cast<ConnectionWork*>(event.GetClientData());
+  UnmarkBusy();
+  if (cancelling)
+    return;
 
   if (work->state == ConnectionWork::CONNECTED) {
     objectBrowser->AddServerConnection(work->server, work->db);
@@ -93,4 +108,23 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
   }
 
   delete work;
+  connection = NULL;
+}
+
+void ConnectDialogue::MarkBusy() {
+  usernameInput->Disable();
+  passwordInput->Disable();
+  hostnameInput->Disable();
+  savePasswordInput->Disable();
+  okButton->Disable();
+  wxBeginBusyCursor();
+}
+
+void ConnectDialogue::UnmarkBusy() {
+  usernameInput->Enable();
+  passwordInput->Enable();
+  hostnameInput->Enable();
+  savePasswordInput->Enable();
+  okButton->Enable();
+  wxEndBusyCursor();
 }

@@ -450,7 +450,17 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
-  // TODO - check if server already in list
+  wxString serverId = server->Identification();
+  for (vector<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    ServerModel *serverModel = *iter;
+    if (serverModel->conn->Identification().IsSameAs(serverId)) {
+      wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
+      db->CloseSync();
+      delete db;
+      return;
+    }
+  }
+
   ServerModel *serverModel = new ServerModel();
   serverModel->conn = server;
   servers.push_back(serverModel);

@@ -54,6 +54,18 @@ FROM pg_proc
      LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass
                                  AND pg_description.objoid = pg_proc.oid
 
+-- SQL :: Functions83
+SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
+       CASE WHEN proretset THEN 'fs'
+            WHEN prorettype = 'trigger'::regtype THEN 'ft'
+            WHEN proisagg THEN 'fa'
+            ELSE 'f' END,
+       pg_description.description
+FROM pg_proc
+     JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
+     LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass
+                                 AND pg_description.objoid = pg_proc.oid
+
 -- SQL :: Columns
 SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef,
        pg_description.description

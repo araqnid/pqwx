@@ -102,6 +102,9 @@ public:
     }
     return NULL;
   }
+  bool versionNotBefore(int major, int minor) {
+    return majorVersion > major || majorVersion == major && minorVersion >= minor;
+  }
 };
 
 class ObjectBrowserWork : public DatabaseWork {
@@ -305,7 +308,10 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    doQuery(conn, SQL(Functions), functionRows);
+    if (databaseModel->server->versionNotBefore(8,4))
+      doQuery(conn, SQL(Functions), functionRows);
+    else
+      doQuery(conn, SQL(Functions83), functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;

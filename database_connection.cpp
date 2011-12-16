@@ -55,7 +55,9 @@ void DatabaseConnection::Setup() {
   identification = server->Identification() + _T(" ") + dbname;
 }
 
-void DatabaseConnection::Connect() {
+void DatabaseConnection::Connect(ConnectionCallback *callback) {
+  connectionCallback = callback;
+
   wxCriticalSectionLocker enter(workerThreadPointer);
   wxASSERT(workerThread == NULL);
   workerThread = new DatabaseWorkerThread(this);
@@ -155,15 +157,22 @@ bool DatabaseWorkerThread::Connect() {
 
   if (status == CONNECTION_OK) {
     db->LogConnect();
+    if (db->connectionCallback)
+      db->connectionCallback->OnConnection();
     return true;
   }
   else if (PQconnectionNeedsPassword(conn)) {
     db->LogConnectNeedsPassword();
+    if (db->connectionCallback)
+      db->connectionCallback->OnConnectionNeedsPassword();
     PQfinish(conn);
     return false;
   }
   else {
-    db->LogConnectFailed(PQerrorMessage(conn));
+    const char *errorMessage = PQerrorMessage(conn);
+    db->LogConnectFailed(errorMessage);
+    if (db->connectionCallback)
+      db->connectionCallback->OnConnectionFailed(wxString(errorMessage, wxConvUTF8));
     PQfinish(conn);
     return false;
   }

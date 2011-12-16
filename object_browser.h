@@ -29,7 +29,7 @@ public:
     dispose();
   }
 
-  void AddServerConnection(ServerConnection *conn);
+  void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
   void LoadRelation(wxTreeItemId parent, RelationModel *);
 

@@ -10,28 +10,61 @@
 #include "connect_dialogue.h"
 #include "server_connection.h"
 
+const int EVENT_CONNECTION_FINISHED = 10000;
+
 BEGIN_EVENT_TABLE(ConnectDialogue, wxDialog)
   EVT_BUTTON(wxID_OK, ConnectDialogue::OnConnect)
   EVT_BUTTON(wxID_CANCEL, ConnectDialogue::OnCancel)
+  EVT_COMMAND(EVENT_CONNECTION_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ConnectDialogue::OnConnectionFinished)
 END_EVENT_TABLE()
 
+class ConnectionWork : public ConnectionCallback {
+public:
+  ConnectionWork(ConnectDialogue *owner, ServerConnection *server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
+  void OnConnection() {
+    state = CONNECTED;
+    notifyFinished();
+  }
+  void OnConnectionFailed(const wxString &errorMessage_) {
+    state = FAILED;
+    errorMessage = errorMessage_;
+    notifyFinished();
+  }
+  void OnConnectionNeedsPassword() {
+    state = NEEDS_PASSWORD;
+    notifyFinished();
+  }
+  enum { CONNECTED, FAILED, NEEDS_PASSWORD } state;
+  wxString errorMessage;
+private:
+  void notifyFinished() {
+    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_CONNECTION_FINISHED);
+    event.SetClientData(this);
+    owner->AddPendingEvent(event);
+  }
+  ConnectDialogue *owner;
+  ServerConnection *server;
+  DatabaseConnection *db;
+  friend class ConnectDialogue;
+};
+
 void ConnectDialogue::StartConnection() {
-  ServerConnection *conn = new ServerConnection();
+  ServerConnection *server = new ServerConnection();
   wxString username = usernameInput->GetValue();
   wxString password = passwordInput->GetValue();
   wxString hostname = hostnameInput->GetValue();
   if (!username.IsEmpty()) {
-    conn->username = username;
+    server->username = username;
   }
   if (!password.IsEmpty()) {
-    conn->password = password;
+    server->password = password;
   }
   if (!hostname.IsEmpty()) {
-    conn->SetServerName(hostname);
+    server->SetServerName(hostname);
   }
 
-  objectBrowser->AddServerConnection(conn);
-  Destroy();
+  DatabaseConnection *db = server->getConnection();
+  db->Connect(new ConnectionWork(this, server, db));
 }
 
 void ConnectDialogue::OnCancel(wxCommandEvent &event) {
@@ -43,4 +76,21 @@ void ConnectDialogue::DoInitialConnection(const wxString& server, const wxString
   usernameInput->SetValue(user);
   passwordInput->SetValue(password);
   StartConnection();
+}
+
+void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
+  ConnectionWork *work = static_cast<ConnectionWork*>(event.GetClientData());
+
+  if (work->state == ConnectionWork::CONNECTED) {
+    objectBrowser->AddServerConnection(work->server, work->db);
+    Destroy();
+  }
+  else if (work->state == ConnectionWork::NEEDS_PASSWORD) {
+    wxLogError(_("You must enter a password to connect to this server."), work->errorMessage.c_str());
+  }
+  else if (work->state == ConnectionWork::FAILED) {
+    wxLogError(_("Connection to server failed.\n\n%s"), work->errorMessage.c_str());
+  }
+
+  delete work;
 }

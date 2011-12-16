@@ -17,6 +17,7 @@ public:
     StartConnection();
   }
   void OnCancel(wxCommandEvent& event);
+  void OnConnectionFinished(wxCommandEvent& event);
 
   void DoInitialConnection(const wxString& server, const wxString& user, const wxString& password);
 

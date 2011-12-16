@@ -449,16 +449,17 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   AddRoot(_T("root"));
 }
 
-void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
+void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
+  // TODO - check if server already in list
   ServerModel *serverModel = new ServerModel();
-  serverModel->conn = conn;
+  serverModel->conn = server;
   servers.push_back(serverModel);
 
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
-  wxLogDebug(_T("Connection added to object browser: %s"), conn->Identification().c_str());
-  wxTreeItemId serverItem = AppendItem(GetRootItem(), conn->Identification());
-  SetItemText(serverItem, conn->Identification());
+  wxLogDebug(_T("Connection added to object browser: %s"), server->Identification().c_str());
+  wxTreeItemId serverItem = AppendItem(GetRootItem(), server->Identification());
+  SetItemText(serverItem, server->Identification());
   SetItemData(serverItem, serverModel);
 
   RefreshDatabaseList(serverItem);

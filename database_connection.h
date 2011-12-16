@@ -21,15 +21,23 @@ enum DatabaseConnectionState {
 class DatabaseWorkerThread;
 class ServerConnection;
 
+class ConnectionCallback {
+public:
+  virtual void OnConnection() = 0;
+  virtual void OnConnectionFailed(const wxString &message) = 0;
+  virtual void OnConnectionNeedsPassword() = 0;
+};
+
 class DatabaseConnection : public SqlLogger {
 public:
   DatabaseConnection(ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workConditionMutex) {
     workerThread = NULL;
+    connectionCallback = NULL;
     Setup();
   }
   ~DatabaseConnection();
 
-  void Connect();
+  void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();
   void AddWork(DatabaseWork*);
   void LogSql(const char *sql);
@@ -49,6 +57,7 @@ private:
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
   wxCondition workCondition;
+  ConnectionCallback *connectionCallback;
 
   bool AddWorkOnlyIfConnected(DatabaseWork*);
 

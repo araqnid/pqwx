@@ -13,10 +13,7 @@
 class ServerConnection {
 public:
   ServerConnection() : globalDbName(_T("postgres")) {
-    hostname = NULL;
-    username = NULL;
     port = -1;
-    password = NULL;
   }
 
   void CloseAllSync() {
@@ -28,10 +25,10 @@ public:
   }
 
   // connection parameters
-  const char *hostname;
+  wxString hostname;
   int port;
-  const char *username;
-  const char *password;
+  wxString username;
+  wxString password;
   const wxString globalDbName;
 
   DatabaseConnection *getConnection(const wxString& dbname) {
@@ -57,20 +54,43 @@ public:
   void SetServerName(wxString& serverName) {
     int colon = serverName.Find(_T(':'));
     if (colon == wxNOT_FOUND) {
-      hostname = strdup(serverName.utf8_str());
+      hostname = serverName;
     }
     else {
       if (colon > 0)
-	hostname = strdup(serverName.Mid(0, colon).utf8_str());
-      port = atoi(serverName.Mid(colon+1).utf8_str());
-      if (port == DEF_PGPORT)
+	hostname = serverName.Mid(0, colon);
+      unsigned long portUL;
+      serverName.Mid(colon+1).ToULong(&portUL);
+      if (portUL == DEF_PGPORT)
 	port = 0;
+      else
+	port = portUL;
     }
+  }
+
+  const wxString& Identification() {
+    if (identification.IsEmpty()) {
+      if (!username.IsEmpty()) {
+	identification << username << _T('@');
+      }
+      if (!hostname.IsEmpty()) {
+	identification << hostname;
+      }
+      else {
+	identification << _T("[local]");
+      }
+      if (port > 0) {
+	identification << _T(":") << wxString::Format(_T("%d"), port);
+      }
+      wxLogDebug(_T("Generated server identification: %s"), identification.c_str());
+    }
+    return identification;
   }
 
 private:
   std::map<std::string, DatabaseConnection*> databaseConnections;
   DatabaseConnection *makeConnection(const char *dbname);
+  wxString identification;
 };
 
 #endif

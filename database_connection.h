@@ -25,7 +25,7 @@ class DatabaseConnection : public SqlLogger {
 public:
   DatabaseConnection(ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workConditionMutex) {
     workerThread = NULL;
-    setup();
+    Setup();
   }
   ~DatabaseConnection();
 
@@ -41,8 +41,8 @@ public:
   DatabaseConnectionState GetState();
   bool IsConnected();
 private:
-  void setup();
-  char identification[400];
+  void Setup();
+  wxString identification;
   ServerConnection *server;
   const wxString dbname;
   DatabaseWorkerThread *workerThread;

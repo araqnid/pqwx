@@ -449,23 +449,6 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   AddRoot(_T("root"));
 }
 
-static wxString nameOf(ServerConnection *conn) {
-  wxString serverItemName;
-  if (conn->username != NULL) {
-    serverItemName << wxString(conn->username, wxConvUTF8) << wxT('@');
-  }
-  if (conn->hostname != NULL) {
-    serverItemName << wxString(conn->hostname, wxConvUTF8);
-  }
-  else {
-    serverItemName << _("[local]");
-  }
-  if (conn->port > 0) {
-    serverItemName << wxT(":") << wxString::Format(wxT("%d"), conn->port);
-  }
-  return serverItemName;
-}
-
 void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
   ServerModel *serverModel = new ServerModel();
   serverModel->conn = conn;
@@ -473,10 +456,9 @@ void ObjectBrowser::AddServerConnection(ServerConnection *conn) {
 
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
-  wxString connName = nameOf(conn);
-  wxLogDebug(_T("Connection added to object browser: %s"), connName.c_str());
-  wxTreeItemId serverItem = AppendItem(GetRootItem(), connName);
-  SetItemText(serverItem, connName);
+  wxLogDebug(_T("Connection added to object browser: %s"), conn->Identification().c_str());
+  wxTreeItemId serverItem = AppendItem(GetRootItem(), conn->Identification());
+  SetItemText(serverItem, conn->Identification());
   SetItemData(serverItem, serverModel);
 
   RefreshDatabaseList(serverItem);
@@ -555,10 +537,10 @@ void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverIt
     serverModel->SetVersion(atoi(serverVersionRegex.GetMatch(serverVersion, 2).utf8_str()),
 			    atoi(serverVersionRegex.GetMatch(serverVersion, 3).utf8_str()),
 			    serverVersionRegex.GetMatch(serverVersion, 4));
-    SetItemText(serverItem, nameOf(serverModel->conn) + _T(" (") + serverVersionRegex.GetMatch(serverVersion, 1) + _T(")"));
+    SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionRegex.GetMatch(serverVersion, 1) + _T(")"));
   }
   else {
-    SetItemText(serverItem, nameOf(serverModel->conn));
+    SetItemText(serverItem, serverModel->conn->Identification());
   }
 }
 

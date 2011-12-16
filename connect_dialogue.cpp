@@ -21,10 +21,10 @@ void ConnectDialogue::StartConnection() {
   wxString password = passwordInput->GetValue();
   wxString hostname = hostnameInput->GetValue();
   if (!username.IsEmpty()) {
-    conn->username = strdup(username.utf8_str());
+    conn->username = username;
   }
   if (!password.IsEmpty()) {
-    conn->password = strdup(password.utf8_str());
+    conn->password = password;
   }
   if (!hostname.IsEmpty()) {
     conn->SetServerName(hostname);

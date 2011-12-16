@@ -35,7 +35,6 @@ public:
     connectionCallback = NULL;
     Setup();
   }
-  ~DatabaseConnection();
 
   void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();

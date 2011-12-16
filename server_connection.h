@@ -20,6 +20,7 @@ public:
     wxLogDebug(_T("%p: Closing all database connections for this server"), this);
     for (std::map<std::string,DatabaseConnection*>::iterator iter = databaseConnections.begin(); iter != databaseConnections.end(); iter++) {
       iter->second->CloseSync();
+      delete iter->second;
     }
     databaseConnections.clear();
   }

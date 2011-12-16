@@ -17,6 +17,7 @@ const int EVENT_WORK_FINISHED = 10000;
 
 BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
+  EVT_TREE_ITEM_GETTOOLTIP(Pqwx_ObjectBrowser, ObjectBrowser::OnGetTooltip)
   EVT_COMMAND(EVENT_WORK_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ObjectBrowser::OnWorkFinished)
 END_EVENT_TABLE()
 
@@ -24,21 +25,25 @@ typedef std::vector< std::vector<wxString> > QueryResults;
 
 static wxRegEx serverVersionRegex(wxT("^([^ ]+ ([0-9]+)\\.([0-9]+)([0-9.a-z]*))"));
 
-class ColumnModel : public wxTreeItemData {
+class ObjectModel : public wxTreeItemData {
+public:
+  wxString name;
+  wxString description;
+};
+
+class ColumnModel : public ObjectModel {
 public:
   RelationModel *relation;
-  wxString name;
   wxString type;
   bool nullable;
   bool hasDefault;
 };
 
-class SchemaMemberModel : public wxTreeItemData {
+class SchemaMemberModel : public ObjectModel {
 public:
   DatabaseModel *database;
   unsigned long oid;
   wxString schema;
-  wxString name;
   bool user;
 };
 
@@ -53,13 +58,12 @@ public:
   enum Type { SCALAR, RECORDSET, TRIGGER, AGGREGATE, WINDOW } type;
 };
 
-class DatabaseModel : public wxTreeItemData {
+class DatabaseModel : public ObjectModel {
 public:
   unsigned long oid;
   bool isTemplate;
   bool allowConnections;
   bool havePrivsToConnect;
-  wxString name;
   ServerModel *server;
   bool IsUsable() {
     return allowConnections && havePrivsToConnect;
@@ -69,12 +73,11 @@ public:
   }
 };
 
-class RoleModel : public wxTreeItemData {
+class RoleModel : public ObjectModel {
 public:
   unsigned long oid;
-  bool isSuperuser;
+  bool superuser;
   bool canLogin;
-  wxString name;
 };
 
 class ServerModel : public wxTreeItemData {
@@ -183,10 +186,11 @@ private:
   wxEvtHandler *dest;
 };
 
-#define GET_OID(iter, index, result) (*iter)[index].ToULong(&(result))
-#define GET_BOOLEAN(iter, index, result) result = (*iter)[index].IsSameAs(_T("t"))
-#define GET_TEXT(iter, index, result) result = (*iter)[index]
-#define GET_INT4(iter, index, result) (*iter)[index].ToULong(&(result))
+#define CHECK_INDEX(iter, index) wxASSERT(index < (*iter).size())
+#define GET_OID(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
+#define GET_BOOLEAN(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index].IsSameAs(_T("t"))
+#define GET_TEXT(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index]
+#define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
 
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
@@ -219,7 +223,7 @@ private:
   }
   void loadDatabases(PGconn *conn) {
     QueryResults databaseRows;
-    doQuery(conn, "SELECT oid, datname, datistemplate, datallowconn, has_database_privilege(oid, 'connect') AS can_connect FROM pg_database", databaseRows);
+    doQuery(conn, "SELECT pg_database.oid, datname, datistemplate, datallowconn, has_database_privilege(pg_database.oid, 'connect') AS can_connect, pg_shdescription.description FROM pg_database LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_database'::regclass AND pg_shdescription.objoid = pg_database.oid", databaseRows);
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -228,18 +232,20 @@ private:
       GET_BOOLEAN(iter, 2, database->isTemplate);
       GET_BOOLEAN(iter, 3, database->allowConnections);
       GET_BOOLEAN(iter, 4, database->havePrivsToConnect);
+      GET_TEXT(iter, 5, database->description);
       databases.push_back(database);
     }
   }
   void loadRoles(PGconn *conn) {
     QueryResults roleRows;
-    doQuery(conn, "SELECT oid, rolname, rolcanlogin, rolsuper FROM pg_roles", roleRows);
+    doQuery(conn, "SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper, pg_shdescription.description FROM pg_roles LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_authid'::regclass AND pg_shdescription.objoid = pg_roles.oid", roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       GET_OID(iter, 0, role->oid);
       GET_TEXT(iter, 1, role->name);
       GET_BOOLEAN(iter, 2, role->canLogin);
-      GET_BOOLEAN(iter, 3, role->isSuperuser);
+      GET_BOOLEAN(iter, 3, role->superuser);
+      GET_TEXT(iter, 4, role->description);
       roles.push_back(role);
     }
   }
@@ -270,21 +276,22 @@ protected:
   }
   void loadRelations(PGconn *conn) {
     QueryResults relationRows;
-    doQuery(conn, "SELECT pg_class.oid, nspname, relname, relkind FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relationRows);
+    map<wxString, RelationModel::Type> typemap;
+    typemap[_T("r")] = RelationModel::TABLE;
+    typemap[_T("v")] = RelationModel::VIEW;
+    typemap[_T("S")] = RelationModel::SEQUENCE;
+    doQuery(conn, "SELECT pg_class.oid, nspname, relname, relkind, pg_description.description FROM (SELECT oid, relname, relkind, relnamespace FROM pg_class WHERE relkind IN ('r','v') OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))) pg_class LEFT JOIN pg_description ON pg_description.classoid = 'pg_class'::regclass AND pg_description.objoid = pg_class.oid AND pg_description.objsubid = 0 RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace", relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
-      (*iter)[0].ToULong(&(relation->oid));
-      relation->schema = (*iter)[1];
-      relation->name = (*iter)[2];
-      wxString relkind = (*iter)[3];
-      if (relkind.IsSameAs(_("r")))
-	relation->type = RelationModel::TABLE;
-      else if (relkind.IsSameAs(_("v")))
-	relation->type = RelationModel::VIEW;
-      else if (relkind.IsSameAs(_("S")))
-	relation->type = RelationModel::SEQUENCE;
+      GET_OID(iter, 0, relation->oid);
+      GET_TEXT(iter, 1, relation->schema);
+      GET_TEXT(iter, 2, relation->name);
+      wxString relkind;
+      GET_TEXT(iter, 3, relkind);
+      relation->type = typemap[relkind];
       relation->user = !systemSchema(relation->schema);
+      GET_TEXT(iter, 4, relation->description);
       relations.push_back(relation);
     }
   }
@@ -295,7 +302,7 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    doQuery(conn, "SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure, CASE WHEN proretset THEN 'fs' WHEN prorettype = 'trigger'::regtype THEN 'ft' WHEN proisagg THEN 'fa' WHEN proiswindow THEN 'fw' ELSE 'f' END FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace", functionRows);
+    doQuery(conn, "SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure, CASE WHEN proretset THEN 'fs' WHEN prorettype = 'trigger'::regtype THEN 'ft' WHEN proisagg THEN 'fa' WHEN proiswindow THEN 'fw' ELSE 'f' END, pg_description.description FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass AND pg_description.objoid = pg_proc.oid", functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -306,6 +313,7 @@ protected:
       wxString type;
       GET_TEXT(iter, 4, type);
       func->type = typemap[type];
+      GET_TEXT(iter, 5, func->description);
       func->user = !systemSchema(func->schema);
       functions.push_back(func);
     }
@@ -331,7 +339,7 @@ protected:
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    doQuery(conn, "SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef FROM pg_attribute WHERE attrelid = $1 AND NOT attisdropped AND attnum > 0 ORDER BY attnum", attributeRows, 23 /* int4 */, oidValue.utf8_str());
+    doQuery(conn, "SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef, pg_description.description FROM pg_attribute LEFT JOIN pg_description ON pg_description.classoid = 'pg_attribute'::regclass AND pg_description.objoid = pg_attribute.attrelid AND pg_description.objsubid = pg_attribute.attnum WHERE attrelid = $1 AND NOT attisdropped AND attnum > 0 ORDER BY attnum", attributeRows, 23 /* int4 */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -339,6 +347,7 @@ protected:
       GET_TEXT(iter, 1, column->type);
       GET_BOOLEAN(iter, 2, column->nullable);
       GET_BOOLEAN(iter, 3, column->hasDefault);
+      GET_TEXT(iter, 4, column->description);
       columns.push_back(column);
     }
   }
@@ -690,4 +699,13 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
   }
+}
+
+void ObjectBrowser::OnGetTooltip(wxTreeEvent &event) {
+  wxTreeItemId item = event.GetItem();
+  wxTreeItemData *itemData = GetItemData(item);
+  if (itemData == NULL) return;
+  ObjectModel *object = dynamic_cast<ObjectModel*>(itemData);
+  if (object == NULL) return;
+  event.SetToolTip(object->description);
 }

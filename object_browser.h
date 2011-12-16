@@ -17,6 +17,8 @@ class DatabaseModel;
 class RoleModel;
 class RelationModel;
 class ColumnModel;
+class FunctionModel;
+class SchemaMemberModel;
 
 class ObjectBrowser : public wxTreeCtrl {
 public:
@@ -38,7 +40,7 @@ public:
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles);
 
-  void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem, vector<RelationModel*> &relations);
+  void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions);
 
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns);
 private:
@@ -48,7 +50,7 @@ private:
   void BeforeExpand(wxTreeEvent&);
   void OnWorkFinished(wxCommandEvent&);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
-  void AppendSchemaItems(wxTreeItemId parent, bool includeSchemaItem, const wxString &schemaName, vector<RelationModel*> &relations);
+  void AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members);
 };
 
 #endif

@@ -23,6 +23,9 @@ class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
   void execute(SqlLogger *logger, PGconn *conn) {
+    int serverVersion = PQserverVersion(conn);
+    if (serverVersion < 90000)
+      return;
     wxString sql = _T("SET application_name = ") + quoteLiteral(conn, newLabel);
     wxCharBuffer sqlBuf = sql.utf8_str();
     DatabaseCommandWork command(sqlBuf.data());

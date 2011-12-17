@@ -8,8 +8,9 @@ public:
 
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
-  void OnNew(wxCommandEvent& event);
-  void OnOpen(wxCommandEvent& event);
+
+  void OnConnectObjectBrowser(wxCommandEvent& event);
+  void OnDisconnectObjectBrowser(wxCommandEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 
@@ -22,9 +23,9 @@ private:
 enum {
   Pqwx_Quit = wxID_EXIT,
   Pqwx_About = wxID_ABOUT,
-  Pqwx_New = wxID_NEW,
-  Pqwx_Open = wxID_OPEN,
 
   // local
-  Pqwx_ObjectBrowser = 16384
+  Pqwx_ObjectBrowser = 16384,
+  Pqwx_ConnectObjectBrowser = 16385,
+  Pqwx_DisconnectObjectBrowser = 16386,
 };

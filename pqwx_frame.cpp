@@ -23,8 +23,8 @@
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(Pqwx_Quit, PqwxFrame::OnQuit)
   EVT_MENU(Pqwx_About, PqwxFrame::OnAbout)
-  EVT_MENU(Pqwx_New, PqwxFrame::OnNew)
-  EVT_MENU(Pqwx_Open, PqwxFrame::OnOpen)
+  EVT_MENU(Pqwx_ConnectObjectBrowser, PqwxFrame::OnConnectObjectBrowser)
+  EVT_MENU(Pqwx_DisconnectObjectBrowser, PqwxFrame::OnDisconnectObjectBrowser)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
 END_EVENT_TABLE()
 
@@ -36,8 +36,8 @@ PqwxFrame::PqwxFrame(const wxString& title)
   SetIcon(wxICON(Pqwx_appicon));
 
   wxMenu *fileMenu = new wxMenu;
-  fileMenu->Append(Pqwx_New, _T("&New query\tCtrl-N"), _T("Create a new query"));
-  fileMenu->Append(Pqwx_Open, _T("&Open script\tCtrl-O"), _T("Open a SQL script"));
+  fileMenu->Append(Pqwx_ConnectObjectBrowser, _T("Connect Object &Browser..."), _T("Open the database schema browsing tool"));
+  fileMenu->Append(Pqwx_DisconnectObjectBrowser, _T("&Disconnect Object Browser"), _T("Disconnect the schema browsing tool"));
   fileMenu->Append(Pqwx_Quit, _T("E&xit\tCtrl-Q"), _T("Exit PQWX"));
 
   wxMenu *helpMenu = new wxMenu;
@@ -48,13 +48,6 @@ PqwxFrame::PqwxFrame(const wxString& title)
   menuBar->Append(helpMenu, _T("&Help"));
 
   SetMenuBar(menuBar);
-
-  CreateToolBar(wxNO_BORDER | wxHORIZONTAL | wxTB_FLAT, TOOLBAR_MAIN);
-  GetToolBar()->SetMargins(2, 2);
-  GetToolBar()->SetToolBitmapSize(wxSize(16, 15));
-  GetToolBar()->AddTool(wxID_NEW, _T("NEW"), wxBitmap(new_xpm), wxNullBitmap, wxITEM_NORMAL,
-			_T("New query"), _T("Create a new query"));
-  GetToolBar()->Realize();
 
   CreateStatusBar(2);
 
@@ -83,22 +76,14 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   wxAboutBox(info);
 }
 
-void PqwxFrame::OnNew(wxCommandEvent& event)
+void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 {
   wxDialog *connect = new ConnectDialogue(NULL, objectBrowser);
   connect->Show();
 }
 
-void PqwxFrame::OnOpen(wxCommandEvent& event)
+void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)
 {
-  wxFileDialog *openFileDialog = new wxFileDialog(this);
-
-  openFileDialog->SetWildcard(_T("SQL files (*.sql)|*.sql"));
-
-  if (openFileDialog->ShowModal() == wxID_OK) {
-    wxString filename = openFileDialog->GetPath();
-    wxLogStatus(_T("Load file %s..."), filename.c_str());
-  }
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {

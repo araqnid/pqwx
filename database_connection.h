@@ -38,7 +38,8 @@ public:
 
   void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();
-  void AddWork(DatabaseWork*);
+  void AddWork(DatabaseWork*); // will throw an assertion failure if database connection is not live
+  bool AddWorkOnlyIfConnected(DatabaseWork *work); // returns true if work added, false if database connection not live
   void LogSql(const char *sql);
   void LogDisconnect();
   void LogConnect();
@@ -60,8 +61,6 @@ private:
   wxMutex workConditionMutex;
   wxCondition workCondition;
   ConnectionCallback *connectionCallback;
-
-  bool AddWorkOnlyIfConnected(DatabaseWork*);
 
   friend class DatabaseWorkerThread;
 };

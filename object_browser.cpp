@@ -132,8 +132,7 @@ class ObjectBrowserWork : public DatabaseWork {
 public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
-  void execute(SqlLogger *logger_, PGconn *conn) {
-    logger = logger_;
+  void execute(PGconn *conn) {
     if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
       return;
 
@@ -143,7 +142,6 @@ public:
   }
   virtual void loadResultsToGui(ObjectBrowser *browser) = 0;
 protected:
-  SqlLogger *logger;
   void notifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(this);
@@ -151,7 +149,7 @@ protected:
   }
   virtual void executeInTransaction(PGconn *conn) = 0;
   bool doCommand(PGconn *conn, const char *sql) {
-    return cmd(logger, conn, sql);
+    return cmd(conn, sql);
   }
   bool doQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
     doQuery(conn, GetSql(conn, name), results, paramType, paramValue);

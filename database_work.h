@@ -14,7 +14,7 @@ class DatabaseWork {
 public:
   DatabaseWork() : done(false) {}
   virtual ~DatabaseWork() {}
-  virtual void execute(SqlLogger *logger, PGconn *conn) = 0;
+  virtual void execute(PGconn *conn) = 0;
   bool isDone() {
     wxMutexLocker locker(mutex);
     return done;
@@ -47,7 +47,7 @@ protected:
   wxMutex mutex;
   bool done;
 
-  bool cmd(SqlLogger *logger, PGconn *conn, const char *sql) {
+  bool cmd(PGconn *conn, const char *sql) {
     logger->LogSql(sql);
 
     PGresult *rs = PQexec(conn, sql);
@@ -67,6 +67,8 @@ protected:
 
     return true;
   }
+
+  SqlLogger *logger;
 
 private:
   void finished() {
@@ -104,7 +106,7 @@ public:
   };
 
   DisconnectWork(CloseCallback *callback = NULL) : callback(callback) {}
-  void execute(SqlLogger *logger, PGconn *conn) {
+  void execute(PGconn *conn) {
     PQfinish(conn);
     logger->LogDisconnect();
   }

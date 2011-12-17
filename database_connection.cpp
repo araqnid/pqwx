@@ -8,25 +8,25 @@ using namespace std;
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void execute(SqlLogger *logger, PGconn *conn) {
+  void execute(PGconn *conn) {
     int clientEncoding = PQclientEncoding(conn);
     const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
     if (strcmp(clientEncodingName, "UTF8") != 0) {
       PQsetClientEncoding(conn, "UTF8");
     }
-    cmd(logger, conn, "SET DateStyle = 'ISO'");
+    cmd(conn, "SET DateStyle = 'ISO'");
   }
 };
 
 class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
-  void execute(SqlLogger *logger, PGconn *conn) {
+  void execute(PGconn *conn) {
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
     wxString sql = _T("SET application_name = ") + quoteLiteral(conn, newLabel);
-    cmd(logger, conn, sql.utf8_str());
+    cmd(conn, sql.utf8_str());
   }
 private:
   const wxString newLabel;
@@ -104,7 +104,8 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       db->workConditionMutex.Unlock();
       for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
 	DatabaseWork *work = *iter;
-	work->execute(db, conn);
+	work->logger = db;
+	work->execute(conn);
 	work->finished(); // after this method is called, don't touch work again.
       }
       db->workConditionMutex.Lock();

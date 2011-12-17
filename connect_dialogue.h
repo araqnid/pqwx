@@ -11,7 +11,8 @@ class ConnectionWork;
 
 class ConnectDialogue : public wxDialog {
 public:
-  ConnectDialogue(wxWindow *parent, ObjectBrowser *objectBrowser) : wxDialog(), objectBrowser(objectBrowser) {
+  ConnectDialogue(wxWindow *parent, ObjectBrowser *objectBrowser) : wxDialog(), objectBrowser(objectBrowser),
+								    recentServersConfigPath(_T("RecentServers")) {
     InitXRC(parent);
     LoadRecentServers();
     connection = NULL;
@@ -22,6 +23,7 @@ public:
     StartConnection();
   }
   void OnCancel(wxCommandEvent& event);
+  void OnRecentServerChosen(wxCommandEvent& event);
   void OnConnectionFinished(wxCommandEvent& event);
 
   void DoInitialConnection(const wxString& server, const wxString& user, const wxString& password);
@@ -51,13 +53,28 @@ private:
   void UnmarkBusy();
   ConnectionWork *connection;
   bool cancelling;
-  void SaveServerPassword(ServerConnection *server);
-  void SaveRecentServer();
-  void LoadRecentServers();
-  DECLARE_EVENT_TABLE();
 
-  list<wxString> LoadConfigList(const wxString &path);
-  void SaveConfigList(const wxString &path, const list<wxString> &servers);
+  class RecentServerParameters {
+    wxString server;
+    wxString username;
+    wxString password;
+    friend class ConnectDialogue;
+  public:
+    bool operator==(const RecentServerParameters &other) {
+      return server == other.server;
+    }
+  };
+  list<RecentServerParameters> recentServerList;
+  const wxString recentServersConfigPath;
+  // read/write just transfers recentServerList (model) to configuration file
+  void ReadRecentServers();
+  void WriteRecentServers();
+  // load/save calls read/write and moves data from recentServerList to the UI and back
+  void LoadRecentServers();
+  void LoadRecentServer(const RecentServerParameters&);
+  void SaveRecentServers();
+
+  DECLARE_EVENT_TABLE();
 };
 
 #endif

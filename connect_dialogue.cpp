@@ -19,6 +19,7 @@ BEGIN_EVENT_TABLE(ConnectDialogue, wxDialog)
   EVT_BUTTON(wxID_OK, ConnectDialogue::OnConnect)
   EVT_BUTTON(wxID_CANCEL, ConnectDialogue::OnCancel)
   EVT_COMMAND(EVENT_CONNECTION_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ConnectDialogue::OnConnectionFinished)
+  EVT_COMBOBOX(XRCID("hostname_value"), ConnectDialogue::OnRecentServerChosen)
 END_EVENT_TABLE()
 
 class ConnectionWork : public ConnectionCallback {
@@ -104,14 +105,10 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
   if (work->state == ConnectionWork::CONNECTED) {
     objectBrowser->AddServerConnection(work->server, work->db);
     if (!passwordInput->GetValue().empty()) {
-      if (work->usedPassword) {
-	if (savePasswordInput->GetValue())
-	  SaveServerPassword(work->server);
-      }
-      else
+      if (!work->usedPassword)
 	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
     }
-    SaveRecentServer();
+    SaveRecentServers();
     Destroy();
   }
   else if (work->state == ConnectionWork::NEEDS_PASSWORD) {
@@ -143,21 +140,19 @@ void ConnectDialogue::UnmarkBusy() {
   wxEndBusyCursor();
 }
 
-void ConnectDialogue::SaveServerPassword(ServerConnection *conn) {
-  if (conn->password.IsEmpty())
-    return;
-  wxLogDebug(_T("Save password for hostname=%s port=%d user=%s..."), conn->hostname.c_str(), conn->port, conn->username.c_str());
-}
-
-void ConnectDialogue::SaveRecentServer() {
-  wxString server = hostnameInput->GetValue();
-  wxString username = usernameInput->GetValue();
+void ConnectDialogue::SaveRecentServers() {
+  RecentServerParameters server;
+  server.server = hostnameInput->GetValue();
+  server.username = usernameInput->GetValue();
+  if (savePasswordInput->IsChecked()) {
+    server.password = passwordInput->GetValue();
+  }
 
   // ":" is interpreted the same way as an empty string
-  if (server == _T(":"))
-    server = wxEmptyString;
+  if (server.server == _T(":"))
+    server.server = wxEmptyString;
 
-  list<wxString> recentServerList = LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+  LoadRecentServers(); // in case something external changed it?
 
   recentServerList.remove(server);
 
@@ -167,56 +162,83 @@ void ConnectDialogue::SaveRecentServer() {
     recentServerList.resize(maxRecentServers);
   }
 
-  SaveConfigList(_T("/ConnectDialogue/RecentServers"), recentServerList);
+  WriteRecentServers();
 }
 
 void ConnectDialogue::LoadRecentServers() {
-  list<wxString> recentServerList = LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+  ReadRecentServers();
   if (recentServerList.empty()) return;
 
-  for (list<wxString>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
-    hostnameInput->Append(*iter);
+  for (list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
+    hostnameInput->Append(iter->server);
   }
 
-  hostnameInput->SetValue(recentServerList.front());
+  LoadRecentServer(recentServerList.front());
 }
 
-list<wxString> ConnectDialogue::LoadConfigList(const wxString &path) {
+void ConnectDialogue::LoadRecentServer(const RecentServerParameters &server) {
+  hostnameInput->SetValue(server.server);
+  usernameInput->SetValue(server.username);
+  passwordInput->SetValue(server.password);
+  savePasswordInput->SetValue(!server.password.IsEmpty());
+}
+
+void ConnectDialogue::ReadRecentServers() {
   wxConfigBase *cfg = wxConfig::Get();
   wxString oldPath = cfg->GetPath();
-  cfg->SetPath(path);
+  cfg->SetPath(recentServersConfigPath);
 
-  list<wxString> servers;
+  recentServerList.clear();
+
   int pos = 0;
   do {
     wxString key = wxString::Format(_T("%d"), pos++);
-    wxString value;
-    if (!cfg->Read(key, &value))
+    RecentServerParameters server;
+    if (!cfg->Read(key + _T("/Server"), &server.server))
       break;
-    servers.push_back(value);
+    cfg->Read(key + _T("/Username"), &server.username);
+    cfg->Read(key + _T("/Password"), &server.password);
+    recentServerList.push_back(server);
   } while (1);
 
   cfg->SetPath(oldPath);
-
-  return servers;
 }
 
-void ConnectDialogue::SaveConfigList(const wxString &path, const list<wxString> &servers) {
+void ConnectDialogue::WriteRecentServers() {
   wxConfigBase *cfg = wxConfig::Get();
   wxString oldPath = cfg->GetPath();
-  cfg->SetPath(path);
+  cfg->SetPath(recentServersConfigPath);
 
   int pos = 0;
-  for (list<wxString>::const_iterator iter = servers.begin(); iter != servers.end(); iter++, pos++) {
+  for (list<RecentServerParameters>::const_iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++, pos++) {
     wxString key = wxString::Format(_T("%d"), pos);
-    cfg->Write(key, *iter);
+    cfg->Write(key + _T("/Server"), iter->server);
+    if (!iter->username.IsEmpty())
+      cfg->Write(key + _T("/Username"), iter->username);
+    else
+      cfg->DeleteEntry(key + _T("/Username"));
+    if (!iter->password.IsEmpty())
+      cfg->Write(key + _T("/Password"), iter->password);
+    else
+      cfg->DeleteEntry(key + _T("/Password"));
   }
 
   do {
     wxString key = wxString::Format(_T("%d"), pos++);
-    if (!cfg->DeleteEntry(key))
+    if (!cfg->DeleteGroup(key))
       break;
   } while (1);
 
   cfg->SetPath(oldPath);
+}
+
+void ConnectDialogue::OnRecentServerChosen(wxCommandEvent& event) {
+  wxString newServer = hostnameInput->GetValue();
+  for (list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
+    if (iter->server == newServer) {
+      LoadRecentServer(*iter);
+      return;
+    }
+  }
+  wxASSERT(false);
 }

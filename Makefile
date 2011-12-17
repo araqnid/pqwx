@@ -14,8 +14,8 @@ WX_CONFIG_FLAGS := --debug=yes
 LOCAL_CXXFLAGS := -DPQWX_DEBUG -ggdb
 endif
 
-CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags)
-LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs)
+CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags) $(shell pkg-config --cflags jansson)
+LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs) $(shell pkg-config --libs jansson)
 OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o
 XRC := rc/connect.xrc
 

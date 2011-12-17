@@ -10,14 +10,6 @@
 #include "database_work.h"
 #include "sql_logger.h"
 
-enum DatabaseConnectionState {
-  NOT_CONNECTED,
-  CONNECTING,
-  CONNECTED,
-  IDLE,
-  EXECUTING
-};
-
 class DatabaseWorkerThread;
 class ServerConnection;
 
@@ -46,7 +38,6 @@ public:
   void LogConnectFailed(const char *msg);
   void LogConnectNeedsPassword();
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
-  DatabaseConnectionState GetState();
   bool IsConnected();
   wxString DbName() { return dbname; }
   void Relabel(const wxString &newLabel);

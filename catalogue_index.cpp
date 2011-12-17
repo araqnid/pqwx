@@ -4,10 +4,10 @@
 
 using namespace std;
 
-void CatalogueIndex::AddDocument(long entityId, Type entityType, const wxString& symbol, const wxString& disambig) {
+void CatalogueIndex::AddDocument(const Document& document) {
   int documentId = documents.size();
-  documents.push_back(Document(entityId, entityType, symbol, disambig));
-  vector<wxString> tokens(Analyse(symbol));
+  documents.push_back(document);
+  vector<wxString> tokens(Analyse(document.symbol));
   int pos = 0;
   for (vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++, pos++) {
     map<wxString, int>::iterator termIter = termsIndex.find(*iter);
@@ -89,7 +89,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-void CatalogueIndex::Search(const wxString &input) {
+void CatalogueIndex::Search(const wxString &input, const Filter &filter) {
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -122,7 +122,12 @@ void CatalogueIndex::Search(const wxString &input) {
   for (map<DocumentPosition, Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
     Occurrence *firstTerm = iter->second;
     int documentId = firstTerm->documentId;
-    // TODO if (!filter(documentId)) continue;
+    if (!filter.Included(documentId)) {
+#ifdef PQWX_DEBUG_CATALOGUE_INDEX
+      wxLogDebug(_T("Document#%d excluded by filter"), firstTerm->documentId);
+#endif
+      continue;
+    }
     int position = firstTerm->position;
     vector<Occurrence*> matched;
     matched.push_back(firstTerm);
@@ -198,4 +203,26 @@ void CatalogueIndex::Search(const wxString &input) {
   double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
   wxLogDebug(_T("** Completed search in %.3lf seconds"), elapsedFP);
 #endif
+}
+
+CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() {
+  Filter filter(documents.size());
+
+  int documentId = 0;
+  for (vector<Document>::iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+    if (!iter->system) filter.Include(documentId);
+  }
+
+  return filter;
+}
+
+CatalogueIndex::Filter CatalogueIndex::CreateTypeFilter(CatalogueIndex::Type type) {
+  Filter filter(documents.size());
+
+  int documentId = 0;
+  for (vector<Document>::iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+    if (iter->entityType == type) filter.Include(documentId);
+  }
+
+  return filter;
 }

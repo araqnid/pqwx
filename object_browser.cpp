@@ -398,7 +398,7 @@ protected:
       GET_TEXT(iter, 1, typeString);
       GET_TEXT(iter, 2, symbol);
       GET_TEXT(iter, 3, disambig);
-      catalogueIndex->AddDocument(entityId, entityType, symbol, disambig);
+      catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, symbol, disambig));
     }
     catalogueIndex->Commit();
   }

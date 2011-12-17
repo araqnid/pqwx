@@ -15,12 +15,23 @@ public:
   enum Type { TABLE, VIEW, SEQUENCE,
 	      FUNCTION_SCALAR, FUNCTION_ROWSET, FUNCTION_TRIGGER, FUNCTION_AGGREGATE, FUNCTION_WINDOW,
 	      TYPE, EXTENSION, COLLATION };
+
+  class Document {
+  public:
+    Document(long entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), system(system), symbol(symbol), disambig(disambig) {}
+    long entityId;
+    Type entityType;
+    wxString symbol;
+    wxString disambig;
+    bool system;
+  };
+
   void Begin() {
 #ifdef PQWX_DEBUG
     gettimeofday(&start, NULL);
 #endif
   }
-  void AddDocument(long entityId, Type entityType, const wxString& symbol, const wxString& disambig = wxEmptyString);
+  void AddDocument(const Document& document);
   void Commit() {
 #ifdef PQWX_DEBUG
     gettimeofday(&finish, NULL);
@@ -31,15 +42,6 @@ public:
 #endif
   }
 
-  class Document {
-  public:
-    Document(long entityId, Type entityType, const wxString& symbol, const wxString& disambig) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig) {}
-    long entityId;
-    Type entityType;
-    wxString symbol;
-    wxString disambig;
-  };
-
   class Result {
   public:
     Result(Document *document, int score) : document(document), score(score) {}
@@ -47,7 +49,91 @@ public:
     int score;
   };
 
-  void Search(const wxString &input);
+  // assumption that "unsigned long" is 64 bits ahoy!
+  class Filter {
+  public:
+    Filter(int capacity) : capacity(capacity) {
+      data = new unsigned long[NumWords()];
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] = 0UL;
+      }
+    }
+    Filter(const Filter &other) : capacity(other.capacity) {
+      data = new unsigned long[NumWords()];
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] = other.data[i];
+      }
+    }
+    virtual ~Filter() {
+      delete[] data;
+    }
+    void Include(int pos) {
+      wxASSERT(pos < capacity);
+      data[pos >> 6] |= 1UL<<(pos & 63);
+    }
+    bool Included(int pos) const {
+      wxASSERT(pos < capacity);
+      return data[pos >> 6] & (1UL<<(pos & 63));
+    }
+    void Clear() {
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] = 0UL;
+      }
+    }
+    void operator =(const Filter &other) {
+      wxASSERT(other.capacity == capacity);
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] = other.data[i];
+      }
+    }
+    void operator &=(const Filter &other) {
+      wxASSERT(other.capacity == capacity);
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] &= other.data[i];
+      }
+    }
+    void operator |=(const Filter &other) {
+      wxASSERT(other.capacity == capacity);
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	data[i] |= other.data[i];
+      }
+    }
+    Filter operator&(const Filter &other) const {
+      wxASSERT(other.capacity == capacity);
+      Filter result(capacity);
+      for (int i = result.NumWords() - 1; i >= 0; i--) {
+	result.data[i] = data[i] & other.data[i];
+      }
+      return result;
+    }
+    Filter operator|(const Filter &other) const {
+      wxASSERT(other.capacity == capacity);
+      Filter result(capacity);
+      for (int i = result.NumWords() - 1; i >= 0; i--) {
+	result.data[i] = data[i] | other.data[i];
+      }
+      return result;
+    }
+  private:
+    int NumWords() const {
+      return (capacity+63) >> 6;
+    }
+    int capacity;
+    unsigned long *data;
+    friend class CatalogueIndex;
+  };
+
+  Filter CreateMatchEverythingFilter() {
+    Filter filter(documents.size());
+    for (int i = filter.NumWords() - 1; i >= 0; i--) {
+      filter.data[i] = 0xffffffffffffffffUL;
+    }
+    return filter;
+  };
+  Filter CreateNonSystemFilter();
+  Filter CreateTypeFilter(Type type);
+
+  void Search(const wxString &input, const Filter &filter);
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   void DumpDocumentStore() {

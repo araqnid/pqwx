@@ -401,7 +401,6 @@ protected:
     catalogueIndex->Begin();
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
       long entityId;
-      CatalogueIndex::Type entityType;
       wxString typeString;
       wxString symbol;
       wxString disambig;
@@ -409,7 +408,20 @@ protected:
       GET_TEXT(iter, 1, typeString);
       GET_TEXT(iter, 2, symbol);
       GET_TEXT(iter, 3, disambig);
-      catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, symbol, disambig));
+      bool systemObject;
+      CatalogueIndex::Type entityType;
+      if (typeString.Last() == _T('S')) {
+	systemObject = true;
+	typeString.RemoveLast();
+	wxASSERT(typeMap.count(typeString) > 0);
+	entityType = typeMap[typeString];
+      }
+      else {
+	systemObject = false;
+	wxASSERT(typeMap.count(typeString) > 0);
+	entityType = typeMap[typeString];
+      }
+      catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, symbol, disambig));
     }
     catalogueIndex->Commit();
   }

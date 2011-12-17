@@ -14,7 +14,7 @@
 #include "pqwx_frame.h"
 #include "catalogue_index.h"
 
-#define SQL(t) _SQL__##t
+#define SQL(t) "/* " #t " */ " _SQL__##t
 
 const int EVENT_WORK_FINISHED = 10000;
 
@@ -385,7 +385,18 @@ protected:
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
     QueryResults rs;
-    doQuery(conn, SQL(IndexSchema), rs);
+    if (database->server->versionNotBefore(9, 1)) {
+      doQuery(conn, SQL(IndexSchema), rs);
+    }
+    else if (database->server->versionNotBefore(8, 4)) {
+      doQuery(conn, SQL(IndexSchema90), rs);
+    }
+    else if (database->server->versionNotBefore(8, 3)) {
+      doQuery(conn, SQL(IndexSchema83), rs);
+    }
+    else {
+      doQuery(conn, SQL(IndexSchema82), rs);
+    }
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -444,7 +455,10 @@ private:
   void loadIndices(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults indexRows;
-    doQuery(conn, "SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered FROM pg_index JOIN pg_class ON pg_class.oid = pg_index.indexrelid WHERE indrelid = $1", indexRows, 26 /* oid */, oidValue.utf8_str());
+    if (relationModel->database->server->versionNotBefore(9, 0))
+      doQuery(conn, SQL(Indices), indexRows, 26 /* oid */, oidValue.utf8_str());
+    else
+      doQuery(conn, SQL(Indices84), indexRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
       GET_TEXT(iter, 0, index->name);
@@ -454,7 +468,12 @@ private:
   void loadTriggers(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults triggerRows;
-    doQuery(conn, "SELECT tgname, tgfoid::regprocedure, tgenabled FROM pg_trigger WHERE tgrelid = $1 AND NOT tgisinternal", triggerRows, 26 /* oid */, oidValue.utf8_str());
+    if (relationModel->database->server->versionNotBefore(9, 0))
+      doQuery(conn, SQL(Triggers), triggerRows, 26 /* oid */, oidValue.utf8_str());
+    else if (relationModel->database->server->versionNotBefore(8, 3))
+      doQuery(conn, SQL(Triggers84), triggerRows, 26 /* oid */, oidValue.utf8_str());
+    else
+      doQuery(conn, SQL(Triggers82), triggerRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       GET_TEXT(iter, 0, trigger->name);

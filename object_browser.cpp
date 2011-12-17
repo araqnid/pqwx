@@ -6,7 +6,6 @@
     #include "wx/wx.h"
 #endif
 
-#include "wx/regex.h"
 #include <algorithm>
 #include <set>
 
@@ -25,8 +24,6 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
 END_EVENT_TABLE()
 
 typedef std::vector< std::vector<wxString> > QueryResults;
-
-static wxRegEx serverVersionRegex(wxT("^([^ ]+ ([0-9]+)\\.([0-9]+)([0-9.a-z]*))"));
 
 class ObjectModel : public wxTreeItemData {
 public:
@@ -104,14 +101,10 @@ public:
   }
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
-  int majorVersion;
-  int minorVersion;
-  wxString versionSuffix;
+  int serverVersion;
   map<wxString, DatabaseConnection*> connections;
-  void SetVersion(int major, int minor, wxString suffix) {
-    majorVersion = major;
-    minorVersion = minor;
-    versionSuffix = suffix;
+  void SetVersion(int version) {
+    serverVersion = version;
   }
   DatabaseModel *findDatabase(unsigned long oid) {
     for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
@@ -121,7 +114,7 @@ public:
     return NULL;
   }
   bool versionNotBefore(int major, int minor) {
-    return majorVersion > major || majorVersion == major && minorVersion >= minor;
+    return serverVersion >= (major * 10000 + minor * 1000);
   }
   void Dispose() {
     wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
@@ -237,7 +230,7 @@ protected:
     loadRoles(conn);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
-    ob->FillInServer(serverModel, serverItem, serverVersion);
+    ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion);
     ob->FillInDatabases(serverModel, serverItem, databases);
     ob->FillInRoles(serverModel, serverItem, roles);
 
@@ -248,11 +241,12 @@ private:
   wxTreeItemId serverItem;
   vector<DatabaseModel*> databases;
   vector<RoleModel*> roles;
-  wxString serverVersion;
+  wxString serverVersionString;
+  int serverVersion;
   void loadServer(PGconn *conn) {
-    QueryResults serverRows;
-    doQuery(conn, SQL(Server), serverRows);
-    serverVersion = serverRows[0][0];
+    const char *serverVersionRaw = PQparameterStatus(conn, "server_version");
+    serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
+    serverVersion = PQserverVersion(conn);
   }
   void loadDatabases(PGconn *conn) {
     QueryResults databaseRows;
@@ -576,16 +570,9 @@ void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *wo
   conn->AddWork(work);
 }
 
-void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, wxString& serverVersion) {
-  if (serverVersionRegex.Matches(serverVersion)) {
-    serverModel->SetVersion(atoi(serverVersionRegex.GetMatch(serverVersion, 2).utf8_str()),
-			    atoi(serverVersionRegex.GetMatch(serverVersion, 3).utf8_str()),
-			    serverVersionRegex.GetMatch(serverVersion, 4));
-    SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionRegex.GetMatch(serverVersion, 1) + _T(")"));
-  }
-  else {
-    SetItemText(serverItem, serverModel->conn->Identification());
-  }
+void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString &serverVersionString, int serverVersion) {
+  serverModel->SetVersion(serverVersion);
+  SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionString + _T(")"));
 }
 
 static bool collateDatabases(DatabaseModel *d1, DatabaseModel *d2) {

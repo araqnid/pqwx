@@ -32,10 +32,19 @@ FROM pg_roles
      LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_authid'::regclass
                                    AND pg_shdescription.objoid = pg_roles.oid
 
--- SQL :: Roles
+-- SQL :: Roles :: 8.0
 SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper,
        null AS description
 FROM pg_roles
+
+-- SQL :: Roles
+SELECT usesysid, usename, true, usesuper,
+       null AS description
+FROM pg_user
+UNION ALL
+SELECT grosysid, groname, false, false,
+       null AS description
+FROM pg_group
 
 -- SQL :: Relations
 SELECT pg_class.oid, nspname, relname, relkind,

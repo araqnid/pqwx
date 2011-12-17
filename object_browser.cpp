@@ -133,8 +133,18 @@ public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
   void execute(PGconn *conn) {
-    if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
-      return;
+    if (PQserverVersion(conn) >= 80000) {
+      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
+	return;
+    }
+    else {
+      if (!doCommand(conn, "BEGIN"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
+	return;
+    }
 
     executeInTransaction(conn);
 

@@ -11,7 +11,7 @@
 -- SQL :: Server
 SELECT version()
 
--- SQL :: Databases
+-- SQL :: Databases :: 8.2
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        has_database_privilege(pg_database.oid, 'connect') AS can_connect,
        pg_shdescription.description
@@ -19,12 +19,23 @@ FROM pg_database
      LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_database'::regclass
                                    AND pg_shdescription.objoid = pg_database.oid
 
--- SQL :: Roles
+-- SQL :: Databases
+SELECT pg_database.oid, datname, datistemplate, datallowconn,
+       true AS can_connect,
+       null AS description
+FROM pg_database
+
+-- SQL :: Roles :: 8.2
 SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper,
        pg_shdescription.description
 FROM pg_roles
      LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_authid'::regclass
                                    AND pg_shdescription.objoid = pg_roles.oid
+
+-- SQL :: Roles
+SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper,
+       null AS description
+FROM pg_roles
 
 -- SQL :: Relations
 SELECT pg_class.oid, nspname, relname, relkind,
@@ -283,7 +294,7 @@ FROM pg_namespace
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
 
--- SQL :: IndexSchema :: 8.2
+-- SQL :: IndexSchema
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,

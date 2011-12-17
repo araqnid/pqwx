@@ -6,14 +6,6 @@
 
 using namespace std;
 
-class DisconnectWork : public DatabaseWork {
-public:
-  void execute(SqlLogger *logger, PGconn *conn) {
-    PQfinish(conn);
-    logger->LogDisconnect();
-  }
-};
-
 class InitialiseWork : public DatabaseWork {
 public:
   void execute(SqlLogger *logger, PGconn *conn) {

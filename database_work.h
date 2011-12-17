@@ -100,4 +100,24 @@ public:
   }
 };
 
+class DisconnectWork : public DatabaseWork {
+public:
+  class CloseCallback {
+  public:
+    virtual void OnConnectionClosed() = 0;
+  };
+
+  DisconnectWork(CloseCallback *callback = NULL) : callback(callback) {}
+  void execute(SqlLogger *logger, PGconn *conn) {
+    PQfinish(conn);
+    logger->LogDisconnect();
+  }
+private:
+  CloseCallback *callback;
+  void notifyFinished() {
+    if (callback)
+      callback->OnConnectionClosed();
+  }
+};
+
 #endif

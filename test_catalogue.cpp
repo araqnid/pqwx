@@ -2,6 +2,7 @@
 #include "wx/wx.h"
 #include "wx/cmdline.h"
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -13,20 +14,70 @@ public:
 private:
   vector<wxString> queries;
   vector<CatalogueIndex::Type> ParseTypeListString(const wxString &input);
+  wxString inputFile;
 };
 
 IMPLEMENT_APP(TestCatalogueApp)
 
+static vector<wxString> Split(const wxString& input, const wxChar sep) {
+  vector<wxString> result;
+
+  int mark = 0;
+  for (int i = 0; i < input.length(); i++) {
+    if (input[i] == sep) {
+      result.push_back(input.Mid(mark, i-mark));
+      mark = i + 1;
+    }
+  }
+  result.push_back(input.Mid(mark));
+
+  return result;
+}
+
+static map<wxString, CatalogueIndex::Type> getTypeMap() {
+  map<wxString, CatalogueIndex::Type> typeMap;
+  typeMap[_T("t")] = CatalogueIndex::TABLE;
+  typeMap[_T("v")] = CatalogueIndex::VIEW;
+  typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
+  typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
+  typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
+  typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
+  typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
+  typeMap[_T("T")] = CatalogueIndex::TYPE;
+  typeMap[_T("O")] = CatalogueIndex::COLLATION;
+  typeMap[_T("x")] = CatalogueIndex::EXTENSION;
+  return typeMap;
+}
+
 int TestCatalogueApp::OnRun() {
   CatalogueIndex index;
+  map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
   index.Begin();
-  index.AddDocument(CatalogueIndex::Document(1259, CatalogueIndex::TABLE, true, _T("pg_catalog.pg_class")));
-  index.AddDocument(CatalogueIndex::Document(16394, CatalogueIndex::FUNCTION_SCALAR, false, _T("public.my_func")));
-  index.AddDocument(CatalogueIndex::Document(16395, CatalogueIndex::VIEW, false, _T("public.running_speed")));
-  index.AddDocument(CatalogueIndex::Document(16399, CatalogueIndex::TABLE, false, _T("so4423225.pref_money")));
-  index.AddDocument(CatalogueIndex::Document(62391, CatalogueIndex::TABLE, false, _T("so8201351.t")));
-  index.AddDocument(CatalogueIndex::Document(62401, CatalogueIndex::VIEW, false, _T("so8201351.my_soln1")));
-  index.AddDocument(CatalogueIndex::Document(72236, CatalogueIndex::EXTENSION, false, _T("public.cube")));
+  ifstream inputStream(inputFile.fn_str());
+  char buf[8192];
+  do {
+    inputStream.getline(buf, sizeof(buf));
+    if (inputStream.eof())
+      break;
+    vector<wxString> parts = Split(wxString(buf, wxConvUTF8), _T('|'));
+    wxASSERT(parts.size() == 4);
+    long entityId;
+    parts[0].ToLong(&entityId);
+    CatalogueIndex::Type entityType;
+    bool systemObject;
+    if (parts[1][parts[1].length()-1] == _T('S')) {
+      systemObject = true;
+      wxString typeString(parts[1].Left(parts[1].length()-1));
+      wxASSERT(typeMap.count(typeString) > 0);
+      entityType = typeMap[typeString];
+    }
+    else {
+      systemObject = false;
+      wxASSERT(typeMap.count(parts[1]) > 0);
+      entityType = typeMap[parts[1]];
+    }
+    index.AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, parts[2], parts[3]));
+  } while (1);
   index.Commit();
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   index.DumpDocumentStore();
@@ -46,6 +97,7 @@ int TestCatalogueApp::OnRun() {
       typesFilter.Clear();
       vector<CatalogueIndex::Type> types = ParseTypeListString((*iter).Mid(1));
       for (vector<CatalogueIndex::Type>::iterator iter = types.begin(); iter != types.end(); iter++) {
+	wxLogDebug(_T("Filtering on %s"), CatalogueIndex::EntityTypeName(*iter).c_str());
 	typesFilter |= index.CreateTypeFilter(*iter);
       }
     }
@@ -57,13 +109,15 @@ int TestCatalogueApp::OnRun() {
 }
 
 void TestCatalogueApp::OnInitCmdLine(wxCmdLineParser &parser) {
+  parser.AddParam(_T("catalogue-file"), wxCMD_LINE_VAL_STRING);
   parser.AddParam(_T("query"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_MULTIPLE);
   wxAppConsole::OnInitCmdLine(parser);
 }
 
 bool TestCatalogueApp::OnCmdLineParsed(wxCmdLineParser &parser) {
+  inputFile = parser.GetParam(0);
   int params = parser.GetParamCount();
-  for (int i = 0; i < params; i++) {
+  for (int i = 1; i < params; i++) {
     queries.push_back(parser.GetParam(i));
   }
   return true;
@@ -71,20 +125,10 @@ bool TestCatalogueApp::OnCmdLineParsed(wxCmdLineParser &parser) {
 
 vector<CatalogueIndex::Type> TestCatalogueApp::ParseTypeListString(const wxString &input) {
   vector<CatalogueIndex::Type> result;
-  map<wxString, CatalogueIndex::Type> typeMap;
-  typeMap[_T("t")] = CatalogueIndex::TABLE;
-  typeMap[_T("v")] = CatalogueIndex::VIEW;
-  typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR; // actually any function...
-  typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
-  typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
-  typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
-  typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
-  typeMap[_T("T")] = CatalogueIndex::TYPE;
-  typeMap[_T("O")] = CatalogueIndex::COLLATION;
-  typeMap[_T("x")] = CatalogueIndex::EXTENSION;
   wxWCharBuffer buffer = input.wc_str();
   wchar_t *ptr;
   wchar_t *tok;
+  map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
 
   for (tok = wcstok(buffer.data(), L",", &ptr); tok != NULL; tok = wcstok(NULL, L",", &ptr)) {
     wxASSERT(typeMap.count(tok) > 0);

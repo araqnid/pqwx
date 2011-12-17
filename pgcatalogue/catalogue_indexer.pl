@@ -66,15 +66,23 @@ sub index_entity {
     }
 }
 
+@ARGV > 0 or die "Syntax: $0 catalogue-data-file (+S|-s|@<types>|query)...\n";
+
+my $input_file = shift;
+
+open my $input, "<", $input_file or die "Unable to read $input_file: $!\n";
+
 my $indexing_start = [gettimeofday];
 
-while (<STDIN>) {
+while (<$input>) {
     chomp;
     my($id, $type, $symbol, $disambig) = split(/\|/);
     index_entity(int($id), $type, $symbol, $disambig);
 }
 
 my $indexing_finished = [gettimeofday];
+
+close $input;
 
 print "** Indexed ".scalar(@TERMS)." terms of ".scalar(@DOCUMENTS)." documents in ".sprintf("%.3f", tv_interval($indexing_start, $indexing_finished))." seconds\n";
 

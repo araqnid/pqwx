@@ -40,7 +40,7 @@ public:
   void SubmitServerWork(ServerModel *server, DatabaseWork *work);
   void SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work);
 
-  void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString& serverVersionString, int serverVersion);
+  void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString& serverVersionString, int serverVersion, bool usingSSL);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles);
 

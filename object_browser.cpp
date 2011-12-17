@@ -102,6 +102,7 @@ public:
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
   int serverVersion;
+  bool usingSSL;
   map<wxString, DatabaseConnection*> connections;
   void SetVersion(int version) {
     serverVersion = version;
@@ -230,7 +231,7 @@ protected:
     loadRoles(conn);
   }
   void loadResultsToGui(ObjectBrowser *ob) {
-    ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion);
+    ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion, usingSSL);
     ob->FillInDatabases(serverModel, serverItem, databases);
     ob->FillInRoles(serverModel, serverItem, roles);
 
@@ -243,10 +244,13 @@ private:
   vector<RoleModel*> roles;
   wxString serverVersionString;
   int serverVersion;
+  bool usingSSL;
   void loadServer(PGconn *conn) {
     const char *serverVersionRaw = PQparameterStatus(conn, "server_version");
     serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
     serverVersion = PQserverVersion(conn);
+    void *ssl = PQgetssl(conn);
+    usingSSL = (ssl != NULL);
   }
   void loadDatabases(PGconn *conn) {
     QueryResults databaseRows;
@@ -570,9 +574,10 @@ void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *wo
   conn->AddWork(work);
 }
 
-void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString &serverVersionString, int serverVersion) {
+void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString &serverVersionString, int serverVersion, bool usingSSL) {
   serverModel->SetVersion(serverVersion);
-  SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionString + _T(")"));
+  serverModel->usingSSL = usingSSL;
+  SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionString + _T(")") + (usingSSL ? _T(" [SSL]") : wxEmptyString));
 }
 
 static bool collateDatabases(DatabaseModel *d1, DatabaseModel *d2) {

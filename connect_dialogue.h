@@ -13,6 +13,7 @@ class ConnectDialogue : public wxDialog {
 public:
   ConnectDialogue(wxWindow *parent, ObjectBrowser *objectBrowser) : wxDialog(), objectBrowser(objectBrowser) {
     InitXRC(parent);
+    LoadRecentServers();
     connection = NULL;
     cancelling = false;
   }
@@ -34,6 +35,7 @@ protected:
   wxButton *cancelButton;
 
 private:
+  static const int maxRecentServers = 10;
   ObjectBrowser *objectBrowser;
   void InitXRC(wxWindow *parent) {
     wxXmlResource::Get()->LoadDialog(this, parent, wxT("connect"));
@@ -49,6 +51,9 @@ private:
   void UnmarkBusy();
   ConnectionWork *connection;
   bool cancelling;
+  void SaveServerPassword(ServerConnection *server);
+  void SaveRecentServer();
+  void LoadRecentServers();
   DECLARE_EVENT_TABLE();
 };
 

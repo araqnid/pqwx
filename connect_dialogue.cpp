@@ -7,6 +7,7 @@
 #endif
 
 #include "wx/xrc/xmlres.h"
+#include "pqwx.h"
 #include "connect_dialogue.h"
 #include "server_connection.h"
 
@@ -98,6 +99,9 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
 
   if (work->state == ConnectionWork::CONNECTED) {
     objectBrowser->AddServerConnection(work->server, work->db);
+    if (savePasswordInput->GetValue())
+      SaveServerPassword(work->server);
+    SaveRecentServer();
     Destroy();
   }
   else if (work->state == ConnectionWork::NEEDS_PASSWORD) {
@@ -127,4 +131,42 @@ void ConnectDialogue::UnmarkBusy() {
   savePasswordInput->Enable();
   okButton->Enable();
   wxEndBusyCursor();
+}
+
+void ConnectDialogue::SaveServerPassword(ServerConnection *conn) {
+  if (conn->password.IsEmpty())
+    return;
+  wxLogDebug(_T("Save password for hostname=%s port=%d user=%s..."), conn->hostname.c_str(), conn->port, conn->username.c_str());
+}
+
+void ConnectDialogue::SaveRecentServer() {
+  wxString server = hostnameInput->GetValue();
+  wxString username = usernameInput->GetValue();
+
+  // ":" is interpreted the same way as an empty string
+  if (server == _T(":"))
+    server = wxEmptyString;
+
+  list<wxString> recentServerList = PQWXApp::LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+
+  recentServerList.remove(server);
+
+  recentServerList.push_front(server);
+
+  if (recentServerList.size() > maxRecentServers) {
+    recentServerList.resize(maxRecentServers);
+  }
+
+  PQWXApp::SaveConfigList(_T("/ConnectDialogue/RecentServers"), recentServerList);
+}
+
+void ConnectDialogue::LoadRecentServers() {
+  list<wxString> recentServerList = PQWXApp::LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+  if (recentServerList.empty()) return;
+
+  for (list<wxString>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
+    hostnameInput->Append(*iter);
+  }
+
+  hostnameInput->SetValue(recentServerList.front());
 }

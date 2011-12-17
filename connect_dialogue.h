@@ -3,8 +3,8 @@
 #ifndef __connect_dialogue_h
 #define __connect_dialogue_h
 
+#include <list>
 #include "wx/xrc/xmlres.h"
-
 #include "object_browser.h"
 
 class ConnectionWork;
@@ -55,6 +55,9 @@ private:
   void SaveRecentServer();
   void LoadRecentServers();
   DECLARE_EVENT_TABLE();
+
+  list<wxString> LoadConfigList(const wxString &path);
+  void SaveConfigList(const wxString &path, const list<wxString> &servers);
 };
 
 #endif

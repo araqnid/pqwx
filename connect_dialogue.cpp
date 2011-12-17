@@ -6,7 +6,9 @@
     #include "wx/wx.h"
 #endif
 
+#include <list>
 #include "wx/xrc/xmlres.h"
+#include "wx/config.h"
 #include "pqwx.h"
 #include "connect_dialogue.h"
 #include "server_connection.h"
@@ -155,7 +157,7 @@ void ConnectDialogue::SaveRecentServer() {
   if (server == _T(":"))
     server = wxEmptyString;
 
-  list<wxString> recentServerList = PQWXApp::LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+  list<wxString> recentServerList = LoadConfigList(_T("/ConnectDialogue/RecentServers"));
 
   recentServerList.remove(server);
 
@@ -165,11 +167,11 @@ void ConnectDialogue::SaveRecentServer() {
     recentServerList.resize(maxRecentServers);
   }
 
-  PQWXApp::SaveConfigList(_T("/ConnectDialogue/RecentServers"), recentServerList);
+  SaveConfigList(_T("/ConnectDialogue/RecentServers"), recentServerList);
 }
 
 void ConnectDialogue::LoadRecentServers() {
-  list<wxString> recentServerList = PQWXApp::LoadConfigList(_T("/ConnectDialogue/RecentServers"));
+  list<wxString> recentServerList = LoadConfigList(_T("/ConnectDialogue/RecentServers"));
   if (recentServerList.empty()) return;
 
   for (list<wxString>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
@@ -177,4 +179,44 @@ void ConnectDialogue::LoadRecentServers() {
   }
 
   hostnameInput->SetValue(recentServerList.front());
+}
+
+list<wxString> ConnectDialogue::LoadConfigList(const wxString &path) {
+  wxConfigBase *cfg = wxConfig::Get();
+  wxString oldPath = cfg->GetPath();
+  cfg->SetPath(path);
+
+  list<wxString> servers;
+  int pos = 0;
+  do {
+    wxString key = wxString::Format(_T("%d"), pos++);
+    wxString value;
+    if (!cfg->Read(key, &value))
+      break;
+    servers.push_back(value);
+  } while (1);
+
+  cfg->SetPath(oldPath);
+
+  return servers;
+}
+
+void ConnectDialogue::SaveConfigList(const wxString &path, const list<wxString> &servers) {
+  wxConfigBase *cfg = wxConfig::Get();
+  wxString oldPath = cfg->GetPath();
+  cfg->SetPath(path);
+
+  int pos = 0;
+  for (list<wxString>::const_iterator iter = servers.begin(); iter != servers.end(); iter++, pos++) {
+    wxString key = wxString::Format(_T("%d"), pos);
+    cfg->Write(key, *iter);
+  }
+
+  do {
+    wxString key = wxString::Format(_T("%d"), pos++);
+    if (!cfg->DeleteEntry(key))
+      break;
+  } while (1);
+
+  cfg->SetPath(oldPath);
 }

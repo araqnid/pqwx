@@ -22,8 +22,9 @@ END_EVENT_TABLE()
 class ConnectionWork : public ConnectionCallback {
 public:
   ConnectionWork(ConnectDialogue *owner, ServerConnection *server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
-  void OnConnection() {
+  void OnConnection(bool usedPassword_) {
     state = CONNECTED;
+    usedPassword = usedPassword_;
     notifyFinished();
   }
   void OnConnectionFailed(const wxString &errorMessage_) {
@@ -46,6 +47,7 @@ private:
   ConnectDialogue *owner;
   ServerConnection *server;
   DatabaseConnection *db;
+  bool usedPassword;
   friend class ConnectDialogue;
 };
 
@@ -99,8 +101,14 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
 
   if (work->state == ConnectionWork::CONNECTED) {
     objectBrowser->AddServerConnection(work->server, work->db);
-    if (savePasswordInput->GetValue())
-      SaveServerPassword(work->server);
+    if (!passwordInput->GetValue().empty()) {
+      if (work->usedPassword) {
+	if (savePasswordInput->GetValue())
+	  SaveServerPassword(work->server);
+      }
+      else
+	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
+    }
     SaveRecentServer();
     Destroy();
   }

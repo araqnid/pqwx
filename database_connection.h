@@ -23,7 +23,7 @@ class ServerConnection;
 
 class ConnectionCallback {
 public:
-  virtual void OnConnection() = 0;
+  virtual void OnConnection(bool usedPassword) = 0;
   virtual void OnConnectionFailed(const wxString &message) = 0;
   virtual void OnConnectionNeedsPassword() = 0;
 };

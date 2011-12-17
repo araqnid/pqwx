@@ -175,9 +175,10 @@ bool DatabaseWorkerThread::Connect() {
   ConnStatusType status = PQstatus(conn);
 
   if (status == CONNECTION_OK) {
+    bool usedPassword = PQconnectionUsedPassword(conn);
     db->LogConnect();
     if (db->connectionCallback)
-      db->connectionCallback->OnConnection();
+      db->connectionCallback->OnConnection(usedPassword);
     return true;
   }
   else if (PQconnectionNeedsPassword(conn)) {

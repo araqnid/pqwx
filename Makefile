@@ -37,8 +37,8 @@ resources.cpp: $(XRC)
 resources.h: $(XRC)
 	wxrc -c -e -o $*.cpp $(XRC)
 
-object_browser_sql.h: object_browser.sql
-	./format_sql_header $^ $@
+object_browser_sql.h: object_browser.sql format_sql_header
+	./format_sql_header object_browser.sql $@
 
 object_browser.o: object_browser_sql.h
 

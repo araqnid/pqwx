@@ -14,8 +14,6 @@
 #include "pqwx_frame.h"
 #include "catalogue_index.h"
 
-#define SQL(t) "/* " #t " */ " _SQL__##t
-
 const int EVENT_WORK_FINISHED = 10000;
 
 BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
@@ -132,7 +130,7 @@ public:
 
 class ObjectBrowserWork : public DatabaseWork {
 public:
-  ObjectBrowserWork(wxEvtHandler *owner) : dest(owner) {}
+  ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
   void execute(SqlLogger *logger_, PGconn *conn) {
     logger = logger_;
@@ -149,13 +147,19 @@ protected:
   void notifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(this);
-    dest->AddPendingEvent(event);
+    owner->AddPendingEvent(event);
   }
   virtual void executeInTransaction(PGconn *conn) = 0;
   bool cmd(PGconn *conn, const char *sql) {
     DatabaseCommandWork work(sql);
     work.execute(logger, conn);
     return work.successful;
+  }
+  bool doQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
+    doQuery(conn, GetSql(conn, name), results, paramType, paramValue);
+  }
+  bool doQuery(PGconn *conn, const wxString &name, QueryResults &results) {
+    doQuery(conn, GetSql(conn, name), results);
   }
   bool doQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
     logger->LogSql(sql);
@@ -212,7 +216,10 @@ protected:
     }
   }
 private:
-  wxEvtHandler *dest;
+  ObjectBrowser *owner;
+  const char *GetSql(PGconn *conn, const wxString &name) const {
+    return owner->GetSql(name, PQserverVersion(conn));
+  }
 };
 
 #define CHECK_INDEX(iter, index) wxASSERT(index < (*iter).size())
@@ -224,7 +231,7 @@ private:
 
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
-  RefreshDatabaseListWork(wxEvtHandler *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -257,7 +264,7 @@ private:
   }
   void loadDatabases(PGconn *conn) {
     QueryResults databaseRows;
-    doQuery(conn, SQL(Databases), databaseRows);
+    doQuery(conn, _T("Databases"), databaseRows);
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -272,7 +279,7 @@ private:
   }
   void loadRoles(PGconn *conn) {
     QueryResults roleRows;
-    doQuery(conn, SQL(Roles), roleRows);
+    doQuery(conn, _T("Roles"), roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       GET_OID(iter, 0, role->oid);
@@ -295,7 +302,7 @@ static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
 
 class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  LoadDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
+  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -314,7 +321,7 @@ protected:
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    doQuery(conn, SQL(Relations), relationRows);
+    doQuery(conn, _T("Relations"), relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
@@ -336,10 +343,7 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    if (databaseModel->server->versionNotBefore(8,4))
-      doQuery(conn, SQL(Functions), functionRows);
-    else
-      doQuery(conn, SQL(Functions83), functionRows);
+    doQuery(conn, _T("Functions"), functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -364,7 +368,7 @@ protected:
 
 class IndexDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  IndexDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *database) : ObjectBrowserWork(owner), database(database) {
+  IndexDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *database) : ObjectBrowserWork(owner), database(database) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
@@ -385,18 +389,7 @@ protected:
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
     QueryResults rs;
-    if (database->server->versionNotBefore(9, 1)) {
-      doQuery(conn, SQL(IndexSchema), rs);
-    }
-    else if (database->server->versionNotBefore(8, 4)) {
-      doQuery(conn, SQL(IndexSchema90), rs);
-    }
-    else if (database->server->versionNotBefore(8, 3)) {
-      doQuery(conn, SQL(IndexSchema83), rs);
-    }
-    else {
-      doQuery(conn, SQL(IndexSchema82), rs);
-    }
+    doQuery(conn, _T("IndexSchema"), rs);
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -432,7 +425,7 @@ protected:
 
 class LoadRelationWork : public ObjectBrowserWork {
 public:
-  LoadRelationWork(wxEvtHandler *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
@@ -452,7 +445,7 @@ private:
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    doQuery(conn, SQL(Columns), attributeRows, 26 /* oid */, oidValue.utf8_str());
+    doQuery(conn, _T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -467,10 +460,7 @@ private:
   void loadIndices(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults indexRows;
-    if (relationModel->database->server->versionNotBefore(9, 0))
-      doQuery(conn, SQL(Indices), indexRows, 26 /* oid */, oidValue.utf8_str());
-    else
-      doQuery(conn, SQL(Indices84), indexRows, 26 /* oid */, oidValue.utf8_str());
+    doQuery(conn, _T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
       GET_TEXT(iter, 0, index->name);
@@ -480,12 +470,7 @@ private:
   void loadTriggers(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults triggerRows;
-    if (relationModel->database->server->versionNotBefore(9, 0))
-      doQuery(conn, SQL(Triggers), triggerRows, 26 /* oid */, oidValue.utf8_str());
-    else if (relationModel->database->server->versionNotBefore(8, 3))
-      doQuery(conn, SQL(Triggers84), triggerRows, 26 /* oid */, oidValue.utf8_str());
-    else
-      doQuery(conn, SQL(Triggers82), triggerRows, 26 /* oid */, oidValue.utf8_str());
+    doQuery(conn, _T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       GET_TEXT(iter, 0, trigger->name);
@@ -537,8 +522,9 @@ private:
   ObjectBrowser *ob;
 };
 
-ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
+ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), sql() {
   AddRoot(_T("root"));
+  sql = new ObjectBrowserSql();
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {

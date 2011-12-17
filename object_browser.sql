@@ -1,5 +1,12 @@
 -- SQL used by the object browser
--- The object browser extracts its results by position, so the order of columns is critical
+
+-- The object browser extracts its results by position, so the order of columns is critical.
+
+-- The introductory comments define a name and, optionally, a minimum
+-- server version for that statement. Statments with the same name are
+-- collected together, and the instance with the highest minimum
+-- version that the connected server satisfies is taken. If there is
+-- an instance with no version as well, that is used as a fallback.
 
 -- SQL :: Server
 SELECT version()
@@ -41,7 +48,7 @@ FROM (SELECT oid, relname, relkind, relnamespace
                                  AND pg_description.objsubid = 0
      RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
--- SQL :: Functions
+-- SQL :: Functions :: 8.4
 SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
@@ -54,7 +61,7 @@ FROM pg_proc
      LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass
                                  AND pg_description.objoid = pg_proc.oid
 
--- SQL :: Functions83
+-- SQL :: Functions
 SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
@@ -78,31 +85,31 @@ WHERE attrelid = $1
       AND attnum > 0
 ORDER BY attnum
 
--- SQL :: Indices
+-- SQL :: Indices :: 9.0
 SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
 WHERE indrelid = $1
 
--- SQL :: Indices84
+-- SQL :: Indices
 SELECT relname, indisunique, indisprimary, false AS indisexclusion, indisclustered
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
 WHERE indrelid = $1
 
--- SQL :: Triggers
+-- SQL :: Triggers :: 9.0
 SELECT tgname, tgfoid::regprocedure, tgenabled
 FROM pg_trigger
 WHERE tgrelid = $1
       AND NOT tgisinternal
 
--- SQL :: Triggers84
+-- SQL :: Triggers :: 8.3
 SELECT tgname, tgfoid::regprocedure, tgenabled
 FROM pg_trigger
 WHERE tgrelid = $1
       AND tgconstraint = 0
 
--- SQL :: Triggers82
+-- SQL :: Triggers
 SELECT tgname, tgfoid::regprocedure, tgenabled
 FROM pg_trigger
 WHERE tgrelid = $1
@@ -116,7 +123,7 @@ WHERE tgrelid = $1
                      AND c.contype = 'f')
           )
 
--- SQL :: IndexSchema
+-- SQL :: IndexSchema :: 9.1
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
@@ -180,7 +187,7 @@ FROM pg_namespace
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
 
--- SQL :: IndexSchema90
+-- SQL :: IndexSchema :: 8.4
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
@@ -228,7 +235,7 @@ FROM pg_namespace
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
 
--- SQL :: IndexSchema83
+-- SQL :: IndexSchema :: 8.3
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
@@ -276,7 +283,7 @@ FROM pg_namespace
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
 
--- SQL :: IndexSchema82
+-- SQL :: IndexSchema :: 8.2
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,

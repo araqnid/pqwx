@@ -3,12 +3,11 @@
 #ifndef __object_browser_h
 #define __object_browser_h
 
+#include <vector>
 #include "wx/treectrl.h"
 #include "server_connection.h"
 #include "database_connection.h"
-
-#include <string>
-#include <vector>
+#include "versioned_sql.h"
 
 using namespace std;
 
@@ -27,6 +26,7 @@ public:
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
   ~ObjectBrowser() {
     Dispose();
+    delete sql;
   }
 
   void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
@@ -47,6 +47,8 @@ public:
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions);
 
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers);
+
+  const char *GetSql(const wxString &name, int serverVersion) { return sql->GetSql(name, serverVersion); }
 private:
   DECLARE_EVENT_TABLE();
   vector<ServerModel*> servers;
@@ -56,6 +58,7 @@ private:
   void OnWorkFinished(wxCommandEvent&);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members);
+  VersionedSql *sql;
 };
 
 #endif

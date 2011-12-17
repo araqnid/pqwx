@@ -8,6 +8,15 @@ use Getopt::Std;
 
 getopts('') or die "Syntax: $0 [infile [outfile]]";
 
+sub slurp_template {
+    local $/;
+    undef $/;
+    my $template = <DATA>;
+    return $template;
+}
+
+my $class_template = slurp_template();
+
 sub c_escape {
     my $str = shift;
     our %escape = ( "\"" => "\\\"", "\r" => "\\r", "\n" => "\\n", "\t" => "\\t", "\\" => "\\\\" );
@@ -26,22 +35,38 @@ sub flush_sql {
     my($output, $tag, $buffer) = @_;
     $buffer =~ s/\n+$//;
     $buffer =~ s/^\n+//;
-    print $output "// $tag->[0] line $tag->[1]\n";
-    print $output "#define _SQL__$tag->[0] \"".c_escape(collapse_sql($buffer))."\"\n";
+    my $sql = collapse_sql($buffer);
+    my($name, $line, $major_version, $minor_version) = @$tag;
+    if ($major_version) {
+	$sql = "/* $name (version >= $major_version.$minor_version) */ $sql";
+	print $output "AddSql(_T(\"".c_escape($name)."\"), \"".c_escape($sql)."\", $major_version, $minor_version);\n";
+    }
+    else {
+	$sql = "/* $name */ $sql";
+	print $output "AddSql(_T(\"".c_escape($name)."\"), \"".c_escape($sql)."\");\n";
+    }
 }
 
 sub process_header {
+    my $classname = shift;
     my $input = shift;
     my $output = shift;
+
+    my($header, $footer) = split(/\{\{content\}\}/, $class_template, 2);
+    $header =~ s/\{\{classname\}\}/$classname/g;
+    $footer =~ s/\{\{classname\}\}/$classname/g;
+
+    print $output $header;
 
     my $tag;
     my $buffer;
     my $line = 0;
     while (<$input>) {
 	++$line;
-	if (/^-- SQL :: (.+)/) {
+	if (/^-- SQL :: ([[:alnum:][:blank:]]+)(?: :: (\d+)\.(\d+))?$/) {
+	    my $new_tag = [$1, $line, $2, $3];
 	    flush_sql($output, $tag, $buffer) if ($tag);
-	    $tag = [$1, $line];
+	    $tag = $new_tag;
 	    $buffer = '';
 	}
 	elsif ($tag) {
@@ -49,10 +74,12 @@ sub process_header {
 	}
     }
     flush_sql($output, $tag, $buffer) if ($tag);
+
+    print $output $footer;
 }
 
 if (@ARGV == 0) {
-    process_header(\*STDIN, \*STDOUT);
+    process_header('ObjectBrowserSql', \*STDIN, \*STDOUT);
 }
 else {
     my $infilename = shift;
@@ -64,5 +91,14 @@ else {
 	$outfilename .= ".h";
     }
     open my $output, '>', $outfilename or die "Unable to write '$outfilename': $!\n";
-    process_header($input, $output);
+    process_header('ObjectBrowserSql', $input, $output);
 }
+
+__DATA__
+#include "versioned_sql.h"
+class {{classname}} : public VersionedSql {
+public:
+    {{classname}}() : VersionedSql() {
+{{content}}
+    }
+};

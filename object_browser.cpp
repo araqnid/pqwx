@@ -134,12 +134,12 @@ public:
   virtual ~ObjectBrowserWork() {}
   void execute(SqlLogger *logger_, PGconn *conn) {
     logger = logger_;
-    if (!cmd(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
+    if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
       return;
 
     executeInTransaction(conn);
 
-    cmd(conn, "END");
+    doCommand(conn, "END");
   }
   virtual void loadResultsToGui(ObjectBrowser *browser) = 0;
 protected:
@@ -150,10 +150,8 @@ protected:
     owner->AddPendingEvent(event);
   }
   virtual void executeInTransaction(PGconn *conn) = 0;
-  bool cmd(PGconn *conn, const char *sql) {
-    DatabaseCommandWork work(sql);
-    work.execute(logger, conn);
-    return work.successful;
+  bool doCommand(PGconn *conn, const char *sql) {
+    return cmd(logger, conn, sql);
   }
   bool doQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
     doQuery(conn, GetSql(conn, name), results, paramType, paramValue);

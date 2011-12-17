@@ -14,8 +14,7 @@ public:
     if (strcmp(clientEncodingName, "UTF8") != 0) {
       PQsetClientEncoding(conn, "UTF8");
     }
-    DatabaseCommandWork datestyle("SET DateStyle = 'ISO'");
-    datestyle.execute(logger, conn);
+    cmd(logger, conn, "SET DateStyle = 'ISO'");
   }
 };
 
@@ -27,9 +26,7 @@ public:
     if (serverVersion < 90000)
       return;
     wxString sql = _T("SET application_name = ") + quoteLiteral(conn, newLabel);
-    wxCharBuffer sqlBuf = sql.utf8_str();
-    DatabaseCommandWork command(sqlBuf.data());
-    command.execute(logger, conn);
+    cmd(logger, conn, sql.utf8_str());
   }
 private:
   const wxString newLabel;

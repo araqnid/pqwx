@@ -589,11 +589,15 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 }
 
 void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, DatabaseWork *work) {
-  DatabaseConnection *conn = GetServerAdminConnection(serverModel);
-  // bodge
-  if (!conn->IsConnected())
-    conn->Connect();
-  conn->AddWork(work);
+  ConnectAndAddWork(serverModel, GetServerAdminConnection(serverModel), work);
+}
+
+void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnection *db, DatabaseWork *work) {
+  // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
+  if (!db->IsConnected()) {
+    db->Connect();
+  }
+  db->AddWork(work);
 }
 
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
@@ -639,11 +643,7 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 }
 
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
-  DatabaseConnection *conn = GetDatabaseConnection(database->server, database->name);
-  // bodge
-  if (!conn->IsConnected())
-    conn->Connect();
-  conn->AddWork(work);
+  ConnectAndAddWork(database->server, GetDatabaseConnection(database->server, database->name), work);
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString &serverVersionString, int serverVersion, bool usingSSL) {

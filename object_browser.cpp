@@ -117,7 +117,7 @@ public:
     return NULL;
   }
   bool versionNotBefore(int major, int minor) {
-    return serverVersion >= (major * 10000 + minor * 1000);
+    return serverVersion >= (major * 10000 + minor * 100);
   }
   void Dispose() {
     wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());

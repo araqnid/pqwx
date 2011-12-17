@@ -23,6 +23,9 @@ public:
   wxString password;
   const wxString globalDbName;
 
+  // discovered attributes
+  bool passwordNeededToConnect;
+
   void SetServerName(wxString& serverName) {
     int colon = serverName.Find(_T(':'));
     if (colon == wxNOT_FOUND) {

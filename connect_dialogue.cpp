@@ -103,6 +103,7 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
     return;
 
   if (work->state == ConnectionWork::CONNECTED) {
+    work->server->passwordNeededToConnect = work->usedPassword;
     objectBrowser->AddServerConnection(work->server, work->db);
     if (!passwordInput->GetValue().empty()) {
       if (!work->usedPassword)

@@ -12,6 +12,7 @@
 #include "object_browser.h"
 #include "object_browser_sql.h"
 #include "pqwx_frame.h"
+#include "catalogue_index.h"
 
 #define SQL(t) _SQL__##t
 
@@ -77,6 +78,7 @@ public:
   bool allowConnections;
   bool havePrivsToConnect;
   ServerModel *server;
+  CatalogueIndex *catalogueIndex;
   bool IsUsable() {
     return allowConnections && havePrivsToConnect;
   }
@@ -217,7 +219,8 @@ private:
 #define GET_OID(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
 #define GET_BOOLEAN(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index].IsSameAs(_T("t"))
 #define GET_TEXT(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index]
-#define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
+#define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
+#define GET_INT8(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
@@ -356,6 +359,51 @@ protected:
     ob->FillInDatabaseSchema(databaseModel, databaseItem, relations, functions);
     ob->Expand(databaseItem);
     ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
+  }
+};
+
+class IndexDatabaseSchemaWork : public ObjectBrowserWork {
+public:
+  IndexDatabaseSchemaWork(wxEvtHandler *owner, DatabaseModel *database) : ObjectBrowserWork(owner), database(database) {
+    wxLogDebug(_T("%p: work to index schema"), this);
+  }
+private:
+  DatabaseModel *database;
+  CatalogueIndex *catalogueIndex;
+protected:
+  void executeInTransaction(PGconn *conn) {
+    map<wxString, CatalogueIndex::Type> typeMap;
+    typeMap[_T("t")] = CatalogueIndex::TABLE;
+    typeMap[_T("v")] = CatalogueIndex::VIEW;
+    typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
+    typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
+    typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
+    typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
+    typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
+    typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
+    typeMap[_T("T")] = CatalogueIndex::TYPE;
+    typeMap[_T("x")] = CatalogueIndex::EXTENSION;
+    typeMap[_T("O")] = CatalogueIndex::COLLATION;
+    QueryResults rs;
+    doQuery(conn, SQL(IndexSchema), rs);
+    catalogueIndex = new CatalogueIndex();
+    catalogueIndex->Begin();
+    for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
+      long entityId;
+      CatalogueIndex::Type entityType;
+      wxString typeString;
+      wxString symbol;
+      wxString disambig;
+      GET_INT8(iter, 0, entityId);
+      GET_TEXT(iter, 1, typeString);
+      GET_TEXT(iter, 2, symbol);
+      GET_TEXT(iter, 3, disambig);
+      catalogueIndex->AddDocument(entityId, entityType, symbol, disambig);
+    }
+    catalogueIndex->Commit();
+  }
+  void loadResultsToGui(ObjectBrowser *ob) {
+    database->catalogueIndex = catalogueIndex;
   }
 };
 
@@ -559,6 +607,7 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database) {
   SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(this, database, databaseItem));
+  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(this, database));
 }
 
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {

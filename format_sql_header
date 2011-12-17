@@ -17,7 +17,7 @@ sub c_escape {
 
 sub collapse_sql {
     my $sql = shift;
-    $sql =~ s{-- (.+)}{/* $1 */};
+    $sql =~ s{-- (.+)}{/* $1 */}g;
     $sql =~ s{\s+}{ }g;
     return $sql;
 }

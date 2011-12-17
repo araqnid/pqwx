@@ -8,3 +8,4 @@ core
 resources.h
 resources.cpp
 object_browser_sql.h
+test_catalogue

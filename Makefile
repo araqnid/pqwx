@@ -1,6 +1,6 @@
 -include local_build.mk
 
-all: pqwx
+all: pqwx test_catalogue
 
 vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
@@ -16,13 +16,16 @@ endif
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags) $(shell pkg-config --cflags jansson)
 LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs) $(shell pkg-config --libs jansson)
-OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o
+OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o
 XRC := rc/connect.xrc
 
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^
 
--include $(OBJS:.o=.d)
+test_catalogue: catalogue_index.o test_catalogue.o
+	g++ $(LDFLAGS) -o $@ $^
+
+-include $(OBJS:.o=.d) test_catalogue.d
 
 %.o: %.cpp
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp
@@ -40,6 +43,6 @@ object_browser_sql.h: object_browser.sql
 object_browser.o: object_browser_sql.h
 
 clean:
-	rm -f *.o *.d pqwx vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h
+	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h
 
 .PHONY: FORCE

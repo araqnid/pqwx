@@ -27,6 +27,19 @@ public:
   }
 };
 
+class RelabelWork : public DatabaseWork {
+public:
+  RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
+  void execute(SqlLogger *logger, PGconn *conn) {
+    wxString sql = _T("SET application_name = ") + quoteLiteral(conn, newLabel);
+    wxCharBuffer sqlBuf = sql.utf8_str();
+    DatabaseCommandWork command(sqlBuf.data());
+    command.execute(logger, conn);
+  }
+private:
+  const wxString newLabel;
+};
+
 class DatabaseWorkerThread : public wxThread {
 public:
   DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) {
@@ -132,6 +145,9 @@ bool DatabaseWorkerThread::Connect() {
   wxCharBuffer hostname = db->server->hostname.utf8_str();
   wxCharBuffer username = db->server->username.utf8_str();
   wxCharBuffer password = db->server->password.utf8_str();
+  wxString appName(_T("pqwx"));
+  if (!db->label.IsEmpty()) appName << _T(" - ") << db->label;
+  wxCharBuffer appNameBuf = appName.utf8_str();
 
   values[0] = db->server->hostname.IsEmpty() ? NULL : hostname.data();
 
@@ -145,7 +161,7 @@ bool DatabaseWorkerThread::Connect() {
 
   values[2] = db->server->username.IsEmpty() ? NULL : username.data();
   values[3] = db->server->password.IsEmpty() ? NULL : password.data();
-  values[4] = "pqwx";
+  values[4] = appNameBuf.data();
   values[5] = dbname;
 
 #ifdef PQWX_DEBUG
@@ -233,4 +249,8 @@ bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
   workerThread->work.push_back(work);
   workCondition.Signal();
   return true;
+}
+
+void DatabaseConnection::Relabel(const wxString &newLabel) {
+  AddWork(new RelabelWork(_T("pqwx - ") + newLabel));
 }

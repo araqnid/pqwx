@@ -31,6 +31,25 @@ public:
   // Called from the db execution context with the work mutex held.
   virtual void notifyFinished() {
   }
+
+  static wxString quoteIdent(PGconn *conn, const wxString &str) {
+    wxCharBuffer buf(str.utf8_str());
+    char *escaped = PQescapeIdentifier(conn, buf.data(), strlen(buf.data()));
+    wxString result = wxString::FromUTF8(escaped);
+    if (result.length() == (str.length() + 2)
+	&& result.IsSameAs(_T("\"") + str + _T("\"")))
+      return str; 
+    PQfreemem(escaped);
+    return result;
+  }
+
+  static wxString quoteLiteral(PGconn *conn, const wxString &str) {
+    wxCharBuffer buf(str.utf8_str());
+    char *escaped = PQescapeLiteral(conn, buf.data(), strlen(buf.data()));
+    wxString result = wxString::FromUTF8(escaped);
+    PQfreemem(escaped);
+    return result;
+  }
 protected:
 private:
   wxMutex mutex;

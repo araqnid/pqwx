@@ -30,7 +30,7 @@ public:
 
 class DatabaseConnection : public SqlLogger {
 public:
-  DatabaseConnection(ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workConditionMutex) {
+  DatabaseConnection(ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workConditionMutex), label(label) {
     workerThread = NULL;
     connectionCallback = NULL;
     Setup();
@@ -48,11 +48,13 @@ public:
   DatabaseConnectionState GetState();
   bool IsConnected();
   wxString DbName() { return dbname; }
+  void Relabel(const wxString &newLabel);
 private:
   void Setup();
   wxString identification;
   ServerConnection *server;
   const wxString dbname;
+  wxString label;
   DatabaseWorkerThread *workerThread;
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;

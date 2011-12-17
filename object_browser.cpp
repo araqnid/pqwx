@@ -100,6 +100,7 @@ public:
   ServerModel() {}
   ServerModel(DatabaseConnection *db) {
     connections[db->DbName()] = db;
+    db->Relabel(_("Object Browser"));
   }
   ServerConnection *conn;
   vector<DatabaseModel*> databases;
@@ -469,13 +470,15 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
     ServerModel *serverModel = *iter;
     if (serverModel->conn->Identification().IsSameAs(serverId)) {
       wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
-      db->CloseSync();
-      delete db;
+      if (db != NULL) {
+	db->CloseSync();
+	delete db;
+      }
       return;
     }
   }
 
-  ServerModel *serverModel = new ServerModel(db);
+  ServerModel *serverModel = db ? new ServerModel(db) : new ServerModel();
   serverModel->conn = server;
   servers.push_back(serverModel);
 
@@ -497,7 +500,7 @@ DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, co
   DatabaseConnection *db = server->connections[dbname];
   if (db == NULL) {
     wxLogDebug(_T("Allocating connection to %s database %s"), server->conn->Identification().c_str(), dbname.c_str());
-    db = new DatabaseConnection(server->conn, dbname);
+    db = new DatabaseConnection(server->conn, dbname, _("Object Browser"));
     server->connections[dbname] = db;
   }
   return db;

@@ -23,6 +23,11 @@ class TriggerModel;
 class FunctionModel;
 class SchemaMemberModel;
 
+#define DECLARE_SCRIPT_HANDLERS(menu, mode) \
+  void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
+  void On##menu##MenuScript##mode##File(wxCommandEvent&); \
+  void On##menu##MenuScript##mode##Clipboard(wxCommandEvent&)
+
 class ObjectBrowser : public wxTreeCtrl {
 public:
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
@@ -69,15 +74,9 @@ private:
   void OnServerMenuProperties(wxCommandEvent&);
   void OnDatabaseMenuRefresh(wxCommandEvent&);
   void OnDatabaseMenuProperties(wxCommandEvent&);
-  void OnDatabaseMenuScriptCreateWindow(wxCommandEvent&);
-  void OnDatabaseMenuScriptCreateFile(wxCommandEvent&);
-  void OnDatabaseMenuScriptCreateClipboard(wxCommandEvent&);
-  void OnDatabaseMenuScriptAlterWindow(wxCommandEvent&);
-  void OnDatabaseMenuScriptAlterFile(wxCommandEvent&);
-  void OnDatabaseMenuScriptAlterClipboard(wxCommandEvent&);
-  void OnDatabaseMenuScriptDropWindow(wxCommandEvent&);
-  void OnDatabaseMenuScriptDropFile(wxCommandEvent&);
-  void OnDatabaseMenuScriptDropClipboard(wxCommandEvent&);
+  DECLARE_SCRIPT_HANDLERS(Database, Create);
+  DECLARE_SCRIPT_HANDLERS(Database, Alter);
+  DECLARE_SCRIPT_HANDLERS(Database, Drop);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members);
   VersionedSql *sql;

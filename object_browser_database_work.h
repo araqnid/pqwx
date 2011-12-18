@@ -354,21 +354,21 @@ protected:
 
 class ScriptWork : public ObjectBrowserWork {
 public:
-  const enum Mode { CREATE, ALTER, DROP } mode;
-  const enum Output { WINDOW, FILE, CLIPBOARD } output;
+  const enum Mode { Create, Alter, Drop } mode;
+  const enum Output { Window, File, Clipboard } output;
   ScriptWork(ObjectBrowser *owner, Mode mode, Output output): ObjectBrowserWork(owner), mode(mode), output(output) {}
 protected:
   std::vector<wxString> ddl;
   void LoadIntoView(ObjectBrowser *ob) {
     wxString message;
     switch (output) {
-    case WINDOW:
+    case Window:
       message << _T("TODO Send to query window:\n\n");
       break;
-    case FILE:
+    case File:
       message << _T("TODO Send to file:\n\n");
       break;
-    case CLIPBOARD:
+    case Clipboard:
       message << _T("TODO Send to clipboard:\n\n");
       break;
     }
@@ -402,7 +402,7 @@ protected:
 
     wxString sql;
     switch (mode) {
-    case CREATE:
+    case Create:
       sql << _T("CREATE DATABASE ") << QuoteIdent(conn, database->name);
       sql << _T("\n\tENCODING = ") << QuoteLiteral(conn, encoding);
       sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(conn, collation);
@@ -411,13 +411,13 @@ protected:
       sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
       break;
 
-    case ALTER:
+    case Alter:
       sql << _T("ALTER DATABASE ") << QuoteIdent(conn, database->name);
       sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
       sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
       break;
 
-    case DROP:
+    case Drop:
       sql << _T("DROP DATABASE ") << QuoteIdent(conn, database->name);
       break;
     }

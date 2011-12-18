@@ -17,6 +17,11 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 
+#define BIND_SCRIPT_HANDLERS(menu, mode) \
+  EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
+  EVT_MENU(XRCID(#menu "Menu_Script" #mode "File"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
+  EVT_MENU(XRCID(#menu "Menu_Script" #mode "Clipboard"), ObjectBrowser::On##menu##MenuScript##mode##Window)
+
 BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
   EVT_TREE_ITEM_GETTOOLTIP(Pqwx_ObjectBrowser, ObjectBrowser::OnGetTooltip)
@@ -29,16 +34,24 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
 
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateWindow"), ObjectBrowser::OnDatabaseMenuScriptCreateWindow)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateFile"), ObjectBrowser::OnDatabaseMenuScriptCreateFile)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateClipboard"), ObjectBrowser::OnDatabaseMenuScriptCreateClipboard)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterWindow"), ObjectBrowser::OnDatabaseMenuScriptAlterWindow)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterFile"), ObjectBrowser::OnDatabaseMenuScriptAlterFile)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterClipboard"), ObjectBrowser::OnDatabaseMenuScriptAlterClipboard)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptDropWindow"), ObjectBrowser::OnDatabaseMenuScriptDropWindow)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptDropFile"), ObjectBrowser::OnDatabaseMenuScriptDropFile)
-  EVT_MENU(XRCID("DatabaseMenu_ScriptDropClipboard"), ObjectBrowser::OnDatabaseMenuScriptDropClipboard)
+  BIND_SCRIPT_HANDLERS(Database, Create)
+  BIND_SCRIPT_HANDLERS(Database, Alter)
+  BIND_SCRIPT_HANDLERS(Database, Drop)
 END_EVENT_TABLE()
+
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output) \
+void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
+  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(this, contextMenu##menu, ScriptWork::mode, ScriptWork::output)); \
+}
+
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard)
+
+IMPLEMENT_SCRIPT_HANDLERS(Database, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Alter)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Drop)
 
 class LazyLoader : public wxTreeItemData {
 public:
@@ -557,40 +570,4 @@ void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
   wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptCreateWindow(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::WINDOW));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptCreateFile(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::FILE));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptCreateClipboard(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::CLIPBOARD));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptAlterWindow(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::WINDOW));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptAlterFile(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::FILE));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptAlterClipboard(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::CLIPBOARD));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptDropWindow(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::WINDOW));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptDropFile(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::FILE));
-}
-
-void ObjectBrowser::OnDatabaseMenuScriptDropClipboard(wxCommandEvent &event) {
-  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::CLIPBOARD));
 }

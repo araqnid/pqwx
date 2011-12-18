@@ -34,19 +34,17 @@ vector<wxString> CatalogueIndex::Analyse(const wxString &input) {
 
   int mark = -1; // start of current token
   // [mark,pos) is the token when we find an edge
-  bool lastWasLowerCase;
   for (int pos = 0; pos < input.length(); pos++) {
     wxChar c = input[pos];
     if (iswalnum(c)) {
       if (mark < 0) {
 	mark = pos;
       }
-      if (iswupper(c) && lastWasLowerCase) {
-	// moved from lower-case to upper-case
+      else if (iswupper(c)) {
+	// upper-case letter causes a flush
 	output.push_back(input.Mid(mark, pos-mark));
 	mark = pos;
       }
-      lastWasLowerCase = iswlower(c);
     }
     else if (mark >= 0) {
       // moved from alphanumeric to other

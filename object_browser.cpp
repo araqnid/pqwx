@@ -22,7 +22,22 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_GETTOOLTIP(Pqwx_ObjectBrowser, ObjectBrowser::OnGetTooltip)
   EVT_TREE_ITEM_RIGHT_CLICK(Pqwx_ObjectBrowser, ObjectBrowser::OnItemRightClick)
   EVT_COMMAND(EVENT_WORK_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ObjectBrowser::OnWorkFinished)
+
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
+  EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
+  EVT_MENU(XRCID("ServerMenu_Refresh"), ObjectBrowser::OnServerMenuRefresh)
+
+  EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
+  EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateWindow"), ObjectBrowser::OnDatabaseMenuScriptCreateWindow)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateFile"), ObjectBrowser::OnDatabaseMenuScriptCreateFile)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptCreateClipboard"), ObjectBrowser::OnDatabaseMenuScriptCreateClipboard)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterWindow"), ObjectBrowser::OnDatabaseMenuScriptAlterWindow)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterFile"), ObjectBrowser::OnDatabaseMenuScriptAlterFile)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptAlterClipboard"), ObjectBrowser::OnDatabaseMenuScriptAlterClipboard)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptDropWindow"), ObjectBrowser::OnDatabaseMenuScriptDropWindow)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptDropFile"), ObjectBrowser::OnDatabaseMenuScriptDropFile)
+  EVT_MENU(XRCID("DatabaseMenu_ScriptDropClipboard"), ObjectBrowser::OnDatabaseMenuScriptDropClipboard)
 END_EVENT_TABLE()
 
 class LazyLoader : public wxTreeItemData {
@@ -56,9 +71,11 @@ private:
   ObjectBrowser *ob;
 };
 
-ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), sql() {
+ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
   AddRoot(_T("root"));
   sql = new ObjectBrowserSql();
+  serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
+  databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
@@ -496,7 +513,9 @@ void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIn
 }
 
 void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
-  wxTreeItemData *data = GetItemData(event.GetItem());
+  contextMenuItem = event.GetItem();
+
+  wxTreeItemData *data = GetItemData(contextMenuItem);
   if (data == NULL) {
     // some day this will never happen, when every tree node has something useful
     return;
@@ -504,11 +523,16 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
 
   ServerModel *server = dynamic_cast<ServerModel*>(data);
   if (server != NULL) {
-    wxLogDebug(_T("item has a server: %s"), server->conn->Identification().c_str());
-    wxMenu *menu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
     contextMenuServer = server;
-    contextMenuItem = event.GetItem();
-    PopupMenu(menu);
+    PopupMenu(serverMenu);
+    return;
+  }
+
+  DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
+  if (database != NULL) {
+    contextMenuDatabase = database;
+    PopupMenu(databaseMenu);
+    return;
   }
 }
 
@@ -517,4 +541,56 @@ void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
   servers.remove(contextMenuServer);
   contextMenuServer->Dispose();
   Delete(contextMenuItem);
+}
+
+void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
+  wxMessageBox(_T("TODO Refresh server: ") + contextMenuServer->conn->Identification());
+}
+
+void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
+  wxMessageBox(_T("TODO Show server properties: ") + contextMenuServer->conn->Identification());
+}
+
+void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
+  wxMessageBox(_T("TODO Refresh database: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
+}
+
+void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
+  wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptCreateWindow(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::WINDOW));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptCreateFile(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::FILE));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptCreateClipboard(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::CREATE, ScriptWork::CLIPBOARD));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptAlterWindow(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::WINDOW));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptAlterFile(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::FILE));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptAlterClipboard(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::ALTER, ScriptWork::CLIPBOARD));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptDropWindow(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::WINDOW));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptDropFile(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::FILE));
+}
+
+void ObjectBrowser::OnDatabaseMenuScriptDropClipboard(wxCommandEvent &event) {
+  SubmitDatabaseWork(contextMenuDatabase, new DatabaseScriptWork(this, contextMenuDatabase, ScriptWork::DROP, ScriptWork::CLIPBOARD));
 }

@@ -25,6 +25,12 @@ SELECT pg_database.oid, datname, datistemplate, datallowconn,
        null AS description
 FROM pg_database
 
+-- SQL :: Database Detail
+SELECT owner.rolname, pg_encoding_to_char(encoding), datcollate, datctype, datconnlimit
+FROM pg_database
+     JOIN pg_roles owner ON owner.oid = pg_database.datdba
+WHERE pg_database.oid = $1
+
 -- SQL :: Roles :: 8.2
 SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper,
        pg_shdescription.description

@@ -4,5 +4,67 @@
     <object class="wxMenuItem" name="ServerMenu_Disconnect">
       <label>&amp;Disconnect</label>
     </object>
+    <object class="wxMenuItem" name="ServerMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="ServerMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="DatabaseMenu">
+    <object class="wxMenuItem" name="DatabaseMenu_New">
+      <label>New &amp;Database...</label>
+    </object>
+    <object class="wxMenuItem" name="DatabaseMenu_Query">
+      <label>New &amp;Query</label>
+    </object>
+    <object class="wxMenu" name="DatabaseMenu_Script">
+      <label>&amp;Script database as</label>
+      <object class="wxMenu" name="DatabaseMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="DatabaseMenu_ScriptAlter">
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="DatabaseMenu_ScriptDrop">
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="DatabaseMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+    </object>
+    <object class="wxMenuItem" name="DatabaseMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="DatabaseMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
   </object>
 </resource>

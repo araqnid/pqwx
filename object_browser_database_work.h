@@ -16,6 +16,10 @@ protected:
     event.SetClientData(this);
     owner->AddPendingEvent(event);
   }
+  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
+    wxString valueString = wxString::Format(_T("%lu"), paramValue);
+    DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
+  }
   bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
     DoQuery(conn, GetSql(conn, name), results, paramType, paramValue);
   }
@@ -345,6 +349,80 @@ protected:
     if (space != wxNOT_FOUND) {
       ob->SetItemText(relationItem, itemText.Left(space));
     }
+  }
+};
+
+class ScriptWork : public ObjectBrowserWork {
+public:
+  const enum Mode { CREATE, ALTER, DROP } mode;
+  const enum Output { WINDOW, FILE, CLIPBOARD } output;
+  ScriptWork(ObjectBrowser *owner, Mode mode, Output output): ObjectBrowserWork(owner), mode(mode), output(output) {}
+protected:
+  std::vector<wxString> ddl;
+  void LoadIntoView(ObjectBrowser *ob) {
+    wxString message;
+    switch (output) {
+    case WINDOW:
+      message << _T("TODO Send to query window:\n\n");
+      break;
+    case FILE:
+      message << _T("TODO Send to file:\n\n");
+      break;
+    case CLIPBOARD:
+      message << _T("TODO Send to clipboard:\n\n");
+      break;
+    }
+    for (std::vector<wxString>::iterator iter = ddl.begin(); iter != ddl.end(); iter++) {
+      message << *iter << _T("\n\n");
+    }
+    wxLogDebug(message);
+    wxMessageBox(message);
+  }
+};
+
+class DatabaseScriptWork : public ScriptWork {
+public:
+  DatabaseScriptWork(ObjectBrowser *owner, DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), database(database) {
+    wxLogDebug(_T("%p: work to generate database DDL script"), this);
+  }
+private:
+  DatabaseModel *database;
+protected:
+  void Execute(PGconn *conn) {
+    QueryResults rs;
+    DoQuery(conn, _T("Database Detail"), rs, 26 /* oid */, database->oid);
+    wxASSERT(rs.size() == 1);
+    wxASSERT(rs[0].size() >= 5);
+    wxString ownerName = rs[0][0];
+    wxString encoding = rs[0][1];
+    wxString collation = rs[0][2];
+    wxString ctype = rs[0][3];
+    long connectionLimit;
+    rs[0][4].ToLong(&connectionLimit);
+
+    wxString sql;
+    switch (mode) {
+    case CREATE:
+      sql << _T("CREATE DATABASE ") << QuoteIdent(conn, database->name);
+      sql << _T("\n\tENCODING = ") << QuoteLiteral(conn, encoding);
+      sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(conn, collation);
+      sql << _T("\n\tLC_CTYPE = ") << QuoteLiteral(conn, ctype);
+      sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
+      sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
+      break;
+
+    case ALTER:
+      sql << _T("ALTER DATABASE ") << QuoteIdent(conn, database->name);
+      sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
+      sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
+      break;
+
+    case DROP:
+      sql << _T("DROP DATABASE ") << QuoteIdent(conn, database->name);
+      break;
+    }
+
+    ddl.push_back(sql);
   }
 };
 

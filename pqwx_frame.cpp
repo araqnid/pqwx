@@ -72,6 +72,7 @@ void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 
 void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)
 {
+  objectBrowser->DisconnectSelected();
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {

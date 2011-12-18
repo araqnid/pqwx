@@ -4,6 +4,7 @@
 #define __object_browser_h
 
 #include <vector>
+#include <list>
 #include "wx/treectrl.h"
 #include "server_connection.h"
 #include "database_connection.h"
@@ -32,6 +33,7 @@ public:
   void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
   void LoadRelation(wxTreeItemId parent, RelationModel *);
+  void DisconnectSelected();
 
   void Dispose();
 
@@ -52,7 +54,7 @@ public:
   const char *GetSql(const wxString &name, int serverVersion) { return sql->GetSql(name, serverVersion); }
 private:
   DECLARE_EVENT_TABLE();
-  vector<ServerModel*> servers;
+  list<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnGetTooltip(wxTreeEvent&);

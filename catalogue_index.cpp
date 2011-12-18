@@ -134,7 +134,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T("Matched first term %d:\"%s\" in Document#%d at %d"), firstTerm->termId, terms[firstTerm->termId].c_str(), firstTerm->documentId, firstTerm->position);
 #endif
-    for (int offset = 1; offset < tokenMatches.size(); offset++, position++) {
+    for (int offset = 1; offset < tokenMatches.size(); offset++) {
       Occurrence *occurrence = tokenMatches[offset][DocumentPosition(documentId, position + offset)];
       if (!occurrence) {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX

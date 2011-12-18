@@ -9,34 +9,12 @@ class ObjectBrowserWork : public DatabaseWork {
 public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
-  void execute(PGconn *conn) {
-    if (PQserverVersion(conn) >= 80000) {
-      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
-	return;
-    }
-    else {
-      if (!doCommand(conn, "BEGIN"))
-	return;
-      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
-	return;
-      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
-	return;
-    }
-
-    executeInTransaction(conn);
-
-    doCommand(conn, "END");
-  }
   virtual void loadResultsToGui(ObjectBrowser *browser) = 0;
 protected:
   void notifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(this);
     owner->AddPendingEvent(event);
-  }
-  virtual void executeInTransaction(PGconn *conn) = 0;
-  bool doCommand(PGconn *conn, const char *sql) {
-    return cmd(conn, sql);
   }
   bool doQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
     doQuery(conn, GetSql(conn, name), results, paramType, paramValue);
@@ -98,10 +76,37 @@ protected:
       results.push_back(row);
     }
   }
-private:
-  ObjectBrowser *owner;
   const char *GetSql(PGconn *conn, const wxString &name) const {
     return owner->GetSql(name, PQserverVersion(conn));
+  }
+  ObjectBrowser *owner;
+};
+
+class ObjectBrowserTransactionalWork : public ObjectBrowserWork {
+public:
+  ObjectBrowserTransactionalWork(ObjectBrowser *owner) : ObjectBrowserWork(owner) {}
+  void execute(PGconn *conn) {
+    if (PQserverVersion(conn) >= 80000) {
+      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
+	return;
+    }
+    else {
+      if (!doCommand(conn, "BEGIN"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
+	return;
+    }
+
+    executeInTransaction(conn);
+
+    doCommand(conn, "END");
+  }
+  virtual void executeInTransaction(PGconn *conn) = 0;
+protected:
+  bool doCommand(PGconn *conn, const char *sql) {
+    return cmd(conn, sql);
   }
 };
 
@@ -112,9 +117,9 @@ private:
 #define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 #define GET_INT8(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 
-class RefreshDatabaseListWork : public ObjectBrowserWork {
+class RefreshDatabaseListWork : public ObjectBrowserTransactionalWork {
 public:
-  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserTransactionalWork(owner), serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -176,9 +181,9 @@ private:
   }
 };
 
-class LoadDatabaseSchemaWork : public ObjectBrowserWork {
+class LoadDatabaseSchemaWork : public ObjectBrowserTransactionalWork {
 public:
-  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
+  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserTransactionalWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -255,7 +260,7 @@ private:
   DatabaseModel *database;
   CatalogueIndex *catalogueIndex;
 protected:
-  void executeInTransaction(PGconn *conn) {
+  void execute(PGconn *conn) {
     map<wxString, CatalogueIndex::Type> typeMap;
     typeMap[_T("t")] = CatalogueIndex::TABLE;
     typeMap[_T("v")] = CatalogueIndex::VIEW;
@@ -303,9 +308,9 @@ protected:
   }
 };
 
-class LoadRelationWork : public ObjectBrowserWork {
+class LoadRelationWork : public ObjectBrowserTransactionalWork {
 public:
-  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserTransactionalWork(owner), relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:

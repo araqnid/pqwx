@@ -41,6 +41,10 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
 }
 
 void ObjectFinder::OnOk(wxCommandEvent &event) {
+  int n = resultsCtrl->GetSelection();
+  // should really disable the button when no result is selected
+  if (n == wxNOT_FOUND)
+    return;
   OnDoubleClickResult(event);
 }
 

@@ -131,6 +131,8 @@ protected:
     ob->FillInDatabases(serverModel, serverItem, databases);
     ob->FillInRoles(serverModel, serverItem, roles);
 
+    ob->EnsureVisible(serverItem);
+    ob->SelectItem(serverItem);
     ob->Expand(serverItem);
   }
 private:

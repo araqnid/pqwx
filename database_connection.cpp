@@ -14,7 +14,7 @@ public:
     if (strcmp(clientEncodingName, "UTF8") != 0) {
       PQsetClientEncoding(conn, "UTF8");
     }
-    cmd(conn, "SET DateStyle = 'ISO'");
+    DoCommand(conn, "SET DateStyle = 'ISO'");
   }
   void NotifyFinished() {
   }
@@ -27,8 +27,7 @@ public:
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
-    wxString sql = _T("SET application_name = ") + QuoteLiteral(conn, newLabel);
-    cmd(conn, sql.utf8_str());
+    DoCommand(conn, _T("SET application_name = ") + QuoteLiteral(conn, newLabel));
   }
   void NotifyFinished() {
   }

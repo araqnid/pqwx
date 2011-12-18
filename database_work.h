@@ -46,7 +46,11 @@ protected:
   wxMutex mutex;
   bool done;
 
-  bool cmd(PGconn *conn, const char *sql) {
+  bool DoCommand(PGconn *conn, const wxString &sql) {
+    return DoCommand(conn, sql.utf8_str());
+  }
+
+  bool DoCommand(PGconn *conn, const char *sql) {
     logger->LogSql(sql);
 
     PGresult *rs = PQexec(conn, sql);
@@ -139,10 +143,6 @@ public:
     DoCommand(conn, "END");
   }
   virtual void ExecuteInTransaction(PGconn *conn) = 0;
-protected:
-  bool DoCommand(PGconn *conn, const char *sql) {
-    return cmd(conn, sql);
-  }
 };
 
 #endif

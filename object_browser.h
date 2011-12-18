@@ -77,6 +77,18 @@ private:
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);
   DECLARE_SCRIPT_HANDLERS(Database, Drop);
+  DECLARE_SCRIPT_HANDLERS(Table, Create);
+  DECLARE_SCRIPT_HANDLERS(Table, Alter);
+  DECLARE_SCRIPT_HANDLERS(Table, Drop);
+  DECLARE_SCRIPT_HANDLERS(View, Create);
+  DECLARE_SCRIPT_HANDLERS(View, Alter);
+  DECLARE_SCRIPT_HANDLERS(View, Drop);
+  DECLARE_SCRIPT_HANDLERS(Sequence, Create);
+  DECLARE_SCRIPT_HANDLERS(Sequence, Alter);
+  DECLARE_SCRIPT_HANDLERS(Sequence, Drop);
+  DECLARE_SCRIPT_HANDLERS(Function, Create);
+  DECLARE_SCRIPT_HANDLERS(Function, Alter);
+  DECLARE_SCRIPT_HANDLERS(Function, Drop);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members);
   VersionedSql *sql;
@@ -84,10 +96,16 @@ private:
   // context menus
   wxMenu *serverMenu;
   wxMenu *databaseMenu;
+  wxMenu *tableMenu;
+  wxMenu *viewMenu;
+  wxMenu *sequenceMenu;
+  wxMenu *functionMenu;
 
   // remember what was the context for a context menu
   ServerModel *contextMenuServer;
   DatabaseModel *contextMenuDatabase;
+  RelationModel *contextMenuRelation;
+  FunctionModel *contextMenuFunction;
   wxTreeItemId contextMenuItem;
 };
 

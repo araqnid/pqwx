@@ -37,21 +37,45 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Database, Create)
   BIND_SCRIPT_HANDLERS(Database, Alter)
   BIND_SCRIPT_HANDLERS(Database, Drop)
+  BIND_SCRIPT_HANDLERS(Table, Create)
+  BIND_SCRIPT_HANDLERS(Table, Alter)
+  BIND_SCRIPT_HANDLERS(Table, Drop)
+  BIND_SCRIPT_HANDLERS(View, Create)
+  BIND_SCRIPT_HANDLERS(View, Alter)
+  BIND_SCRIPT_HANDLERS(View, Drop)
+  BIND_SCRIPT_HANDLERS(Sequence, Create)
+  BIND_SCRIPT_HANDLERS(Sequence, Alter)
+  BIND_SCRIPT_HANDLERS(Sequence, Drop)
+  BIND_SCRIPT_HANDLERS(Function, Create)
+  BIND_SCRIPT_HANDLERS(Function, Alter)
+  BIND_SCRIPT_HANDLERS(Function, Drop)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output) \
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, output)		\
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(this, contextMenu##menu, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(this, field, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, field) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, Window) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, File)    \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, Clipboard)
 
-IMPLEMENT_SCRIPT_HANDLERS(Database, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Alter)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuDatabase)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuDatabase)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Alter, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 
 class LazyLoader : public wxTreeItemData {
 public:
@@ -89,6 +113,10 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   sql = new ObjectBrowserSql();
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
+  tableMenu = wxXmlResource::Get()->LoadMenu(_T("TableMenu"));
+  viewMenu = wxXmlResource::Get()->LoadMenu(_T("ViewMenu"));
+  sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
+  functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
@@ -545,6 +573,32 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
   if (database != NULL) {
     contextMenuDatabase = database;
     PopupMenu(databaseMenu);
+    return;
+  }
+
+  RelationModel *relation = dynamic_cast<RelationModel*>(data);
+  if (relation != NULL) {
+    contextMenuDatabase = relation->database;
+    contextMenuRelation = relation;
+    switch (relation->type) {
+    case RelationModel::TABLE:
+      PopupMenu(tableMenu);
+      break;
+    case RelationModel::VIEW:
+      PopupMenu(viewMenu);
+      break;
+    case RelationModel::SEQUENCE:
+      PopupMenu(sequenceMenu);
+      break;
+    }
+    return;
+  }
+
+  FunctionModel *function = dynamic_cast<FunctionModel*>(data);
+  if (function != NULL) {
+    contextMenuDatabase = function->database;
+    contextMenuFunction = function;
+    PopupMenu(functionMenu);
     return;
   }
 }

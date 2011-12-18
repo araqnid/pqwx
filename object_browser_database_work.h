@@ -426,4 +426,52 @@ protected:
   }
 };
 
+class TableScriptWork : public ScriptWork {
+public:
+  TableScriptWork(ObjectBrowser *owner, RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), table(table) {
+    wxLogDebug(_T("%p: work to generate table DDL script"), this);
+  }
+private:
+  RelationModel *table;
+protected:
+  void Execute(PGconn *conn) {
+  }
+};
+
+class ViewScriptWork : public ScriptWork {
+public:
+  ViewScriptWork(ObjectBrowser *owner, RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), view(view) {
+    wxLogDebug(_T("%p: work to generate view DDL script"), this);
+  }
+private:
+  RelationModel *view;
+protected:
+  void Execute(PGconn *conn) {
+  }
+};
+
+class SequenceScriptWork : public ScriptWork {
+public:
+  SequenceScriptWork(ObjectBrowser *owner, RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), sequence(sequence) {
+    wxLogDebug(_T("%p: work to generate sequence DDL script"), this);
+  }
+private:
+  RelationModel *sequence;
+protected:
+  void Execute(PGconn *conn) {
+  }
+};
+
+class FunctionScriptWork : public ScriptWork {
+public:
+  FunctionScriptWork(ObjectBrowser *owner, FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), function(function) {
+    wxLogDebug(_T("%p: work to generate function DDL script"), this);
+  }
+private:
+  FunctionModel *function;
+protected:
+  void Execute(PGconn *conn) {
+  }
+};
+
 #endif

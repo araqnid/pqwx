@@ -133,7 +133,7 @@ public:
   Filter CreateNonSystemFilter();
   Filter CreateTypeFilter(Type type);
 
-  void Search(const wxString &input, const Filter &filter);
+  std::vector<Result> Search(const wxString &input, const Filter &filter);
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   void DumpDocumentStore() {

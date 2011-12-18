@@ -25,6 +25,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(XRCID("HelpAbout"), PqwxFrame::OnAbout)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
+  EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
 END_EVENT_TABLE()
 
@@ -73,6 +74,10 @@ void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)
 {
   objectBrowser->DisconnectSelected();
+}
+
+void PqwxFrame::OnFindObject(wxCommandEvent& event) {
+  objectBrowser->FindObject();
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {

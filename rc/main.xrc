@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <resource>
   <object class="wxMenuBar" name="mainmenu">
-    <object class="wxMenu">
+    <object class="wxMenu" name="filemenu">
       <object class="wxMenuItem" name="ConnectObjectBrowser">
         <label>Connect Object &amp;Browser...</label>
       </object>
@@ -14,7 +14,14 @@
       </object>
       <label>&amp;File</label>
     </object>
-    <object class="wxMenu">
+    <object class="wxMenu" name="editmenu">
+      <label>&amp;Edit</label>
+      <object class="wxMenuItem" name="FindObject">
+        <label>Find &amp;Object...</label>
+        <accel>Ctrl-Shift-T</accel>
+      </object>
+    </object>
+    <object class="wxMenu" name="helpmenu">
       <object class="wxMenuItem" name="HelpAbout">
         <label>&amp;About</label>
         <accel>F1</accel>

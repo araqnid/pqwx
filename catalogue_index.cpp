@@ -89,7 +89,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-void CatalogueIndex::Search(const wxString &input, const Filter &filter) {
+vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter) {
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -203,6 +203,7 @@ void CatalogueIndex::Search(const wxString &input, const Filter &filter) {
   double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
   wxLogDebug(_T("** Completed search in %.3lf seconds"), elapsedFP);
 #endif
+  return scoreDocs;
 }
 
 CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() {

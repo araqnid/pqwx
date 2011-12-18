@@ -9,6 +9,7 @@
 #include "server_connection.h"
 #include "database_connection.h"
 #include "versioned_sql.h"
+#include "catalogue_index.h"
 
 using namespace std;
 
@@ -34,6 +35,8 @@ public:
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *);
   void LoadRelation(wxTreeItemId parent, RelationModel *);
   void DisconnectSelected();
+  void FindObject();
+  void ZoomToFoundObject(DatabaseModel*, const CatalogueIndex::Document*);
 
   void Dispose();
 

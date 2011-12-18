@@ -11,6 +11,7 @@
 
 #include "object_browser.h"
 #include "object_browser_sql.h"
+#include "object_finder.h"
 #include "pqwx_frame.h"
 #include "catalogue_index.h"
 
@@ -75,6 +76,7 @@ public:
   bool isTemplate;
   bool allowConnections;
   bool havePrivsToConnect;
+  bool loaded;
   ServerModel *server;
   CatalogueIndex *catalogueIndex;
   bool IsUsable() {
@@ -274,6 +276,7 @@ private:
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
+      database->loaded = false;
       GET_OID(iter, 0, database->oid);
       GET_TEXT(iter, 1, database->name);
       GET_BOOLEAN(iter, 2, database->isTemplate);
@@ -728,6 +731,8 @@ static bool collateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
 }
 
 void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions) {
+  databaseModel->loaded = true;
+
   sort(relations.begin(), relations.end(), collateSchemaMembers);
   sort(functions.begin(), functions.end(), collateSchemaMembers);
   map<wxString, vector<SchemaMemberModel*> > systemSchemas;
@@ -895,4 +900,65 @@ void ObjectBrowser::DisconnectSelected() {
   servers.remove(server);
   server->Dispose(); // still does nasty synchronous disconnect for now
   Delete(cursor);
+}
+
+class ZoomToFoundObjectOnCompletion : public ObjectFinder::Completion {
+public:
+  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, DatabaseModel *database) : ob(ob), database(database) {}
+  void OnObjectChosen(const CatalogueIndex::Document *document) {
+    ob->ZoomToFoundObject(database, document);
+  }
+  void OnCancelled() {
+  }
+private:
+  DatabaseModel *database;
+  ObjectBrowser *ob;
+};
+
+void ObjectBrowser::FindObject() {
+  wxTreeItemId selected = GetSelection();
+  if (!selected.IsOk()) {
+    wxLogDebug(_T("selected item was not ok -- nothing is selected?"));
+    return;
+  }
+  if (selected == GetRootItem()) {
+    wxLogDebug(_T("selected item was root -- nothing is selected"));
+    return;
+  }
+  wxTreeItemId cursor = selected;
+  wxTreeItemId previous;
+  do {
+    wxTreeItemId parent = GetItemParent(cursor);
+    if (parent == GetRootItem())
+      break;
+    previous = cursor;
+    cursor = parent;
+  } while (1);
+  if (!previous.IsOk()) {
+    wxLogDebug(_T("selection is above database level?"));
+    return;
+  }
+
+  wxTreeItemData *data = GetItemData(previous);
+  wxASSERT(data != NULL);
+
+  DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
+  wxASSERT(database != NULL);
+
+  wxLogDebug(_T("Find object in %s %s"), database->server->conn->Identification().c_str(), database->name.c_str());
+
+  // TODO - should be able to open the dialogue and have it start loading this if it's not already done
+  if (!database->loaded) {
+    wxMessageBox(_T("Database not loaded yet (expand the tree node)"));
+    return;
+  }
+  wxASSERT(database->catalogueIndex != NULL);
+
+  ObjectFinder *finder = new ObjectFinder(NULL, new ZoomToFoundObjectOnCompletion(this, database), database->catalogueIndex);
+  finder->Show();
+  finder->SetFocus();
+}
+
+void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIndex::Document *document) {
+  wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\" of \"%s\""), document->symbol.c_str(), database->name.c_str(), database->server->conn->Identification().c_str());
 }

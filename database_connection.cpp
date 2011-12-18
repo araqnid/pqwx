@@ -8,7 +8,7 @@ using namespace std;
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void execute(PGconn *conn) {
+  void Execute(PGconn *conn) {
     int clientEncoding = PQclientEncoding(conn);
     const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
     if (strcmp(clientEncodingName, "UTF8") != 0) {
@@ -21,11 +21,11 @@ public:
 class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
-  void execute(PGconn *conn) {
+  void Execute(PGconn *conn) {
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
-    wxString sql = _T("SET application_name = ") + quoteLiteral(conn, newLabel);
+    wxString sql = _T("SET application_name = ") + QuoteLiteral(conn, newLabel);
     cmd(conn, sql.utf8_str());
   }
 private:
@@ -105,8 +105,8 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
 	DatabaseWork *work = *iter;
 	work->logger = db;
-	work->execute(conn);
-	work->finished(); // after this method is called, don't touch work again.
+	work->Execute(conn);
+	work->Finished(); // after this method is called, don't touch work again.
       }
       db->workConditionMutex.Lock();
       continue;

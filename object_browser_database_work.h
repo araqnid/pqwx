@@ -9,20 +9,20 @@ class ObjectBrowserWork : virtual public DatabaseWork {
 public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
-  virtual void loadResultsToGui(ObjectBrowser *browser) = 0;
+  virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
-  void notifyFinished() {
+  void NotifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(this);
     owner->AddPendingEvent(event);
   }
-  bool doQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
-    doQuery(conn, GetSql(conn, name), results, paramType, paramValue);
+  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
+    DoQuery(conn, GetSql(conn, name), results, paramType, paramValue);
   }
-  bool doQuery(PGconn *conn, const wxString &name, QueryResults &results) {
-    doQuery(conn, GetSql(conn, name), results);
+  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results) {
+    DoQuery(conn, GetSql(conn, name), results);
   }
-  bool doQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
+  bool DoQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
     logger->LogSql(sql);
 
     PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
@@ -37,13 +37,13 @@ protected:
       return false; // expected data back
     }
 
-    loadResultSet(rs, results);
+    ReadResultSet(rs, results);
 
     PQclear(rs);
 
     return true;
   }
-  bool doQuery(PGconn *conn, const char *sql, QueryResults &results) {
+  bool DoQuery(PGconn *conn, const char *sql, QueryResults &results) {
     logger->LogSql(sql);
 
     PGresult *rs = PQexec(conn, sql);
@@ -58,13 +58,13 @@ protected:
       return false; // expected data back
     }
 
-    loadResultSet(rs, results);
+    ReadResultSet(rs, results);
 
     PQclear(rs);
 
     return true;
   }
-  void loadResultSet(PGresult *rs, QueryResults &results) {
+  void ReadResultSet(PGresult *rs, QueryResults &results) {
     int rowCount = PQntuples(rs);
     int colCount = PQnfields(rs);
     for (int rowNum = 0; rowNum < rowCount; rowNum++) {
@@ -95,12 +95,12 @@ public:
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void executeInTransaction(PGconn *conn) {
-    loadServer(conn);
-    loadDatabases(conn);
-    loadRoles(conn);
+  void ExecuteInTransaction(PGconn *conn) {
+    ReadServer(conn);
+    ReadDatabases(conn);
+    ReadRoles(conn);
   }
-  void loadResultsToGui(ObjectBrowser *ob) {
+  void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion, usingSSL);
     ob->FillInDatabases(serverModel, serverItem, databases);
     ob->FillInRoles(serverModel, serverItem, roles);
@@ -115,16 +115,16 @@ private:
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
-  void loadServer(PGconn *conn) {
+  void ReadServer(PGconn *conn) {
     const char *serverVersionRaw = PQparameterStatus(conn, "server_version");
     serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
     serverVersion = PQserverVersion(conn);
     void *ssl = PQgetssl(conn);
     usingSSL = (ssl != NULL);
   }
-  void loadDatabases(PGconn *conn) {
+  void ReadDatabases(PGconn *conn) {
     QueryResults databaseRows;
-    doQuery(conn, _T("Databases"), databaseRows);
+    DoQuery(conn, _T("Databases"), databaseRows);
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -138,9 +138,9 @@ private:
       databases.push_back(database);
     }
   }
-  void loadRoles(PGconn *conn) {
+  void ReadRoles(PGconn *conn) {
     QueryResults roleRows;
-    doQuery(conn, _T("Roles"), roleRows);
+    DoQuery(conn, _T("Roles"), roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       GET_OID(iter, 0, role->oid);
@@ -164,17 +164,17 @@ private:
   vector<RelationModel*> relations;
   vector<FunctionModel*> functions;
 protected:
-  void executeInTransaction(PGconn *conn) {
-    loadRelations(conn);
-    loadFunctions(conn);
+  void ExecuteInTransaction(PGconn *conn) {
+    LoadRelations(conn);
+    LoadFunctions(conn);
   }
-  void loadRelations(PGconn *conn) {
+  void LoadRelations(PGconn *conn) {
     QueryResults relationRows;
     map<wxString, RelationModel::Type> typemap;
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    doQuery(conn, _T("Relations"), relationRows);
+    DoQuery(conn, _T("Relations"), relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
@@ -184,19 +184,19 @@ protected:
       wxString relkind;
       GET_TEXT(iter, 3, relkind);
       relation->type = typemap[relkind];
-      relation->user = !systemSchema(relation->schema);
+      relation->user = !IsSystemSchema(relation->schema);
       GET_TEXT(iter, 4, relation->description);
       relations.push_back(relation);
     }
   }
-  void loadFunctions(PGconn *conn) {
+  void LoadFunctions(PGconn *conn) {
     QueryResults functionRows;
     map<wxString, FunctionModel::Type> typemap;
     typemap[_T("f")] = FunctionModel::SCALAR;
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    doQuery(conn, _T("Functions"), functionRows);
+    DoQuery(conn, _T("Functions"), functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -208,17 +208,17 @@ protected:
       GET_TEXT(iter, 4, type);
       func->type = typemap[type];
       GET_TEXT(iter, 5, func->description);
-      func->user = !systemSchema(func->schema);
+      func->user = !IsSystemSchema(func->schema);
       functions.push_back(func);
     }
   }
-  void loadResultsToGui(ObjectBrowser *ob) {
+  void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInDatabaseSchema(databaseModel, databaseItem, relations, functions);
     ob->Expand(databaseItem);
     ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
   }
 private:
-  static inline bool systemSchema(wxString schema) {
+  static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"));
   }
 };
@@ -232,7 +232,7 @@ private:
   DatabaseModel *database;
   CatalogueIndex *catalogueIndex;
 protected:
-  void execute(PGconn *conn) {
+  void Execute(PGconn *conn) {
     map<wxString, CatalogueIndex::Type> typeMap;
     typeMap[_T("t")] = CatalogueIndex::TABLE;
     typeMap[_T("v")] = CatalogueIndex::VIEW;
@@ -246,7 +246,7 @@ protected:
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
     QueryResults rs;
-    doQuery(conn, _T("IndexSchema"), rs);
+    DoQuery(conn, _T("IndexSchema"), rs);
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -275,7 +275,7 @@ protected:
     }
     catalogueIndex->Commit();
   }
-  void loadResultsToGui(ObjectBrowser *ob) {
+  void LoadIntoView(ObjectBrowser *ob) {
     database->catalogueIndex = catalogueIndex;
   }
 };
@@ -292,17 +292,17 @@ private:
   vector<IndexModel*> indices;
   vector<TriggerModel*> triggers;
 protected:
-  void executeInTransaction(PGconn *conn) {
-    loadColumns(conn);
-    loadIndices(conn);
-    loadTriggers(conn);
+  void ExecuteInTransaction(PGconn *conn) {
+    ReadColumns(conn);
+    ReadIndices(conn);
+    ReadTriggers(conn);
   }
 private:
-  void loadColumns(PGconn *conn) {
+  void ReadColumns(PGconn *conn) {
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    doQuery(conn, _T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(conn, _T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -314,20 +314,20 @@ private:
       columns.push_back(column);
     }
   }
-  void loadIndices(PGconn *conn) {
+  void ReadIndices(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults indexRows;
-    doQuery(conn, _T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(conn, _T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
       GET_TEXT(iter, 0, index->name);
       indices.push_back(index);
     }
   }
-  void loadTriggers(PGconn *conn) {
+  void ReadTriggers(PGconn *conn) {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults triggerRows;
-    doQuery(conn, _T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(conn, _T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       GET_TEXT(iter, 0, trigger->name);
@@ -335,7 +335,7 @@ private:
     }
   }
 protected:
-  void loadResultsToGui(ObjectBrowser *ob) {
+  void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInRelation(relationModel, relationItem, columns, indices, triggers);
     ob->Expand(relationItem);
 

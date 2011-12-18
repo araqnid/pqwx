@@ -14,18 +14,18 @@ class DatabaseWork {
 public:
   DatabaseWork() : done(false) {}
   virtual ~DatabaseWork() {}
-  virtual void execute(PGconn *conn) = 0;
-  bool isDone() {
+  virtual void Execute(PGconn *conn) = 0;
+  bool IsDone() {
     wxMutexLocker locker(mutex);
     return done;
   }
 
   // Notify owner that work is finished (if more is required that signalling the condition).
   // Called from the db execution context with the work mutex held.
-  virtual void notifyFinished() {
+  virtual void NotifyFinished() {
   }
 
-  static wxString quoteIdent(PGconn *conn, const wxString &str) {
+  static wxString QuoteIdent(PGconn *conn, const wxString &str) {
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeIdentifier(conn, buf.data(), strlen(buf.data()));
     wxString result = wxString::FromUTF8(escaped);
@@ -36,7 +36,7 @@ public:
     return result;
   }
 
-  static wxString quoteLiteral(PGconn *conn, const wxString &str) {
+  static wxString QuoteLiteral(PGconn *conn, const wxString &str) {
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeLiteral(conn, buf.data(), strlen(buf.data()));
     wxString result = wxString::FromUTF8(escaped);
@@ -71,10 +71,10 @@ protected:
   SqlLogger *logger;
 
 private:
-  void finished() {
+  void Finished() {
     wxMutexLocker locker(mutex);
     done = true;
-    notifyFinished();
+    NotifyFinished();
   }
   friend class DatabaseWorkerThread;
 };
@@ -93,7 +93,7 @@ public:
 private:
   wxCondition condition;
 protected:
-  void notifyFinished() {
+  void NotifyFinished() {
     condition.Signal();
   }
 };
@@ -106,14 +106,14 @@ public:
   };
 
   DisconnectWork(CloseCallback *callback = NULL) : callback(callback) {}
-  void execute(PGconn *conn) {
+  void Execute(PGconn *conn) {
     PQfinish(conn);
     logger->LogDisconnect();
   }
 private:
   CloseCallback *callback;
-  void notifyFinished() {
-    SynchronisableDatabaseWork::notifyFinished();
+  void NotifyFinished() {
+    SynchronisableDatabaseWork::NotifyFinished();
     if (callback)
       callback->OnConnectionClosed();
   }
@@ -121,27 +121,27 @@ private:
 
 class SnapshotIsolatedWork : virtual public DatabaseWork {
 public:
-  void execute(PGconn *conn) {
+  void Execute(PGconn *conn) {
     if (PQserverVersion(conn) >= 80000) {
-      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
+      if (!DoCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
 	return;
     }
     else {
-      if (!doCommand(conn, "BEGIN"))
+      if (!DoCommand(conn, "BEGIN"))
 	return;
-      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
+      if (!DoCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
 	return;
-      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
+      if (!DoCommand(conn, "SET TRANSACTION READ ONLY"))
 	return;
     }
 
-    executeInTransaction(conn);
+    ExecuteInTransaction(conn);
 
-    doCommand(conn, "END");
+    DoCommand(conn, "END");
   }
-  virtual void executeInTransaction(PGconn *conn) = 0;
+  virtual void ExecuteInTransaction(PGconn *conn) = 0;
 protected:
-  bool doCommand(PGconn *conn, const char *sql) {
+  bool DoCommand(PGconn *conn, const char *sql) {
     return cmd(conn, sql);
   }
 };

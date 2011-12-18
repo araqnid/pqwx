@@ -39,7 +39,7 @@ public:
   void LogConnectNeedsPassword();
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
   bool IsConnected();
-  wxString DbName() { return dbname; }
+  const wxString& DbName() const { return dbname; }
   void Relabel(const wxString &newLabel);
 private:
   void Setup();

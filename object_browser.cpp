@@ -129,9 +129,9 @@ void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnecti
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
-  if (work->isDone()) {
+  if (work->IsDone()) {
     wxLogDebug(_T("%p: work finished"), work);
-    work->loadResultsToGui(this);
+    work->LoadIntoView(this);
   }
   else {
     wxLogDebug(_T("%p: work finished but not marked as done"), work);
@@ -178,12 +178,12 @@ void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverIt
   SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionString + _T(")") + (usingSSL ? _T(" [SSL]") : wxEmptyString));
 }
 
-static bool collateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
+static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
   return d1->name < d2->name;
 }
 
 void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases) {
-  sort(databases.begin(), databases.end(), collateDatabases);
+  sort(databases.begin(), databases.end(), CollateDatabases);
   vector<DatabaseModel*> systemDatabases;
   vector<DatabaseModel*> templateDatabases;
   vector<DatabaseModel*> userDatabases;
@@ -224,12 +224,12 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, vector<Database
   }
 }
 
-static bool collateRoles(RoleModel *r1, RoleModel *r2) {
+static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
   return r1->name < r2->name;
 }
 
 void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles) {
-  sort(roles.begin(), roles.end(), collateRoles);
+  sort(roles.begin(), roles.end(), CollateRoles);
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
   for (vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
@@ -245,7 +245,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
   }
 }
 
-static bool collateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
+static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
   if (r1->schema < r2->schema) return true;
   if (r1->schema.IsSameAs(r2->schema)) {
     return r1->name < r2->name;
@@ -256,8 +256,8 @@ static bool collateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
 void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions) {
   databaseModel->loaded = true;
 
-  sort(relations.begin(), relations.end(), collateSchemaMembers);
-  sort(functions.begin(), functions.end(), collateSchemaMembers);
+  sort(relations.begin(), relations.end(), CollateSchemaMembers);
+  sort(functions.begin(), functions.end(), CollateSchemaMembers);
   map<wxString, vector<SchemaMemberModel*> > systemSchemas;
   map<wxString, vector<SchemaMemberModel*> > userSchemas;
 

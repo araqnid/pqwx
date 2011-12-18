@@ -111,6 +111,58 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
+      <object class="wxMenu" name="TableMenu_ScriptSelect">
+        <object class="wxMenuItem" name="TableMenu_ScriptSelectWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TableMenu_ScriptSelectFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TableMenu_ScriptSelectClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;SELECT to</label>
+      </object>
+      <object class="wxMenu" name="TableMenu_ScriptInsert">
+        <object class="wxMenuItem" name="TableMenu_ScriptInsertWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TableMenu_ScriptInsertFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TableMenu_ScriptInsertClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;INSERT to</label>
+      </object>
+      <object class="wxMenu" name="TableMenu_ScriptUpdate">
+        <object class="wxMenuItem" name="TableMenu_ScriptUpdateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TableMenu_ScriptUpdateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TableMenu_ScriptUpdateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;UPDATE to</label>
+      </object>
+      <object class="wxMenu" name="TableMenu_ScriptDelete">
+        <object class="wxMenuItem" name="TableMenu_ScriptDeleteWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TableMenu_ScriptDeleteFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TableMenu_ScriptDeleteClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>D&amp;ELETE to</label>
+      </object>
       <label>&amp;Script table as</label>
     </object>
     <object class="wxMenuItem" name="TableMenu_Refresh">
@@ -163,6 +215,19 @@
           <label>&amp;Clipboard</label>
         </object>
         <label>&amp;DROP to</label>
+      </object>
+      <object class="wxMenu" name="ViewMenu_ScriptSelect">
+        <object class="wxMenuItem" name="ViewMenu_ScriptSelectWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="ViewMenu_ScriptSelectFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="ViewMenu_ScriptSelectClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;SELECT to</label>
       </object>
       <label>&amp;Script view as</label>
     </object>

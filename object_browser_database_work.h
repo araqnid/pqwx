@@ -370,7 +370,7 @@ protected:
 
 class ScriptWork : public ObjectBrowserWork {
 public:
-  const enum Mode { Create, Alter, Drop } mode;
+  const enum Mode { Create, Alter, Drop, Select, Insert, Update, Delete } mode;
   const enum Output { Window, File, Clipboard } output;
   ScriptWork(Mode mode, Output output): mode(mode), output(output) {}
 protected:

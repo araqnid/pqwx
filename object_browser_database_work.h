@@ -5,7 +5,7 @@
 
 typedef std::vector< std::vector<wxString> > QueryResults;
 
-class ObjectBrowserWork : public DatabaseWork {
+class ObjectBrowserWork : virtual public DatabaseWork {
 public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
@@ -82,34 +82,6 @@ protected:
   ObjectBrowser *owner;
 };
 
-class ObjectBrowserTransactionalWork : public ObjectBrowserWork {
-public:
-  ObjectBrowserTransactionalWork(ObjectBrowser *owner) : ObjectBrowserWork(owner) {}
-  void execute(PGconn *conn) {
-    if (PQserverVersion(conn) >= 80000) {
-      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
-	return;
-    }
-    else {
-      if (!doCommand(conn, "BEGIN"))
-	return;
-      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
-	return;
-      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
-	return;
-    }
-
-    executeInTransaction(conn);
-
-    doCommand(conn, "END");
-  }
-  virtual void executeInTransaction(PGconn *conn) = 0;
-protected:
-  bool doCommand(PGconn *conn, const char *sql) {
-    return cmd(conn, sql);
-  }
-};
-
 #define CHECK_INDEX(iter, index) wxASSERT(index < (*iter).size())
 #define GET_OID(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
 #define GET_BOOLEAN(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index].IsSameAs(_T("t"))
@@ -117,9 +89,9 @@ protected:
 #define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 #define GET_INT8(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 
-class RefreshDatabaseListWork : public ObjectBrowserTransactionalWork {
+class RefreshDatabaseListWork : public ObjectBrowserWork, SnapshotIsolatedWork {
 public:
-  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserTransactionalWork(owner), serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -181,9 +153,9 @@ private:
   }
 };
 
-class LoadDatabaseSchemaWork : public ObjectBrowserTransactionalWork {
+class LoadDatabaseSchemaWork : public ObjectBrowserWork, SnapshotIsolatedWork {
 public:
-  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserTransactionalWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
+  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -308,9 +280,9 @@ protected:
   }
 };
 
-class LoadRelationWork : public ObjectBrowserTransactionalWork {
+class LoadRelationWork : public ObjectBrowserWork, SnapshotIsolatedWork {
 public:
-  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserTransactionalWork(owner), relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:

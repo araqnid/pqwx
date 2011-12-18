@@ -119,4 +119,31 @@ private:
   }
 };
 
+class SnapshotIsolatedWork : virtual public DatabaseWork {
+public:
+  void execute(PGconn *conn) {
+    if (PQserverVersion(conn) >= 80000) {
+      if (!doCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
+	return;
+    }
+    else {
+      if (!doCommand(conn, "BEGIN"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
+	return;
+      if (!doCommand(conn, "SET TRANSACTION READ ONLY"))
+	return;
+    }
+
+    executeInTransaction(conn);
+
+    doCommand(conn, "END");
+  }
+  virtual void executeInTransaction(PGconn *conn) = 0;
+protected:
+  bool doCommand(PGconn *conn, const char *sql) {
+    return cmd(conn, sql);
+  }
+};
+
 #endif

@@ -67,4 +67,6 @@ private:
   VersionedSql *sql;
 };
 
+const int EVENT_WORK_FINISHED = 10000;
+
 #endif

@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxMenu" name="ServerMenu">
+    <object class="wxMenuItem" name="ServerMenu_Disconnect">
+      <label>&amp;Disconnect</label>
+    </object>
+  </object>
+</resource>

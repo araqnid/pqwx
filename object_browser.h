@@ -61,10 +61,16 @@ private:
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnGetTooltip(wxTreeEvent&);
+  void OnItemRightClick(wxTreeEvent&);
   void OnWorkFinished(wxCommandEvent&);
+  void OnServerMenuDisconnect(wxCommandEvent&);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members);
   VersionedSql *sql;
+
+  // remember what was the context for a context menu
+  ServerModel *contextMenuServer;
+  wxTreeItemId contextMenuItem;
 };
 
 const int EVENT_WORK_FINISHED = 10000;

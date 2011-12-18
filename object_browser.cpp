@@ -20,7 +20,9 @@
 BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
   EVT_TREE_ITEM_GETTOOLTIP(Pqwx_ObjectBrowser, ObjectBrowser::OnGetTooltip)
+  EVT_TREE_ITEM_RIGHT_CLICK(Pqwx_ObjectBrowser, ObjectBrowser::OnItemRightClick)
   EVT_COMMAND(EVENT_WORK_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ObjectBrowser::OnWorkFinished)
+  EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
 END_EVENT_TABLE()
 
 class LazyLoader : public wxTreeItemData {
@@ -421,7 +423,7 @@ void ObjectBrowser::DisconnectSelected() {
   ServerModel *server = dynamic_cast<ServerModel*>(data);
   wxASSERT(server != NULL);
 
-  wxLogDebug(_T("Disconnect: %s"), server->conn->Identification().c_str());
+  wxLogDebug(_T("Disconnect: %s (menubar)"), server->conn->Identification().c_str());
   servers.remove(server);
   server->Dispose(); // still does nasty synchronous disconnect for now
   Delete(cursor);
@@ -491,4 +493,28 @@ void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIn
   EnsureVisible(item);
   SelectItem(item);
   Expand(item);
+}
+
+void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
+  wxTreeItemData *data = GetItemData(event.GetItem());
+  if (data == NULL) {
+    // some day this will never happen, when every tree node has something useful
+    return;
+  }
+
+  ServerModel *server = dynamic_cast<ServerModel*>(data);
+  if (server != NULL) {
+    wxLogDebug(_T("item has a server: %s"), server->conn->Identification().c_str());
+    wxMenu *menu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
+    contextMenuServer = server;
+    contextMenuItem = event.GetItem();
+    PopupMenu(menu);
+  }
+}
+
+void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
+  wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->conn->Identification().c_str());
+  servers.remove(contextMenuServer);
+  contextMenuServer->Dispose();
+  Delete(contextMenuItem);
 }

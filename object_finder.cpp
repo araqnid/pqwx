@@ -61,9 +61,11 @@ void ObjectFinder::OnDoubleClickResult(wxCommandEvent &event) {
 }
 
 void ObjectFinder::OnCancel(wxCommandEvent &event) {
+  completion->OnCancelled();
   Destroy();
 }
 
 void ObjectFinder::OnClose(wxCloseEvent &event) {
+  completion->OnCancelled();
   Destroy();
 }

@@ -50,13 +50,18 @@ public:
 
 class DatabaseModel : public ObjectModel {
 public:
+  DatabaseModel() : catalogueIndex(NULL){}
+  virtual ~DatabaseModel() {
+    if (catalogueIndex != NULL)
+      delete catalogueIndex;
+  }
   unsigned long oid;
   bool isTemplate;
   bool allowConnections;
   bool havePrivsToConnect;
   bool loaded;
   ServerModel *server;
-  CatalogueIndex *catalogueIndex;
+  const CatalogueIndex *catalogueIndex;
   bool IsUsable() {
     return allowConnections && havePrivsToConnect;
   }

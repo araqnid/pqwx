@@ -44,8 +44,8 @@ public:
 
   class Result {
   public:
-    Result(Document *document, int score) : document(document), score(score) {}
-    Document *document;
+    Result(const Document *document, int score) : document(document), score(score) {}
+    const Document *document;
     int score;
   };
 
@@ -123,7 +123,7 @@ public:
     friend class CatalogueIndex;
   };
 
-  Filter CreateMatchEverythingFilter() {
+  Filter CreateMatchEverythingFilter() const {
     Filter filter(documents.size());
     for (int i = filter.NumWords() - 1; i >= 0; i--) {
       filter.data[i] = 0xffffffffffffffffUL;
@@ -134,7 +134,7 @@ public:
   Filter CreateTypeFilter(Type type) const;
   Filter CreateSchemaFilter(const wxString &schema) const;
 
-  std::vector<Result> Search(const wxString &input, const Filter &filter);
+  std::vector<Result> Search(const wxString &input, const Filter &filter) const;
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   void DumpDocumentStore() {
@@ -171,14 +171,26 @@ private:
     int termId;
   };
 
-  std::vector<wxString> Analyse(const wxString &input);
+  const std::vector<Occurrence> * TermOccurrences(int termId) const {
+    std::map<int, std::vector<Occurrence> >::const_iterator iter = occurrences.find(termId);
+    wxASSERT(iter != occurrences.end());
+    return &( iter->second );
+  }
+
+  const std::vector<int> * DocumentTerms(int documentId) const {
+    std::map<int, std::vector<int> >::const_iterator iter = documentTerms.find(documentId);
+    wxASSERT(iter != documentTerms.end());
+    return &( iter->second );
+  }
+
+  std::vector<wxString> Analyse(const wxString &input) const;
   std::vector<Document> documents;
   std::vector<wxString> terms;
   std::map<wxString, int> termsIndex;
   std::map<wxString, std::vector<int> > prefixes;
   std::map<int, std::vector<int> > documentTerms;
   std::map<int, std::vector<Occurrence> > occurrences;
-  std::vector<int> MatchTerms(const wxString &token);
+  std::vector<int> MatchTerms(const wxString &token) const;
 };
 
 #endif

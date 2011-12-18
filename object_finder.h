@@ -16,7 +16,7 @@ public:
     virtual void OnCancelled() = 0;
   };
 
-  ObjectFinder(wxWindow *parent, Completion *callback, CatalogueIndex *catalogue)
+  ObjectFinder(wxWindow *parent, Completion *callback, const CatalogueIndex *catalogue)
     : wxDialog(), catalogue(catalogue), completion(callback), filter(catalogue->CreateNonSystemFilter()) {
     InitXRC(parent);
 
@@ -42,7 +42,7 @@ protected:
   wxListBox *resultsCtrl;
 
 private:
-  CatalogueIndex *catalogue;
+  const CatalogueIndex *catalogue;
   Completion *completion;
   CatalogueIndex::Filter filter;
   std::vector<CatalogueIndex::Result> results;

@@ -29,7 +29,7 @@ void CatalogueIndex::AddDocument(const Document& document) {
   }
 }
 
-vector<wxString> CatalogueIndex::Analyse(const wxString &input) {
+vector<wxString> CatalogueIndex::Analyse(const wxString &input) const {
   vector<wxString> output;
 
   int mark = -1; // start of current token
@@ -68,7 +68,7 @@ static bool collateResults(const CatalogueIndex::Result &r1, const CatalogueInde
     || (r1.score == r2.score && r1.document->symbol < r2.document->symbol);
 }
 
-vector<int> CatalogueIndex::MatchTerms(const wxString &token) {
+vector<int> CatalogueIndex::MatchTerms(const wxString &token) const {
   map<wxString, vector<int> >::const_iterator iter = prefixes.find(token);
   if (iter == prefixes.end()) {
     vector<int> empty;
@@ -87,19 +87,19 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter) {
+vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter) const {
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
   vector<wxString> tokens = Analyse(input);
-  vector< map<DocumentPosition, Occurrence*> > tokenMatches;
+  vector< map<const DocumentPosition, const Occurrence*> > tokenMatches;
   for (vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
-    map<DocumentPosition, Occurrence*> tokenOccurrences;
+    map<const DocumentPosition, const Occurrence*> tokenOccurrences;
     vector<int> matchedTerms = MatchTerms(*iter);
     for (vector<int>::iterator matchedTermsIter = matchedTerms.begin(); matchedTermsIter != matchedTerms.end(); matchedTermsIter++) {
-      vector<Occurrence> *termOccurrences = &(occurrences[*matchedTermsIter]);
-      for (vector<Occurrence>::iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
+      const vector<Occurrence> * termOccurrences = TermOccurrences(*matchedTermsIter);
+      for (vector<Occurrence>::const_iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
 	tokenOccurrences[*occurrenceIter] = &(*occurrenceIter);
       }
     }
@@ -117,8 +117,8 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   }
 #endif
   vector<Result> scoreDocs;
-  for (map<DocumentPosition, Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
-    Occurrence *firstTerm = iter->second;
+  for (map<const DocumentPosition, const Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
+    const Occurrence *firstTerm = iter->second;
     int documentId = firstTerm->documentId;
     if (!filter.Included(documentId)) {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
@@ -127,13 +127,13 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
       continue;
     }
     int position = firstTerm->position;
-    vector<Occurrence*> matched;
+    vector<const Occurrence*> matched;
     matched.push_back(firstTerm);
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T("Matched first term %d:\"%s\" in Document#%d at %d"), firstTerm->termId, terms[firstTerm->termId].c_str(), firstTerm->documentId, firstTerm->position);
 #endif
     for (int offset = 1; offset < tokenMatches.size(); offset++) {
-      Occurrence *occurrence = tokenMatches[offset][DocumentPosition(documentId, position + offset)];
+      const Occurrence *occurrence = tokenMatches[offset][DocumentPosition(documentId, position + offset)];
       if (!occurrence) {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
 	wxLogDebug(_T(" No match for subsequent token %d=\"%s\" in Document#%d at %d"), offset, tokens[offset].c_str(), documentId, position + offset);
@@ -161,13 +161,13 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
     wxLogDebug(_T(" first position: %d"), firstTerm->position);
     wxLogDebug(_T(" document terms are: %s"), documentDump.Mid(3).c_str());
 #endif
-    int suffixLength = documentTerms[documentId].size() - matched.size() - firstTerm->position;
+    int suffixLength = DocumentTerms(documentId)->size() - matched.size() - firstTerm->position;
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T(" trailing terms not matched: %d"), suffixLength);
 #endif
     int lastLengthDifference;
     int totalLengthDifference = 0;
-    vector<Occurrence*>::iterator matchIter = matched.begin();
+    vector<const Occurrence*>::iterator matchIter = matched.begin();
     vector<wxString>::iterator tokenIter = tokens.begin();
     for (; matchIter != matched.end(); matchIter++, tokenIter++) {
       wxString termToken = terms[(*matchIter)->termId];

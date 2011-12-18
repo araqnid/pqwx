@@ -7,16 +7,9 @@ typedef std::vector< std::vector<wxString> > QueryResults;
 
 class ObjectBrowserWork {
 public:
-  ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
-  virtual ~ObjectBrowserWork() {}
   virtual void Execute(PGconn *conn) = 0;
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
-  void NotifyFinished() {
-    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
-    event.SetClientData(this);
-    owner->AddPendingEvent(event);
-  }
   bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
@@ -84,16 +77,15 @@ protected:
     }
   }
   const char *GetSql(PGconn *conn, const wxString &name) const {
-    return owner->GetSql(name, PQserverVersion(conn));
+    return ObjectBrowser::GetSqlDictionary().GetSql(name, PQserverVersion(conn));
   }
-  ObjectBrowser *owner;
   SqlLogger *logger;
   friend class ObjectBrowserDatabaseWork;
 };
 
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
-  ObjectBrowserDatabaseWork(ObjectBrowser *owner, ObjectBrowserWork *work) : owner(owner), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : dest(dest), work(work) {}
   void Execute(PGconn *conn) {
     work->logger = logger;
     work->Execute(conn);
@@ -101,10 +93,10 @@ public:
   void NotifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(work);
-    owner->AddPendingEvent(event);
+    dest->AddPendingEvent(event);
   }
 private:
-  ObjectBrowser *owner;
+  wxEvtHandler *dest;
   ObjectBrowserWork *work;
 };
 
@@ -117,7 +109,7 @@ private:
 
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
-  RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ServerModel *serverModel, wxTreeItemId serverItem) : serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -183,7 +175,7 @@ private:
 
 class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
+  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem) : databaseModel(databaseModel), databaseItem(databaseItem) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -253,7 +245,7 @@ private:
 
 class IndexDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  IndexDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *database) : ObjectBrowserWork(owner), database(database) {
+  IndexDatabaseSchemaWork(DatabaseModel *database) : database(database) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
@@ -310,7 +302,7 @@ protected:
 
 class LoadRelationWork : public ObjectBrowserWork {
 public:
-  LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(RelationModel *relationModel, wxTreeItemId relationItem) : relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
@@ -380,7 +372,7 @@ class ScriptWork : public ObjectBrowserWork {
 public:
   const enum Mode { Create, Alter, Drop } mode;
   const enum Output { Window, File, Clipboard } output;
-  ScriptWork(ObjectBrowser *owner, Mode mode, Output output): ObjectBrowserWork(owner), mode(mode), output(output) {}
+  ScriptWork(Mode mode, Output output): mode(mode), output(output) {}
 protected:
   std::vector<wxString> ddl;
   void LoadIntoView(ObjectBrowser *ob) {
@@ -406,7 +398,7 @@ protected:
 
 class DatabaseScriptWork : public ScriptWork {
 public:
-  DatabaseScriptWork(ObjectBrowser *owner, DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), database(database) {
+  DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), database(database) {
     wxLogDebug(_T("%p: work to generate database DDL script"), this);
   }
 private:
@@ -452,7 +444,7 @@ protected:
 
 class TableScriptWork : public ScriptWork {
 public:
-  TableScriptWork(ObjectBrowser *owner, RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), table(table) {
+  TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), table(table) {
     wxLogDebug(_T("%p: work to generate table DDL script"), this);
   }
 private:
@@ -464,7 +456,7 @@ protected:
 
 class ViewScriptWork : public ScriptWork {
 public:
-  ViewScriptWork(ObjectBrowser *owner, RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), view(view) {
+  ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), view(view) {
     wxLogDebug(_T("%p: work to generate view DDL script"), this);
   }
 private:
@@ -476,7 +468,7 @@ protected:
 
 class SequenceScriptWork : public ScriptWork {
 public:
-  SequenceScriptWork(ObjectBrowser *owner, RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), sequence(sequence) {
+  SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), sequence(sequence) {
     wxLogDebug(_T("%p: work to generate sequence DDL script"), this);
   }
 private:
@@ -488,7 +480,7 @@ protected:
 
 class FunctionScriptWork : public ScriptWork {
 public:
-  FunctionScriptWork(ObjectBrowser *owner, FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(owner, mode, output), function(function) {
+  FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), function(function) {
     wxLogDebug(_T("%p: work to generate function DDL script"), this);
   }
 private:

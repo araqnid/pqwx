@@ -14,9 +14,10 @@ protected:
   void AddSql(const wxString &name, const char *sql, int majorVersion, int minorVersion) { AddSql(name, Statement(sql, majorVersion * 10000 + minorVersion * 100)); }
   void AddSql(const wxString &name, const char *sql) { AddSql(name, Statement(sql)); }
 public:
-  const char *GetSql(const wxString &name, int serverVersion) {
-    wxASSERT_MSG(data.count(name) > 0, name);
-    for (std::vector<Statement>::iterator iter = data[name].begin(); iter != data[name].end(); iter++) {
+  const char *GetSql(const wxString &name, int serverVersion) const {
+    std::map<wxString, std::vector<Statement> >::const_iterator ptr = data.find(name);
+    wxASSERT_MSG(ptr != data.end(), name);
+    for (std::vector<Statement>::const_iterator iter = ptr->second.begin(); iter != ptr->second.end(); iter++) {
       if (serverVersion >= iter->minVersion) {
 	return iter->sql;
       }

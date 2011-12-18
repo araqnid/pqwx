@@ -53,7 +53,7 @@ END_EVENT_TABLE()
 
 #define IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, output)		\
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(this, field, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(field, ScriptWork::mode, ScriptWork::output)); \
 }
 
 #define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, field) \
@@ -76,6 +76,11 @@ IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
+
+const VersionedSql& ObjectBrowser::GetSqlDictionary() {
+  static ObjectBrowserSql dict;
+  return dict;
+}
 
 class LazyLoader : public wxTreeItemData {
 public:
@@ -171,7 +176,7 @@ void ObjectBrowser::Dispose() {
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
-  SubmitServerWork(serverModel, new RefreshDatabaseListWork(this, serverModel, serverItem));
+  SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel, serverItem));
 }
 
 void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, ObjectBrowserWork *work) {
@@ -213,13 +218,13 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database) {
-  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(this, database, databaseItem));
-  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(this, database));
+  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, databaseItem));
+  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork( database));
 }
 
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
   wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
-  SubmitDatabaseWork(relation->database, new LoadRelationWork(this, relation, relationItem));
+  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation, relationItem));
 }
 
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {

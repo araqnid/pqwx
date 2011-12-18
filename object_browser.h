@@ -22,6 +22,7 @@ class IndexModel;
 class TriggerModel;
 class FunctionModel;
 class SchemaMemberModel;
+class ObjectBrowserWork;
 
 #define DECLARE_SCRIPT_HANDLERS(menu, mode) \
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
@@ -48,9 +49,9 @@ public:
 
   DatabaseConnection* GetServerAdminConnection(ServerModel *server);
   DatabaseConnection* GetDatabaseConnection(ServerModel *server, const wxString &dbname);
-  void SubmitServerWork(ServerModel *server, DatabaseWork *work);
-  void SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work);
-  void ConnectAndAddWork(ServerModel *server, DatabaseConnection *db, DatabaseWork *work);
+  void SubmitServerWork(ServerModel *server, ObjectBrowserWork *work);
+  void SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work);
+  void ConnectAndAddWork(ServerModel *server, DatabaseConnection *db, ObjectBrowserWork *work);
 
   void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString& serverVersionString, int serverVersion, bool usingSSL);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases);

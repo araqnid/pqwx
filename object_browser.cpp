@@ -174,29 +174,23 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   SubmitServerWork(serverModel, new RefreshDatabaseListWork(this, serverModel, serverItem));
 }
 
-void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, DatabaseWork *work) {
+void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, ObjectBrowserWork *work) {
   ConnectAndAddWork(serverModel, GetServerAdminConnection(serverModel), work);
 }
 
-void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnection *db, DatabaseWork *work) {
+void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnection *db, ObjectBrowserWork *work) {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
   }
-  db->AddWork(work);
+  db->AddWork(new ObjectBrowserDatabaseWork(this, work));
 }
 
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
-  if (work->IsDone()) {
-    wxLogDebug(_T("%p: work finished"), work);
-    work->LoadIntoView(this);
-  }
-  else {
-    wxLogDebug(_T("%p: work finished but not marked as done"), work);
-    // call a cleanup method?
-  }
+  wxLogDebug(_T("%p: work finished"), work);
+  work->LoadIntoView(this);
 
   delete work;
 }
@@ -228,7 +222,7 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
   SubmitDatabaseWork(relation->database, new LoadRelationWork(this, relation, relationItem));
 }
 
-void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, DatabaseWork *work) {
+void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {
   ConnectAndAddWork(database->server, GetDatabaseConnection(database->server, database->name), work);
 }
 

@@ -5,10 +5,11 @@
 
 typedef std::vector< std::vector<wxString> > QueryResults;
 
-class ObjectBrowserWork : virtual public DatabaseWork {
+class ObjectBrowserWork {
 public:
   ObjectBrowserWork(ObjectBrowser *owner) : owner(owner) {}
   virtual ~ObjectBrowserWork() {}
+  virtual void Execute(PGconn *conn) = 0;
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
   void NotifyFinished() {
@@ -84,6 +85,25 @@ protected:
     return owner->GetSql(name, PQserverVersion(conn));
   }
   ObjectBrowser *owner;
+  SqlLogger *logger;
+  friend class ObjectBrowserDatabaseWork;
+};
+
+class ObjectBrowserDatabaseWork : public DatabaseWork {
+public:
+  ObjectBrowserDatabaseWork(ObjectBrowser *owner, ObjectBrowserWork *work) : owner(owner), work(work) {}
+  void Execute(PGconn *conn) {
+    work->logger = logger;
+    work->Execute(conn);
+  }
+  void NotifyFinished() {
+    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
+    event.SetClientData(work);
+    owner->AddPendingEvent(event);
+  }
+private:
+  ObjectBrowser *owner;
+  ObjectBrowserWork *work;
 };
 
 #define CHECK_INDEX(iter, index) wxASSERT(index < (*iter).size())
@@ -93,13 +113,13 @@ protected:
 #define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 #define GET_INT8(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
 
-class RefreshDatabaseListWork : public ObjectBrowserWork, SnapshotIsolatedWork {
+class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
   RefreshDatabaseListWork(ObjectBrowser *owner, ServerModel *serverModel, wxTreeItemId serverItem) : ObjectBrowserWork(owner), serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void ExecuteInTransaction(PGconn *conn) {
+  void Execute(PGconn *conn) {
     ReadServer(conn);
     ReadDatabases(conn);
     ReadRoles(conn);
@@ -157,7 +177,7 @@ private:
   }
 };
 
-class LoadDatabaseSchemaWork : public ObjectBrowserWork, SnapshotIsolatedWork {
+class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
   LoadDatabaseSchemaWork(ObjectBrowser *owner, DatabaseModel *databaseModel, wxTreeItemId databaseItem) : ObjectBrowserWork(owner), databaseModel(databaseModel), databaseItem(databaseItem) {
     wxLogDebug(_T("%p: work to load schema"), this);
@@ -168,7 +188,7 @@ private:
   vector<RelationModel*> relations;
   vector<FunctionModel*> functions;
 protected:
-  void ExecuteInTransaction(PGconn *conn) {
+  void Execute(PGconn *conn) {
     LoadRelations(conn);
     LoadFunctions(conn);
   }
@@ -284,7 +304,7 @@ protected:
   }
 };
 
-class LoadRelationWork : public ObjectBrowserWork, SnapshotIsolatedWork {
+class LoadRelationWork : public ObjectBrowserWork {
 public:
   LoadRelationWork(ObjectBrowser *owner, RelationModel *relationModel, wxTreeItemId relationItem) : ObjectBrowserWork(owner), relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
@@ -296,7 +316,7 @@ private:
   vector<IndexModel*> indices;
   vector<TriggerModel*> triggers;
 protected:
-  void ExecuteInTransaction(PGconn *conn) {
+  void Execute(PGconn *conn) {
     ReadColumns(conn);
     ReadIndices(conn);
     ReadTriggers(conn);
@@ -403,22 +423,22 @@ protected:
     wxString sql;
     switch (mode) {
     case Create:
-      sql << _T("CREATE DATABASE ") << QuoteIdent(conn, database->name);
-      sql << _T("\n\tENCODING = ") << QuoteLiteral(conn, encoding);
-      sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(conn, collation);
-      sql << _T("\n\tLC_CTYPE = ") << QuoteLiteral(conn, ctype);
+      sql << _T("CREATE DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
+      sql << _T("\n\tENCODING = ") << DatabaseWork::QuoteLiteral(conn, encoding);
+      sql << _T("\n\tLC_COLLATE = ") << DatabaseWork::QuoteLiteral(conn, collation);
+      sql << _T("\n\tLC_CTYPE = ") << DatabaseWork::QuoteLiteral(conn, ctype);
       sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
-      sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
+      sql << _T("\n\tOWNER = ") << DatabaseWork::QuoteLiteral(conn, ownerName);
       break;
 
     case Alter:
-      sql << _T("ALTER DATABASE ") << QuoteIdent(conn, database->name);
-      sql << _T("\n\tOWNER = ") << QuoteLiteral(conn, ownerName);
+      sql << _T("ALTER DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
+      sql << _T("\n\tOWNER = ") << DatabaseWork::QuoteLiteral(conn, ownerName);
       sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
       break;
 
     case Drop:
-      sql << _T("DROP DATABASE ") << QuoteIdent(conn, database->name);
+      sql << _T("DROP DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
       break;
     }
 

@@ -4,7 +4,6 @@
 #define __database_work_h
 
 #include <vector>
-#include <iostream>
 #include <libpq-fe.h>
 #include "wx/string.h"
 #include "wx/thread.h"
@@ -54,11 +53,7 @@ protected:
     logger->LogSql(sql);
 
     PGresult *rs = PQexec(conn, sql);
-
-    if (!rs) {
-      fwprintf(stderr, _T("No result from PQexec!\n"));
-      return false;
-    }
+    wxASSERT(rs != NULL);
 
     ExecStatusType status = PQresultStatus(rs);
     if (status != PGRES_COMMAND_OK) {

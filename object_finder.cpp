@@ -9,6 +9,7 @@
 #include <vector>
 #include "wx/xrc/xmlres.h"
 #include "wx/config.h"
+#include "wx/regex.h"
 #include "object_finder.h"
 #include "object_browser.h"
 
@@ -22,13 +23,21 @@ BEGIN_EVENT_TABLE(ObjectFinder, wxDialog)
   EVT_LISTBOX_DCLICK(XRCID("results"), ObjectFinder::OnDoubleClickResult)
 END_EVENT_TABLE()
 
+static wxRegEx schemaPattern(_T("^([a-zA-Z_][a-zA-Z0-9_]*)\\."));
+
 void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   wxString query = queryInput->GetValue();
 
   resultsCtrl->Clear();
 
   if (!query.IsEmpty()) {
-    results = catalogue->Search(query, filter);
+    if (schemaPattern.Matches(query)) {
+      wxString schema = schemaPattern.GetMatch(query, 1);
+      results = catalogue->Search(query, filter & catalogue->CreateSchemaFilter(schema));
+    }
+    else {
+      results = catalogue->Search(query, filter);
+    }
   }
   else {
     results.clear();

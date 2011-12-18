@@ -130,8 +130,9 @@ public:
     }
     return filter;
   };
-  Filter CreateNonSystemFilter();
-  Filter CreateTypeFilter(Type type);
+  Filter CreateNonSystemFilter() const;
+  Filter CreateTypeFilter(Type type) const;
+  Filter CreateSchemaFilter(const wxString &schema) const;
 
   std::vector<Result> Search(const wxString &input, const Filter &filter);
 

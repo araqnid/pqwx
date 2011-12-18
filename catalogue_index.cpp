@@ -204,23 +204,35 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   return scoreDocs;
 }
 
-CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() {
+CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() const {
   Filter filter(documents.size());
 
   int documentId = 0;
-  for (vector<Document>::iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (!iter->system) filter.Include(documentId);
   }
 
   return filter;
 }
 
-CatalogueIndex::Filter CatalogueIndex::CreateTypeFilter(CatalogueIndex::Type type) {
+CatalogueIndex::Filter CatalogueIndex::CreateTypeFilter(CatalogueIndex::Type type) const {
   Filter filter(documents.size());
 
   int documentId = 0;
-  for (vector<Document>::iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (iter->entityType == type) filter.Include(documentId);
+  }
+
+  return filter;
+}
+
+CatalogueIndex::Filter CatalogueIndex::CreateSchemaFilter(const wxString &schema) const {
+  Filter filter(documents.size());
+  wxString prefix = schema + _T(".");
+
+  int documentId = 0;
+  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+    if (iter->symbol.StartsWith(prefix)) filter.Include(documentId);
   }
 
   return filter;

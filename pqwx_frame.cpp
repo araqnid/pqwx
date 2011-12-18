@@ -6,8 +6,9 @@
     #include "wx/wx.h"
 #endif
 
-#include "wx/toolbar.h"
 #include "wx/aboutdlg.h"
+#include "wx/listbox.h"
+#include "wx/notebook.h"
 
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
@@ -38,9 +39,29 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
   SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("mainmenu")));
 
-  CreateStatusBar(2);
+  CreateStatusBar(1);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
+  scriptsBook = new wxNotebook(this, Pqwx_ScriptsNotebook);
+  resultsBook = new wxNotebook(this, Pqwx_ResultsNotebook);
+
+  resultsPanel = new wxPanel(resultsBook, Pqwx_ResultsPage);
+  resultsBook->AddPage(resultsPanel, _("&Results"), true);
+
+  messagesPanel = new wxPanel(resultsBook, Pqwx_MessagesPage);
+  resultsBook->AddPage(messagesPanel, _("&Messages"), false);
+
+  planPanel = new wxPanel(resultsBook, Pqwx_PlanPage);
+  resultsBook->AddPage(planPanel, _("&Query Plan"), false);
+
+  wxSizer *editorSizer = new wxBoxSizer(wxVERTICAL);
+  editorSizer->Add(scriptsBook, 3, wxEXPAND);
+  editorSizer->Add(resultsBook, 1, wxEXPAND);
+
+  wxSizer *mainSizer = new wxBoxSizer(wxHORIZONTAL);
+  mainSizer->Add(objectBrowser, 1, wxEXPAND);
+  mainSizer->Add(editorSizer, 3, wxEXPAND);
+  SetSizer(mainSizer);
 
   SetPosition(wxPoint(100,100));
   SetSize(wxSize(1000,800));
@@ -81,6 +102,5 @@ void PqwxFrame::OnFindObject(wxCommandEvent& event) {
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
-  objectBrowser->Dispose();
   Destroy();
 }

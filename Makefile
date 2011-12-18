@@ -18,7 +18,7 @@ WX_MODULES := base core xrc adv
 CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
 OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o
-XRC := rc/connect.xrc
+XRC := rc/connect.xrc rc/main.xrc
 
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^

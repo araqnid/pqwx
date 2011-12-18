@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxMenuBar" name="mainmenu">
+    <object class="wxMenu">
+      <object class="wxMenuItem" name="ConnectObjectBrowser">
+        <label>Connect Object &amp;Browser...</label>
+      </object>
+      <object class="wxMenuItem" name="DisconnectObjectBrowser">
+        <label>&amp;Disconnect Object Browser</label>
+      </object>
+      <object class="wxMenuItem" name="Quit">
+        <label>E&amp;xit</label>
+        <accel>Ctrl-Q</accel>
+      </object>
+      <label>&amp;File</label>
+    </object>
+    <object class="wxMenu">
+      <object class="wxMenuItem" name="HelpAbout">
+        <label>&amp;About</label>
+        <accel>F1</accel>
+      </object>
+      <label>&amp;Help</label>
+    </object>
+  </object>
+</resource>

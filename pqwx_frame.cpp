@@ -21,10 +21,10 @@
 #include "toolbar-new.xpm"
 
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
-  EVT_MENU(Pqwx_Quit, PqwxFrame::OnQuit)
-  EVT_MENU(Pqwx_About, PqwxFrame::OnAbout)
-  EVT_MENU(Pqwx_ConnectObjectBrowser, PqwxFrame::OnConnectObjectBrowser)
-  EVT_MENU(Pqwx_DisconnectObjectBrowser, PqwxFrame::OnDisconnectObjectBrowser)
+  EVT_MENU(XRCID("Quit"), PqwxFrame::OnQuit)
+  EVT_MENU(XRCID("HelpAbout"), PqwxFrame::OnAbout)
+  EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
+  EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
 END_EVENT_TABLE()
 
@@ -35,19 +35,7 @@ PqwxFrame::PqwxFrame(const wxString& title)
 {
   SetIcon(wxICON(Pqwx_appicon));
 
-  wxMenu *fileMenu = new wxMenu;
-  fileMenu->Append(Pqwx_ConnectObjectBrowser, _T("Connect Object &Browser..."), _T("Open the database schema browsing tool"));
-  fileMenu->Append(Pqwx_DisconnectObjectBrowser, _T("&Disconnect Object Browser"), _T("Disconnect the schema browsing tool"));
-  fileMenu->Append(Pqwx_Quit, _T("E&xit\tCtrl-Q"), _T("Exit PQWX"));
-
-  wxMenu *helpMenu = new wxMenu;
-  helpMenu->Append(Pqwx_About, _T("&About...\tF1"), _T("Show information about PQWX"));
-
-  wxMenuBar *menuBar = new wxMenuBar();
-  menuBar->Append(fileMenu, _T("&File"));
-  menuBar->Append(helpMenu, _T("&Help"));
-
-  SetMenuBar(menuBar);
+  SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("mainmenu")));
 
   CreateStatusBar(2);
 

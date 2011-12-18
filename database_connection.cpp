@@ -95,6 +95,30 @@ void DatabaseConnection::CloseSync() {
     wxLogDebug(_T("%s: CloseSync: waiting for worker completion"), identification.c_str());
     workerCompleteCondition.Wait();
   } while (!workerComplete);
+
+  wxLogDebug(_T("%s: CloseSync: worker completed after waiting"), identification.c_str());
+}
+
+bool DatabaseConnection::WaitUntilClosed() {
+  wxMutexLocker locker(workerCompleteMutex);
+
+  if (!IsConnected()) {
+    wxLogDebug(_T("%s: WaitUntilClosed: no worker thread"), identification.c_str());
+    return false;
+  }
+  if (workerComplete) {
+    wxLogDebug(_T("%s: WaitUntilClosed: worker thread already complete (maybe exiting?)"), identification.c_str());
+    return false;
+  }
+
+  do {
+    wxLogDebug(_T("%s: WaitUntilClosed: waiting for worker completion"), identification.c_str());
+    workerCompleteCondition.Wait();
+  } while (!workerComplete);
+
+  wxLogDebug(_T("%s: WaitUntilClosed: worker completed after waiting"), identification.c_str());
+
+  return true;
 }
 
 bool DatabaseConnection::IsConnected() {

@@ -107,8 +107,13 @@ public:
     wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
     for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
       DatabaseConnection *db = iter->second;
-      wxLogDebug(_T(" Closing connection to %s"), iter->first.c_str());
-      db->CloseSync();
+      wxLogDebug(_T(" Sending disconnect request to %s"), iter->first.c_str());
+      db->AddWork(new DisconnectWork());
+    }
+    for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+      DatabaseConnection *db = iter->second;
+      wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
+      db->WaitUntilClosed();
     }
     connections.clear();
   }

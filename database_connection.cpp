@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
 #include "wx/log.h"
 #include "server_connection.h"
 #include "database_connection.h"
@@ -37,14 +35,11 @@ private:
 
 class DatabaseWorkerThread : public wxThread {
 public:
-  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) {
-    dbname = strdup(db->dbname.utf8_str());
-  }
+  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) { }
 
   ~DatabaseWorkerThread() {
     wxCriticalSectionLocker enter(db->workerThreadPointer);
     db->workerThread = NULL;
-    free((void*) dbname);
   }
 private:
   std::vector<DatabaseWork*> work;
@@ -57,7 +52,6 @@ private:
   bool Connect();
 
   DatabaseConnection *db;
-  const char *dbname;
 
   friend class DatabaseConnection;
 };
@@ -144,6 +138,7 @@ bool DatabaseWorkerThread::Connect() {
   wxString appName(_T("pqwx"));
   if (!db->label.IsEmpty()) appName << _T(" - ") << db->label;
   wxCharBuffer appNameBuf = appName.utf8_str();
+  wxCharBuffer dbNameBuf = db->dbname.utf8_str();
 
   values[0] = db->server->hostname.IsEmpty() ? NULL : hostname.data();
 
@@ -158,7 +153,7 @@ bool DatabaseWorkerThread::Connect() {
   values[2] = db->server->username.IsEmpty() ? NULL : username.data();
   values[3] = db->server->password.IsEmpty() ? NULL : password.data();
   values[4] = appNameBuf.data();
-  values[5] = dbname;
+  values[5] = dbNameBuf.data();
 
 #ifdef PQWX_DEBUG
   fwprintf(stderr, wxT("thr#%lx connecting to server\n"), GetId());

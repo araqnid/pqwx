@@ -1,3 +1,4 @@
+#include <deque>
 #include "wx/log.h"
 #include "server_connection.h"
 #include "database_connection.h"
@@ -42,7 +43,7 @@ public:
     db->workerThread = NULL;
   }
 private:
-  std::vector<DatabaseWork*> work;
+  deque<DatabaseWork*> workQueue;
   PGconn *conn;
 
 protected:
@@ -70,7 +71,7 @@ void DatabaseConnection::Connect(ConnectionCallback *callback) {
   workerThread->Run();
 
   wxMutexLocker locker(workConditionMutex);
-  workerThread->work.push_back(new InitialiseWork());
+  workerThread->workQueue.push_back(new InitialiseWork());
   workCondition.Signal();
   wxLogDebug(_T("thr#%lx: new database connection worker for '%s'"), workerThread->GetId(), dbname.c_str());
 }
@@ -95,16 +96,13 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
   wxMutexLocker locker(db->workConditionMutex);
 
   do {
-    if (work.size() > 0) {
-      vector<DatabaseWork*> workRun(work);
-      work.clear();
+    if (!workQueue.empty()) {
+      DatabaseWork *work = workQueue.front();
+      workQueue.pop_front();
       db->workConditionMutex.Unlock();
-      for (vector<DatabaseWork*>::iterator iter = workRun.begin(); iter != workRun.end(); iter++) {
-	DatabaseWork *work = *iter;
-	work->logger = db;
-	work->Execute(conn);
-	work->Finished(); // after this method is called, don't touch work again.
-      }
+      work->logger = db;
+      work->Execute(conn);
+      work->Finished(); // after this method is called, don't touch work again.
       db->workConditionMutex.Lock();
       continue;
     }
@@ -229,7 +227,7 @@ void DatabaseConnection::AddWork(DatabaseWork *work) {
   wxCriticalSectionLocker enter(workerThreadPointer);
   wxMutexLocker locker(workConditionMutex);
   wxCHECK(workerThread != NULL, );
-  workerThread->work.push_back(work);
+  workerThread->workQueue.push_back(work);
   workCondition.Signal();
 }
 
@@ -238,7 +236,7 @@ bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
   wxMutexLocker locker(workConditionMutex);
   if (workerThread == NULL)
     return false;
-  workerThread->work.push_back(work);
+  workerThread->workQueue.push_back(work);
   workCondition.Signal();
   return true;
 }

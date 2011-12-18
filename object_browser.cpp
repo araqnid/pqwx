@@ -85,6 +85,7 @@ public:
   bool IsSystem() {
     return name.IsSameAs(_T("postgres")) || name.IsSameAs(_T("template0")) || name.IsSameAs(_T("template1"));
   }
+  map<unsigned long,wxTreeItemId> symbolItemLookup;
 };
 
 class RoleModel : public ObjectModel {
@@ -803,6 +804,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
     if (relation != NULL) {
       wxTreeItemId memberItem = AppendItem(parent, includeSchemaMember ? relation->name : relation->schema + _T(".") + relation->name);
       SetItemData(memberItem, relation);
+      relation->database->symbolItemLookup[relation->oid] = memberItem;
       if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
 	SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
       continue;
@@ -820,6 +822,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
       }
       wxTreeItemId memberItem = AppendItem(functionParent, includeSchemaMember ? function->prototype : function->schema + _T(".") + function->prototype);
       SetItemData(memberItem, function);
+      function->database->symbolItemLookup[function->oid] = memberItem;
       continue;
     }
   }
@@ -961,4 +964,9 @@ void ObjectBrowser::FindObject() {
 
 void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIndex::Document *document) {
   wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\" of \"%s\""), document->symbol.c_str(), database->name.c_str(), database->server->conn->Identification().c_str());
+  wxASSERT(database->symbolItemLookup.count(document->entityId) > 0);
+  wxTreeItemId item = database->symbolItemLookup[document->entityId];
+  EnsureVisible(item);
+  SelectItem(item);
+  Expand(item);
 }

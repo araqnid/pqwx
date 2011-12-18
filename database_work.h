@@ -22,8 +22,7 @@ public:
 
   // Notify owner that work is finished (if more is required that signalling the condition).
   // Called from the db execution context with the work mutex held.
-  virtual void NotifyFinished() {
-  }
+  virtual void NotifyFinished() = 0;
 
   static wxString QuoteIdent(PGconn *conn, const wxString &str) {
     wxCharBuffer buf(str.utf8_str());

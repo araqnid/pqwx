@@ -16,6 +16,8 @@ public:
     }
     cmd(conn, "SET DateStyle = 'ISO'");
   }
+  void NotifyFinished() {
+  }
 };
 
 class RelabelWork : public DatabaseWork {
@@ -27,6 +29,8 @@ public:
       return;
     wxString sql = _T("SET application_name = ") + QuoteLiteral(conn, newLabel);
     cmd(conn, sql.utf8_str());
+  }
+  void NotifyFinished() {
   }
 private:
   const wxString newLabel;

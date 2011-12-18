@@ -72,8 +72,10 @@ protected:
   void ReadResultSet(PGresult *rs, QueryResults &results) {
     int rowCount = PQntuples(rs);
     int colCount = PQnfields(rs);
+    results.reserve(rowCount);
     for (int rowNum = 0; rowNum < rowCount; rowNum++) {
       vector<wxString> row;
+      row.reserve(colCount);
       for (int colNum = 0; colNum < colCount; colNum++) {
 	const char *value = PQgetvalue(rs, rowNum, colNum);
 	row.push_back(wxString(value, wxConvUTF8));

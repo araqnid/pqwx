@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include "wx/log.h"
 #include "server_connection.h"
 #include "database_connection.h"
-#include <wx/log.h>
 
 using namespace std;
 

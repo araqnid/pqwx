@@ -55,11 +55,11 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   wxAboutDialogInfo info;
   info.SetName(_T("PQWX"));
   info.SetVersion(_T(PQWX_VERSION));
-  info.SetDescription(_T("PostgreSQL query tool"
+  wxString description(_("PostgreSQL query tool"));
 #ifdef PQWX_DEBUG
-			 _T(" - Debug build")
+  description += _(" - Debug build");
 #endif
-			 ));
+  info.SetDescription(description);
   info.SetCopyright(_T("(c) 2011 Steve Haslam"));
   wxAboutBox(info);
 }

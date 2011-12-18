@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 
+#include "wx/intl.h"
 #include "postgresql/pg_config.h"
 #include "database_connection.h"
 
@@ -52,7 +53,7 @@ public:
 	identification << hostname;
       }
       else {
-	identification << _T("[local]");
+	identification << _("[local]");
       }
       if (port > 0) {
 	identification << _T(":") << wxString::Format(_T("%d"), port);

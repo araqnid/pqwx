@@ -799,7 +799,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
       wxTreeItemId memberItem = AppendItem(parent, includeSchemaMember ? relation->name : relation->schema + _T(".") + relation->name);
       SetItemData(memberItem, relation);
       if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
-	SetItemData(AppendItem(memberItem, _T("Loading...")), new RelationLoader(this, relation));
+	SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
       continue;
     }
     FunctionModel *function = dynamic_cast<FunctionModel*>(member);
@@ -827,11 +827,11 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
     if (relation->type == RelationModel::TABLE) {
       if (column->nullable)
-	itemText += _T(", null");
+	itemText += _(", null");
       else
-	itemText += _T(", not null");
+	itemText += _(", not null");
       if (column->hasDefault)
-	itemText += _T(", default");
+	itemText += _(", default");
     }
 
     itemText += _T(")");

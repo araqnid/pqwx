@@ -77,10 +77,24 @@ void DatabaseConnection::Connect(ConnectionCallback *callback) {
 }
 
 void DatabaseConnection::CloseSync() {
-  DisconnectWork work;
-  if (AddWorkOnlyIfConnected(&work)) {
-    work.await();
+  wxMutexLocker locker(workerCompleteMutex);
+
+  if (!IsConnected()) {
+    wxLogDebug(_T("%s: CloseSync: no worker thread"), identification.c_str());
+    return;
   }
+  if (workerComplete) {
+    wxLogDebug(_T("%s: CloseSync: worker thread already complete (maybe exiting?)"), identification.c_str());
+    return;
+  }
+
+  wxLogDebug(_T("%s: CloseSync: adding disconnect work"), identification.c_str());
+  AddWork(new DisconnectWork());
+
+  do {
+    wxLogDebug(_T("%s: CloseSync: waiting for worker completion"), identification.c_str());
+    workerCompleteCondition.Wait();
+  } while (!workerComplete);
 }
 
 bool DatabaseConnection::IsConnected() {
@@ -96,15 +110,15 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
   wxMutexLocker locker(db->workConditionMutex);
 
   do {
-    if (!workQueue.empty()) {
+    while (!workQueue.empty()) {
       DatabaseWork *work = workQueue.front();
       workQueue.pop_front();
       db->workConditionMutex.Unlock();
       work->logger = db;
       work->Execute(conn);
-      work->Finished(); // after this method is called, don't touch work again.
+      work->NotifyFinished();
+      delete work;
       db->workConditionMutex.Lock();
-      continue;
     }
     ConnStatusType connStatus = PQstatus(conn);
     if (connStatus == CONNECTION_BAD) {
@@ -112,6 +126,10 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
     }
     db->workCondition.Wait();
   } while (true);
+
+  wxMutexLocker completionLocker(db->workerCompleteMutex);
+  db->workerComplete = true;
+  db->workerCompleteCondition.Signal();
 
   return 0;
 }

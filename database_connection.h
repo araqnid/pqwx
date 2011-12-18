@@ -22,8 +22,9 @@ public:
 
 class DatabaseConnection : public SqlLogger {
 public:
-  DatabaseConnection(ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workConditionMutex), label(label) {
+  DatabaseConnection(ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workConditionMutex), workerCompleteCondition(workerCompleteMutex), label(label) {
     workerThread = NULL;
+    workerComplete = false;
     connectionCallback = NULL;
     Setup();
   }
@@ -51,7 +52,10 @@ private:
   wxCriticalSection workerThreadPointer;
   wxMutex workConditionMutex;
   wxCondition workCondition;
+  wxMutex workerCompleteMutex;
+  wxCondition workerCompleteCondition;
   ConnectionCallback *connectionCallback;
+  bool workerComplete;
 
   friend class DatabaseWorkerThread;
 };

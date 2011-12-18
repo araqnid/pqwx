@@ -11,16 +11,10 @@
 
 class DatabaseWork {
 public:
-  DatabaseWork() : done(false) {}
+  DatabaseWork() {}
   virtual ~DatabaseWork() {}
-  virtual void Execute(PGconn *conn) = 0;
-  bool IsDone() {
-    wxMutexLocker locker(mutex);
-    return done;
-  }
 
-  // Notify owner that work is finished (if more is required that signalling the condition).
-  // Called from the db execution context with the work mutex held.
+  virtual void Execute(PGconn *conn) = 0;
   virtual void NotifyFinished() = 0;
 
   static wxString QuoteIdent(PGconn *conn, const wxString &str) {
@@ -42,8 +36,6 @@ public:
     return result;
   }
 protected:
-  wxMutex mutex;
-  bool done;
 
   bool DoCommand(PGconn *conn, const wxString &sql) {
     return DoCommand(conn, sql.utf8_str());
@@ -68,35 +60,10 @@ protected:
 
   SqlLogger *logger;
 
-private:
-  void Finished() {
-    wxMutexLocker locker(mutex);
-    done = true;
-    NotifyFinished();
-  }
   friend class DatabaseWorkerThread;
 };
 
-class SynchronisableDatabaseWork : public DatabaseWork {
-public:
-  SynchronisableDatabaseWork() : condition(mutex) {}
-  void await() {
-    wxMutexLocker locker(mutex);
-    do {
-      if (done)
-	return;
-      condition.Wait();
-    } while (true);
-  }
-private:
-  wxCondition condition;
-protected:
-  void NotifyFinished() {
-    condition.Signal();
-  }
-};
-
-class DisconnectWork : public SynchronisableDatabaseWork {
+class DisconnectWork : public DatabaseWork {
 public:
   class CloseCallback {
   public:
@@ -111,7 +78,6 @@ public:
 private:
   CloseCallback *callback;
   void NotifyFinished() {
-    SynchronisableDatabaseWork::NotifyFinished();
     if (callback)
       callback->OnConnectionClosed();
   }

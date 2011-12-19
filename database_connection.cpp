@@ -93,7 +93,10 @@ void DatabaseConnection::CloseSync() {
   }
 
   wxLogDebug(_T("%s: CloseSync: adding disconnect work"), identification.c_str());
-  AddWork(new DisconnectWork());
+  // can't call AddWork here because that would try to re-obtain the mutex
+  workerThread->workQueue.push_back(new DisconnectWork());
+  wxCHECK(workerThread != NULL, );
+  workCondition.Signal();
 
   do {
     wxLogDebug(_T("%s: CloseSync: waiting for worker completion"), identification.c_str());

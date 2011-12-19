@@ -13,8 +13,9 @@
 
 class ServerConnection {
 public:
-  ServerConnection() : globalDbName(_T("postgres")) {
+  ServerConnection() : globalDbName(_T("postgres")), generatedIdentification(false) {
     port = -1;
+    GenerateIdentification();
   }
 
   // connection parameters
@@ -27,7 +28,7 @@ public:
   // discovered attributes
   bool passwordNeededToConnect;
 
-  void SetServerName(wxString& serverName) {
+  void SetServerName(const wxString& serverName, const wxString& identifiedAs = wxEmptyString) {
     int colon = serverName.Find(_T(':'));
     if (colon == wxNOT_FOUND) {
       hostname = serverName;
@@ -42,29 +43,39 @@ public:
       else
 	port = portUL;
     }
+
+    if (identifiedAs.IsEmpty()) {
+      GenerateIdentification();
+    }
+    else {
+      identification = identifiedAs;
+      generatedIdentification = false;
+    }
   }
 
-  const wxString& Identification() {
-    if (identification.IsEmpty()) {
-      if (!username.IsEmpty()) {
-	identification << username << _T('@');
-      }
-      if (!hostname.IsEmpty()) {
-	identification << hostname;
-      }
-      else {
-	identification << _("[local]");
-      }
-      if (port > 0) {
-	identification << _T(":") << wxString::Format(_T("%d"), port);
-      }
-      wxLogDebug(_T("Generated server identification: %s"), identification.c_str());
-    }
+  const wxString& Identification() const {
     return identification;
   }
 
 private:
+  void GenerateIdentification() {
+    identification.Clear();
+    if (!username.IsEmpty()) {
+      identification << username << _T('@');
+    }
+    if (!hostname.IsEmpty()) {
+      identification << hostname;
+    }
+    else {
+      identification << _("[local]");
+    }
+    if (port > 0) {
+      identification << _T(":") << wxString::Format(_T("%d"), port);
+    }
+  }
+
   wxString identification;
+  bool generatedIdentification;
 };
 
 #endif

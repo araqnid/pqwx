@@ -54,11 +54,79 @@ private:
   friend class ConnectDialogue;
 };
 
+#ifdef USE_DEBIAN_PGCLUSTER
+
+#include "wx/regex.h"
+#include <fstream>
+
+static wxRegEx clusterPattern(_T("([0-9]+\\.[0-9]+)/(.+)"));
+static wxRegEx remoteClusterPattern(_T("([^:]+):([0-9]*)"));
+static wxRegEx settingPattern(_T("^([a-z_]+) *= *(.+)"));
+
+static wxString ReadConfigValue(const wxString &filename, const wxString &keyword) {
+  ifstream input(filename.fn_str());
+  if (!input.is_open()) {
+    return wxEmptyString;
+  }
+
+  std::string line;
+  while (input.good()) {
+    getline(input, line);
+    wxString recoded(line.c_str(), wxConvUTF8);
+    if (settingPattern.Matches(recoded) && settingPattern.GetMatch(recoded, 1).IsSameAs(keyword)) {
+      wxString value = settingPattern.GetMatch(recoded, 2);
+
+      int comment = value.Find(_T('#'));
+      if (comment != wxNOT_FOUND) value = value.Left(comment);
+
+      return value.Trim();
+    }
+  }
+
+  return wxEmptyString;
+}
+
+static wxString ParseCluster(const wxString &server) {
+  if (!clusterPattern.Matches(server))
+    return server;
+  wxString clusterName = clusterPattern.GetMatch(server, 2);
+
+  if (remoteClusterPattern.Matches(clusterName)) {
+    wxLogDebug(_T("%s looks like a remote cluster"), server.c_str());
+    if (remoteClusterPattern.GetMatch(clusterName, 2).IsEmpty())
+      return remoteClusterPattern.GetMatch(clusterName, 1);
+    else
+      return clusterName;
+  }
+
+  wxString localConfigFile = _T("/etc/postgresql/") + clusterPattern.GetMatch(server, 1) + _T("/") + clusterName + _T("/postgresql.conf");
+  wxString portString = ReadConfigValue(localConfigFile, _T("port"));
+
+  if (portString.IsEmpty()) {
+    wxLogError(_("Failed to find a 'port' setting in %s"), localConfigFile.c_str());
+    return wxEmptyString;
+  }
+
+  long port;
+  if (!portString.ToLong(&port)) {
+    wxLogError(_("Incomprehensible 'port' setting in %s: \"%s\""), localConfigFile.c_str(), portString.c_str());
+    return wxEmptyString;
+  }
+
+  // TODO might need to put in an alternative unix_socket_directory too
+  wxString localServer;
+  localServer << _T(":") << port;
+
+  return localServer;
+}
+#endif
+
 void ConnectDialogue::StartConnection() {
   ServerConnection *server = new ServerConnection();
   wxString username = usernameInput->GetValue();
   wxString password = passwordInput->GetValue();
   wxString hostname = hostnameInput->GetValue();
+
   if (!username.IsEmpty()) {
     server->username = username;
   }
@@ -66,7 +134,18 @@ void ConnectDialogue::StartConnection() {
     server->password = password;
   }
   if (!hostname.IsEmpty()) {
+#ifdef USE_DEBIAN_PGCLUSTER
+    wxString resolvedHostname = ParseCluster(hostname);
+    if (resolvedHostname.IsEmpty())
+      return;
+    if (resolvedHostname.IsSameAs(hostname))
+      server->SetServerName(hostname);
+    else {
+      server->SetServerName(resolvedHostname, hostname);
+    }
+#else
     server->SetServerName(hostname);
+#endif
   }
 
   wxASSERT(connection == NULL);

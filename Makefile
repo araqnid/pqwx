@@ -6,16 +6,21 @@ vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
 -include vcs_version.mk
 
+debversion := $(shell cat /etc/debian_version 2>/dev/null)
+ifneq (,$(debversion))
+LOCAL_CXXFLAGS += -DUSE_DEBIAN_PGCLUSTER
+endif
+
 ifdef RELEASE
-WX_CONFIG_FLAGS :=
-LOCAL_CXXFLAGS := -g -O
+WX_CONFIG_FLAGS =
+VARIANT_CXXFLAGS = -g -O
 else
-WX_CONFIG_FLAGS := --debug=yes
-LOCAL_CXXFLAGS := -DPQWX_DEBUG -ggdb
+WX_CONFIG_FLAGS = --debug=yes
+VARIANT_CXXFLAGS = -DPQWX_DEBUG -ggdb
 endif
 
 WX_MODULES := base core xrc adv
-CXXFLAGS := $(LOCAL_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
+CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell pg_config --includedir) $(shell wx-config $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
 OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o object_finder.o
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc

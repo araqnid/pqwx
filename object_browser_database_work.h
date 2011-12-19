@@ -14,6 +14,13 @@ protected:
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
   }
+  bool DoQuery(PGconn *conn, const wxString &name, std::vector<wxString> &row, Oid paramType, unsigned long paramValue) {
+    wxString valueString = wxString::Format(_T("%lu"), paramValue);
+    QueryResults results;
+    DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
+    wxASSERT(results.size() == 1);
+    row = results[0];
+  }
   bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
     DoQuery(conn, GetSql(conn, name), results, paramType, paramValue);
   }
@@ -374,7 +381,7 @@ public:
   const enum Output { Window, File, Clipboard } output;
   ScriptWork(Mode mode, Output output): mode(mode), output(output) {}
 protected:
-  std::vector<wxString> ddl;
+  std::vector<wxString> statements;
   void LoadIntoView(ObjectBrowser *ob) {
     wxString message;
     switch (output) {
@@ -387,11 +394,13 @@ protected:
     case Clipboard:
       message << _T("TODO Send to clipboard:\n\n");
       break;
+    default:
+      wxASSERT(false);
     }
-    for (std::vector<wxString>::iterator iter = ddl.begin(); iter != ddl.end(); iter++) {
+    for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
       message << *iter << _T("\n\n");
     }
-    wxLogDebug(message);
+    wxLogDebug(_T("%s"), message.c_str());
     wxMessageBox(message);
   }
 };
@@ -399,7 +408,7 @@ protected:
 class DatabaseScriptWork : public ScriptWork {
 public:
   DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), database(database) {
-    wxLogDebug(_T("%p: work to generate database DDL script"), this);
+    wxLogDebug(_T("%p: work to generate database script"), this);
   }
 private:
   DatabaseModel *database;
@@ -436,57 +445,360 @@ protected:
     case Drop:
       sql << _T("DROP DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
       break;
+
+    default:
+      wxASSERT(false);
     }
 
-    ddl.push_back(sql);
+    statements.push_back(sql);
   }
 };
 
 class TableScriptWork : public ScriptWork {
 public:
   TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), table(table) {
-    wxLogDebug(_T("%p: work to generate table DDL script"), this);
+    wxLogDebug(_T("%p: work to generate table script"), this);
   }
 private:
   RelationModel *table;
 protected:
   void Execute(PGconn *conn) {
+    std::vector< wxString > tableDetail;
+    QueryResults columns;
+    DoQuery(conn, _T("Table Detail"), tableDetail, 26 /* oid */, table->oid);
+    DoQuery(conn, _T("Relation Column Detail"), columns, 26 /* oid */, table->oid);
+
+    switch (mode) {
+    case Create: {
+      wxString sql;
+      std::vector< wxString > alterSql;
+      sql << _T("CREATE TABLE ")
+	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name) << _T("(\n");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name, type;
+	GET_TEXT(iter, 0, name);
+	GET_TEXT(iter, 1, type);
+	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
+
+	bool notnull;
+	GET_BOOLEAN(iter, 2, notnull);
+	if (notnull) sql << _T(" NOT NULL");
+
+	bool hasdefault;
+	GET_BOOLEAN(iter, 3, hasdefault);
+	if (hasdefault) {
+	  wxString defaultexpr;
+	  GET_TEXT(iter, 4, defaultexpr);
+	  sql << _T(" DEFAULT ") << defaultexpr;
+	}
+
+	wxString collation;
+	GET_TEXT(iter, 5, collation);
+	if (!collation.IsEmpty()) sql << _T(" COLLATE ") << collation; // already quoted
+
+	long statsTarget;
+	GET_INT4(iter, 6, statsTarget);
+	if (statsTarget >= 0) {
+	  wxString statsSql;
+	  statsSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
+		   << _T(" SET STATISTICS ") << statsTarget;
+	  alterSql.push_back(statsSql);
+	}
+
+	wxString storageType;
+	GET_TEXT(iter, 7, storageType);
+	if (!storageType.IsEmpty()) {
+	  wxString storageSql;
+	  storageSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
+		     << _T(" SET STORAGE ") << storageType;
+	  alterSql.push_back(storageSql);
+	}
+
+	if (n != (columns.size()-1)) sql << _T(',');
+	sql << _T("\n");
+      }
+      sql << _T(")");
+      statements.push_back(sql);
+      if (!alterSql.empty()) {
+	wxString prefix;
+	prefix << _T("ALTER TABLE ")
+	       << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name) << _T("\n\t");
+	for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
+	  statements.push_back(prefix + *moreSqlIter);
+	}
+      }
+    }
+      break;
+
+    case Drop: {
+      wxString sql;
+      sql << _T("DROP TABLE IF EXISTS ")
+	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+
+      statements.push_back(sql);
+    }
+      break;
+
+    case Select: {
+      wxString sql;
+      sql << _T("SELECT ");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name;
+	GET_TEXT(iter, 0, name);
+	sql << DatabaseWork::QuoteIdent(conn, name);
+	if (n != (columns.size()-1))
+	  sql << _T(",\n       ");
+	else
+	  sql << _T("\n");
+      }
+      sql << _T("FROM ") << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+      statements.push_back(sql);
+    }
+      break;
+
+    case Insert: {
+      wxString sql;
+      sql << _T("INSERT INTO ")
+	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name)
+	  << _T("(\n");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name;
+	GET_TEXT(iter, 0, name);
+	sql << _T("            ") << DatabaseWork::QuoteIdent(conn, name);
+	if (n != (columns.size()-1))
+	  sql << _T(",\n");
+	else
+	  sql << _T("\n");
+      }
+      sql << _T(") VALUES (\n");
+      n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name, type;
+	GET_TEXT(iter, 0, name);
+	GET_TEXT(iter, 1, type);
+	sql << _T("            <") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
+	if (n != (columns.size()-1))
+	  sql << _T(",\n");
+	else
+	  sql << _T("\n");
+      }
+      sql << _T(")");
+      statements.push_back(sql);
+    }
+      break;
+
+    case Update: {
+      wxString sql;
+      sql << _T("UPDATE ")
+	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name)
+	  << _T("\nSET ");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name, type;
+	GET_TEXT(iter, 0, name);
+	GET_TEXT(iter, 1, type);
+	sql << DatabaseWork::QuoteIdent(conn, name) << _T(" = ")
+	    << _T("<") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
+	if (n != (columns.size()-1))
+	  sql << _T(",\n    ");
+	else
+	  sql << _T("\n");
+      }
+      sql << _T("WHERE <") << _("search criteria") << _T(">");
+      statements.push_back(sql);
+    }
+      break;
+
+    case Delete: {
+      wxString sql;
+      sql << _T("DELETE FROM ")
+	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+      statements.push_back(sql);
+    }
+      break;
+
+    default:
+      wxASSERT(false);
+    }
   }
 };
 
 class ViewScriptWork : public ScriptWork {
 public:
   ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), view(view) {
-    wxLogDebug(_T("%p: work to generate view DDL script"), this);
+    wxLogDebug(_T("%p: work to generate view script"), this);
   }
 private:
   RelationModel *view;
 protected:
   void Execute(PGconn *conn) {
+    std::vector< wxString > viewDetail;
+    QueryResults columns;
+    DoQuery(conn, _T("View Detail"), viewDetail, 26 /* oid */, view->oid);
+    DoQuery(conn, _T("Relation Column Detail"), columns, 26 /* oid */, view->oid);
+
+    switch (mode) {
+    case Create:
+    case Alter: {
+      wxString sql;
+      if (mode == Create)
+	sql << _T("CREATE VIEW ");
+      else
+	sql << _T("CREATE OR REPLACE VIEW ");
+      sql << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name) << _T("(\n");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name, type;
+	GET_TEXT(iter, 0, name);
+	GET_TEXT(iter, 1, type);
+	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
+	if (n != (columns.size()-1))
+	  sql << _T(",\n");
+      }
+      sql << _T(") AS\n")
+	  << viewDetail[1];
+      statements.push_back(sql);
+    }
+      break;
+
+    case Select: {
+      wxString sql;
+      sql << _T("SELECT ");
+      int n = 0;
+      for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+	wxString name;
+	GET_TEXT(iter, 0, name);
+	sql << DatabaseWork::QuoteIdent(conn, name);
+	if (n != (columns.size()-1))
+	  sql << _T(",\n       ");
+	else
+	  sql << _T("\n");
+      }
+      sql << _T("FROM ") << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name);
+      statements.push_back(sql);
+    }
+      break;
+
+    case Drop: {
+      wxString sql;
+      sql << _T("DROP VIEW IF EXISTS ")
+	  << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name);
+
+      statements.push_back(sql);
+    }
+      break;
+
+    default:
+      wxASSERT(false);
+    }
   }
 };
 
 class SequenceScriptWork : public ScriptWork {
 public:
   SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), sequence(sequence) {
-    wxLogDebug(_T("%p: work to generate sequence DDL script"), this);
+    wxLogDebug(_T("%p: work to generate sequence script"), this);
   }
 private:
   RelationModel *sequence;
 protected:
   void Execute(PGconn *conn) {
+    std::vector< wxString > sequenceDetail;
+    DoQuery(conn, _T("Sequence Detail"), sequenceDetail, 26 /* oid */, sequence->oid);
   }
 };
 
 class FunctionScriptWork : public ScriptWork {
 public:
   FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), function(function) {
-    wxLogDebug(_T("%p: work to generate function DDL script"), this);
+    wxLogDebug(_T("%p: work to generate function script"), this);
   }
 private:
   FunctionModel *function;
 protected:
   void Execute(PGconn *conn) {
+    std::vector< wxString > functionDetail;
+    DoQuery(conn, _T("Function Detail"), functionDetail, 26 /* oid */, function->oid);
+
+    switch (mode) {
+    case Create:
+    case Alter: {
+      wxString sql;
+      if (mode == Create)
+	sql << _T("CREATE FUNCTION ");
+      else
+	sql << _T("CREATE OR REPLACE FUNCTION ");
+      sql << DatabaseWork::QuoteIdent(conn, function->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, function->name)
+	  << _T("(") << functionDetail[0] << _T(")")
+	  << _T(" RETURNS ");
+
+      bool rowset;
+      rowset = functionDetail[10].IsSameAs(_T("t"));
+      if (rowset) sql << _T("SETOF ");
+      sql << functionDetail[9];
+
+      long cost;
+      functionDetail[3].ToLong(&cost);
+      if (cost > 0)
+	sql << _T(" COST ") << cost;
+
+      long rows;
+      functionDetail[4].ToLong(&rows);
+      if (rows > 0)
+	sql << _T(" ROWS ") << rows;
+
+      bool securityDefiner;
+      securityDefiner = functionDetail[5].IsSameAs(_T("t"));
+      if (securityDefiner)
+	sql << _T(" SECURITY DEFINER ");
+
+      bool isStrict;
+      isStrict = functionDetail[6].IsSameAs(_T("t"));
+      if (isStrict)
+	sql << _T(" STRICT ");
+
+      sql << _T(" ") << functionDetail[7]; // volatility
+
+      sql << _T(" AS ");
+      EscapeCode(functionDetail[8], sql);
+      statements.push_back(sql);
+    }
+      break;
+
+    case Drop: {
+      wxString sql;
+      sql << _T("DROP FUNCTION IF EXISTS ")
+	  << DatabaseWork::QuoteIdent(conn, function->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, function->name)
+	  << _T("(") << functionDetail[0] << _T(")");
+      statements.push_back(sql);
+    }
+      break;
+
+    }
+  }
+
+private:
+  void EscapeCode(const wxString &src, wxString &buf) {
+    if (src.Find(_T("$$")) == wxNOT_FOUND) {
+      buf << _T("$$") << src << _T("$$");
+      return;
+    }
+    if (src.Find(_T("$_$")) == wxNOT_FOUND) {
+      buf << _T("$_$") << src << _T("$_$");
+      return;
+    }
+    int n = 0;
+    while (1) {
+      wxString delimiter;
+      delimiter << _T('$') << n << _T('$');
+      if (src.Find(delimiter) == wxNOT_FOUND) {
+	buf << delimiter << src << delimiter;
+      }
+      ++n;
+    }
   }
 };
 

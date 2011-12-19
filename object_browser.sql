@@ -74,6 +74,68 @@ FROM (SELECT oid, relname, relkind, relnamespace
                                  AND pg_description.objsubid = 0
      RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
+-- SQL :: Table Detail
+
+SELECT owner.rolname,
+       pg_tablespace.spcname,
+       relhasoids,
+       relacl,
+       reloptions
+FROM pg_class
+     JOIN pg_roles owner ON owner.oid = pg_class.relowner
+     LEFT JOIN pg_tablespace ON pg_tablespace.oid = pg_class.reltablespace
+WHERE pg_class.oid = $1
+
+-- SQL :: Relation Column Detail
+
+SELECT attname,
+       pg_catalog.format_type(atttypid, atttypmod),
+       attnotnull,
+       atthasdef,
+       pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid),
+       CASE WHEN attcollation <> typcollation THEN quote_ident(collname) END,
+       attstattarget,
+       CASE attstorage WHEN 'e' THEN 'EXTERNAL' END,
+       attacl,
+       attoptions
+FROM pg_attribute
+     LEFT JOIN pg_attrdef ON pg_attrdef.adrelid = pg_attribute.attrelid AND pg_attrdef.adnum = pg_attribute.attnum
+     LEFT JOIN pg_collation ON pg_collation.oid = pg_attribute.attcollation
+     JOIN pg_type ON pg_type.oid = pg_attribute.atttypid
+WHERE pg_attribute.attrelid = $1
+      AND NOT attisdropped
+      AND attnum > 0
+ORDER BY attnum
+
+-- SQL :: View Detail
+
+SELECT owner.rolname,
+       pg_get_viewdef(pg_class.oid, true)
+FROM pg_class
+     JOIN pg_roles owner ON owner.oid = pg_class.relowner
+WHERE pg_class.oid = $1
+
+-- SQL :: Sequence Detail
+
+-- SQL :: Function Detail
+
+SELECT pg_get_function_arguments(pg_proc.oid),
+       owner.rolname,
+       prolang,
+       CASE WHEN procost <> 100 THEN procost ELSE -1 END,
+       CASE WHEN NOT proretset THEN -1 WHEN prorows <> 1000 THEN prorows ELSE -1 END,
+       prosecdef,
+       proisstrict,
+       CASE provolatile WHEN 'i' THEN 'IMMUTABLE' WHEN 'v' THEN 'VOLATILE' WHEN 's' THEN 'STABLE' END,
+       prosrc,
+       format_type(prorettype, null),
+       proretset,
+       proconfig,
+       proacl
+FROM pg_proc
+     JOIN pg_roles owner ON owner.oid = pg_proc.proowner
+WHERE pg_proc.oid = $1
+
 -- SQL :: Functions :: 8.4
 SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'

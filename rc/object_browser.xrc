@@ -85,19 +85,6 @@
           <label>&amp;Clipboard</label>
         </object>
       </object>
-      <object class="wxMenu" name="TableMenu_ScriptAlter">
-        <object class="wxMenuItem" name="TableMenu_ScriptAlterWindow">
-          <label>&amp;New query window</label>
-        </object>
-        <object class="separator"/>
-        <object class="wxMenuItem" name="TableMenu_ScriptAlterFile">
-          <label>&amp;File...</label>
-        </object>
-        <object class="wxMenuItem" name="TableMenu_ScriptAlterClipboard">
-          <label>&amp;Clipboard</label>
-        </object>
-        <label>&amp;ALTER to</label>
-      </object>
       <object class="wxMenu" name="TableMenu_ScriptDrop">
         <object class="wxMenuItem" name="TableMenu_ScriptDropWindow">
           <label>&amp;New query window</label>
@@ -111,6 +98,7 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
+      <object class="separator"/>
       <object class="wxMenu" name="TableMenu_ScriptSelect">
         <object class="wxMenuItem" name="TableMenu_ScriptSelectWindow">
           <label>&amp;New query window</label>
@@ -216,6 +204,7 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
+      <object class="separator"/>
       <object class="wxMenu" name="ViewMenu_ScriptSelect">
         <object class="wxMenuItem" name="ViewMenu_ScriptSelectWindow">
           <label>&amp;New query window</label>
@@ -334,6 +323,20 @@
           <label>&amp;Clipboard</label>
         </object>
         <label>&amp;DROP to</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenu" name="FunctionMenu_ScriptSelect">
+        <object class="wxMenuItem" name="FunctionMenu_ScriptSelectWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="FunctionMenu_ScriptSelectFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="FunctionMenu_ScriptSelectClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;SELECT to</label>
       </object>
       <label>&amp;Script function as</label>
     </object>

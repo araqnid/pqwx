@@ -17,15 +17,25 @@ public:
   virtual void Execute(PGconn *conn) = 0;
   virtual void NotifyFinished() = 0;
 
+  // This tries to duplicate the fancy behaviour of quote_ident,
+  // which avoids quoting identifiers when not necessary.
+  // PQescapeIdentifier is "safe" in that it *always* quotes
   static wxString QuoteIdent(PGconn *conn, const wxString &str) {
+    if (IsSimpleSymbol(str.utf8_str()))
+      return str;
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeIdentifier(conn, buf.data(), strlen(buf.data()));
     wxString result = wxString::FromUTF8(escaped);
-    if (result.length() == (str.length() + 2)
-	&& result.IsSameAs(_T("\"") + str + _T("\"")))
-      return str; 
     PQfreemem(escaped);
     return result;
+  }
+
+  static bool IsSimpleSymbol(const char *str) {
+    for (const char *p = str; *p != '\0'; p++) {
+      if (!( *p >= 'a' && *p <= 'z' || *p == '_' || *p >= '0' && *p <= '9' ))
+	return false;
+    }
+    return true;
   }
 
   static wxString QuoteLiteral(PGconn *conn, const wxString &str) {

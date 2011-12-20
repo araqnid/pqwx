@@ -38,6 +38,7 @@ static map<wxString, CatalogueIndex::Type> getTypeMap() {
   map<wxString, CatalogueIndex::Type> typeMap;
   typeMap[_T("t")] = CatalogueIndex::TABLE;
   typeMap[_T("v")] = CatalogueIndex::VIEW;
+  typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
   typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
   typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
   typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
@@ -73,7 +74,7 @@ int TestCatalogueApp::OnRun() {
     }
     else {
       systemObject = false;
-      wxASSERT(typeMap.count(parts[1]) > 0);
+      wxASSERT_MSG(typeMap.count(parts[1]) > 0, parts[1]);
       entityType = typeMap[parts[1]];
     }
     index.AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, parts[2], parts[3]));

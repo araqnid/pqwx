@@ -84,15 +84,14 @@ int TestCatalogueApp::OnRun() {
   index.DumpDocumentStore();
 #endif
   bool includeSystem = false;
-  CatalogueIndex::Filter universal(index.CreateMatchEverythingFilter());
-  CatalogueIndex::Filter nonSystem(index.CreateNonSystemFilter());
-  CatalogueIndex::Filter typesFilter(index.CreateMatchEverythingFilter());
+  CatalogueIndex::Filter baseFilter = index.CreateNonSystemFilter();
+  CatalogueIndex::Filter typesFilter = index.CreateMatchEverythingFilter();
   for (vector<wxString>::iterator iter = queries.begin(); iter != queries.end(); iter++) {
     if (iter->IsSameAs(_T("+S"))) {
-      includeSystem = true;
+      baseFilter = index.CreateMatchEverythingFilter();
     }
     else if (iter->IsSameAs(_T("-S"))) {
-      includeSystem = false;
+      baseFilter = index.CreateNonSystemFilter();
     }
     else if ((*iter)[0] == _T('@')) {
       typesFilter.Clear();
@@ -103,7 +102,11 @@ int TestCatalogueApp::OnRun() {
       }
     }
     else {
-      index.Search(*iter, (includeSystem ? universal : nonSystem) & typesFilter);
+      int dot = (*iter).Find(_T('.'));
+      if (dot != wxNOT_FOUND)
+	index.Search(*iter, baseFilter & typesFilter & index.CreateSchemaFilter((*iter).Left(dot)));
+      else
+	index.Search(*iter, baseFilter & typesFilter);
     }
   }
   return 0;

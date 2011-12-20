@@ -22,8 +22,8 @@
 #include "toolbar-new.xpm"
 
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
-  EVT_MENU(XRCID("Quit"), PqwxFrame::OnQuit)
-  EVT_MENU(XRCID("HelpAbout"), PqwxFrame::OnAbout)
+  EVT_MENU(wxID_EXIT, PqwxFrame::OnQuit)
+  EVT_MENU(wxID_ABOUT, PqwxFrame::OnAbout)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)

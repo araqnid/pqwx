@@ -29,9 +29,6 @@ private:
 
 // controls and menu commands
 enum {
-  Pqwx_Quit = wxID_EXIT,
-  Pqwx_About = wxID_ABOUT,
-
   // local
   Pqwx_ObjectBrowser = 16384,
   Pqwx_ConnectObjectBrowser = 16385,

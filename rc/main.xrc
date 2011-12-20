@@ -8,9 +8,7 @@
       <object class="wxMenuItem" name="DisconnectObjectBrowser">
         <label>&amp;Disconnect Object Browser</label>
       </object>
-      <object class="wxMenuItem" name="Quit">
-        <label>E&amp;xit</label>
-        <accel>Ctrl-Q</accel>
+      <object class="wxMenuItem" name="wxID_EXIT">
       </object>
       <label>&amp;File</label>
     </object>
@@ -22,11 +20,8 @@
       </object>
     </object>
     <object class="wxMenu" name="helpmenu">
-      <object class="wxMenuItem" name="HelpAbout">
-        <label>&amp;About</label>
-        <accel>F1</accel>
-      </object>
       <label>&amp;Help</label>
+      <object class="wxMenuItem" name="wxID_ABOUT"/>
     </object>
   </object>
 </resource>

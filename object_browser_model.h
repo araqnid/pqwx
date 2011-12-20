@@ -85,7 +85,7 @@ public:
     connections[db->DbName()] = db;
     db->Relabel(_("Object Browser"));
   }
-  ServerConnection *conn;
+  const ServerConnection *conn;
   vector<DatabaseModel*> databases;
   int serverVersion;
   bool usingSSL;

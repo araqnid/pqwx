@@ -49,17 +49,16 @@ public:
     int score;
   };
 
-  // assumption that "unsigned long" is 64 bits ahoy!
   class Filter {
   public:
     Filter(int capacity) : capacity(capacity) {
-      data = new unsigned long[NumWords()];
+      data = new wxUint64[NumWords()];
       for (int i = NumWords() - 1; i >= 0; i--) {
 	data[i] = 0UL;
       }
     }
     Filter(const Filter &other) : capacity(other.capacity) {
-      data = new unsigned long[NumWords()];
+      data = new wxUint64[NumWords()];
       for (int i = NumWords() - 1; i >= 0; i--) {
 	data[i] = other.data[i];
       }
@@ -119,14 +118,14 @@ public:
       return (capacity+63) >> 6;
     }
     int capacity;
-    unsigned long *data;
+    wxUint64 *data;
     friend class CatalogueIndex;
   };
 
   Filter CreateMatchEverythingFilter() const {
     Filter filter(documents.size());
     for (int i = filter.NumWords() - 1; i >= 0; i--) {
-      filter.data[i] = 0xffffffffffffffffUL;
+      filter.data[i] = (wxUint64) -1;
     }
     return filter;
   };

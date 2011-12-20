@@ -24,6 +24,7 @@ CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell pg_config --included
 LDFLAGS := -L$(shell pg_config --libdir) -lpq $(shell wx-config $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
 OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o object_finder.o
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc
+SOURCES = $(OBJS:.o=.cpp) catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
 
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^
@@ -48,7 +49,15 @@ object_browser_sql.h: object_browser.sql format_sql_header
 
 object_browser.o: object_browser_sql.h
 
+rc/%.c: rc/%.xrc
+	wxrc -o $@ -g $^
+
+pqwx.pot: $(SOURCES) $(patsubst rc/%.xrc,rc/%.c,$(XRC))
+	xgettext --from-code=UTF-8 -k_ -o $@ $^
+
+pot: pqwx.pot
+
 clean:
-	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h
+	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h resources.h rc/*.c
 
 .PHONY: FORCE

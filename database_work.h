@@ -4,7 +4,7 @@
 #define __database_work_h
 
 #include <vector>
-#include <libpq-fe.h>
+#include "libpq-fe.h"
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "sql_logger.h"
@@ -23,10 +23,23 @@ public:
   static wxString QuoteIdent(PGconn *conn, const wxString &str) {
     if (IsSimpleSymbol(str.utf8_str()))
       return str;
+#if PG_VERSION_NUM >= 90000
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeIdentifier(conn, buf.data(), strlen(buf.data()));
     wxString result = wxString::FromUTF8(escaped);
     PQfreemem(escaped);
+#else
+    wxString result;
+    result.Alloc(str.length() + 2);
+    result << _T('\"');
+    for (int i = 0; i < str.length(); i++) {
+      if (str[i] == '\"')
+	result << _T("\"\"");
+      else
+	result << str[i];
+    }
+    result << _T('\"');
+#endif
     return result;
   }
 
@@ -38,15 +51,43 @@ public:
     return true;
   }
 
+#if PG_VERSION_NUM < 90000
+  static bool standardConformingStrings(PGconn *conn) {
+    const char *value = PQparameterStatus(conn, "standard_conforming_strings");
+    return strcmp(value, "on") == 0;
+  }
+#endif
+
   static wxString QuoteLiteral(PGconn *conn, const wxString &str) {
+#if PG_VERSION_NUM >= 90000
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeLiteral(conn, buf.data(), strlen(buf.data()));
     wxString result = wxString::FromUTF8(escaped);
     PQfreemem(escaped);
+#else
+    wxString result;
+    bool useEscapeSyntax = !standardConformingStrings(conn);
+    bool usedEscapeSyntax = false;
+    result.Alloc(str.length() + 2);
+    result << _T('\'');
+    for (int i = 0; i < str.length(); i++) {
+      if (str[i] == '\'')
+	result << _T("\'\'");
+      else if (useEscapeSyntax && str[i] == '\\') {
+	result << _T("\\\\");
+	usedEscapeSyntax = true;
+      }
+      else
+	result << str[i];
+    }
+    result << _T('\'');
+    if (usedEscapeSyntax)
+      result = _T('E') + result;
+#endif
     return result;
   }
-protected:
 
+protected:
   bool DoCommand(PGconn *conn, const wxString &sql) {
     return DoCommand(conn, sql.utf8_str());
   }

@@ -6,13 +6,15 @@ vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
 -include vcs_version.mk
 
+PG_CONFIG := pg_config
+WX_CONFIG := wx-config
+
+ifeq (pg_config,$(PG_CONFIG))
 debversion := $(shell cat /etc/debian_version 2>/dev/null)
 ifneq (,$(debversion))
 LOCAL_CXXFLAGS += -DUSE_DEBIAN_PGCLUSTER
 endif
-
-PG_CONFIG := pg_config
-WX_CONFIG := wx-config
+endif
 
 ifdef RELEASE
 WX_CONFIG_FLAGS =

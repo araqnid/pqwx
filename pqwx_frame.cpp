@@ -79,7 +79,14 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   info.SetVersion(_T(PQWX_VERSION));
   wxString description(_("PostgreSQL query tool"));
 #ifdef PQWX_DEBUG
-  description += _(" - Debug build");
+  description << _(" - Debug build");
+  description << _("\nlibpq ") << _T(PG_VERSION);
+  description << _("\n") << wxVERSION_STRING;
+#if wxUSE_UNICODE
+  description << _T(" (Unicode)");
+#else
+  description << _T(" (ANSI)");
+#endif
 #endif
   info.SetDescription(description);
   info.SetCopyright(_T("(c) 2011 Steve Haslam"));

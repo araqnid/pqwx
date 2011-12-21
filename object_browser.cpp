@@ -168,7 +168,11 @@ DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, co
   DatabaseConnection *db = server->connections[dbname];
   if (db == NULL) {
     wxLogDebug(_T("Allocating connection to %s database %s"), server->conn->Identification().c_str(), dbname.c_str());
+#if PG_VERSION_NUM >= 90000
     db = new DatabaseConnection(server->conn, dbname, _("Object Browser"));
+#else
+    db = new DatabaseConnection(server->conn, dbname);
+#endif
     server->connections[dbname] = db;
   }
   return db;
@@ -195,6 +199,9 @@ void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnecti
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
+#if PG_VERSION_NUM < 90000
+    db->Relabel(_("Object Browser"));
+#endif
   }
   db->AddWork(new ObjectBrowserDatabaseWork(this, work));
 }

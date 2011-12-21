@@ -22,12 +22,21 @@ public:
 
 class DatabaseConnection : public SqlLogger {
 public:
+#if PG_VERSION_NUM >= 90000
   DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex), label(label) {
     workerThread = NULL;
     state = NOT_CONNECTED;
     connectionCallback = NULL;
     Setup();
   }
+#else
+  DatabaseConnection(const ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex) {
+    workerThread = NULL;
+    state = NOT_CONNECTED;
+    connectionCallback = NULL;
+    Setup();
+  }
+#endif
 
   void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();
@@ -50,7 +59,9 @@ private:
   wxString identification;
   const ServerConnection *server;
   const wxString dbname;
+#if PG_VERSION_NUM >= 90000
   wxString label;
+#endif
   DatabaseWorkerThread *workerThread;
   wxMutex workQueueMutex;
   wxCondition workCondition;

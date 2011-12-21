@@ -349,8 +349,10 @@ private:
 protected:
   void Execute(PGconn *conn) {
     ReadColumns(conn);
-    ReadIndices(conn);
-    ReadTriggers(conn);
+    if (relationModel->type == RelationModel::TABLE) {
+      ReadIndices(conn);
+      ReadTriggers(conn);
+    }
   }
 private:
   void ReadColumns(PGconn *conn) {

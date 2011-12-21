@@ -53,8 +53,7 @@ SELECT grosysid, groname, false, false,
 FROM pg_group
 
 -- SQL :: Relations
-SELECT pg_class.oid, nspname, relname, relkind,
-       pg_description.description
+SELECT pg_class.oid, nspname, relname, relkind
 FROM (SELECT oid, relname, relkind, relnamespace
       FROM pg_class
       WHERE relkind IN ('r','v')
@@ -69,9 +68,6 @@ FROM (SELECT oid, relname, relkind, relnamespace
                            AND deptype = 'a')
                )
      ) pg_class
-     LEFT JOIN pg_description ON pg_description.classoid = 'pg_class'::regclass
-                                 AND pg_description.objoid = pg_class.oid
-                                 AND pg_description.objsubid = 0
      RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
 -- SQL :: Table Detail
@@ -142,24 +138,23 @@ SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
             WHEN proiswindow THEN 'fw'
-            ELSE 'f' END,
-       pg_description.description
+            ELSE 'f' END
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
-     LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass
-                                 AND pg_description.objoid = pg_proc.oid
 
 -- SQL :: Functions
 SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
-            ELSE 'f' END,
-       pg_description.description
+            ELSE 'f' END
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
-     LEFT JOIN pg_description ON pg_description.classoid = 'pg_proc'::regclass
-                                 AND pg_description.objoid = pg_proc.oid
+
+-- SQL :: Object Descriptions
+SELECT objoid, description
+FROM pg_description
+WHERE classoid IN ('pg_class'::regclass, 'pg_proc'::regclass)
 
 -- SQL :: Columns
 SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef,

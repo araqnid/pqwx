@@ -69,6 +69,8 @@ public:
     return name.IsSameAs(_T("postgres")) || name.IsSameAs(_T("template0")) || name.IsSameAs(_T("template1"));
   }
   map<unsigned long,wxTreeItemId> symbolItemLookup;
+  vector<RelationModel*> relations;
+  vector<FunctionModel*> functions;
 };
 
 class RoleModel : public ObjectModel {

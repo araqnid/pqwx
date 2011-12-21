@@ -216,8 +216,6 @@ public:
 private:
   DatabaseModel *databaseModel;
   wxTreeItemId databaseItem;
-  vector<RelationModel*> relations;
-  vector<FunctionModel*> functions;
 protected:
   void Execute(PGconn *conn) {
     LoadRelations(conn);
@@ -240,8 +238,7 @@ protected:
       GET_TEXT(iter, 3, relkind);
       relation->type = typemap[relkind];
       relation->user = !IsSystemSchema(relation->schema);
-      GET_TEXT(iter, 4, relation->description);
-      relations.push_back(relation);
+      databaseModel->relations.push_back(relation);
     }
   }
   void LoadFunctions(PGconn *conn) {
@@ -262,19 +259,58 @@ protected:
       wxString type;
       GET_TEXT(iter, 4, type);
       func->type = typemap[type];
-      GET_TEXT(iter, 5, func->description);
       func->user = !IsSystemSchema(func->schema);
-      functions.push_back(func);
+      databaseModel->functions.push_back(func);
     }
   }
   void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInDatabaseSchema(databaseModel, databaseItem, relations, functions);
+    ob->FillInDatabaseSchema(databaseModel, databaseItem);
     ob->Expand(databaseItem);
     ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
   }
 private:
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"));
+  }
+};
+
+class LoadDatabaseDescriptionsWork : public ObjectBrowserWork {
+public:
+  LoadDatabaseDescriptionsWork(DatabaseModel *databaseModel) : databaseModel(databaseModel) {
+    wxLogDebug(_T("%p: work to load schema object descriptions"), this);
+  }
+private:
+  DatabaseModel *databaseModel;
+  map<unsigned long, wxString> descriptions;
+protected:
+  void Execute(PGconn *conn) {
+    QueryResults rs;
+    DoQuery(conn, _T("Object Descriptions"), rs);
+    for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
+      unsigned long oid;
+      wxString description;
+      GET_OID(iter, 0, oid);
+      GET_TEXT(iter, 1, description);
+      descriptions[oid] = description;
+    }
+  }
+  void LoadIntoView(ObjectBrowser *ob) {
+    int count = 0;
+    for (vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
+      map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+      if (ptr != descriptions.end()) {
+	(*iter)->description = (*ptr).second;
+	++count;
+      }
+    }
+    for (vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
+      map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+      if (ptr != descriptions.end()) {
+	(*iter)->description = (*ptr).second;
+	++count;
+      }
+    }
+    wxLogDebug(_T("Loaded %d/%d descriptions"), count, descriptions.size());
   }
 };
 

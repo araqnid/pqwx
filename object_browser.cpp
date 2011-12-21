@@ -234,7 +234,8 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database) {
   SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, databaseItem));
-  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork( database));
+  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database));
+  SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
 }
 
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
@@ -327,16 +328,16 @@ static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
   return false;
 }
 
-void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem, vector<RelationModel*> &relations, vector<FunctionModel*> &functions) {
+void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem) {
   databaseModel->loaded = true;
 
-  sort(relations.begin(), relations.end(), CollateSchemaMembers);
-  sort(functions.begin(), functions.end(), CollateSchemaMembers);
+  sort(databaseModel->relations.begin(), databaseModel->relations.end(), CollateSchemaMembers);
+  sort(databaseModel->functions.begin(), databaseModel->functions.end(), CollateSchemaMembers);
   map<wxString, vector<SchemaMemberModel*> > systemSchemas;
   map<wxString, vector<SchemaMemberModel*> > userSchemas;
 
   int userObjectCount = 0;
-  for (vector<RelationModel*>::iterator iter = relations.begin(); iter != relations.end(); iter++) {
+  for (vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
     RelationModel *relation = *iter;
     if (relation->user) {
       userObjectCount++;
@@ -346,7 +347,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
       systemSchemas[relation->schema].push_back(relation);
     }
   }
-  for (vector<FunctionModel*>::iterator iter = functions.begin(); iter != functions.end(); iter++) {
+  for (vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
     FunctionModel *function = *iter;
     if (function->user) {
       userObjectCount++;

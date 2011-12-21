@@ -1,4 +1,7 @@
 #include <deque>
+#if PG_VERSION_NUM < 90000
+#include <sstream>
+#endif
 #include "wx/log.h"
 #include "server_connection.h"
 #include "database_connection.h"
@@ -166,8 +169,10 @@ static const char *options[] = {
   "port",
   "user",
   "password",
-  "application_name",
   "dbname",
+#if PG_VERSION_NUM >= 90000
+  "application_name",
+#endif
   NULL
 };
 
@@ -195,8 +200,10 @@ bool DatabaseWorkerThread::Connect() {
 
   values[2] = db->server->username.IsEmpty() ? NULL : username.data();
   values[3] = db->server->password.IsEmpty() ? NULL : password.data();
-  values[4] = appNameBuf.data();
-  values[5] = dbNameBuf.data();
+  values[4] = dbNameBuf.data();
+#if PG_VERSION_NUM >= 90000
+  values[5] = appNameBuf.data();
+#endif
 
 #ifdef PQWX_DEBUG
   fwprintf(stderr, wxT("thr#%lx connecting to server\n"), GetId());
@@ -205,7 +212,20 @@ bool DatabaseWorkerThread::Connect() {
   }
 #endif
 
+#if PG_VERSION_NUM >= 90000
   conn = PQconnectdbParams(options, values, 0);
+#else
+  stringstream conninfoBuilder;
+  for (int j = 0; options[j]; j++) {
+    if (values[j])
+      conninfoBuilder << ' ' << options[j] << '=' << values[j];
+  }
+#ifdef PQWX_DEBUG
+  fwprintf(stderr, wxT("conninfo: %s\n"), conninfoBuilder.str().c_str());
+#endif
+  conn = PQconnectdb(conninfoBuilder.str().c_str());
+#endif
+
   ConnStatusType status = PQstatus(conn);
 
   if (status == CONNECTION_OK) {

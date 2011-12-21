@@ -8,7 +8,7 @@
 #include <map>
 
 #include "wx/intl.h"
-#include "postgresql/pg_config.h"
+#include "pg_config.h"
 #include "database_connection.h"
 
 class ServerConnection {

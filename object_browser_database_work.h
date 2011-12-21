@@ -30,9 +30,23 @@ protected:
   bool DoQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
     logger->LogSql(sql);
 
+#ifdef PQWX_DEBUG
+    struct timeval start;
+    gettimeofday(&start, NULL);
+#endif
+
     PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
     if (!rs)
       return false;
+
+#ifdef PQWX_DEBUG
+    struct timeval finish;
+    gettimeofday(&finish, NULL);
+    struct timeval elapsed;
+    timersub(&finish, &start, &elapsed);
+    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
+    wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
+#endif
 
     ExecStatusType status = PQresultStatus(rs);
     if (status != PGRES_TUPLES_OK) {
@@ -51,9 +65,23 @@ protected:
   bool DoQuery(PGconn *conn, const char *sql, QueryResults &results) {
     logger->LogSql(sql);
 
+#ifdef PQWX_DEBUG
+    struct timeval start;
+    gettimeofday(&start, NULL);
+#endif
+
     PGresult *rs = PQexec(conn, sql);
     if (!rs)
       return false;
+
+#ifdef PQWX_DEBUG
+    struct timeval finish;
+    gettimeofday(&finish, NULL);
+    struct timeval elapsed;
+    timersub(&finish, &start, &elapsed);
+    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
+    wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
+#endif
 
     ExecStatusType status = PQresultStatus(rs);
     if (status != PGRES_TUPLES_OK) {

@@ -54,6 +54,10 @@ public:
     const Document *document;
     int score;
     std::vector<Extent> extents;
+    bool operator<(const CatalogueIndex::Result &r2) const {
+      return score < r2.score
+	|| (score == r2.score && document->symbol < r2.document->symbol);
+    }
   };
 
   class Filter {
@@ -140,7 +144,7 @@ public:
   Filter CreateTypeFilter(Type type) const;
   Filter CreateSchemaFilter(const wxString &schema) const;
 
-  std::vector<Result> Search(const wxString &input, const Filter &filter) const;
+  std::vector<Result> Search(const wxString &input, const Filter &filter, int maxResults = 100) const;
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   void DumpDocumentStore() {

@@ -84,6 +84,7 @@ int TestCatalogueApp::OnRun() {
   index.DumpDocumentStore();
 #endif
   bool includeSystem = false;
+  int maxResults = 10;
   CatalogueIndex::Filter baseFilter = index.CreateNonSystemFilter();
   CatalogueIndex::Filter typesFilter = index.CreateMatchEverythingFilter();
   for (vector<wxString>::iterator iter = queries.begin(); iter != queries.end(); iter++) {
@@ -101,15 +102,26 @@ int TestCatalogueApp::OnRun() {
 	typesFilter |= index.CreateTypeFilter(*iter);
       }
     }
+    else if ((*iter)[0] == _T('<')) {
+      long value;
+      if ((*iter).Mid(1).ToLong(&value)) {
+	maxResults = (int) value;
+	wxLogDebug(_T("Max results: %d"), maxResults);
+      }
+      else {
+	wxLogWarning(_T("Incomprehensible max results setting: %s"), (*iter).c_str());
+      }
+    }
     else {
       vector<CatalogueIndex::Result> results;
       const wxString &query = (*iter);
       int dot = query.Find(_T('.'));
+      CatalogueIndex::Filter filter = baseFilter & typesFilter;
 
       if (dot != wxNOT_FOUND)
-	results = index.Search(query, baseFilter & typesFilter & index.CreateSchemaFilter(query.Left(dot)));
-      else
-	results = index.Search(query, baseFilter & typesFilter);
+	filter &= index.CreateSchemaFilter(query.Left(dot));
+
+      results = index.Search(query, filter, maxResults);
 
       for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
 	wxString resultDump = iter->document->symbol;

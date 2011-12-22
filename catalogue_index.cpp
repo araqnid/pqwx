@@ -1,6 +1,7 @@
 #include "catalogue_index.h"
 #include "wx/log.h"
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -63,11 +64,6 @@ vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) con
   return output;
 }
 
-static bool collateResults(const CatalogueIndex::Result &r1, const CatalogueIndex::Result &r2) {
-  return r1.score < r2.score
-    || (r1.score == r2.score && r1.document->symbol < r2.document->symbol);
-}
-
 vector<int> CatalogueIndex::MatchTerms(const wxString &token) const {
   map<wxString, vector<int> >::const_iterator iter = prefixes.find(token);
   if (iter == prefixes.end()) {
@@ -87,7 +83,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter) const {
+vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, int maxResults) const {
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -116,7 +112,8 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
     }
   }
 #endif
-  vector<Result> scoreDocs;
+  priority_queue<Result> scoreDocs;
+  int hitCount = 0;
   for (map<const DocumentPosition, const Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
     const Occurrence *firstTerm = iter->second;
     int documentId = firstTerm->documentId;
@@ -182,18 +179,27 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
 #endif
     // TODO weightings for these
     int score = firstTerm->position + suffixLength + lastLengthDifference + (totalLengthDifference - lastLengthDifference);
-    scoreDocs.push_back(Result(&(documents[documentId]), score, extents));
+    ++hitCount;
+    scoreDocs.push(Result(&(documents[documentId]), score, extents));
+    if (scoreDocs.size() > maxResults)
+      scoreDocs.pop();
   }
-  sort(scoreDocs.begin(), scoreDocs.end(), collateResults);
 #ifdef PQWX_DEBUG
   struct timeval finish;
   gettimeofday(&finish, NULL);
   struct timeval elapsed;
   timersub(&finish, &start, &elapsed);
   double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d results"), elapsedFP, scoreDocs.size());
+  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d/%d results"), elapsedFP, scoreDocs.size(), hitCount);
 #endif
-  return scoreDocs;
+  vector<Result> resultVector;
+  resultVector.reserve(scoreDocs.size());
+  while (!scoreDocs.empty()) {
+    resultVector.push_back(scoreDocs.top());
+    scoreDocs.pop();
+  }
+  reverse(resultVector.begin(), resultVector.end());
+  return resultVector;
 }
 
 CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() const {

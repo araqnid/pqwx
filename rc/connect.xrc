@@ -2,9 +2,6 @@
 <resource class="wxDialog">
   <object class="wxDialog" name="connect">
     <title>Connect to server</title>
-    
-    
-    
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
@@ -84,7 +81,8 @@
             <object class="wxButton" name="wxID_CANCEL"/>
           </object>
         </object>
-        <flag>wxEXPAND</flag>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>2</border>
       </object>
     </object>
   </object>

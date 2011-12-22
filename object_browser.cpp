@@ -320,77 +320,19 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
   }
 }
 
-static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
-  if (r1->schema < r2->schema) return true;
-  if (r1->schema.IsSameAs(r2->schema)) {
-    return r1->name < r2->name;
-  }
-  return false;
-}
-
-void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem) {
-  databaseModel->loaded = true;
-
-  sort(databaseModel->relations.begin(), databaseModel->relations.end(), CollateSchemaMembers);
-  sort(databaseModel->functions.begin(), databaseModel->functions.end(), CollateSchemaMembers);
-  map<wxString, vector<SchemaMemberModel*> > systemSchemas;
-  map<wxString, vector<SchemaMemberModel*> > userSchemas;
-
-  int userObjectCount = 0;
-  for (vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
-    RelationModel *relation = *iter;
-    if (relation->user) {
-      userObjectCount++;
-      userSchemas[relation->schema].push_back(relation);
-    }
-    else {
-      systemSchemas[relation->schema].push_back(relation);
-    }
-  }
-  for (vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
-    FunctionModel *function = *iter;
-    if (function->user) {
-      userObjectCount++;
-      userSchemas[function->schema].push_back(function);
-    }
-    else {
-      systemSchemas[function->schema].push_back(function);
-    }
-  }
-
-  bool foldUserSchemas;
-  if (userObjectCount < 50) {
-    wxLogDebug(_T("Found %d user objects, unfolding schemas"), userObjectCount);
-    foldUserSchemas = false;
-  }
-  else {
-    wxLogDebug(_T("Found %d user objects, keeping all schemas folded"), userObjectCount);
-    foldUserSchemas = true;
-  }
-
-  for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = userSchemas.begin(); iter != userSchemas.end(); iter++) {
-    AppendSchemaMembers(databaseItem, foldUserSchemas && iter->second.size() > 1, iter->first, iter->second);
-  }
-
-  wxTreeItemId systemSchemaMember = AppendItem(databaseItem, _("System schemas"));
-  for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = systemSchemas.begin(); iter != systemSchemas.end(); iter++) {
-    AppendSchemaMembers(systemSchemaMember, iter->second.size() > 1, iter->first, iter->second);
-  }
-}
-
-void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaMember, const wxString &schemaName, vector<SchemaMemberModel*> &members) {
+void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
     AppendItem(parent, schemaName + _T("."));
     return;
   }
 
-  if (includeSchemaMember) {
+  if (createSchemaItem) {
     parent = AppendItem(parent, schemaName + _T("."));
   }
 
   wxTreeItemId functionsItem;
   bool schemaHasRelations = true;
-  for (vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+  for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) {
       schemaHasRelations = false;
@@ -399,7 +341,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
     // not sure if this is better or worse than having a virtual model method to have the model add itself
     RelationModel *relation = dynamic_cast<RelationModel*>(member);
     if (relation != NULL) {
-      wxTreeItemId memberItem = AppendItem(parent, includeSchemaMember ? relation->name : relation->schema + _T(".") + relation->name);
+      wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
       SetItemData(memberItem, relation);
       relation->database->symbolItemLookup[relation->oid] = memberItem;
       if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
@@ -409,7 +351,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
     FunctionModel *function = dynamic_cast<FunctionModel*>(member);
     if (function != NULL) {
       wxTreeItemId functionParent;
-      if (includeSchemaMember && schemaHasRelations) {
+      if (createSchemaItem && schemaHasRelations) {
 	if (!functionsItem.IsOk())
 	  functionsItem = AppendItem(parent, _("Functions"));
 	functionParent = functionsItem;
@@ -417,12 +359,45 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool includeSchemaM
       else {
 	functionParent = parent;
       }
-      wxTreeItemId memberItem = AppendItem(functionParent, includeSchemaMember ? function->prototype : function->schema + _T(".") + function->prototype);
+      wxTreeItemId memberItem = AppendItem(functionParent, createSchemaItem ? function->prototype : function->schema + _T(".") + function->prototype);
       SetItemData(memberItem, function);
       function->database->symbolItemLookup[function->oid] = memberItem;
       continue;
     }
   }
+}
+
+void ObjectBrowser::AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
+  map<wxString, vector<SchemaMemberModel*> > schemas;
+
+  for (vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+    SchemaMemberModel *member = *iter;
+    schemas[member->schema].push_back(member);
+  }
+
+  bool foldSchemas = members.size() > 50;
+  for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
+    AppendSchemaMembers(parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
+  }
+}
+
+void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem) {
+  databaseModel->loaded = true;
+
+  DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
+
+  AppendDivision(divisions.userDivision, databaseItem);
+
+  if (!divisions.extensionDivisions.empty()) {
+    wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
+    for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
+      wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
+      AppendDivision(iter->second, extensionItem);
+    }
+  }
+
+  wxTreeItemId systemDivisionItem = AppendItem(databaseItem, _("System schemas"));
+  AppendDivision(divisions.systemDivision, systemDivisionItem);
 }
 
 void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers) {

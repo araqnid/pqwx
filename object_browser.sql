@@ -52,8 +52,35 @@ SELECT grosysid, groname, false, false,
        null AS description
 FROM pg_group
 
+-- SQL :: Relations :: 9.1
+SELECT pg_class.oid, nspname, relname, relkind,
+       pg_extension.extname
+FROM (SELECT oid, relname, relkind, relnamespace
+      FROM pg_class
+      WHERE relkind IN ('r','v')
+            OR (relkind = 'S' AND NOT EXISTS (
+                     -- exclude sequences that depend on an attribute (serial columns)
+                     SELECT 1
+                     FROM pg_depend
+                     WHERE classid = 'pg_class'::regclass
+                           AND objid = pg_class.oid
+                           AND refclassid = 'pg_class'::regclass
+                           AND refobjsubid > 0
+                           AND deptype = 'a')
+               )
+     ) pg_class
+     LEFT JOIN pg_description ON pg_description.classoid = 'pg_class'::regclass
+                                 AND pg_description.objoid = pg_class.oid
+                                 AND pg_description.objsubid = 0
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
+                         AND pg_depend.objid = pg_class.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+     RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+
 -- SQL :: Relations
-SELECT pg_class.oid, nspname, relname, relkind
+SELECT pg_class.oid, nspname, relname, relkind,
+       NULL AS extname
 FROM (SELECT oid, relname, relkind, relnamespace
       FROM pg_class
       WHERE relkind IN ('r','v')
@@ -132,13 +159,29 @@ FROM pg_proc
      JOIN pg_roles owner ON owner.oid = pg_proc.proowner
 WHERE pg_proc.oid = $1
 
+-- SQL :: Functions :: 9.1
+SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
+       CASE WHEN proretset THEN 'fs'
+            WHEN prorettype = 'trigger'::regtype THEN 'ft'
+            WHEN proisagg THEN 'fa'
+            WHEN proiswindow THEN 'fw'
+            ELSE 'f' END,
+       extname
+FROM pg_proc
+     JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_proc'::regclass
+                         AND pg_depend.objid = pg_proc.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+
 -- SQL :: Functions :: 8.4
 SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
             WHEN proiswindow THEN 'fw'
-            ELSE 'f' END
+            ELSE 'f' END,
+       NULL AS extname
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 
@@ -147,7 +190,8 @@ SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
-            ELSE 'f' END
+            ELSE 'f' END,
+       NULL AS extname
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 

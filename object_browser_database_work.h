@@ -236,6 +236,7 @@ protected:
       GET_TEXT(iter, 2, relation->name);
       wxString relkind;
       GET_TEXT(iter, 3, relkind);
+      GET_TEXT(iter, 4, relation->extension);
       relation->type = typemap[relkind];
       relation->user = !IsSystemSchema(relation->schema);
       databaseModel->relations.push_back(relation);
@@ -258,6 +259,7 @@ protected:
       GET_TEXT(iter, 3, func->prototype);
       wxString type;
       GET_TEXT(iter, 4, type);
+      GET_TEXT(iter, 5, func->extension);
       func->type = typemap[type];
       func->user = !IsSystemSchema(func->schema);
       databaseModel->functions.push_back(func);

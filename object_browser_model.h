@@ -34,6 +34,7 @@ public:
   DatabaseModel *database;
   unsigned long oid;
   wxString schema;
+  wxString extension;
   bool user;
 };
 
@@ -71,6 +72,49 @@ public:
   map<unsigned long,wxTreeItemId> symbolItemLookup;
   vector<RelationModel*> relations;
   vector<FunctionModel*> functions;
+
+  class Divisions {
+  public:
+    vector<SchemaMemberModel*> userDivision;
+    vector<SchemaMemberModel*> systemDivision;
+    map<wxString, vector<SchemaMemberModel*> > extensionDivisions;
+  };
+
+  Divisions DivideSchemaMembers() const {
+    vector<SchemaMemberModel*> members;
+    for (vector<RelationModel*>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
+      members.push_back(*iter);
+    }
+    for (vector<FunctionModel*>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
+      members.push_back(*iter);
+    }
+
+    sort(members.begin(), members.end(), CollateSchemaMembers);
+  
+    Divisions result;
+
+    for (vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (!member->extension.IsEmpty())
+	result.extensionDivisions[member->extension].push_back(member);
+      else if (!member->user)
+	result.systemDivision.push_back(member);
+      else
+	result.userDivision.push_back(member);
+    }
+
+    return result;
+  }
+
+private:
+  static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
+    if (r1->schema < r2->schema) return true;
+    if (r1->schema.IsSameAs(r2->schema)) {
+      return r1->name < r2->name;
+    }
+    return false;
+  }
+
 };
 
 class RoleModel : public ObjectModel {

@@ -26,7 +26,7 @@ WX_CONFIG_FLAGS = --debug=yes
 VARIANT_CXXFLAGS = -DPQWX_DEBUG -ggdb
 endif
 
-WX_MODULES := base core xrc adv
+WX_MODULES := base core xrc adv html
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LIBS) -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))

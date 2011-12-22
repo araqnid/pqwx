@@ -160,7 +160,7 @@ FROM pg_proc
 WHERE pg_proc.oid = $1
 
 -- SQL :: Functions :: 9.1
-SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
+SELECT pg_proc.oid, nspname, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
@@ -175,7 +175,7 @@ FROM pg_proc
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 
 -- SQL :: Functions :: 8.4
-SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
+SELECT pg_proc.oid, nspname, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
@@ -186,7 +186,7 @@ FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 
 -- SQL :: Functions
-SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure,
+SELECT pg_proc.oid, nspname, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'

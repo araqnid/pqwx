@@ -359,7 +359,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       else {
 	functionParent = parent;
       }
-      wxTreeItemId memberItem = AppendItem(functionParent, createSchemaItem ? function->prototype : function->schema + _T(".") + function->prototype);
+      wxTreeItemId memberItem = AppendItem(functionParent, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
       SetItemData(memberItem, function);
       function->database->symbolItemLookup[function->oid] = memberItem;
       continue;

@@ -256,7 +256,7 @@ protected:
       GET_OID(iter, 0, func->oid);
       GET_TEXT(iter, 1, func->schema);
       GET_TEXT(iter, 2, func->name);
-      GET_TEXT(iter, 3, func->prototype);
+      GET_TEXT(iter, 3, func->arguments);
       wxString type;
       GET_TEXT(iter, 4, type);
       GET_TEXT(iter, 5, func->extension);

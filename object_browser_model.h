@@ -45,7 +45,7 @@ public:
 
 class FunctionModel : public SchemaMemberModel {
 public:
-  wxString prototype;
+  wxString arguments;
   enum Type { SCALAR, RECORDSET, TRIGGER, AGGREGATE, WINDOW } type;
 };
 

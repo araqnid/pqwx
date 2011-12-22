@@ -89,6 +89,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   gettimeofday(&start, NULL);
 #endif
   vector<Token> tokens = Analyse(input);
+  if (tokens.empty()) return vector<CatalogueIndex::Result>();
   vector< map<const DocumentPosition, const Occurrence*> > tokenMatches;
   for (vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
     map<const DocumentPosition, const Occurrence*> tokenOccurrences;

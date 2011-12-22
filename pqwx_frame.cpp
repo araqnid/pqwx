@@ -12,6 +12,7 @@
 
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
+#include "wx_flavour.h"
 #include "object_browser.h"
 #include "connect_dialogue.h"
 
@@ -81,12 +82,7 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 #ifdef PQWX_DEBUG
   description << _(" - Debug build");
   description << _("\nlibpq ") << _T(PG_VERSION);
-  description << _("\n") << wxVERSION_STRING;
-#if wxUSE_UNICODE
-  description << _T(" (Unicode)");
-#else
-  description << _T(" (ANSI)");
-#endif
+  description << _T("\n") << wxVERSION_STRING << _T(" ") << _T(WX_FLAVOUR);
 #endif
   info.SetDescription(description);
   info.SetCopyright(_T("(c) 2011 Steve Haslam"));

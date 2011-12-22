@@ -34,6 +34,14 @@ OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o c
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc
 SOURCES = $(OBJS:.o=.cpp) catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
 
+wx_flavour.h build_settings: FORCE
+	@settings='$(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --selected-config)'; \
+	if test x"$$settings" != x"`cat build_settings 2>/dev/null`" ; then \
+		echo "WX_FLAVOUR = $$settings"; \
+		echo $$settings > build_settings; \
+		echo "#define WX_FLAVOUR \"$$settings\"" > wx_flavour.h; \
+	fi
+
 pqwx: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^
 
@@ -42,7 +50,7 @@ test_catalogue: catalogue_index.o test_catalogue.o
 
 -include $(OBJS:.o=.d) test_catalogue.d
 
-%.o: %.cpp
+%.o: %.cpp build_settings
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp
 	@g++ $(CXXFLAGS) -MM -o $*.d $*.cpp
 
@@ -66,6 +74,6 @@ pqwx.pot: $(SOURCES) $(patsubst rc/%.xrc,rc/%.c,$(XRC))
 pot: pqwx.pot
 
 clean:
-	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h resources.h rc/*.c
+	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp object_browser_sql.h resources.h rc/*.c build_settings wx_flavour.h
 
 .PHONY: FORCE

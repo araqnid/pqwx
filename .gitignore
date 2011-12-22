@@ -10,3 +10,5 @@ resources.cpp
 object_browser_sql.h
 test_catalogue
 pqwx.pot
+build_settings
+wx_flavour.h

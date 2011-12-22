@@ -102,11 +102,42 @@ int TestCatalogueApp::OnRun() {
       }
     }
     else {
-      int dot = (*iter).Find(_T('.'));
+      vector<CatalogueIndex::Result> results;
+      const wxString &query = (*iter);
+      int dot = query.Find(_T('.'));
+
       if (dot != wxNOT_FOUND)
-	index.Search(*iter, baseFilter & typesFilter & index.CreateSchemaFilter((*iter).Left(dot)));
+	results = index.Search(query, baseFilter & typesFilter & index.CreateSchemaFilter(query.Left(dot)));
       else
-	index.Search(*iter, baseFilter & typesFilter);
+	results = index.Search(query, baseFilter & typesFilter);
+
+      for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
+	wxString resultDump = iter->document->symbol;
+
+	if (!iter->document->disambig.IsEmpty()) {
+	  resultDump << _T("(") << iter->document->disambig << _T(")");
+	}
+	resultDump << _T(' ') << CatalogueIndex::EntityTypeName(iter->document->entityType) << _T('#') << iter->document->entityId;
+	resultDump << _T(" (") << iter->score << _T(")");
+	wxLogDebug(_T("%s"), resultDump.c_str());
+
+	wxString extentsLine1;
+	wxString extentsLine2;
+	size_t pos = 0;
+	for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
+	  for (; pos < (*extentIter).offset; pos++) {
+	    extentsLine1 << _T(' ');
+	    extentsLine2 << _T(' ');
+	  }
+	  for (size_t len = 0; len < (*extentIter).length; len++, pos++) {
+	    extentsLine1 << _T('^');
+	    extentsLine2 << (len ? _T(' ') : _T('|'));
+	  }
+	}
+
+	wxLogDebug(_T("%s"), extentsLine1.c_str());
+	wxLogDebug(_T("%s"), extentsLine2.c_str());
+      }
     }
   }
   return 0;

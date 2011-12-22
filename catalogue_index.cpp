@@ -7,30 +7,30 @@ using namespace std;
 void CatalogueIndex::AddDocument(const Document& document) {
   int documentId = documents.size();
   documents.push_back(document);
-  vector<wxString> tokens(Analyse(document.symbol));
+  vector<Token> tokens(Analyse(document.symbol));
   int pos = 0;
-  for (vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++, pos++) {
-    map<wxString, int>::iterator termIter = termsIndex.find(*iter);
+  for (vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++, pos++) {
+    map<wxString, int>::iterator termIter = termsIndex.find((*iter).value);
     int termId;
     if (termIter == termsIndex.end()) {
       termId = terms.size();
-      terms.push_back(*iter);
-      termsIndex[*iter] = termId;
+      terms.push_back((*iter).value);
+      termsIndex[(*iter).value] = termId;
       // still doing this the perl-ish way
-      for (int len = 1; len <= iter->length(); len++) {
-	prefixes[iter->Left(len)].push_back(termId);
+      for (int len = 1; len <= (*iter).value.length(); len++) {
+	prefixes[(*iter).value.Left(len)].push_back(termId);
       }
     }
     else {
       termId = termIter->second;
     }
     documentTerms[documentId].push_back(termId);
-    occurrences[termId].push_back(Occurrence(documentId, termId, pos));
+    occurrences[termId].push_back(Occurrence(documentId, termId, pos, (*iter).inputPosition));
   }
 }
 
-vector<wxString> CatalogueIndex::Analyse(const wxString &input) const {
-  vector<wxString> output;
+vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) const {
+  vector<CatalogueIndex::Token> output;
 
   int mark = -1; // start of current token
   // [mark,pos) is the token when we find an edge
@@ -42,22 +42,22 @@ vector<wxString> CatalogueIndex::Analyse(const wxString &input) const {
       }
       else if (iswupper(c)) {
 	// upper-case letter causes a flush
-	output.push_back(input.Mid(mark, pos-mark));
+	output.push_back(Token(input.Mid(mark, pos-mark), (size_t) mark));
 	mark = pos;
       }
     }
     else if (mark >= 0) {
       // moved from alphanumeric to other
-      output.push_back(input.Mid(mark, pos-mark));
+      output.push_back(Token(input.Mid(mark, pos-mark), (size_t) mark));
       mark = -1;
     }
   }
 
   if (mark >= 0)
-    output.push_back(input.Mid(mark)); // moved to end-of-string
+    output.push_back(Token(input.Mid(mark), (size_t) mark)); // moved to end-of-string
 
-  for (vector<wxString>::iterator iter = output.begin(); iter != output.end(); iter++) {
-    iter->MakeLower();
+  for (vector<Token>::iterator iter = output.begin(); iter != output.end(); iter++) {
+    (*iter).value.MakeLower();
   }
 
   return output;
@@ -92,11 +92,11 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
-  vector<wxString> tokens = Analyse(input);
+  vector<Token> tokens = Analyse(input);
   vector< map<const DocumentPosition, const Occurrence*> > tokenMatches;
-  for (vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+  for (vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
     map<const DocumentPosition, const Occurrence*> tokenOccurrences;
-    vector<int> matchedTerms = MatchTerms(*iter);
+    vector<int> matchedTerms = MatchTerms((*iter).value);
     for (vector<int>::iterator matchedTermsIter = matchedTerms.begin(); matchedTermsIter != matchedTerms.end(); matchedTermsIter++) {
       const vector<Occurrence> * termOccurrences = TermOccurrences(*matchedTermsIter);
       for (vector<Occurrence>::const_iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
@@ -168,12 +168,13 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
     int lastLengthDifference;
     int totalLengthDifference = 0;
     vector<const Occurrence*>::iterator matchIter = matched.begin();
-    vector<wxString>::iterator tokenIter = tokens.begin();
+    vector<Token>::iterator tokenIter = tokens.begin();
+    vector<Result::Extent> extents;
     for (; matchIter != matched.end(); matchIter++, tokenIter++) {
       wxString termToken = terms[(*matchIter)->termId];
-      wxString queryToken = *tokenIter;
-      lastLengthDifference = termToken.length() - queryToken.length();
+      lastLengthDifference = termToken.length() - (*tokenIter).value.length();
       totalLengthDifference += lastLengthDifference;
+      extents.push_back(Result::Extent((*matchIter)->offset, (*tokenIter).value.length()));
     }
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T(" last token length difference: %d"), lastLengthDifference);
@@ -181,25 +182,16 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
 #endif
     // TODO weightings for these
     int score = firstTerm->position + suffixLength + lastLengthDifference + (totalLengthDifference - lastLengthDifference);
-    scoreDocs.push_back(Result(&(documents[documentId]), score));
+    scoreDocs.push_back(Result(&(documents[documentId]), score, extents));
   }
   sort(scoreDocs.begin(), scoreDocs.end(), collateResults);
 #ifdef PQWX_DEBUG
   struct timeval finish;
   gettimeofday(&finish, NULL);
-  for (vector<Result>::iterator iter = scoreDocs.begin(); iter != scoreDocs.end(); iter++) {
-    wxString resultDump = iter->document->symbol;
-    if (!iter->document->disambig.IsEmpty()) {
-      resultDump << _T("(") << iter->document->disambig << _T(")");
-    }
-    resultDump << _T(' ') << EntityTypeName(iter->document->entityType) << _T('#') << iter->document->entityId;
-    resultDump << _T(" (") << iter->score << _T(")");
-    wxLogDebug(_T("%s"), resultDump.c_str());
-  }
   struct timeval elapsed;
   timersub(&finish, &start, &elapsed);
   double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("** Completed search in %.3lf seconds"), elapsedFP);
+  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d results"), elapsedFP, scoreDocs.size());
 #endif
   return scoreDocs;
 }

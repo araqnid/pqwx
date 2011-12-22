@@ -44,9 +44,16 @@ public:
 
   class Result {
   public:
-    Result(const Document *document, int score) : document(document), score(score) {}
+    class Extent {
+    public:
+      Extent(size_t offset, int length) : offset(offset), length(length) {}
+      size_t offset;
+      int length;
+    };
+    Result(const Document *document, int score, const std::vector<Extent> &extents) : document(document), score(score), extents(extents) {}
     const Document *document;
     int score;
+    std::vector<Extent> extents;
   };
 
   class Filter {
@@ -166,7 +173,8 @@ private:
   };
   class Occurrence : public DocumentPosition {
   public:
-    Occurrence(int documentId, int termId, int position) : DocumentPosition(documentId, position), termId(termId) {}
+    Occurrence(int documentId, int termId, int position, size_t offset) : DocumentPosition(documentId, position), termId(termId), offset(offset) {}
+    size_t offset;
     int termId;
   };
 
@@ -182,7 +190,14 @@ private:
     return &( iter->second );
   }
 
-  std::vector<wxString> Analyse(const wxString &input) const;
+  class Token {
+  public:
+    Token(const wxString &value, size_t inputPosition) : value(value), inputPosition(inputPosition) {}
+    wxString value;
+    size_t inputPosition;
+  };
+
+  std::vector<Token> Analyse(const wxString &input) const;
   std::vector<Document> documents;
   std::vector<wxString> terms;
   std::map<wxString, int> termsIndex;

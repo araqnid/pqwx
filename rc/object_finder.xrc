@@ -1,19 +1,38 @@
 <?xml version="1.0" ?>
 <resource>
   <object class="wxDialog" name="ObjectFinder">
+    <size>100,100d</size>
+    <title>Find Object</title>
+    <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLOSE_BOX</style>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
+        <object class="wxStaticText">
+          <label>Enter type or view name, either underscore_symbols or StudlyCaps:</label>
+        </object>
+        <flag>wxALL</flag>
+        <border>4</border>
+      </object>
+      <object class="sizeritem">
         <object class="wxTextCtrl" name="query"/>
         <option>0</option>
-        <flag>wxEXPAND</flag>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>4</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticText">
+          <label>Matching items:</label>
+        </object>
+        <flag>wxALL</flag>
+        <border>4</border>
       </object>
       <object class="sizeritem">
         <object class="wxListBox" name="results">
           <size>150,100d</size>
         </object>
         <option>1</option>
-        <flag>wxEXPAND</flag>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>4</border>
       </object>
       <object class="sizeritem">
         <object class="wxStdDialogButtonSizer">
@@ -24,11 +43,9 @@
             <object class="wxButton" name="wxID_CANCEL"/>
           </object>
         </object>
-        <flag>wxEXPAND</flag>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>4</border>
       </object>
     </object>
-    <size>100,100d</size>
-    <title>Find Object</title>
-    <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLOSE_BOX</style>
   </object>
 </resource>

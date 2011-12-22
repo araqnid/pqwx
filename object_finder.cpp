@@ -20,7 +20,7 @@ BEGIN_EVENT_TABLE(ObjectFinder, wxDialog)
   EVT_BUTTON(wxID_OK, ObjectFinder::OnOk)
   EVT_BUTTON(wxID_CANCEL, ObjectFinder::OnCancel)
   EVT_CLOSE(ObjectFinder::OnClose)
-  EVT_LISTBOX_DCLICK(XRCID("results"), ObjectFinder::OnDoubleClickResult)
+  EVT_LISTBOX_DCLICK(Pqwx_ObjectFinderResults, ObjectFinder::OnDoubleClickResult)
 END_EVENT_TABLE()
 
 static wxRegEx schemaPattern(_T("^([a-zA-Z_][a-zA-Z0-9_]*)\\."));
@@ -44,7 +44,26 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   }
 
   for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
-    unsigned n = resultsCtrl->Append(iter->document->symbol);
+    wxString html;
+    const wxString &symbol = iter->document->symbol;
+    size_t pos = 0;
+    for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
+      int skip = (*extentIter).offset - pos;
+      if (skip > 0) {
+	html << symbol.Mid(pos, skip);
+	pos += skip;
+      }
+      html << _T("<b>");
+      html << symbol.Mid(pos, (*extentIter).length);
+      pos += (*extentIter).length;
+      html << _T("</b>");
+    }
+    int residual = symbol.length() - pos;
+    if (residual > 0) {
+      html << symbol.Mid(pos);
+    }
+
+    unsigned n = resultsCtrl->Append(html);
     resultsCtrl->SetClientData(n, &(*iter));
   }
 }

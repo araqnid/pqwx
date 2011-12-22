@@ -6,7 +6,9 @@
 #include <vector>
 #include "wx/dialog.h"
 #include "wx/xrc/xmlres.h"
+#include "wx/htmllbox.h"
 #include "catalogue_index.h"
+#include "pqwx_frame.h"
 
 class ObjectFinder : public wxDialog {
 public:
@@ -39,7 +41,7 @@ public:
 
 protected:
   wxTextCtrl *queryInput;
-  wxListBox *resultsCtrl;
+  wxSimpleHtmlListBox *resultsCtrl;
 
 private:
   const CatalogueIndex *catalogue;
@@ -49,7 +51,11 @@ private:
   void InitXRC(wxWindow *parent) {
     wxXmlResource::Get()->LoadDialog(this, parent, _T("ObjectFinder"));
     queryInput = XRCCTRL(*this, "query", wxTextCtrl);
-    resultsCtrl = XRCCTRL(*this, "results", wxListBox);
+    // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
+    wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
+    resultsCtrl = new wxSimpleHtmlListBox(this, Pqwx_ObjectFinderResults);
+    GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
+    dummyResultsCtrl->Destroy();
   }
 
   DECLARE_EVENT_TABLE();

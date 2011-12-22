@@ -43,6 +43,8 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
     results.clear();
   }
 
+  wxArrayString htmlList;
+
   for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
     wxString html;
     const wxString &symbol = iter->document->symbol;
@@ -63,9 +65,10 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
       html << symbol.Mid(pos);
     }
 
-    unsigned n = resultsCtrl->Append(html);
-    resultsCtrl->SetClientData(n, &(*iter));
+    htmlList.Add(html);
   }
+
+  resultsCtrl->Append(htmlList);
 }
 
 void ObjectFinder::OnOk(wxCommandEvent &event) {
@@ -79,11 +82,10 @@ void ObjectFinder::OnOk(wxCommandEvent &event) {
 void ObjectFinder::OnDoubleClickResult(wxCommandEvent &event) {
   int n = resultsCtrl->GetSelection();
   wxASSERT(n != wxNOT_FOUND);
-  void *clientData = resultsCtrl->GetClientData(n);
-  wxASSERT(clientData != NULL);
-  CatalogueIndex::Result *result = static_cast<CatalogueIndex::Result*>(clientData);
-  wxLogDebug(_T("Open object: %s"), result->document->symbol.c_str());
-  completion->OnObjectChosen(result->document);
+  wxASSERT(n < results.size());
+  const CatalogueIndex::Result &result = results[n];
+  wxLogDebug(_T("Open object: %s"), result.document->symbol.c_str());
+  completion->OnObjectChosen(result.document);
 
   Destroy();
 }

@@ -23,7 +23,8 @@ public:
     InitXRC(parent);
 
     filter &= catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::VIEW) 
+	       | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
+	       | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)

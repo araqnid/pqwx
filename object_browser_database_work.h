@@ -3,7 +3,39 @@
 #ifndef __object_browser_database_work_h
 #define __object_browser_database_work_h
 
-typedef std::vector< std::vector<wxString> > QueryResults;
+typedef std::vector<wxString> QueryRow;
+typedef std::vector<QueryRow> QueryResults;
+
+static inline Oid ReadOid(QueryResults::iterator iter, int index) {
+  wxASSERT(index < (*iter).size());
+  long value;
+  wxCHECK((*iter)[index].ToLong(&value), 0);
+  return value;
+}
+
+static inline bool ReadBool(QueryResults::iterator iter, int index) {
+  wxASSERT(index < (*iter).size());
+  return (*iter)[index].IsSameAs(_T("t"));
+}
+
+static inline wxString ReadText(QueryResults::iterator iter, int index) {
+  wxASSERT(index < (*iter).size());
+  return (*iter)[index];
+}
+
+static inline wxInt32 ReadInt4(QueryResults::iterator iter, int index) {
+  wxASSERT(index < (*iter).size());
+  long value;
+  wxCHECK((*iter)[index].ToLong(&value), (wxInt32)0);
+  return (wxInt32) value;
+}
+
+static inline wxInt64 ReadInt8(QueryResults::iterator iter, int index) {
+  wxASSERT(index < (*iter).size());
+  long value;
+  wxCHECK((*iter)[index].ToLong(&value), (wxInt64)0);
+  return (wxInt64) value;
+}
 
 class ObjectBrowserWork {
 public:
@@ -135,13 +167,6 @@ private:
   ObjectBrowserWork *work;
 };
 
-#define CHECK_INDEX(iter, index) wxASSERT(index < (*iter).size())
-#define GET_OID(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToULong(&(result))
-#define GET_BOOLEAN(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index].IsSameAs(_T("t"))
-#define GET_TEXT(iter, index, result) CHECK_INDEX(iter, index); result = (*iter)[index]
-#define GET_INT4(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
-#define GET_INT8(iter, index, result) CHECK_INDEX(iter, index); (*iter)[index].ToLong(&(result))
-
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
   RefreshDatabaseListWork(ServerModel *serverModel, wxTreeItemId serverItem) : serverModel(serverModel), serverItem(serverItem) {
@@ -184,12 +209,12 @@ private:
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
       database->loaded = false;
-      GET_OID(iter, 0, database->oid);
-      GET_TEXT(iter, 1, database->name);
-      GET_BOOLEAN(iter, 2, database->isTemplate);
-      GET_BOOLEAN(iter, 3, database->allowConnections);
-      GET_BOOLEAN(iter, 4, database->havePrivsToConnect);
-      GET_TEXT(iter, 5, database->description);
+      database->oid = ReadOid(iter, 0);
+      database->name = ReadText(iter, 1);
+      database->isTemplate = ReadBool(iter, 2);
+      database->allowConnections = ReadBool(iter, 3);
+      database->havePrivsToConnect = ReadBool(iter, 4);
+      database->description = ReadText(iter, 5);
       databases.push_back(database);
     }
   }
@@ -198,11 +223,11 @@ private:
     DoQuery(conn, _T("Roles"), roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
-      GET_OID(iter, 0, role->oid);
-      GET_TEXT(iter, 1, role->name);
-      GET_BOOLEAN(iter, 2, role->canLogin);
-      GET_BOOLEAN(iter, 3, role->superuser);
-      GET_TEXT(iter, 4, role->description);
+      role->oid = ReadOid(iter, 0);
+      role->name = ReadText(iter, 1);
+      role->canLogin = ReadBool(iter, 2);
+      role->superuser = ReadBool(iter, 3);
+      role->description = ReadText(iter, 4);
       roles.push_back(role);
     }
   }
@@ -231,14 +256,15 @@ protected:
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
-      GET_OID(iter, 0, relation->oid);
-      GET_TEXT(iter, 1, relation->schema);
-      GET_TEXT(iter, 2, relation->name);
-      wxString relkind;
-      GET_TEXT(iter, 3, relkind);
-      GET_TEXT(iter, 4, relation->extension);
-      relation->type = typemap[relkind];
+      relation->schema = ReadText(iter, 1);
       relation->user = !IsSystemSchema(relation->schema);
+      if (!(*iter)[0].IsEmpty()) {
+	relation->oid = ReadOid(iter, 0);
+	relation->name = ReadText(iter, 2);
+	wxString relkind(ReadText(iter, 3));
+	relation->extension = ReadText(iter, 4);
+	relation->type = typemap[relkind];
+      }
       databaseModel->relations.push_back(relation);
     }
   }
@@ -253,13 +279,12 @@ protected:
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
-      GET_OID(iter, 0, func->oid);
-      GET_TEXT(iter, 1, func->schema);
-      GET_TEXT(iter, 2, func->name);
-      GET_TEXT(iter, 3, func->arguments);
-      wxString type;
-      GET_TEXT(iter, 4, type);
-      GET_TEXT(iter, 5, func->extension);
+      func->oid = ReadOid(iter, 0);
+      func->schema = ReadText(iter, 1);
+      func->name = ReadText(iter, 2);
+      func->arguments = ReadText(iter, 3);
+      wxString type(ReadText(iter, 4));
+      func->extension = ReadText(iter, 5);
       func->type = typemap[type];
       func->user = !IsSystemSchema(func->schema);
       databaseModel->functions.push_back(func);
@@ -291,8 +316,8 @@ protected:
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
       unsigned long oid;
       wxString description;
-      GET_OID(iter, 0, oid);
-      GET_TEXT(iter, 1, description);
+      oid = ReadOid(iter, 0);
+      description = ReadText(iter, 1);
       descriptions[oid] = description;
     }
   }
@@ -347,10 +372,10 @@ protected:
       wxString typeString;
       wxString symbol;
       wxString disambig;
-      GET_INT8(iter, 0, entityId);
-      GET_TEXT(iter, 1, typeString);
-      GET_TEXT(iter, 2, symbol);
-      GET_TEXT(iter, 3, disambig);
+      entityId = ReadInt8(iter, 0);
+      typeString = ReadText(iter, 1);
+      symbol = ReadText(iter, 2);
+      disambig = ReadText(iter, 3);
       bool systemObject;
       CatalogueIndex::Type entityType;
       if (typeString.Last() == _T('S')) {
@@ -401,11 +426,11 @@ private:
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
-      GET_TEXT(iter, 0, column->name);
-      GET_TEXT(iter, 1, column->type);
-      GET_BOOLEAN(iter, 2, column->nullable);
-      GET_BOOLEAN(iter, 3, column->hasDefault);
-      GET_TEXT(iter, 4, column->description);
+      column->name = ReadText(iter, 0);
+      column->type = ReadText(iter, 1);
+      column->nullable = ReadBool(iter, 2);
+      column->hasDefault = ReadBool(iter, 3);
+      column->description = ReadText(iter, 4);
       columns.push_back(column);
     }
   }
@@ -415,7 +440,7 @@ private:
     DoQuery(conn, _T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
-      GET_TEXT(iter, 0, index->name);
+      index->name = ReadText(iter, 0);
       indices.push_back(index);
     }
   }
@@ -425,7 +450,7 @@ private:
     DoQuery(conn, _T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
-      GET_TEXT(iter, 0, trigger->name);
+      trigger->name = ReadText(iter, 0);
       triggers.push_back(trigger);
     }
   }
@@ -544,29 +569,23 @@ protected:
 	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name) << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name, type;
-	GET_TEXT(iter, 0, name);
-	GET_TEXT(iter, 1, type);
+	wxString name(ReadText(iter, 0)),
+	  type(ReadText(iter, 1));
 	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
 
-	bool notnull;
-	GET_BOOLEAN(iter, 2, notnull);
+	bool notnull = ReadBool(iter, 2);
 	if (notnull) sql << _T(" NOT NULL");
 
-	bool hasdefault;
-	GET_BOOLEAN(iter, 3, hasdefault);
+	bool hasdefault = ReadBool(iter, 3);
 	if (hasdefault) {
-	  wxString defaultexpr;
-	  GET_TEXT(iter, 4, defaultexpr);
+	  wxString defaultexpr(ReadText(iter, 4));
 	  sql << _T(" DEFAULT ") << defaultexpr;
 	}
 
-	wxString collation;
-	GET_TEXT(iter, 5, collation);
+	wxString collation(ReadText(iter, 5));
 	if (!collation.IsEmpty()) sql << _T(" COLLATE ") << collation; // already quoted
 
-	long statsTarget;
-	GET_INT4(iter, 6, statsTarget);
+	long statsTarget(ReadInt4(iter, 6));
 	if (statsTarget >= 0) {
 	  wxString statsSql;
 	  statsSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
@@ -574,8 +593,7 @@ protected:
 	  alterSql.push_back(statsSql);
 	}
 
-	wxString storageType;
-	GET_TEXT(iter, 7, storageType);
+	wxString storageType(ReadText(iter, 7));
 	if (!storageType.IsEmpty()) {
 	  wxString storageSql;
 	  storageSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
@@ -613,8 +631,7 @@ protected:
       sql << _T("SELECT ");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name;
-	GET_TEXT(iter, 0, name);
+	wxString name(ReadText(iter, 0));
 	sql << DatabaseWork::QuoteIdent(conn, name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n       ");
@@ -633,8 +650,7 @@ protected:
 	  << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name;
-	GET_TEXT(iter, 0, name);
+	wxString name(ReadText(iter, 0));
 	sql << _T("            ") << DatabaseWork::QuoteIdent(conn, name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
@@ -644,9 +660,7 @@ protected:
       sql << _T(") VALUES (\n");
       n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name, type;
-	GET_TEXT(iter, 0, name);
-	GET_TEXT(iter, 1, type);
+	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
 	sql << _T("            <") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
@@ -665,9 +679,7 @@ protected:
 	  << _T("\nSET ");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name, type;
-	GET_TEXT(iter, 0, name);
-	GET_TEXT(iter, 1, type);
+	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
 	sql << DatabaseWork::QuoteIdent(conn, name) << _T(" = ")
 	    << _T("<") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
 	if (n != (columns.size()-1))
@@ -719,9 +731,7 @@ protected:
       sql << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name) << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name, type;
-	GET_TEXT(iter, 0, name);
-	GET_TEXT(iter, 1, type);
+	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
 	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
@@ -737,8 +747,7 @@ protected:
       sql << _T("SELECT ");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-	wxString name;
-	GET_TEXT(iter, 0, name);
+	wxString name(ReadText(iter, 0));
 	sql << DatabaseWork::QuoteIdent(conn, name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n       ");

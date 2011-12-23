@@ -50,6 +50,7 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
 
   for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
     wxString html;
+
     const wxString &symbol = iter->document->symbol;
     size_t pos = 0;
     for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
@@ -118,4 +119,15 @@ void ObjectFinder::OnCancel(wxCommandEvent &event) {
 void ObjectFinder::OnClose(wxCloseEvent &event) {
   completion->OnCancelled();
   Destroy();
+}
+
+void ObjectFinder::Init(wxWindow *parent) {
+  wxXmlResource::Get()->LoadDialog(this, parent, _T("ObjectFinder"));
+  queryInput = XRCCTRL(*this, "query", wxTextCtrl);
+  // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
+  wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
+  resultsCtrl = new wxSimpleHtmlListBox(this, Pqwx_ObjectFinderResults);
+  resultsCtrl->GetFileSystem().ChangePathTo(_T("memory:ObjectFinder"), true);
+  GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
+  dummyResultsCtrl->Destroy();
 }

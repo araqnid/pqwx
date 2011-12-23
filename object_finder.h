@@ -20,7 +20,7 @@ public:
 
   ObjectFinder(wxWindow *parent, Completion *callback, const CatalogueIndex *catalogue)
     : wxDialog(), catalogue(catalogue), completion(callback), filter(catalogue->CreateNonSystemFilter()) {
-    InitXRC(parent);
+    Init(parent);
 
     filter &= catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
@@ -49,15 +49,7 @@ private:
   Completion *completion;
   CatalogueIndex::Filter filter;
   std::vector<CatalogueIndex::Result> results;
-  void InitXRC(wxWindow *parent) {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("ObjectFinder"));
-    queryInput = XRCCTRL(*this, "query", wxTextCtrl);
-    // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
-    wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
-    resultsCtrl = new wxSimpleHtmlListBox(this, Pqwx_ObjectFinderResults);
-    GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
-    dummyResultsCtrl->Destroy();
-  }
+  void Init(wxWindow *parent);
 
   DECLARE_EVENT_TABLE();
 };

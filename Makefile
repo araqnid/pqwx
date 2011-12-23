@@ -30,7 +30,7 @@ WX_MODULES := base core xrc adv html
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LIBS) -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
-OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o object_finder.o
+OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o object_finder.o object_finder_resources_yml.o
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc
 SOURCES = $(OBJS:.o=.cpp) catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
 
@@ -64,6 +64,11 @@ object_browser_sql.h: object_browser.sql format_sql_header
 	./format_sql_header object_browser.sql $@
 
 object_browser.o: object_browser_sql.h
+
+object_finder_resources_yml.cpp: object_finder_resources.yml
+	./format_static_resources -f 'InitObjectFinderResources' -o $@ -d object_finder_resources.d object_finder_resources.yml
+
+-include object_finder_resources.d
 
 rc/%.c: rc/%.xrc
 	wxrc -o $@ -g $^

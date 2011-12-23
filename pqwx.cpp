@@ -11,8 +11,10 @@
 #include "pqwx.h"
 #include "pqwx_frame.h"
 #include "connect_dialogue.h"
+#include "object_finder.h"
 
 extern void InitXmlResource(void);
+extern void InitObjectFinderResources(void);
 
 IMPLEMENT_APP(PQWXApp)
 
@@ -23,6 +25,9 @@ bool PQWXApp::OnInit()
 
   InitXmlResource();
   wxXmlResource::Get()->InitAllHandlers();
+
+  InitObjectFinderResources();
+  wxImage::AddHandler(new wxPNGHandler());
 
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);

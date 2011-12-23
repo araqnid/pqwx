@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+
+require 5;
+use strict;
+use utf8;
+use warnings;
+use YAML::Any qw(LoadFile);
+use Getopt::Std;
+use vars qw($opt_o $opt_d $opt_p $opt_f);
+
+getopts('d:o:p:f:') && @ARGV > 0 or die "Syntax: $0 [-p image-path] [-o output-file [-d deps-file]] resources.yml...\n";
+
+my $data_generated = '';
+my $initialisation_generated = '';
+my $dependencies_generated;
+
+if ($opt_o && $opt_d) {
+  $dependencies_generated .= "$opt_o:";
+}
+
+sub slurp {
+  my $filename = shift;
+  open my $io, "<", $filename or die "Unable to read $filename: $!\n";
+  local $/;
+  undef $/;
+  return <$io>;
+}
+
+my $symbol_index = 0;
+for (@ARGV) {
+  $dependencies_generated .= " $_" if ($dependencies_generated);
+  for (LoadFile($_)) {
+    my $local_filename = $opt_p ? "$opt_p/$_->{filename}" : $_->{filename};
+    $dependencies_generated .= " $local_filename" if ($dependencies_generated);
+    my $data = slurp($local_filename);
+    my $data_length = length($data);
+    my $data_symbol = "_data${symbol_index}";
+    my $data_initialiser = join(",", map { sprintf("0x%02X", $_) } unpack("C*", $data) );
+    $data_generated .= <<EOF;
+static unsigned char $data_symbol\[\] = { $data_initialiser };
+EOF
+    $initialisation_generated .= <<EOF;
+wxMemoryFSHandler::AddFileWithMimeType(_T("$_->{class}/$_->{filename}"), $data_symbol, $data_length, _T("$_->{mime_type}"));
+EOF
+    ++$symbol_index;
+  }
+}
+
+my $function_name = $opt_f || "InitStaticResources";
+
+if ($opt_o) {
+  open STDOUT, ">", $opt_o or die "Unable to write $opt_o: $!\n";
+}
+
+while (<DATA>) {
+  s{_FUNCTION}{$function_name};
+  s{/\*\*data\*\*/}{$data_generated};
+  s{/\*\*initialisation\*\*/}{$initialisation_generated};
+  print;
+}
+
+if ($opt_o && $opt_d) {
+  open my $depsfile, ">", $opt_d or die "Unable to write $opt_d: $!\n";
+  print $depsfile "$dependencies_generated\n";
+}
+
+__DATA__
+#include <wx/filesys.h>
+#include <wx/fs_mem.h>
+
+/**data**/
+
+void _FUNCTION() {
+  /**initialisation**/
+  
+}
+

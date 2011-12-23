@@ -350,12 +350,16 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
   }
 
   int relationsCount = 0;
+  int functionsCount = 0;
   for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) continue;
     RelationModel *relation = dynamic_cast<RelationModel*>(member);
-    if (relation == NULL)
+    if (relation == NULL) {
+      FunctionModel *function = dynamic_cast<FunctionModel*>(member);
+      if (function != NULL) ++functionsCount;
       continue;
+    }
     ++relationsCount;
     wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
     SetItemData(memberItem, relation);
@@ -373,8 +377,12 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     case RelationModel::SEQUENCE:
       SetItemImage(memberItem, 2);
       break;
+
     }
   }
+
+  if (functionsCount == 0)
+    return;
 
   wxTreeItemId functionsItem = parent;
   if (relationsCount != 0 && createSchemaItem) {

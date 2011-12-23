@@ -329,40 +329,38 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     parent = AppendItem(parent, schemaName + _T("."));
   }
 
-  wxTreeItemId functionsItem;
-  bool schemaHasRelations = true;
+  int relationsCount = 0;
   for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
-    if (member->name.IsEmpty()) {
-      schemaHasRelations = false;
-      continue;
-    }
-    // not sure if this is better or worse than having a virtual model method to have the model add itself
+    if (member->name.IsEmpty()) continue;
     RelationModel *relation = dynamic_cast<RelationModel*>(member);
-    if (relation != NULL) {
-      wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
-      SetItemData(memberItem, relation);
-      relation->database->symbolItemLookup[relation->oid] = memberItem;
-      if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
-	SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
+    if (relation == NULL)
       continue;
-    }
+    ++relationsCount;
+    wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
+    SetItemData(memberItem, relation);
+    relation->database->symbolItemLookup[relation->oid] = memberItem;
+    if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
+      SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
+  }
+
+  wxTreeItemId functionsItem = parent;
+  if (relationsCount != 0 && createSchemaItem) {
+    functionsItem = AppendItem(parent, _("Functions"));
+  }
+  else {
+    // no relations, so add functions directly in the schema item
+    functionsItem = parent;
+  }
+
+  for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+    SchemaMemberModel *member = *iter;
+    if (member->name.IsEmpty()) continue;
     FunctionModel *function = dynamic_cast<FunctionModel*>(member);
-    if (function != NULL) {
-      wxTreeItemId functionParent;
-      if (createSchemaItem && schemaHasRelations) {
-	if (!functionsItem.IsOk())
-	  functionsItem = AppendItem(parent, _("Functions"));
-	functionParent = functionsItem;
-      }
-      else {
-	functionParent = parent;
-      }
-      wxTreeItemId memberItem = AppendItem(functionParent, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
-      SetItemData(memberItem, function);
-      function->database->symbolItemLookup[function->oid] = memberItem;
-      continue;
-    }
+    if (function == NULL) continue;
+    wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
+    SetItemData(memberItem, function);
+    function->database->symbolItemLookup[function->oid] = memberItem;
   }
 }
 

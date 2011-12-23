@@ -401,7 +401,7 @@ void ObjectBrowser::AppendDivision(vector<SchemaMemberModel*> &members, wxTreeIt
     schemas[member->schema].push_back(member);
   }
 
-  bool foldSchemas = members.size() > 50;
+  bool foldSchemas = members.size() > 50 && schemas.size() > 1;
   for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
     AppendSchemaMembers(parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
   }

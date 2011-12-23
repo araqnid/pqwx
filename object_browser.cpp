@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <set>
-
+#include "wx/imaglist.h"
 #include "object_browser.h"
 #include "object_browser_sql.h"
 #include "object_finder.h"
@@ -121,6 +121,16 @@ private:
   ObjectBrowser *ob;
 };
 
+static wxImage LoadVFSImage(const wxString &vfilename) {
+  wxFileSystem fs;
+  wxFSFile *fsfile = fs.OpenFile(vfilename);
+  wxImage im;
+  wxInputStream *stream = fsfile->GetStream();
+  im.LoadFile(*stream, fsfile->GetMimeType());
+  delete fsfile;
+  return im;
+}
+
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
@@ -129,6 +139,12 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   viewMenu = wxXmlResource::Get()->LoadMenu(_T("ViewMenu"));
   sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
+  wxImageList *images = new wxImageList();
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function.png")));
+  AssignImageList(images);
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
@@ -342,6 +358,18 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     relation->database->symbolItemLookup[relation->oid] = memberItem;
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
       SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
+    // see images->Add calls in constructor for the list that the 2nd param of SetItemImage indexes
+    switch (relation->type) {
+    case RelationModel::TABLE:
+      SetItemImage(memberItem, 0);
+      break;
+    case RelationModel::VIEW:
+      SetItemImage(memberItem, 1);
+      break;
+    case RelationModel::SEQUENCE:
+      SetItemImage(memberItem, 2);
+      break;
+    }
   }
 
   wxTreeItemId functionsItem = parent;
@@ -361,6 +389,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
     SetItemData(memberItem, function);
     function->database->symbolItemLookup[function->oid] = memberItem;
+    SetItemImage(memberItem, 3); // see images->Add calls in constructor
   }
 }
 

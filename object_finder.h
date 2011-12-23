@@ -50,6 +50,13 @@ private:
   CatalogueIndex::Filter filter;
   std::vector<CatalogueIndex::Result> results;
   void Init(wxWindow *parent);
+  std::map<CatalogueIndex::Type, wxString> iconMap;
+
+  wxString findIcon(CatalogueIndex::Type documentType) {
+    std::map<CatalogueIndex::Type, wxString>::const_iterator ptr = iconMap.find(documentType);
+    if (ptr == iconMap.end()) return wxEmptyString;
+    return ptr->second;
+  }
 
   DECLARE_EVENT_TABLE();
 };

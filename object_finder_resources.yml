@@ -1,0 +1,16 @@
+---
+class: ObjectFinder
+filename: icon_table.png
+mime_type: image/png
+---
+class: ObjectFinder
+filename: icon_view.png
+mime_type: image/png
+---
+class: ObjectFinder
+filename: icon_function.png
+mime_type: image/png
+---
+class: ObjectFinder
+filename: icon_sequence.png
+mime_type: image/png

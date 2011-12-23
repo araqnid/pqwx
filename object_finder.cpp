@@ -51,6 +51,10 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
     wxString html;
 
+    wxString icon = findIcon(iter->document->entityType);
+    if (!icon.IsEmpty())
+      html << _T("<img src='") << icon << _T("'>&nbsp;");
+
     const wxString &symbol = iter->document->symbol;
     size_t pos = 0;
     for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
@@ -130,4 +134,11 @@ void ObjectFinder::Init(wxWindow *parent) {
   resultsCtrl->GetFileSystem().ChangePathTo(_T("memory:ObjectFinder"), true);
   GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
   dummyResultsCtrl->Destroy();
+
+  iconMap[CatalogueIndex::TABLE] = _T("icon_table.png");
+  iconMap[CatalogueIndex::VIEW] = _T("icon_view.png");
+  iconMap[CatalogueIndex::SEQUENCE] = _T("icon_sequence.png");
+  iconMap[CatalogueIndex::FUNCTION_SCALAR] = _T("icon_function.png");
+  iconMap[CatalogueIndex::FUNCTION_AGGREGATE] = _T("icon_function.png");
+  iconMap[CatalogueIndex::FUNCTION_WINDOW] = _T("icon_function.png");
 }

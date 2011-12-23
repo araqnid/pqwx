@@ -124,6 +124,7 @@ private:
 static wxImage LoadVFSImage(const wxString &vfilename) {
   wxFileSystem fs;
   wxFSFile *fsfile = fs.OpenFile(vfilename);
+  wxASSERT_MSG(fsfile != NULL, vfilename);
   wxImage im;
   wxInputStream *stream = fsfile->GetStream();
   im.LoadFile(*stream, fsfile->GetMimeType());
@@ -144,6 +145,9 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_aggregate.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
   AssignImageList(images);
 }
 
@@ -389,7 +393,22 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
     SetItemData(memberItem, function);
     function->database->symbolItemLookup[function->oid] = memberItem;
-    SetItemImage(memberItem, 3); // see images->Add calls in constructor
+    // see images->Add calls in constructor
+    switch (function->type) {
+    case FunctionModel::SCALAR:
+    case FunctionModel::RECORDSET:
+      SetItemImage(memberItem, 3);
+      break;
+    case FunctionModel::AGGREGATE:
+      SetItemImage(memberItem, 4);
+      break;
+    case FunctionModel::TRIGGER:
+      SetItemImage(memberItem, 5);
+      break;
+    case FunctionModel::WINDOW:
+      SetItemImage(memberItem, 6);
+      break;
+    }
   }
 }
 

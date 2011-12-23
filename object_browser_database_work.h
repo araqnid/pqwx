@@ -272,6 +272,7 @@ protected:
     QueryResults functionRows;
     map<wxString, FunctionModel::Type> typemap;
     typemap[_T("f")] = FunctionModel::SCALAR;
+    typemap[_T("ft")] = FunctionModel::TRIGGER;
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
@@ -285,6 +286,7 @@ protected:
       func->arguments = ReadText(iter, 3);
       wxString type(ReadText(iter, 4));
       func->extension = ReadText(iter, 5);
+      wxASSERT_MSG(typemap.find(type) != typemap.end(), type);
       func->type = typemap[type];
       func->user = !IsSystemSchema(func->schema);
       databaseModel->functions.push_back(func);

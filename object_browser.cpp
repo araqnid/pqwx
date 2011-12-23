@@ -123,7 +123,6 @@ private:
 
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
   AddRoot(_T("root"));
-  sql = new ObjectBrowserSql();
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
   tableMenu = wxXmlResource::Get()->LoadMenu(_T("TableMenu"));

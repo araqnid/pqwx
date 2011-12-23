@@ -35,7 +35,6 @@ public:
 
   ~ObjectBrowser() {
     Dispose();
-    delete sql;
   }
 
   void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
@@ -98,7 +97,6 @@ private:
   void AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
   void DivideSchemaMembers(vector<SchemaMemberModel*> &members, vector<SchemaMemberModel*> &userDivision, vector<SchemaMemberModel*> &systemDivision, map<wxString, vector<SchemaMemberModel*> > &extensionDivisions);
   void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members);
-  VersionedSql *sql;
 
   // context menus
   wxMenu *serverMenu;

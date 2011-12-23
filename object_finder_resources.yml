@@ -12,5 +12,13 @@ filename: icon_function.png
 mime_type: image/png
 ---
 class: ObjectFinder
+filename: icon_function_aggregate.png
+mime_type: image/png
+---
+class: ObjectFinder
+filename: icon_function_window.png
+mime_type: image/png
+---
+class: ObjectFinder
 filename: icon_sequence.png
 mime_type: image/png

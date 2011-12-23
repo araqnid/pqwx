@@ -7,6 +7,7 @@
 #endif
 
 #include <vector>
+#include <set>
 #include "wx/xrc/xmlres.h"
 #include "wx/config.h"
 #include "wx/regex.h"
@@ -44,6 +45,8 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   }
 
   wxArrayString htmlList;
+  map<wxString, unsigned> seenSymbols;
+  set<wxString> dupeSymbols;
 
   for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
     wxString html;
@@ -63,6 +66,23 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
     int residual = symbol.length() - pos;
     if (residual > 0) {
       html << symbol.Mid(pos);
+    }
+
+    bool firstRepeat = seenSymbols.count(symbol) > 0;
+    bool subsequentRepeat = dupeSymbols.count(symbol) > 0;
+    if (firstRepeat || subsequentRepeat) {
+      if (!iter->document->disambig.IsEmpty()) {
+	html << _T('(') << iter->document->disambig << _T(')');
+      }
+      if (!subsequentRepeat) {
+	unsigned index = seenSymbols[symbol];
+	const CatalogueIndex::Result &firstResult = results[index];
+	htmlList[index] << _T('(') << firstResult.document->disambig << _T(')');
+	dupeSymbols.insert(symbol);
+      }
+    }
+    else {
+      seenSymbols[symbol] = htmlList.size();
     }
 
     htmlList.Add(html);

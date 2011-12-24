@@ -22,7 +22,7 @@ public:
   // This tries to duplicate the fancy behaviour of quote_ident,
   // which avoids quoting identifiers when not necessary.
   // PQescapeIdentifier is "safe" in that it *always* quotes
-  static wxString QuoteIdent(PGconn *conn, const wxString &str) {
+  wxString QuoteIdent(const wxString &str) {
     if (IsSimpleSymbol(str.utf8_str()))
       return str;
 #if PG_VERSION_NUM >= 90000
@@ -54,13 +54,13 @@ public:
   }
 
 #if PG_VERSION_NUM < 90000
-  static bool standardConformingStrings(PGconn *conn) {
+  bool standardConformingStrings() {
     const char *value = PQparameterStatus(conn, "standard_conforming_strings");
     return strcmp(value, "on") == 0;
   }
 #endif
 
-  static wxString QuoteLiteral(PGconn *conn, const wxString &str) {
+  wxString QuoteLiteral(const wxString &str) {
 #if PG_VERSION_NUM >= 90000
     wxCharBuffer buf(str.utf8_str());
     char *escaped = PQescapeLiteral(conn, buf.data(), strlen(buf.data()));
@@ -68,7 +68,7 @@ public:
     PQfreemem(escaped);
 #else
     wxString result;
-    bool useEscapeSyntax = !standardConformingStrings(conn);
+    bool useEscapeSyntax = !standardConformingStrings();
     bool usedEscapeSyntax = false;
     result.Alloc(str.length() + 2);
     result << _T('\'');
@@ -89,7 +89,6 @@ public:
     return result;
   }
 
-protected:
   bool DoCommand(const wxString &sql) { return DoCommand(sql.utf8_str()); }
   bool DoCommand(const char *sql);
   bool DoQuery(const char *sql, QueryResults &rs);

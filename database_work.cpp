@@ -57,6 +57,42 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
   return true;
 }
 
+bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
+  logger->LogSql(sql);
+
+#ifdef PQWX_DEBUG
+  struct timeval start;
+  gettimeofday(&start, NULL);
+#endif
+
+  PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
+  if (!rs)
+    return false;
+
+#ifdef PQWX_DEBUG
+  struct timeval finish;
+  gettimeofday(&finish, NULL);
+  struct timeval elapsed;
+  timersub(&finish, &start, &elapsed);
+  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
+  wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
+#endif
+
+  ExecStatusType status = PQresultStatus(rs);
+  if (status != PGRES_TUPLES_OK) {
+#ifdef PQWX_DEBUG
+    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+#endif
+    return false; // expected data back
+  }
+
+  ReadResultSet(rs, results);
+
+  PQclear(rs);
+
+  return true;
+}
+
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
   logger->LogSql(sql);
 

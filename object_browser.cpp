@@ -92,9 +92,9 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 
-const VersionedSql& ObjectBrowser::GetSqlDictionary() {
+const VersionedSql* ObjectBrowser::GetSqlDictionary() {
   static ObjectBrowserSql dict;
-  return dict;
+  return &dict;
 }
 
 class DatabaseLoader : public LazyLoader {

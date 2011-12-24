@@ -7,123 +7,38 @@
 
 class ObjectBrowserWork {
 public:
-  virtual void Execute(PGconn *conn) = 0;
+  virtual void Execute() = 0;
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
-  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
+  bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
+    owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
   }
-  bool DoQuery(PGconn *conn, const wxString &name, std::vector<wxString> &row, Oid paramType, unsigned long paramValue) {
+  bool DoQuery(const wxString &name, std::vector<wxString> &row, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     QueryResults results;
-    DoQuery(conn, GetSql(conn, name), results, paramType, valueString.utf8_str());
+    owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
     wxASSERT(results.size() == 1);
     row = results[0];
   }
-  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
-    DoQuery(conn, GetSql(conn, name), results, paramType, paramValue);
+  bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
+    owner->DoNamedQuery(name, results, paramType, paramValue);
   }
-  bool DoQuery(PGconn *conn, const wxString &name, QueryResults &results) {
-    DoQuery(conn, GetSql(conn, name), results);
+  bool DoQuery(const wxString &name, QueryResults &results) {
+    owner->DoNamedQuery(name, results);
   }
-  bool DoQuery(PGconn *conn, const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
-    logger->LogSql(sql);
-
-#ifdef PQWX_DEBUG
-    struct timeval start;
-    gettimeofday(&start, NULL);
-#endif
-
-    PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
-    if (!rs)
-      return false;
-
-#ifdef PQWX_DEBUG
-    struct timeval finish;
-    gettimeofday(&finish, NULL);
-    struct timeval elapsed;
-    timersub(&finish, &start, &elapsed);
-    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-    wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
-#endif
-
-    ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
-      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
-      return false; // expected data back
-    }
-
-    ReadResultSet(rs, results);
-
-    PQclear(rs);
-
-    return true;
-  }
-  bool DoQuery(PGconn *conn, const char *sql, QueryResults &results) {
-    logger->LogSql(sql);
-
-#ifdef PQWX_DEBUG
-    struct timeval start;
-    gettimeofday(&start, NULL);
-#endif
-
-    PGresult *rs = PQexec(conn, sql);
-    if (!rs)
-      return false;
-
-#ifdef PQWX_DEBUG
-    struct timeval finish;
-    gettimeofday(&finish, NULL);
-    struct timeval elapsed;
-    timersub(&finish, &start, &elapsed);
-    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-    wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
-#endif
-
-    ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
-      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
-      return false; // expected data back
-    }
-
-    ReadResultSet(rs, results);
-
-    PQclear(rs);
-
-    return true;
-  }
-  void ReadResultSet(PGresult *rs, QueryResults &results) {
-    int rowCount = PQntuples(rs);
-    int colCount = PQnfields(rs);
-    results.reserve(rowCount);
-    for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-      vector<wxString> row;
-      row.reserve(colCount);
-      for (int colNum = 0; colNum < colCount; colNum++) {
-	const char *value = PQgetvalue(rs, rowNum, colNum);
-	row.push_back(wxString(value, wxConvUTF8));
-      }
-      results.push_back(row);
-    }
-  }
-  const char *GetSql(PGconn *conn, const wxString &name) const {
-    return ObjectBrowser::GetSqlDictionary().GetSql(name, PQserverVersion(conn));
-  }
-  SqlLogger *logger;
+  wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
+  wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
+  DatabaseWork *owner;
   friend class ObjectBrowserDatabaseWork;
 };
 
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : dest(dest), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work) {}
   void Execute() {
-    work->logger = logger;
-    work->Execute(conn);
+    work->owner = this;
+    work->Execute();
   }
   void NotifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
@@ -141,10 +56,10 @@ public:
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void Execute(PGconn *conn) {
-    ReadServer(conn);
-    ReadDatabases(conn);
-    ReadRoles(conn);
+  void Execute() {
+    ReadServer();
+    ReadDatabases();
+    ReadRoles();
   }
   void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion, usingSSL);
@@ -163,16 +78,16 @@ private:
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
-  void ReadServer(PGconn *conn) {
-    const char *serverVersionRaw = PQparameterStatus(conn, "server_version");
+  void ReadServer() {
+    const char *serverVersionRaw = PQparameterStatus(owner->conn, "server_version");
     serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
-    serverVersion = PQserverVersion(conn);
-    void *ssl = PQgetssl(conn);
+    serverVersion = PQserverVersion(owner->conn);
+    void *ssl = PQgetssl(owner->conn);
     usingSSL = (ssl != NULL);
   }
-  void ReadDatabases(PGconn *conn) {
+  void ReadDatabases() {
     QueryResults databaseRows;
-    DoQuery(conn, _T("Databases"), databaseRows);
+    DoQuery(_T("Databases"), databaseRows);
     for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -186,9 +101,9 @@ private:
       databases.push_back(database);
     }
   }
-  void ReadRoles(PGconn *conn) {
+  void ReadRoles() {
     QueryResults roleRows;
-    DoQuery(conn, _T("Roles"), roleRows);
+    DoQuery(_T("Roles"), roleRows);
     for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       role->oid = ReadOid(iter, 0);
@@ -210,17 +125,17 @@ private:
   DatabaseModel *databaseModel;
   wxTreeItemId databaseItem;
 protected:
-  void Execute(PGconn *conn) {
-    LoadRelations(conn);
-    LoadFunctions(conn);
+  void Execute() {
+    LoadRelations();
+    LoadFunctions();
   }
-  void LoadRelations(PGconn *conn) {
+  void LoadRelations() {
     QueryResults relationRows;
     map<wxString, RelationModel::Type> typemap;
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    DoQuery(conn, _T("Relations"), relationRows);
+    DoQuery(_T("Relations"), relationRows);
     for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
@@ -236,7 +151,7 @@ protected:
       databaseModel->relations.push_back(relation);
     }
   }
-  void LoadFunctions(PGconn *conn) {
+  void LoadFunctions() {
     QueryResults functionRows;
     map<wxString, FunctionModel::Type> typemap;
     typemap[_T("f")] = FunctionModel::SCALAR;
@@ -244,7 +159,7 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    DoQuery(conn, _T("Functions"), functionRows);
+    DoQuery(_T("Functions"), functionRows);
     for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -280,9 +195,9 @@ private:
   DatabaseModel *databaseModel;
   map<unsigned long, wxString> descriptions;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     QueryResults rs;
-    DoQuery(conn, _T("Object Descriptions"), rs);
+    DoQuery(_T("Object Descriptions"), rs);
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
       unsigned long oid;
       wxString description;
@@ -320,7 +235,7 @@ private:
   DatabaseModel *database;
   CatalogueIndex *catalogueIndex;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     map<wxString, CatalogueIndex::Type> typeMap;
     typeMap[_T("t")] = CatalogueIndex::TABLE;
     typeMap[_T("v")] = CatalogueIndex::VIEW;
@@ -334,7 +249,7 @@ protected:
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
     QueryResults rs;
-    DoQuery(conn, _T("IndexSchema"), rs);
+    DoQuery(_T("IndexSchema"), rs);
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -380,19 +295,19 @@ private:
   vector<IndexModel*> indices;
   vector<TriggerModel*> triggers;
 protected:
-  void Execute(PGconn *conn) {
-    ReadColumns(conn);
+  void Execute() {
+    ReadColumns();
     if (relationModel->type == RelationModel::TABLE) {
-      ReadIndices(conn);
-      ReadTriggers(conn);
+      ReadIndices();
+      ReadTriggers();
     }
   }
 private:
-  void ReadColumns(PGconn *conn) {
+  void ReadColumns() {
     QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    DoQuery(conn, _T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(_T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -404,20 +319,20 @@ private:
       columns.push_back(column);
     }
   }
-  void ReadIndices(PGconn *conn) {
+  void ReadIndices() {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults indexRows;
-    DoQuery(conn, _T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(_T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
       index->name = ReadText(iter, 0);
       indices.push_back(index);
     }
   }
-  void ReadTriggers(PGconn *conn) {
+  void ReadTriggers() {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
     QueryResults triggerRows;
-    DoQuery(conn, _T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
+    DoQuery(_T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
     for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       trigger->name = ReadText(iter, 0);
@@ -476,9 +391,9 @@ public:
 private:
   DatabaseModel *database;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     QueryResults rs;
-    DoQuery(conn, _T("Database Detail"), rs, 26 /* oid */, database->oid);
+    DoQuery(_T("Database Detail"), rs, 26 /* oid */, database->oid);
     wxASSERT(rs.size() == 1);
     wxASSERT(rs[0].size() >= 5);
     wxString ownerName = rs[0][0];
@@ -491,22 +406,22 @@ protected:
     wxString sql;
     switch (mode) {
     case Create:
-      sql << _T("CREATE DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
-      sql << _T("\n\tENCODING = ") << DatabaseWork::QuoteLiteral(conn, encoding);
-      sql << _T("\n\tLC_COLLATE = ") << DatabaseWork::QuoteLiteral(conn, collation);
-      sql << _T("\n\tLC_CTYPE = ") << DatabaseWork::QuoteLiteral(conn, ctype);
+      sql << _T("CREATE DATABASE ") << QuoteIdent(database->name);
+      sql << _T("\n\tENCODING = ") << QuoteLiteral(encoding);
+      sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(collation);
+      sql << _T("\n\tLC_CTYPE = ") << QuoteLiteral(ctype);
       sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
-      sql << _T("\n\tOWNER = ") << DatabaseWork::QuoteLiteral(conn, ownerName);
+      sql << _T("\n\tOWNER = ") << QuoteLiteral(ownerName);
       break;
 
     case Alter:
-      sql << _T("ALTER DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
-      sql << _T("\n\tOWNER = ") << DatabaseWork::QuoteLiteral(conn, ownerName);
+      sql << _T("ALTER DATABASE ") << QuoteIdent(database->name);
+      sql << _T("\n\tOWNER = ") << QuoteLiteral(ownerName);
       sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
       break;
 
     case Drop:
-      sql << _T("DROP DATABASE ") << DatabaseWork::QuoteIdent(conn, database->name);
+      sql << _T("DROP DATABASE ") << QuoteIdent(database->name);
       break;
 
     default:
@@ -525,23 +440,23 @@ public:
 private:
   RelationModel *table;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     std::vector< wxString > tableDetail;
     QueryResults columns;
-    DoQuery(conn, _T("Table Detail"), tableDetail, 26 /* oid */, table->oid);
-    DoQuery(conn, _T("Relation Column Detail"), columns, 26 /* oid */, table->oid);
+    DoQuery(_T("Table Detail"), tableDetail, 26 /* oid */, table->oid);
+    DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, table->oid);
 
     switch (mode) {
     case Create: {
       wxString sql;
       std::vector< wxString > alterSql;
       sql << _T("CREATE TABLE ")
-	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name) << _T("(\n");
+	  << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0)),
 	  type(ReadText(iter, 1));
-	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
+	sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
 
 	bool notnull = ReadBool(iter, 2);
 	if (notnull) sql << _T(" NOT NULL");
@@ -558,7 +473,7 @@ protected:
 	long statsTarget(ReadInt4(iter, 6));
 	if (statsTarget >= 0) {
 	  wxString statsSql;
-	  statsSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
+	  statsSql << _T("ALTER COLUMN ") << QuoteIdent(name)
 		   << _T(" SET STATISTICS ") << statsTarget;
 	  alterSql.push_back(statsSql);
 	}
@@ -566,7 +481,7 @@ protected:
 	wxString storageType(ReadText(iter, 7));
 	if (!storageType.IsEmpty()) {
 	  wxString storageSql;
-	  storageSql << _T("ALTER COLUMN ") << DatabaseWork::QuoteIdent(conn, name)
+	  storageSql << _T("ALTER COLUMN ") << QuoteIdent(name)
 		     << _T(" SET STORAGE ") << storageType;
 	  alterSql.push_back(storageSql);
 	}
@@ -579,7 +494,7 @@ protected:
       if (!alterSql.empty()) {
 	wxString prefix;
 	prefix << _T("ALTER TABLE ")
-	       << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name) << _T("\n\t");
+	       << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("\n\t");
 	for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
 	  statements.push_back(prefix + *moreSqlIter);
 	}
@@ -590,7 +505,7 @@ protected:
     case Drop: {
       wxString sql;
       sql << _T("DROP TABLE IF EXISTS ")
-	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+	  << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
 
       statements.push_back(sql);
     }
@@ -602,13 +517,13 @@ protected:
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0));
-	sql << DatabaseWork::QuoteIdent(conn, name);
+	sql << QuoteIdent(name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n       ");
 	else
 	  sql << _T("\n");
       }
-      sql << _T("FROM ") << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+      sql << _T("FROM ") << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
       statements.push_back(sql);
     }
       break;
@@ -616,12 +531,12 @@ protected:
     case Insert: {
       wxString sql;
       sql << _T("INSERT INTO ")
-	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name)
+	  << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	  << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0));
-	sql << _T("            ") << DatabaseWork::QuoteIdent(conn, name);
+	sql << _T("            ") << QuoteIdent(name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
 	else
@@ -631,7 +546,7 @@ protected:
       n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
-	sql << _T("            <") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
+	sql << _T("            <") << QuoteIdent(name) << _T(", ") << type << _T(">");
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
 	else
@@ -645,13 +560,13 @@ protected:
     case Update: {
       wxString sql;
       sql << _T("UPDATE ")
-	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name)
+	  << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	  << _T("\nSET ");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
-	sql << DatabaseWork::QuoteIdent(conn, name) << _T(" = ")
-	    << _T("<") << DatabaseWork::QuoteIdent(conn, name) << _T(", ") << type << _T(">");
+	sql << QuoteIdent(name) << _T(" = ")
+	    << _T("<") << QuoteIdent(name) << _T(", ") << type << _T(">");
 	if (n != (columns.size()-1))
 	  sql << _T(",\n    ");
 	else
@@ -665,7 +580,7 @@ protected:
     case Delete: {
       wxString sql;
       sql << _T("DELETE FROM ")
-	  << DatabaseWork::QuoteIdent(conn, table->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, table->name);
+	  << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
       statements.push_back(sql);
     }
       break;
@@ -684,11 +599,11 @@ public:
 private:
   RelationModel *view;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     std::vector< wxString > viewDetail;
     QueryResults columns;
-    DoQuery(conn, _T("View Detail"), viewDetail, 26 /* oid */, view->oid);
-    DoQuery(conn, _T("Relation Column Detail"), columns, 26 /* oid */, view->oid);
+    DoQuery(_T("View Detail"), viewDetail, 26 /* oid */, view->oid);
+    DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, view->oid);
 
     switch (mode) {
     case Create:
@@ -698,11 +613,11 @@ protected:
 	sql << _T("CREATE VIEW ");
       else
 	sql << _T("CREATE OR REPLACE VIEW ");
-      sql << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name) << _T("(\n");
+      sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name) << _T("(\n");
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
-	sql << _T("\t") << DatabaseWork::QuoteIdent(conn, name) << _T(" ") << type;
+	sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
 	if (n != (columns.size()-1))
 	  sql << _T(",\n");
       }
@@ -718,13 +633,13 @@ protected:
       int n = 0;
       for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
 	wxString name(ReadText(iter, 0));
-	sql << DatabaseWork::QuoteIdent(conn, name);
+	sql << QuoteIdent(name);
 	if (n != (columns.size()-1))
 	  sql << _T(",\n       ");
 	else
 	  sql << _T("\n");
       }
-      sql << _T("FROM ") << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name);
+      sql << _T("FROM ") << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
       statements.push_back(sql);
     }
       break;
@@ -732,7 +647,7 @@ protected:
     case Drop: {
       wxString sql;
       sql << _T("DROP VIEW IF EXISTS ")
-	  << DatabaseWork::QuoteIdent(conn, view->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, view->name);
+	  << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
 
       statements.push_back(sql);
     }
@@ -752,9 +667,9 @@ public:
 private:
   RelationModel *sequence;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     std::vector< wxString > sequenceDetail;
-    DoQuery(conn, _T("Sequence Detail"), sequenceDetail, 26 /* oid */, sequence->oid);
+    DoQuery(_T("Sequence Detail"), sequenceDetail, 26 /* oid */, sequence->oid);
   }
 };
 
@@ -766,9 +681,9 @@ public:
 private:
   FunctionModel *function;
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     std::vector< wxString > functionDetail;
-    DoQuery(conn, _T("Function Detail"), functionDetail, 26 /* oid */, function->oid);
+    DoQuery(_T("Function Detail"), functionDetail, 26 /* oid */, function->oid);
 
     switch (mode) {
     case Create:
@@ -778,7 +693,7 @@ protected:
 	sql << _T("CREATE FUNCTION ");
       else
 	sql << _T("CREATE OR REPLACE FUNCTION ");
-      sql << DatabaseWork::QuoteIdent(conn, function->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, function->name)
+      sql << QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
 	  << _T("(") << functionDetail[0] << _T(")")
 	  << _T(" RETURNS ");
 
@@ -818,7 +733,7 @@ protected:
     case Drop: {
       wxString sql;
       sql << _T("DROP FUNCTION IF EXISTS ")
-	  << DatabaseWork::QuoteIdent(conn, function->schema) << _T(".") << DatabaseWork::QuoteIdent(conn, function->name)
+	  << QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
 	  << _T("(") << functionDetail[0] << _T(")");
       statements.push_back(sql);
     }

@@ -29,7 +29,7 @@ public:
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
-    DoCommand(_T("SET application_name = ") + QuoteLiteral(conn, newLabel));
+    DoCommand(_T("SET application_name = ") + QuoteLiteral(newLabel));
   }
   void NotifyFinished() {
   }

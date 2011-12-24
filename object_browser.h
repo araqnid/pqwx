@@ -60,7 +60,7 @@ public:
 
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers);
 
-  static const VersionedSql& GetSqlDictionary();
+  static const VersionedSql* GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
   list<ServerModel*> servers;

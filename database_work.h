@@ -8,13 +8,15 @@
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "sql_logger.h"
+#include "query_results.h"
+#include "versioned_sql.h"
 
 class DatabaseWork {
 public:
-  DatabaseWork() {}
+  DatabaseWork(const VersionedSql *sqlDictionary = NULL) : sqlDictionary(sqlDictionary) {}
   virtual ~DatabaseWork() {}
 
-  virtual void Execute(PGconn *conn) = 0;
+  virtual void Execute() = 0;
   virtual void NotifyFinished() = 0;
 
   // This tries to duplicate the fancy behaviour of quote_ident,
@@ -88,28 +90,23 @@ public:
   }
 
 protected:
-  bool DoCommand(PGconn *conn, const wxString &sql) {
-    return DoCommand(conn, sql.utf8_str());
-  }
+  bool DoCommand(const wxString &sql) { return DoCommand(sql.utf8_str()); }
+  bool DoCommand(const char *sql);
+  bool DoQuery(const char *sql, QueryResults &rs);
+  bool DoQuery(const char *sql, QueryResults &rs, Oid paramType, const char *paramValue);
+  bool DoQuery(const char *sql, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value);
 
-  bool DoCommand(PGconn *conn, const char *sql) {
-    logger->LogSql(sql);
+  bool DoNamedCommand(const wxString &name) { return DoCommand(sqlDictionary->GetSql(name, PQserverVersion(conn))); }
+  bool DoNamedQuery(const wxString &name, QueryResults &rs) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs); }
+  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid paramType, const char *paramValue) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs, paramType, paramValue); }
+  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs, param1Type, param2Type, param1Value, param2Value); }
 
-    PGresult *rs = PQexec(conn, sql);
-    wxASSERT(rs != NULL);
-
-    ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_COMMAND_OK) {
-      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-      return false;
-    }
-
-    PQclear(rs);
-
-    return true;
-  }
-
+  PGconn *conn;
   SqlLogger *logger;
+  const VersionedSql *sqlDictionary;
+
+private:
+  void ReadResultSet(PGresult *rs, QueryResults &results);
 
   friend class DatabaseWorkerThread;
 };
@@ -122,7 +119,7 @@ public:
   };
 
   DisconnectWork(CloseCallback *callback = NULL) : callback(callback) {}
-  void Execute(PGconn *conn) {
+  void Execute() {
     PQfinish(conn);
     logger->LogDisconnect();
   }
@@ -132,29 +129,6 @@ private:
     if (callback)
       callback->OnConnectionClosed();
   }
-};
-
-class SnapshotIsolatedWork : virtual public DatabaseWork {
-public:
-  void Execute(PGconn *conn) {
-    if (PQserverVersion(conn) >= 80000) {
-      if (!DoCommand(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY"))
-	return;
-    }
-    else {
-      if (!DoCommand(conn, "BEGIN"))
-	return;
-      if (!DoCommand(conn, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
-	return;
-      if (!DoCommand(conn, "SET TRANSACTION READ ONLY"))
-	return;
-    }
-
-    ExecuteInTransaction(conn);
-
-    DoCommand(conn, "END");
-  }
-  virtual void ExecuteInTransaction(PGconn *conn) = 0;
 };
 
 #endif

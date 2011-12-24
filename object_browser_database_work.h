@@ -121,7 +121,7 @@ protected:
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
   ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : dest(dest), work(work) {}
-  void Execute(PGconn *conn) {
+  void Execute() {
     work->logger = logger;
     work->Execute(conn);
   }

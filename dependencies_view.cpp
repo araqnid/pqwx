@@ -13,7 +13,6 @@
 #include "dependencies_view.h"
 #include "database_work.h"
 #include "dependencies_view_sql.h"
-#include "query_results.h"
 #include "lazy_loader.h"
 
 using namespace std;
@@ -21,9 +20,9 @@ using namespace std;
 static const int EVENT_LOADED_ROOT = 10000;
 static const int EVENT_LOADED_MORE = 10001;
 
-const VersionedSql& DependenciesView::GetSqlDictionary() {
+const VersionedSql* DependenciesView::GetSqlDictionary() {
   static DependenciesViewSql dict;
-  return dict;
+  return &dict;
 }
 
 static const Oid paramTypes[] = { 26 /* oid (pg_class) */, 26 /* oid */, 23 /* int4 */};
@@ -36,12 +35,12 @@ public:
 
 class LoadInitialObjectWork : public DatabaseWork {
 public:
-  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : dest(dest), regclass(regclass), oid(oid) {
+  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWork(DependenciesView::GetSqlDictionary()), dest(dest), regclass(regclass), oid(oid) {
     wxLogDebug(_T("Work to load dependency tree root: %p"), (void*) this);
   }
 
 protected:
-  void Execute(PGconn *conn) {
+  void Execute() {
     info = new InitialObjectInfo();
     info->name = _T("ROOT NAME");
     info->type = _T("ROOT TYPE");
@@ -82,19 +81,15 @@ public:
 
 class LoadMoreDependenciesWork : public DatabaseWork {
 public:
-  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid) : dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid) {
+  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid) : DatabaseWork(DependenciesView::GetSqlDictionary()), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid) {
     wxLogDebug(_T("Work to load dependencies: %p"), this);
   }
 
 protected:
-  void Execute(PGconn *conn) {
-    result = FindDependencies(conn);
-  }
-
-  DependencyResult *FindDependencies(PGconn *conn) {
+  void Execute() {
     QueryResults rs;
     vector<DependencyModel*> objects;
-    if (DoQuery(conn, dependenciesMode ? _T("Dependencies") : _T("Dependents"), rs))
+    if (DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"), rs))
       for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
 	DependencyModel *dep = new DependencyModel();
 	dep->deptype = ReadText(iter, 0);
@@ -106,76 +101,21 @@ protected:
 	dep->hasMore = ReadBool(iter, 8);
 	objects.push_back(dep);
       }
-    return new DependencyResult(item, objects);
+    result = new DependencyResult(item, objects);
   }
 
-  bool DoQuery(PGconn *conn, const wxString name, QueryResults &results) {
-    const char *sql = GetSql(conn, name);
-
-    logger->LogSql(sql);
-
-#ifdef PQWX_DEBUG
-    struct timeval start;
-    gettimeofday(&start, NULL);
-#endif
-
-    const wxCharBuffer value0 = wxString::Format(_T("%u"), regclass).utf8_str();
-    const wxCharBuffer value1 = wxString::Format(_T("%u"), oid).utf8_str();
-    const char * paramValues[2];
-    paramValues[0] = value0.data();
-    paramValues[1] = value1.data();
-
-    PGresult *rs = PQexecParams(conn, sql, 2, (const Oid*) &paramTypes, (const char * const * ) &paramValues, NULL, NULL, 0);
-    if (!rs)
-      return false;
-
-#ifdef PQWX_DEBUG
-    struct timeval finish;
-    gettimeofday(&finish, NULL);
-    struct timeval elapsed;
-    timersub(&finish, &start, &elapsed);
-    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-    wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
-#endif
-
-    ExecStatusType status = PQresultStatus(rs);
-    if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
-      logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
-      return false; // expected data back
-    }
-
-    ReadResultSet(rs, results);
-
-    PQclear(rs);
-
-    return true;
-  }
-
-  void ReadResultSet(PGresult *rs, QueryResults &results) const {
-    int rowCount = PQntuples(rs);
-    int colCount = PQnfields(rs);
-    results.reserve(rowCount);
-    for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-      vector<wxString> row;
-      row.reserve(colCount);
-      for (int colNum = 0; colNum < colCount; colNum++) {
-	const char *value = PQgetvalue(rs, rowNum, colNum);
-	row.push_back(wxString(value, wxConvUTF8));
-      }
-      results.push_back(row);
-    }
+  bool DoDependenciesQuery(const wxString &name, QueryResults &rs) {
+    wxString classValue;
+    wxString objectValue;
+    classValue << regclass;
+    objectValue << oid;
+    return DoNamedQuery(name, rs, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str());
   }
 
   void NotifyFinished() {
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_LOADED_MORE);
     event.SetClientData(result);
     dest->AddPendingEvent(event);
-  }
-
-  const char *GetSql(PGconn *conn, const wxString &name) const {
-    return DependenciesView::GetSqlDictionary().GetSql(name, PQserverVersion(conn));
   }
 
 private:
@@ -325,5 +265,4 @@ void DependenciesView::OnSelectionChanged(wxTreeEvent &event) {
     selectedNameCtrl->SetValue(dep->symbol);
     selectedTypeCtrl->SetValue(dep->type);
   }
-
 }

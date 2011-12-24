@@ -27,7 +27,7 @@ public:
   void OnSelectionChanged(wxTreeEvent &event);
   void OnOk(wxCommandEvent &event) { Destroy(); }
 
-  static const VersionedSql& GetSqlDictionary();
+  static const VersionedSql* GetSqlDictionary();
 
 private:
   DECLARE_EVENT_TABLE();

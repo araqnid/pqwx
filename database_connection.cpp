@@ -10,13 +10,13 @@ using namespace std;
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void Execute(PGconn *conn) {
+  void Execute() {
     int clientEncoding = PQclientEncoding(conn);
     const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
     if (strcmp(clientEncodingName, "UTF8") != 0) {
       PQsetClientEncoding(conn, "UTF8");
     }
-    DoCommand(conn, "SET DateStyle = 'ISO'");
+    DoCommand("SET DateStyle = 'ISO'");
   }
   void NotifyFinished() {
   }
@@ -25,11 +25,11 @@ public:
 class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
-  void Execute(PGconn *conn) {
+  void Execute() {
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
-    DoCommand(conn, _T("SET application_name = ") + QuoteLiteral(conn, newLabel));
+    DoCommand(_T("SET application_name = ") + QuoteLiteral(conn, newLabel));
   }
   void NotifyFinished() {
   }
@@ -148,7 +148,8 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       db->workQueueMutex.Unlock();
       SetState(DatabaseConnection::EXECUTING);
       work->logger = db;
-      work->Execute(conn);
+      work->conn = conn;
+      work->Execute();
       work->NotifyFinished();
       delete work;
       SetState(DatabaseConnection::IDLE);

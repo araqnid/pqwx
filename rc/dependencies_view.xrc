@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxDialog" name="DependenciesView">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxRadioButton">
+          <label>Objects that depend on %s</label>
+        </object>
+        <flag>wxLEFT|wxRIGHT</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxRadioButton">
+          <label>Objects on which %s depends</label>
+        </object>
+        <flag>wxLEFT|wxRIGHT</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <object class="sizeritem">
+            <object class="wxTreeCtrl" name="DependenciesView_dependencies">
+              <size>250,150d</size>
+            </object>
+            <flag>wxALL</flag>
+            <border>0</border>
+          </object>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticText">
+          <label>Selected object</label>
+        </object>
+        <flag>wxALL</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Name:</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl"/>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Type:</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl"/>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <cols>2</cols>
+          <rows>2</rows>
+          <growablecols>1</growablecols>
+        </object>
+        <flag>wxTOP|wxLEFT|wxEXPAND</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK"/>
+          </object>
+        </object>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>2</border>
+      </object>
+    </object>
+    <title>Object Dependencies - %s</title>
+    <centered>1</centered>
+  </object>
+</resource>

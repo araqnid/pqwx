@@ -74,6 +74,9 @@ private:
   void OnServerMenuProperties(wxCommandEvent&);
   void OnDatabaseMenuRefresh(wxCommandEvent&);
   void OnDatabaseMenuProperties(wxCommandEvent&);
+  void OnDatabaseMenuViewDependencies(wxCommandEvent&);
+  void OnRelationMenuViewDependencies(wxCommandEvent&);
+  void OnFunctionMenuViewDependencies(wxCommandEvent&);
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);
   DECLARE_SCRIPT_HANDLERS(Database, Drop);

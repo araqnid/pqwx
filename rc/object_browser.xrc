@@ -60,6 +60,11 @@
         <label>&amp;DROP to</label>
       </object>
     </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="DatabaseMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="DatabaseMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>
@@ -153,6 +158,11 @@
       </object>
       <label>&amp;Script table as</label>
     </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TableMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="TableMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>
@@ -220,6 +230,11 @@
       </object>
       <label>&amp;Script view as</label>
     </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="ViewMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="ViewMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>
@@ -273,6 +288,11 @@
       </object>
       <label>&amp;Script sequence as</label>
     </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="SequenceMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="SequenceMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>
@@ -340,6 +360,11 @@
       </object>
       <label>&amp;Script function as</label>
     </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="FunctionMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="FunctionMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>

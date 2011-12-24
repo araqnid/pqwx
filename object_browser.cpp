@@ -16,6 +16,8 @@
 #include "catalogue_index.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
+#include "dependencies_view.h"
+#include "lazy_loader.h"
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
@@ -34,6 +36,11 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
 
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
+  EVT_MENU(XRCID("DatabaseMenu_ViewDependencies"), ObjectBrowser::OnDatabaseMenuViewDependencies)
+  EVT_MENU(XRCID("TableMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
+  EVT_MENU(XRCID("ViewMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
+  EVT_MENU(XRCID("SequenceMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
+  EVT_MENU(XRCID("FunctionMenu_ViewDependencies"), ObjectBrowser::OnFunctionMenuViewDependencies)
   BIND_SCRIPT_HANDLERS(Database, Create)
   BIND_SCRIPT_HANDLERS(Database, Alter)
   BIND_SCRIPT_HANDLERS(Database, Drop)
@@ -89,11 +96,6 @@ const VersionedSql& ObjectBrowser::GetSqlDictionary() {
   static ObjectBrowserSql dict;
   return dict;
 }
-
-class LazyLoader : public wxTreeItemData {
-public:
-  virtual void load(wxTreeItemId parent) = 0;
-};
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -667,4 +669,19 @@ void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
   wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
+}
+
+void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid);
+  dialog->Show();
+}
+
+void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1259 /* pg_class */, (Oid) contextMenuRelation->oid);
+  dialog->Show();
+}
+
+void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid);
+  dialog->Show();
 }

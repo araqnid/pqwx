@@ -5,8 +5,9 @@ use strict;
 use warnings;
 use utf8;
 use Getopt::Std;
+use vars qw($opt_c);
 
-getopts('') or die "Syntax: $0 [infile [outfile]]";
+getopts('c:') or die "Syntax: $0 [-c classname] [infile [outfile]]";
 
 sub slurp_template {
     local $/;
@@ -78,8 +79,9 @@ sub process_header {
     print $output $footer;
 }
 
+my $classname = $opt_c || 'SqlDictionary';
 if (@ARGV == 0) {
-    process_header('ObjectBrowserSql', \*STDIN, \*STDOUT);
+    process_header($classname, \*STDIN, \*STDOUT);
 }
 else {
     my $infilename = shift;
@@ -91,7 +93,7 @@ else {
 	$outfilename .= ".h";
     }
     open my $output, '>', $outfilename or die "Unable to write '$outfilename': $!\n";
-    process_header('ObjectBrowserSql', $input, $output);
+    process_header($classname, $input, $output);
 }
 
 __DATA__

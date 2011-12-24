@@ -54,6 +54,7 @@ public:
   void Relabel(const wxString &newLabel);
   enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING };
   State GetState();
+  const wxString& Identification() const { return identification; }
 private:
   void Setup();
   wxString identification;

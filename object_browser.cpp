@@ -672,16 +672,16 @@ void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuDatabase->FormatName(), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1259 /* pg_class */, (Oid) contextMenuRelation->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuRelation->FormatName(), 1259 /* pg_class */, (Oid) contextMenuRelation->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuRelation->FormatName(), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid);
   dialog->Show();
 }

@@ -4,19 +4,18 @@
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <object class="wxRadioButton">
-          <label>Objects that depend on %s</label>
+        <object class="wxRadioBox" name="DependenciesView_mode">
+          <dimension>2</dimension>
+          <content>
+            <item>Objects that depend on %s</item>
+            <item>Objects on which %s depends</item>
+          </content>
+          <dimension>2</dimension>
         </object>
-        <flag>wxLEFT|wxRIGHT</flag>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
         <border>2</border>
       </object>
-      <object class="sizeritem">
-        <object class="wxRadioButton">
-          <label>Objects on which %s depends</label>
-        </object>
-        <flag>wxLEFT|wxRIGHT</flag>
-        <border>2</border>
-      </object>
+      
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
           <object class="sizeritem">
@@ -26,6 +25,7 @@
             <flag>wxALL</flag>
             <border>0</border>
           </object>
+          <label>Dependencies</label>
           <orient>wxVERTICAL</orient>
         </object>
         <flag>wxALL|wxEXPAND</flag>
@@ -46,7 +46,9 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl"/>
+            <object class="wxTextCtrl" name="DependenciesView_selectedName">
+              <style>wxTE_READONLY</style>
+            </object>
             <option>1</option>
             <flag>wxEXPAND</flag>
           </object>
@@ -56,7 +58,9 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl"/>
+            <object class="wxTextCtrl" name="DependenciesView_selectedType">
+              <style>wxTE_READONLY</style>
+            </object>
             <option>1</option>
             <flag>wxEXPAND</flag>
           </object>

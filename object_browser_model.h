@@ -7,6 +7,7 @@ class ObjectModel : public wxTreeItemData {
 public:
   wxString name;
   wxString description;
+  virtual wxString FormatName() const { return name; }
 };
 
 class ColumnModel : public ObjectModel {
@@ -36,6 +37,7 @@ public:
   wxString schema;
   wxString extension;
   bool user;
+  wxString FormatName() const { return schema + _T('.') + name; }
 };
 
 class RelationModel : public SchemaMemberModel {
@@ -47,6 +49,7 @@ class FunctionModel : public SchemaMemberModel {
 public:
   wxString arguments;
   enum Type { SCALAR, RECORDSET, TRIGGER, AGGREGATE, WINDOW } type;
+  wxString FormatName() const { return schema + _T('.') + name + _T('(') + arguments + _T(')'); }
 };
 
 class DatabaseModel : public ObjectModel {

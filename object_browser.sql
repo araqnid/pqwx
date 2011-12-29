@@ -109,7 +109,7 @@ FROM pg_class
      LEFT JOIN pg_tablespace ON pg_tablespace.oid = pg_class.reltablespace
 WHERE pg_class.oid = $1
 
--- SQL :: Relation Column Detail
+-- SQL :: Relation Column Detail :: 9.1
 
 SELECT attname,
        pg_catalog.format_type(atttypid, atttypmod),
@@ -124,6 +124,26 @@ SELECT attname,
 FROM pg_attribute
      LEFT JOIN pg_attrdef ON pg_attrdef.adrelid = pg_attribute.attrelid AND pg_attrdef.adnum = pg_attribute.attnum
      LEFT JOIN pg_collation ON pg_collation.oid = pg_attribute.attcollation
+     JOIN pg_type ON pg_type.oid = pg_attribute.atttypid
+WHERE pg_attribute.attrelid = $1
+      AND NOT attisdropped
+      AND attnum > 0
+ORDER BY attnum
+
+-- SQL :: Relation Column Detail
+
+SELECT attname,
+       pg_catalog.format_type(atttypid, atttypmod),
+       attnotnull,
+       atthasdef,
+       pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid),
+       NULL AS collname,
+       attstattarget,
+       CASE attstorage WHEN 'e' THEN 'EXTERNAL' END,
+       NULL AS attacl,
+       NULL AS attoptions
+FROM pg_attribute
+     LEFT JOIN pg_attrdef ON pg_attrdef.adrelid = pg_attribute.attrelid AND pg_attrdef.adnum = pg_attribute.attnum
      JOIN pg_type ON pg_type.oid = pg_attribute.atttypid
 WHERE pg_attribute.attrelid = $1
       AND NOT attisdropped

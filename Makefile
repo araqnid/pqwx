@@ -31,9 +31,11 @@ WX_MODULES := base core xrc adv html
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
-OBJS := pqwx.o pqwx_frame.o object_browser.o database_connection.o resources.o connect_dialogue.o catalogue_index.o object_finder.o object_finder_resources_yml.o dependencies_view.o database_work.o object_browser_sql.o dependencies_view_sql.o object_browser_scripts.o
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc
-SOURCES = $(OBJS:.o=.cpp) catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
+PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp object_finder_resources_yml.cpp dependencies_view.cpp database_work.cpp object_browser_sql.cpp dependencies_view_sql.cpp object_browser_scripts.cpp
+PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
+SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
+OBJS = $(SOURCES:.cpp=.o)
 
 wx_flavour.h build_settings: FORCE
 	@settings='$(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --selected-config)'; \
@@ -43,7 +45,7 @@ wx_flavour.h build_settings: FORCE
 		echo "#define WX_FLAVOUR \"$$settings\"" > wx_flavour.h; \
 	fi
 
-pqwx: $(OBJS)
+pqwx: $(PQWX_SOURCES:.cpp=.o)
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 test_catalogue: catalogue_index.o test_catalogue.o
@@ -52,7 +54,7 @@ test_catalogue: catalogue_index.o test_catalogue.o
 dump_catalogue: dump_catalogue.o object_browser_sql.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
--include $(OBJS:.o=.d) test_catalogue.d dump_catalogue.d
+-include $(SOURCES:.cpp=.d)
 
 %.o: %.cpp build_settings
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp
@@ -78,7 +80,7 @@ object_finder_resources_yml.cpp: object_finder_resources.yml
 rc/%.c: rc/%.xrc
 	wxrc -o $@ -g $^
 
-pqwx.pot: $(SOURCES) $(patsubst rc/%.xrc,rc/%.c,$(XRC))
+pqwx.pot: $(PQWX_SOURCES) $(patsubst rc/%.xrc,rc/%.c,$(XRC))
 	xgettext --from-code=UTF-8 -k_ -o $@ $^
 
 pot: pqwx.pot

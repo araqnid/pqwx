@@ -1,6 +1,6 @@
 -include local_build.mk
 
-all: pqwx test_catalogue
+all: pqwx test_catalogue dump_catalogue
 
 vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
@@ -48,7 +48,10 @@ pqwx: $(OBJS)
 test_catalogue: catalogue_index.o test_catalogue.o
 	g++ $(LDFLAGS) -o $@ $^
 
--include $(OBJS:.o=.d) test_catalogue.d
+dump_catalogue: dump_catalogue.o object_browser_sql.o
+	g++ $(LDFLAGS) -o $@ $^
+
+-include $(OBJS:.o=.d) test_catalogue.d dump_catalogue.d
 
 %.o: %.cpp build_settings
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp

@@ -94,11 +94,13 @@ public:
   bool DoQuery(const char *sql, QueryResults &rs);
   bool DoQuery(const char *sql, QueryResults &rs, Oid paramType, const char *paramValue);
   bool DoQuery(const char *sql, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value);
+  bool DoQuery(const char *sql, QueryResults &rs, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value);
 
   bool DoNamedCommand(const wxString &name) { return DoCommand(sqlDictionary->GetSql(name, PQserverVersion(conn))); }
   bool DoNamedQuery(const wxString &name, QueryResults &rs) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs); }
   bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid paramType, const char *paramValue) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs, paramType, paramValue); }
   bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs, param1Type, param2Type, param1Value, param2Value); }
+  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) { return DoQuery(sqlDictionary->GetSql(name, PQserverVersion(conn)), rs, param1Type, param2Type, param3Type, param1Value, param2Value, param3Value); }
 
   PGconn *conn;
   SqlLogger *logger;

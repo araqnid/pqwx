@@ -12,7 +12,7 @@
 
 class DependenciesView : public wxDialog {
 public:
-  DependenciesView(wxWindow *parent, DatabaseConnection *db, const wxString &label, Oid regclass, Oid oid) : wxDialog(), db(db), rootClass(regclass), rootObject(oid) {
+  DependenciesView(wxWindow *parent, DatabaseConnection *db, const wxString &label, Oid regclass, Oid oid, Oid database) : wxDialog(), db(db), rootClass(regclass), rootObject(oid), database(database) {
     InitXRC(parent);
     mode = DEPENDENTS;
     FillInLabels(label);
@@ -42,6 +42,7 @@ private:
   enum { DEPENDENTS, DEPENDENCIES } mode;
   Oid rootClass;
   Oid rootObject;
+  Oid database;
   wxString rootName;
   wxString rootType;
 };

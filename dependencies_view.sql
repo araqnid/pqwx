@@ -39,7 +39,17 @@ SELECT deptype, refclassid, refobjid, refobjsubid, refobjsubid,
        EXISTS (SELECT 1 FROM pg_depend more WHERE more.classid = pg_depend.refclassid AND more.objid = pg_depend.refobjid)
 FROM pg_depend
 WHERE pg_depend.classid = $1 AND pg_depend.objid = $2
-ORDER BY pg_depend.objsubid, 6
+UNION ALL
+SELECT deptype, refclassid, refobjid, 0, 0,
+       CASE refclassid
+       WHEN 'pg_authid'::regclass
+       THEN (SELECT rolname FROM pg_roles WHERE pg_roles.oid = refobjid)
+       ELSE refclassid::regclass::text || '#' || refobjid
+       END,
+       NULL, NULL,
+       EXISTS (SELECT 1 FROM pg_shdepend more WHERE more.classid = pg_shdepend.refclassid AND more.objid = pg_shdepend.refobjid AND more.dbid = $3)
+FROM pg_shdepend
+WHERE pg_shdepend.classid = $1 AND pg_shdepend.objid = $2 AND pg_shdepend.dbid = $3
 
 -- SQL :: Dependents
 SELECT deptype, refclassid, refobjid, refobjsubid, refobjsubid,
@@ -80,7 +90,17 @@ SELECT deptype, refclassid, refobjid, refobjsubid, refobjsubid,
        EXISTS (SELECT 1 FROM pg_depend more WHERE more.classid = pg_depend.refclassid AND more.objid = pg_depend.refobjid)
 FROM pg_depend
 WHERE pg_depend.classid = $1 AND pg_depend.objid = $2
-ORDER BY pg_depend.objsubid, 6
+UNION ALL
+SELECT deptype, refclassid, refobjid, 0, 0,
+       CASE refclassid
+       WHEN 'pg_authid'::regclass
+       THEN (SELECT rolname FROM pg_roles WHERE pg_roles.oid = refobjid)
+       ELSE refclassid::regclass::text || '#' || refobjid
+       END,
+       NULL, NULL,
+       EXISTS (SELECT 1 FROM pg_shdepend more WHERE more.classid = pg_shdepend.refclassid AND more.objid = pg_shdepend.refobjid AND more.dbid = $3)
+FROM pg_shdepend
+WHERE pg_shdepend.classid = $1 AND pg_shdepend.objid = $2 AND pg_shdepend.dbid = $3
 
 -- SQL :: Dependencies :: 8.4
 
@@ -122,7 +142,17 @@ SELECT deptype, classid, objid, objsubid, refobjsubid,
        EXISTS (SELECT 1 FROM pg_depend more WHERE more.refclassid = pg_depend.classid AND more.refobjid = pg_depend.objid)
 FROM pg_depend
 WHERE pg_depend.refclassid = $1 AND pg_depend.refobjid = $2
-ORDER BY pg_depend.refobjsubid, 6
+UNION ALL
+SELECT deptype, refclassid, refobjid, 0, 0,
+       CASE refclassid
+       WHEN 'pg_authid'::regclass
+       THEN (SELECT rolname FROM pg_roles WHERE pg_roles.oid = refobjid)
+       ELSE refclassid::regclass::text || '#' || refobjid
+       END,
+       NULL, NULL,
+       EXISTS (SELECT 1 FROM pg_shdepend more WHERE more.classid = pg_shdepend.refclassid AND more.objid = pg_shdepend.refobjid AND more.dbid = $3)
+FROM pg_shdepend
+WHERE pg_shdepend.classid = $1 AND pg_shdepend.objid = $2 AND pg_shdepend.dbid = $3
 
 -- SQL :: Dependencies
 SELECT deptype, classid, objid, objsubid, refobjsubid,
@@ -163,4 +193,15 @@ SELECT deptype, classid, objid, objsubid, refobjsubid,
        EXISTS (SELECT 1 FROM pg_depend more WHERE more.refclassid = pg_depend.classid AND more.refobjid = pg_depend.objid)
 FROM pg_depend
 WHERE pg_depend.refclassid = $1 AND pg_depend.refobjid = $2
-ORDER BY pg_depend.refobjsubid, 6
+UNION ALL
+SELECT deptype, classid, objid, 0, 0,
+       CASE classid
+       WHEN 'pg_authid'::regclass
+       THEN (SELECT rolname FROM pg_roles WHERE pg_roles.oid = objid)
+       ELSE refclassid::regclass::text || '#' || objid
+       END,
+       NULL, NULL,
+       EXISTS (SELECT 1 FROM pg_shdepend more WHERE more.classid = pg_shdepend.classid AND more.objid = pg_shdepend.objid AND more.dbid = $3)
+FROM pg_shdepend
+WHERE pg_shdepend.refclassid = $1 AND pg_shdepend.refobjid = $2 AND pg_shdepend.dbid = $3
+

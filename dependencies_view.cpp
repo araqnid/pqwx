@@ -75,7 +75,7 @@ public:
 
 class LoadMoreDependenciesWork : public DatabaseWork {
 public:
-  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid) {
+  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid, Oid database) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid), database(database) {
     wxLogDebug(_T("Work to load dependencies: %p"), this);
   }
 
@@ -99,11 +99,11 @@ protected:
   }
 
   bool DoDependenciesQuery(const wxString &name, QueryResults &rs) {
-    wxString classValue;
-    wxString objectValue;
+    wxString classValue, objectValue, databaseValue;
     classValue << regclass;
     objectValue << oid;
-    return DoNamedQuery(name, rs, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str());
+    databaseValue << database;
+    return DoNamedQuery(name, rs, 26 /*oid*/, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str(), databaseValue.utf8_str());
   }
 
   void NotifyFinished() {
@@ -115,6 +115,7 @@ protected:
 private:
   Oid regclass;
   Oid oid;
+  Oid database;
   int objsubid;
   wxEvtHandler *dest;
   DependencyResult *result;
@@ -124,14 +125,15 @@ private:
 
 class LoadDependenciesLazyLoader : public LazyLoader {
 public:
-  LoadDependenciesLazyLoader(wxEvtHandler *dest, bool dependenciesMode, DatabaseConnection *db, DependencyModel *dep) : dest(dest), dependenciesMode(dependenciesMode), db(db), dep(dep) {}
+  LoadDependenciesLazyLoader(wxEvtHandler *dest, bool dependenciesMode, DatabaseConnection *db, DependencyModel *dep, Oid database) : dest(dest), dependenciesMode(dependenciesMode), db(db), dep(dep), database(database) {}
 private:
   DependencyModel *dep;
   DatabaseConnection *db;
   wxEvtHandler *dest;
+  Oid database;
   bool dependenciesMode;
   void load(wxTreeItemId item) {
-    db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid));
+    db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid, database));
   }
 };
 
@@ -176,7 +178,7 @@ void DependenciesView::OnLoadedRoot(wxCommandEvent &event) {
   tree->AddRoot(rootName);
   selectedNameCtrl->SetValue(rootName);
   selectedTypeCtrl->SetValue(rootType);
-  db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), mode == DEPENDENCIES, rootClass, rootObject));
+  db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), mode == DEPENDENCIES, rootClass, rootObject, database));
 }
 
 void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
@@ -195,7 +197,7 @@ void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
     tree->SetItemData(newItem, dep);
     if (dep->hasMore) {
       wxTreeItemId dummyItem = tree->AppendItem(newItem, _T("Loading..."));
-      LazyLoader *loader = new LoadDependenciesLazyLoader(this, mode == DEPENDENCIES, db, dep);
+      LazyLoader *loader = new LoadDependenciesLazyLoader(this, mode == DEPENDENCIES, db, dep, database);
       tree->SetItemData(dummyItem, loader);
     }
   }

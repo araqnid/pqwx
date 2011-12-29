@@ -99,8 +99,11 @@ public:
   DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}
 
   bool load(wxTreeItemId parent) {
-    ob->LoadDatabase(parent, db);
-    return true;
+    if (!db->loaded) {
+      ob->LoadDatabase(parent, db);
+      return true;
+    }
+    return false;
   }
   
 private:
@@ -306,9 +309,9 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   }
 }
 
-void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database) {
+void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database, IndexSchemaCompletionCallback *indexCompletion) {
   SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, databaseItem));
-  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database));
+  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database, indexCompletion));
   SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
 }
 
@@ -597,6 +600,15 @@ private:
   ObjectBrowser *ob;
 };
 
+class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
+protected:
+  void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *catalogue) {
+    ObjectFinder *finder = new ObjectFinder(NULL, new ZoomToFoundObjectOnCompletion(ob, db), catalogue);
+    finder->Show();
+    finder->SetFocus();
+  }
+};
+
 void ObjectBrowser::FindObject() {
   wxTreeItemId selected = GetSelection();
   if (!selected.IsOk()) {
@@ -631,7 +643,7 @@ void ObjectBrowser::FindObject() {
 
   // TODO - should be able to open the dialogue and have it start loading this if it's not already done
   if (!database->loaded) {
-    wxMessageBox(_T("Database not loaded yet (expand the tree node)"));
+    LoadDatabase(previous, database, new OpenObjectFinderOnIndexSchemaCompletion());
     return;
   }
   wxASSERT(database->catalogueIndex != NULL);

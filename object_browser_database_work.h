@@ -244,13 +244,19 @@ protected:
   }
 };
 
+class IndexSchemaCompletionCallback {
+public:
+  virtual void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *index) = 0;
+};
+
 class IndexDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  IndexDatabaseSchemaWork(DatabaseModel *database) : database(database) {
+  IndexDatabaseSchemaWork(DatabaseModel *database, IndexSchemaCompletionCallback *completion = NULL) : database(database), completion(completion) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
   DatabaseModel *database;
+  IndexSchemaCompletionCallback *completion;
   CatalogueIndex *catalogueIndex;
 protected:
   void Execute() {
@@ -298,6 +304,10 @@ protected:
   }
   void LoadIntoView(ObjectBrowser *ob) {
     database->catalogueIndex = catalogueIndex;
+    if (completion) {
+      completion->Completed(ob, database, catalogueIndex);
+      delete completion;
+    }
   }
 };
 

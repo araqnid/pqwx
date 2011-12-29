@@ -38,19 +38,34 @@ protected:
 
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work) {}
+  enum State { PENDING, EXECUTED, NOTIFIED };
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work), state(PENDING) {}
   void Execute() {
+    ChangeState(PENDING, EXECUTED);
     work->owner = this;
     work->Execute();
+    state = EXECUTED;
   }
   void NotifyFinished() {
+    ChangeState(EXECUTED, NOTIFIED);
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }
+  State GetState() const {
+    wxCriticalSectionLocker locker(crit);
+    return state;
+  }
 private:
   wxEvtHandler *dest;
   ObjectBrowserWork *work;
+  mutable wxCriticalSection crit;
+  State state;
+  void ChangeState(State oldState, State newState) {
+    wxCriticalSectionLocker locker(crit);
+    wxASSERT(state == oldState);
+    state = newState;
+  }
 };
 
 class RefreshDatabaseListWork : public ObjectBrowserWork {

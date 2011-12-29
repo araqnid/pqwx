@@ -96,7 +96,7 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
 class DatabaseLoader : public LazyLoader {
 public:
-  DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : ob(ob), db(db) {}
+  DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}
 
   bool load(wxTreeItemId parent) {
     ob->LoadDatabase(parent, db);
@@ -110,7 +110,7 @@ private:
 
 class RelationLoader : public LazyLoader {
 public:
-  RelationLoader(ObjectBrowser *ob, RelationModel *rel) : ob(ob), rel(rel) {}
+  RelationLoader(ObjectBrowser *ob, RelationModel *rel) : rel(rel), ob(ob) {}
 
   bool load(wxTreeItemId parent) {
     ob->LoadRelation(parent, rel);
@@ -336,8 +336,6 @@ void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serve
   vector<DatabaseModel*> systemDatabases;
   vector<DatabaseModel*> templateDatabases;
   vector<DatabaseModel*> userDatabases;
-  wxTreeItemId systemDatabasesItem = NULL;
-  wxTreeItemId templateDatabasesItem = NULL;
   for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     if (database->IsSystem()) {
@@ -392,12 +390,6 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
     }
     SetItemData(roleItem, role);
   }
-}
-
-static void ShowTiming(const wxString &message) {
-  struct timeval timeinfo;
-  gettimeofday(&timeinfo, NULL);
-  wxLogDebug(_T("@%d.%d %s"), timeinfo.tv_sec, timeinfo.tv_usec, message.c_str());
 }
 
 void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members) {
@@ -594,7 +586,7 @@ void ObjectBrowser::DisconnectSelected() {
 
 class ZoomToFoundObjectOnCompletion : public ObjectFinder::Completion {
 public:
-  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, DatabaseModel *database) : ob(ob), database(database) {}
+  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, DatabaseModel *database) : database(database), ob(ob) {}
   void OnObjectChosen(const CatalogueIndex::Document *document) {
     ob->ZoomToFoundObject(database, document);
   }

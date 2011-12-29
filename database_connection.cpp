@@ -38,7 +38,7 @@ private:
 
 class DatabaseWorkerThread : public wxThread {
 public:
-  DatabaseWorkerThread(DatabaseConnection *db) : db(db), wxThread(wxTHREAD_DETACHED) { }
+  DatabaseWorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_DETACHED), db(db) { }
 
   ~DatabaseWorkerThread() {
     wxMutexLocker locker(db->workerStateMutex);

@@ -23,6 +23,7 @@ public:
       }
     }
     wxFAIL_MSG(name);
+    return NULL;
   }
 private:
   static const int MIN_VERSION = 0;

@@ -113,25 +113,25 @@ protected:
   }
 
 private:
+  wxEvtHandler *dest;
+  wxTreeItemId item;
+  bool dependenciesMode;
   Oid regclass;
   Oid oid;
   Oid database;
   int objsubid;
-  wxEvtHandler *dest;
   DependencyResult *result;
-  wxTreeItemId item;
-  bool dependenciesMode;
 };
 
 class LoadDependenciesLazyLoader : public LazyLoader {
 public:
   LoadDependenciesLazyLoader(wxEvtHandler *dest, bool dependenciesMode, DatabaseConnection *db, DependencyModel *dep, Oid database) : dest(dest), dependenciesMode(dependenciesMode), db(db), dep(dep), database(database) {}
 private:
-  DependencyModel *dep;
-  DatabaseConnection *db;
   wxEvtHandler *dest;
-  Oid database;
   bool dependenciesMode;
+  DatabaseConnection *db;
+  DependencyModel *dep;
+  Oid database;
   bool load(wxTreeItemId item) {
     db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid, database));
     return true;
@@ -163,7 +163,7 @@ void DependenciesView::LoadInitialObject() {
 void DependenciesView::FillInLabels(const wxString &value) {
   SetTitle(wxString::Format(GetTitle(), value.c_str()));
   wxArrayString strings = modeSelector->GetStrings();
-  for (int i = 0; i < strings.Count(); i++) {
+  for (unsigned i = 0; i < strings.Count(); i++) {
     modeSelector->SetString(i, wxString::Format(strings[i], value.c_str()));
   }
 }

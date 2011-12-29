@@ -23,7 +23,7 @@ static vector<wxString> Split(const wxString& input, const wxChar sep) {
   vector<wxString> result;
 
   int mark = 0;
-  for (int i = 0; i < input.length(); i++) {
+  for (unsigned i = 0; i < input.length(); i++) {
     if (input[i] == sep) {
       result.push_back(input.Mid(mark, i-mark));
       mark = i + 1;
@@ -83,7 +83,6 @@ int TestCatalogueApp::OnRun() {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   index.DumpDocumentStore();
 #endif
-  bool includeSystem = false;
   int maxResults = 10;
   CatalogueIndex::Filter baseFilter = index.CreateNonSystemFilter();
   CatalogueIndex::Filter typesFilter = index.CreateMatchEverythingFilter();

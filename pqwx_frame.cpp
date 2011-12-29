@@ -20,8 +20,6 @@
     #include "pqwx-appicon.xpm"
 #endif
 
-#include "toolbar-new.xpm"
-
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_EXIT, PqwxFrame::OnQuit)
   EVT_MENU(wxID_ABOUT, PqwxFrame::OnAbout)

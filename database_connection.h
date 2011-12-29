@@ -63,14 +63,14 @@ private:
   wxString identification;
   const ServerConnection *server;
   const wxString dbname;
-#if PG_VERSION_NUM >= 90000
-  wxString label;
-#endif
   DatabaseWorkerThread *workerThread;
   wxMutex workQueueMutex;
   wxCondition workCondition;
   wxMutex workerStateMutex;
   wxCondition workerCompleteCondition;
+#if PG_VERSION_NUM >= 90000
+  wxString label;
+#endif
   ConnectionCallback *connectionCallback;
   State state;
   std::set<wxString> preparedStatements;

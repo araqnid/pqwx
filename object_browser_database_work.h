@@ -14,20 +14,21 @@ public:
 protected:
   bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
+    return owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
   }
   bool DoQuery(const wxString &name, std::vector<wxString> &row, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     QueryResults results;
-    owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
+    if (!owner->DoNamedQuery(name, results, paramType, valueString.utf8_str())) return false;
     wxASSERT(results.size() == 1);
     row = results[0];
+    return true;
   }
   bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
-    owner->DoNamedQuery(name, results, paramType, paramValue);
+    return owner->DoNamedQuery(name, results, paramType, paramValue);
   }
   bool DoQuery(const wxString &name, QueryResults &results) {
-    owner->DoNamedQuery(name, results);
+    return owner->DoNamedQuery(name, results);
   }
   wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
   wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }

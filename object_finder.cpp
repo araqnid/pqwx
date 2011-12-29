@@ -107,7 +107,7 @@ void ObjectFinder::OnOk(wxCommandEvent &event) {
 void ObjectFinder::OnDoubleClickResult(wxCommandEvent &event) {
   int n = resultsCtrl->GetSelection();
   wxASSERT(n != wxNOT_FOUND);
-  wxASSERT(n < results.size());
+  wxASSERT(((unsigned) n) < results.size());
   const CatalogueIndex::Result &result = results[n];
   wxLogDebug(_T("Open object: %s"), result.document->symbol.c_str());
   completion->OnObjectChosen(result.document);

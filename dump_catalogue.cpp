@@ -39,6 +39,7 @@ int DumpCatalogueApp::OnRun() {
   }
   PQclear(rs);
   PQfinish(conn);
+  return 0;
 }
 
 void DumpCatalogueApp::OnInitCmdLine(wxCmdLineParser &parser) {

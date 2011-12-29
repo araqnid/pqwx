@@ -18,7 +18,7 @@ public:
 
   class Document {
   public:
-    Document(long entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), system(system), symbol(symbol), disambig(disambig) {}
+    Document(long entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system) {}
     long entityId;
     Type entityType;
     wxString symbol;
@@ -46,9 +46,9 @@ public:
   public:
     class Extent {
     public:
-      Extent(size_t offset, int length) : offset(offset), length(length) {}
+      Extent(size_t offset, size_t length) : offset(offset), length(length) {}
       size_t offset;
-      int length;
+      size_t length;
     };
     Result(const Document *document, int score, const std::vector<Extent> &extents) : document(document), score(score), extents(extents) {}
     const Document *document;
@@ -168,7 +168,7 @@ public:
   Filter CreateTypeFilter(Type type) const;
   Filter CreateSchemaFilter(const wxString &schema) const;
 
-  std::vector<Result> Search(const wxString &input, const Filter &filter, int maxResults = 100) const;
+  std::vector<Result> Search(const wxString &input, const Filter &filter, unsigned maxResults = 100) const;
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   void DumpDocumentStore() {
@@ -196,12 +196,12 @@ private:
     int position;
     bool operator< (const DocumentPosition &other) const {
       return documentId < other.documentId
-	|| documentId == other.documentId && position < other.position;
+	|| (documentId == other.documentId && position < other.position);
     }
   };
   class Occurrence : public DocumentPosition {
   public:
-    Occurrence(int documentId, int termId, int position, size_t offset) : DocumentPosition(documentId, position), termId(termId), offset(offset) {}
+    Occurrence(int documentId, int termId, int position, size_t offset) : DocumentPosition(documentId, position), offset(offset), termId(termId) {}
     size_t offset;
     int termId;
   };

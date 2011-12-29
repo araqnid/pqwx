@@ -6,7 +6,7 @@ using namespace std;
 
 static bool IsSimpleSymbol(const char *str) {
   for (const char *p = str; *p != '\0'; p++) {
-    if (!( *p >= 'a' && *p <= 'z' || *p == '_' || *p >= '0' && *p <= '9' ))
+    if (!( (*p >= 'a' && *p <= 'z') || *p == '_' || (*p >= '0' && *p <= '9') ))
       return false;
   }
   return true;
@@ -27,7 +27,7 @@ wxString DatabaseWork::QuoteIdent(const wxString &str) const {
   wxString result;
   result.Alloc(str.length() + 2);
   result << _T('\"');
-  for (int i = 0; i < str.length(); i++) {
+  for (unsigned i = 0; i < str.length(); i++) {
     if (str[i] == '\"')
       result << _T("\"\"");
     else
@@ -57,7 +57,7 @@ wxString DatabaseWork::QuoteLiteral(const wxString &str) const {
   bool usedEscapeSyntax = false;
   result.Alloc(str.length() + 2);
   result << _T('\'');
-  for (int i = 0; i < str.length(); i++) {
+  for (unsigned i = 0; i < str.length(); i++) {
     if (str[i] == '\'')
       result << _T("\'\'");
     else if (useEscapeSyntax && str[i] == '\\') {

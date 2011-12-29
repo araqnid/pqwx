@@ -28,7 +28,7 @@ endif
 
 WX_MODULES := base core xrc adv html
 
-CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
+CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc

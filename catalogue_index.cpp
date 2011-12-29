@@ -18,7 +18,7 @@ void CatalogueIndex::AddDocument(const Document& document) {
       terms.push_back((*iter).value);
       termsIndex[(*iter).value] = termId;
       // still doing this the perl-ish way
-      for (int len = 1; len <= (*iter).value.length(); len++) {
+      for (unsigned len = 1; len <= (*iter).value.length(); len++) {
 	prefixes[(*iter).value.Left(len)].push_back(termId);
       }
     }
@@ -35,7 +35,7 @@ vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) con
 
   int mark = -1; // start of current token
   // [mark,pos) is the token when we find an edge
-  for (int pos = 0; pos < input.length(); pos++) {
+  for (unsigned pos = 0; pos < input.length(); pos++) {
     wxChar c = input[pos];
     if (iswalnum(c)) {
       if (mark < 0) {
@@ -83,7 +83,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, int maxResults) const {
+vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, unsigned maxResults) const {
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -131,7 +131,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T("Matched first term %d:\"%s\" in Document#%d at %d"), firstTerm->termId, terms[firstTerm->termId].c_str(), firstTerm->documentId, firstTerm->position);
 #endif
-    for (int offset = 1; offset < tokenMatches.size(); offset++) {
+    for (unsigned offset = 1; offset < tokenMatches.size(); offset++) {
       const Occurrence *occurrence = tokenMatches[offset][DocumentPosition(documentId, position + offset)];
       if (!occurrence) {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX

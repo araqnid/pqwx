@@ -14,7 +14,7 @@ void TableScriptWork::Execute() {
     vector< wxString > alterSql;
     sql << _T("CREATE TABLE ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("(\n");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0)),
 	type(ReadText(iter, 1));
@@ -76,7 +76,7 @@ void TableScriptWork::Execute() {
   case Select: {
     wxString sql;
     sql << _T("SELECT ");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0));
       sql << QuoteIdent(name);
@@ -95,7 +95,7 @@ void TableScriptWork::Execute() {
     sql << _T("INSERT INTO ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	<< _T("(\n");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0));
       sql << _T("            ") << QuoteIdent(name);
@@ -124,7 +124,7 @@ void TableScriptWork::Execute() {
     sql << _T("UPDATE ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	<< _T("\nSET ");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
       sql << QuoteIdent(name) << _T(" = ")
@@ -169,7 +169,7 @@ void ViewScriptWork::Execute() {
     else
       sql << _T("CREATE OR REPLACE VIEW ");
     sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name) << _T("(\n");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
       sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
@@ -185,7 +185,7 @@ void ViewScriptWork::Execute() {
   case Select: {
     wxString sql;
     sql << _T("SELECT ");
-    int n = 0;
+    unsigned n = 0;
     for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name(ReadText(iter, 0));
       sql << QuoteIdent(name);
@@ -227,7 +227,7 @@ static void EscapeCode(const wxString &src, wxString &buf) {
     buf << _T("$_$") << src << _T("$_$");
     return;
   }
-  int n = 0;
+  unsigned n = 0;
   while (1) {
     wxString delimiter;
     delimiter << _T('$') << n << _T('$');
@@ -240,9 +240,8 @@ static void EscapeCode(const wxString &src, wxString &buf) {
 
 static vector<Oid> ParseOidVector(const wxString &str) {
   vector<Oid> result;
-  int mark = 0;
-  int pos = 0;
-  for (int pos = 0; pos < str.length(); pos++) {
+  unsigned mark = 0;
+  for (unsigned pos = 0; pos < str.length(); pos++) {
     if (str[pos] == ' ') {
       long typeOid;
       if (str.Mid(mark, pos-mark).ToLong(&typeOid)) {
@@ -262,7 +261,7 @@ static vector<Oid> ParseOidVector(const wxString &str) {
   return result;
 }
 
-static inline vector<Oid> ReadOidVector(const vector<wxString> &row, int index) {
+static inline vector<Oid> ReadOidVector(const vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   return ParseOidVector(row[index]);
 }
@@ -273,7 +272,7 @@ static vector<wxString> ParseTextArray(const wxString &str) {
   wxASSERT(str[0] == _T('{'));
   int state = 0;
   wxString buf;
-  for (int pos = 1; pos < str.length(); pos++) {
+  for (unsigned pos = 1; pos < str.length(); pos++) {
     wxChar c = str[pos];
     if (state == 0) {
       if (c == _T('}')) {
@@ -310,12 +309,12 @@ static vector<wxString> ParseTextArray(const wxString &str) {
   return result;
 }
 
-static inline vector<wxString> ReadTextArray(const vector<wxString> &row, int index) {
+static inline vector<wxString> ReadTextArray(const vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   return ParseTextArray(row[index]);
 }
 
-static inline vector<Oid> ReadOidArray(const vector<wxString> &row, int index) {
+static inline vector<Oid> ReadOidArray(const vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   vector<wxString> strings = ParseTextArray(row[index]);
   vector<Oid> result;
@@ -329,7 +328,7 @@ static inline vector<Oid> ReadOidArray(const vector<wxString> &row, int index) {
   return result;
 }
 
-static inline vector<bool> ReadIOModeArray(const vector<wxString> &row, int index) {
+static inline vector<bool> ReadIOModeArray(const vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   vector<wxString> strings = ParseTextArray(row[index]);
   vector<bool> result;
@@ -359,7 +358,7 @@ template <class T>
 static void DumpCollection(const wxString &tag, T collection) {
   typedef class T::const_iterator I;
   wxLogDebug(_T("%s:"), tag.c_str());
-  int n = 0;
+  unsigned n = 0;
   for (I iter = collection.begin(); iter != collection.end(); iter++, n++) {
     wxString line;
     line << _T(" [") << n << _T("] ") << *iter;
@@ -387,7 +386,7 @@ void FunctionScriptWork::Execute() {
     sql << QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
 	<< _T("(");
     if (!extendedArgTypes.empty()) {
-      int pos = 0;
+      unsigned pos = 0;
       for (vector<Oid>::const_iterator iter = extendedArgTypes.begin(); iter != extendedArgTypes.end(); iter++, pos++) {
 	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
 	Typeinfo typeinfo = typeMap[*iter];
@@ -404,7 +403,7 @@ void FunctionScriptWork::Execute() {
       }
     }
     else {
-      int pos = 0;
+      unsigned pos = 0;
       for (vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
 	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
 	Typeinfo typeinfo = typeMap[*iter];
@@ -466,7 +465,7 @@ void FunctionScriptWork::Execute() {
 
     sql << QuoteIdent(function->schema) << _T('.') << QuoteIdent(function->name) << _T('(');
     if (!basicArgTypes.empty()) {
-      int pos = 0;
+      unsigned pos = 0;
       for (vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
 	Typeinfo typeinfo = typeMap[*iter];
 	sql << _T('<');
@@ -492,5 +491,7 @@ void FunctionScriptWork::Execute() {
   }
     break;
 
+  default:
+    wxASSERT(false);
   }
 }

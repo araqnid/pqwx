@@ -10,6 +10,7 @@
 #include "database_connection.h"
 #include "versioned_sql.h"
 #include "catalogue_index.h"
+#include "lazy_loader.h"
 
 using namespace std;
 
@@ -60,6 +61,17 @@ public:
 
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers);
 
+  void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
+  void AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  void DivideSchemaMembers(vector<SchemaMemberModel*> &members, vector<SchemaMemberModel*> &userDivision, vector<SchemaMemberModel*> &systemDivision, map<wxString, vector<SchemaMemberModel*> > &extensionDivisions);
+  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members);
+
+  wxTreeItemId FindServerItem(ServerModel *server) const;
+  wxTreeItemId FindDatabaseItem(DatabaseModel *db) const;
+  wxTreeItemId FindSystemSchemasItem(DatabaseModel *db) const;
+  LazyLoader* GetLazyLoader(wxTreeItemId item) const;
+  void DeleteLazyLoader(wxTreeItemId item);
+
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
@@ -97,10 +109,6 @@ private:
   DECLARE_SCRIPT_HANDLERS(Function, Alter);
   DECLARE_SCRIPT_HANDLERS(Function, Drop);
   DECLARE_SCRIPT_HANDLERS(Function, Select);
-  void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
-  void AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
-  void DivideSchemaMembers(vector<SchemaMemberModel*> &members, vector<SchemaMemberModel*> &userDivision, vector<SchemaMemberModel*> &systemDivision, map<wxString, vector<SchemaMemberModel*> > &extensionDivisions);
-  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members);
 
   // context menus
   wxMenu *serverMenu;

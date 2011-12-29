@@ -17,7 +17,6 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 #include "dependencies_view.h"
-#include "lazy_loader.h"
 #include "disconnect_work.h"
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
@@ -99,8 +98,9 @@ class DatabaseLoader : public LazyLoader {
 public:
   DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : ob(ob), db(db) {}
 
-  void load(wxTreeItemId parent) {
+  bool load(wxTreeItemId parent) {
     ob->LoadDatabase(parent, db);
+    return true;
   }
   
 private:
@@ -112,13 +112,29 @@ class RelationLoader : public LazyLoader {
 public:
   RelationLoader(ObjectBrowser *ob, RelationModel *rel) : ob(ob), rel(rel) {}
 
-  void load(wxTreeItemId parent) {
+  bool load(wxTreeItemId parent) {
     ob->LoadRelation(parent, rel);
+    return true;
   }
   
 private:
   RelationModel *rel;
   ObjectBrowser *ob;
+};
+
+class SystemSchemasLoader : public LazyLoader {
+public:
+  SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
+
+  bool load(wxTreeItemId parent) {
+    ob->AppendDivision(division, parent);
+    return false;
+  }
+
+private:
+  ObjectBrowser *ob;
+  DatabaseModel *db;
+  vector<SchemaMemberModel*> division;
 };
 
 static wxImage LoadVFSImage(const wxString &vfilename) {
@@ -249,6 +265,29 @@ void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   delete work;
 }
 
+LazyLoader *ObjectBrowser::GetLazyLoader(wxTreeItemId item) const {
+  wxTreeItemIdValue cookie;
+  wxTreeItemId firstChildItem = GetFirstChild(item, cookie);
+  wxTreeItemData *itemData = GetItemData(firstChildItem);
+  if (itemData == NULL) return NULL;
+  LazyLoader *lazyLoader = dynamic_cast<LazyLoader*>(itemData);
+  if (lazyLoader != NULL) {
+    return lazyLoader;
+  }
+  return NULL;
+}
+
+void ObjectBrowser::DeleteLazyLoader(wxTreeItemId item) {
+  wxTreeItemIdValue cookie;
+  wxTreeItemId firstChildItem = GetFirstChild(item, cookie);
+  wxTreeItemData *itemData = GetItemData(firstChildItem);
+  if (itemData == NULL) return;
+  LazyLoader *lazyLoader = dynamic_cast<LazyLoader*>(itemData);
+  if (lazyLoader != NULL) {
+    Delete(firstChildItem);
+  }
+}
+
 void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   wxTreeItemIdValue cookie;
   wxTreeItemId expandingItem = event.GetItem();
@@ -257,12 +296,13 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   if (itemData == NULL) return;
   LazyLoader *lazyLoader = dynamic_cast<LazyLoader*>(itemData);
   if (lazyLoader != NULL) {
-    lazyLoader->load(expandingItem);
-    wxString expandingItemText = GetItemText(expandingItem);
-    SetItemText(expandingItem, expandingItemText + _(" (loading...)"));
+    if (lazyLoader->load(expandingItem)) {
+      wxString expandingItemText = GetItemText(expandingItem);
+      SetItemText(expandingItem, expandingItemText + _(" (loading...)"));
+      // veto expand event, for lazy loader to complete
+      event.Veto();
+    }
     Delete(firstChildItem);
-    // veto expand event, for lazy loader to complete
-    event.Veto();
   }
 }
 
@@ -352,6 +392,12 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
     }
     SetItemData(roleItem, role);
   }
+}
+
+static void ShowTiming(const wxString &message) {
+  struct timeval timeinfo;
+  gettimeofday(&timeinfo, NULL);
+  wxLogDebug(_T("@%d.%d %s"), timeinfo.tv_sec, timeinfo.tv_usec, message.c_str());
 }
 
 void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members) {
@@ -465,7 +511,8 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   }
 
   wxTreeItemId systemDivisionItem = AppendItem(databaseItem, _("System schemas"));
-  AppendDivision(divisions.systemDivision, systemDivisionItem);
+  wxTreeItemId systemDivisionLoaderItem = AppendItem(systemDivisionItem, _T("Loading..."));
+  SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
 void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers) {
@@ -602,8 +649,62 @@ void ObjectBrowser::FindObject() {
   finder->SetFocus();
 }
 
+wxTreeItemId ObjectBrowser::FindServerItem(ServerModel *server) const {
+  wxTreeItemIdValue cookie;
+  wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
+  do {
+    if (!childItem.IsOk())
+      return childItem; // not found
+    ServerModel *itemServer = static_cast<ServerModel*>(GetItemData(childItem));
+    if (itemServer == server)
+      return childItem;
+    childItem = GetNextChild(GetRootItem(), cookie);
+  } while (1);
+}
+
+wxTreeItemId ObjectBrowser::FindDatabaseItem(DatabaseModel *database) const {
+  wxTreeItemId serverItem = FindServerItem(database->server);
+  wxASSERT(serverItem.IsOk());
+  wxTreeItemIdValue cookie;
+  wxTreeItemId childItem = GetFirstChild(serverItem, cookie);
+  do {
+    if (!childItem.IsOk())
+      return childItem; // not found
+    DatabaseModel *itemDatabase = static_cast<DatabaseModel*>(GetItemData(childItem));
+    if (itemDatabase == database)
+      return childItem;
+    childItem = GetNextChild(serverItem, cookie);
+  } while (1);
+}
+
+wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const {
+  wxTreeItemId databaseItem = FindDatabaseItem(database);
+  wxASSERT(databaseItem.IsOk());
+  wxTreeItemIdValue cookie;
+  wxTreeItemId childItem = GetFirstChild(databaseItem, cookie);
+  do {
+    if (!childItem.IsOk())
+      return childItem; // not found
+    // nasty
+    if (GetItemText(childItem).IsSameAs(_("System schemas"))) {
+      return childItem;
+    }
+    childItem = GetNextChild(databaseItem, cookie);
+  } while (1);
+}
+
 void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIndex::Document *document) {
   wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\" of \"%s\""), document->symbol.c_str(), database->name.c_str(), database->server->conn->Identification().c_str());
+  if (database->symbolItemLookup.count(document->entityId) == 0) {
+    wxTreeItemId item = FindSystemSchemasItem(database);
+    LazyLoader *systemSchemasLoader = GetLazyLoader(item);
+    if (systemSchemasLoader != NULL) {
+      wxBusyCursor wait;
+      wxLogDebug(_T("Forcing load of system schemas"));
+      systemSchemasLoader->load(item);
+      DeleteLazyLoader(item);
+    }
+  }
   wxASSERT(database->symbolItemLookup.count(document->entityId) > 0);
   wxTreeItemId item = database->symbolItemLookup[document->entityId];
   EnsureVisible(item);

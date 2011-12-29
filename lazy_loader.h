@@ -5,7 +5,8 @@
 
 class LazyLoader : public wxTreeItemData {
 public:
-  virtual void load(wxTreeItemId parent) = 0;
+  // returns TRUE if lazy loading begun, or FALSE if loading completed
+  virtual bool load(wxTreeItemId parent) = 0;
 };
 
 #endif

@@ -132,8 +132,9 @@ private:
   wxEvtHandler *dest;
   Oid database;
   bool dependenciesMode;
-  void load(wxTreeItemId item) {
+  bool load(wxTreeItemId item) {
     db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid, database));
+    return true;
   }
 };
 

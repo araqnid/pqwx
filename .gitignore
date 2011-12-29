@@ -7,10 +7,10 @@ pqwx_version.h
 core
 resources.h
 resources.cpp
-object_browser_sql.h
+object_browser_sql.cpp
 test_catalogue
 pqwx.pot
 build_settings
 wx_flavour.h
 *_resources_yml.cpp
-dependencies_view_sql.h
+dependencies_view_sql.cpp

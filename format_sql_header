@@ -5,9 +5,9 @@ use strict;
 use warnings;
 use utf8;
 use Getopt::Std;
-use vars qw($opt_c);
+use vars qw($opt_c $opt_f $opt_h);
 
-getopts('c:') or die "Syntax: $0 [-c classname] [infile [outfile]]";
+getopts('c:f:h:') or die "Syntax: $0 [-c classname] [-f singleton-function] [-h header-file] [infile [outfile]]";
 
 sub slurp_template {
     local $/;
@@ -50,12 +50,22 @@ sub flush_sql {
 
 sub process_header {
     my $classname = shift;
+    my $functionname = shift;
     my $input = shift;
     my $output = shift;
 
+    my $includes = '';
+    if ($opt_h) {
+	$includes .= "#include \"$opt_h\"\n";
+    }
+
     my($header, $footer) = split(/\{\{content\}\}/, $class_template, 2);
     $header =~ s/\{\{classname\}\}/$classname/g;
+    $header =~ s/\{\{functionname\}\}/$functionname/g;
+    $header =~ s/\{\{includes\}\}/$includes/g;
     $footer =~ s/\{\{classname\}\}/$classname/g;
+    $footer =~ s/\{\{functionname\}\}/$functionname/g;
+    $footer =~ s/\{\{includes\}\}/$includes/g;
 
     print $output $header;
 
@@ -80,8 +90,9 @@ sub process_header {
 }
 
 my $classname = $opt_c || 'SqlDictionary';
+my $functionname = $opt_f || "Get$classname";
 if (@ARGV == 0) {
-    process_header($classname, \*STDIN, \*STDOUT);
+    process_header($classname, $functionname, \*STDIN, \*STDOUT);
 }
 else {
     my $infilename = shift;
@@ -93,14 +104,19 @@ else {
 	$outfilename .= ".h";
     }
     open my $output, '>', $outfilename or die "Unable to write '$outfilename': $!\n";
-    process_header($classname, $input, $output);
+    process_header($classname, $functionname, $input, $output);
 }
 
 __DATA__
 #include "versioned_sql.h"
+{{includes}}
 class {{classname}} : public VersionedSql {
 public:
     {{classname}}() : VersionedSql() {
 {{content}}
     }
 };
+const VersionedSql& {{functionname}}() {
+  static {{classname}} obj;
+  return obj;
+}

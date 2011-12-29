@@ -35,7 +35,7 @@ protected:
 
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work) {}
   void Execute() {
     work->owner = this;
     work->Execute();

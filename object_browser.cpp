@@ -10,7 +10,6 @@
 #include <set>
 #include "wx/imaglist.h"
 #include "object_browser.h"
-#include "object_browser_sql.h"
 #include "object_finder.h"
 #include "pqwx_frame.h"
 #include "catalogue_index.h"
@@ -91,11 +90,6 @@ IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
-
-const VersionedSql* ObjectBrowser::GetSqlDictionary() {
-  static ObjectBrowserSql dict;
-  return &dict;
-}
 
 class DatabaseLoader : public LazyLoader {
 public:

@@ -12,18 +12,12 @@
 #include "wx/xrc/xmlres.h"
 #include "dependencies_view.h"
 #include "database_work.h"
-#include "dependencies_view_sql.h"
 #include "lazy_loader.h"
 
 using namespace std;
 
 static const int EVENT_LOADED_ROOT = 10000;
 static const int EVENT_LOADED_MORE = 10001;
-
-const VersionedSql* DependenciesView::GetSqlDictionary() {
-  static DependenciesViewSql dict;
-  return &dict;
-}
 
 static const Oid paramTypes[] = { 26 /* oid (pg_class) */, 26 /* oid */, 23 /* int4 */};
 
@@ -35,7 +29,7 @@ public:
 
 class LoadInitialObjectWork : public DatabaseWork {
 public:
-  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWork(DependenciesView::GetSqlDictionary()), dest(dest), regclass(regclass), oid(oid) {
+  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), regclass(regclass), oid(oid) {
     wxLogDebug(_T("Work to load dependency tree root: %p"), (void*) this);
   }
 
@@ -81,7 +75,7 @@ public:
 
 class LoadMoreDependenciesWork : public DatabaseWork {
 public:
-  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid) : DatabaseWork(DependenciesView::GetSqlDictionary()), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid) {
+  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid) {
     wxLogDebug(_T("Work to load dependencies: %p"), this);
   }
 

@@ -4,7 +4,7 @@
 #define __versioned_sql_h
 
 #include <map>
-#include <vector>
+#include <set>
 #include <algorithm>
 #include "wx/string.h"
 
@@ -15,9 +15,9 @@ protected:
   void AddSql(const wxString &name, const char *sql) { AddSql(name, Statement(sql)); }
 public:
   const char *GetSql(const wxString &name, int serverVersion) const {
-    std::map<wxString, std::vector<Statement> >::const_iterator ptr = data.find(name);
+    std::map<wxString, std::set<Statement> >::const_iterator ptr = data.find(name);
     wxASSERT_MSG(ptr != data.end(), name);
-    for (std::vector<Statement>::const_iterator iter = ptr->second.begin(); iter != ptr->second.end(); iter++) {
+    for (std::set<Statement>::const_reverse_iterator iter = ptr->second.rbegin(); iter != ptr->second.rend(); iter++) {
       if (serverVersion >= iter->minVersion) {
 	return iter->sql;
       }
@@ -36,11 +36,9 @@ private:
     }
   };
   void AddSql(const wxString &name, Statement stmt) {
-    data[name].push_back(stmt);
-    sort(data[name].begin(), data[name].end());
-    reverse(data[name].begin(), data[name].end());
+    data[name].insert(stmt);
   };
-  std::map<wxString, std::vector<Statement> > data;
+  std::map<wxString, std::set<Statement> > data;
 };
 
 #endif

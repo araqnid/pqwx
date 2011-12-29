@@ -124,6 +124,30 @@ public:
       }
       return result;
     }
+    Filter operator~() const {
+      Filter result(capacity);
+      for (int i = result.NumWords() - 1; i >= 0; i--) {
+	result.data[i] = ~data[i];
+      }
+      return result;
+    }
+    int cardinality() const {
+      int result = 0;
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	wxUint64 mask = 1;
+	for (int j = 0; j < 64; j++) {
+	  if (data[i] & mask) result++;
+	  mask = mask << 1;
+	}
+      }
+      return result;
+    }
+    bool IsEmpty() const {
+      for (int i = NumWords() - 1; i >= 0; i--) {
+	if (data[i]) return false;
+      }
+      return true;
+    }
   private:
     int NumWords() const {
       return (capacity+63) >> 6;

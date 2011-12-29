@@ -88,6 +88,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
+  if (filter.IsEmpty()) return vector<CatalogueIndex::Result>();
   vector<Token> tokens = Analyse(input);
   if (tokens.empty()) return vector<CatalogueIndex::Result>();
   vector< map<const DocumentPosition, const Occurrence*> > tokenMatches;

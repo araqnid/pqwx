@@ -26,6 +26,7 @@ public:
 	       | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
+	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
 	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
 	       ;

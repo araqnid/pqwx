@@ -13,10 +13,12 @@
 #include "object_finder.h"
 #include "pqwx_frame.h"
 #include "catalogue_index.h"
+#include "database_work.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 #include "dependencies_view.h"
 #include "lazy_loader.h"
+#include "disconnect_work.h"
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
@@ -199,6 +201,21 @@ void ObjectBrowser::Dispose() {
     ServerModel *server = *iter;
     server->Dispose();
   }
+}
+
+void ServerModel::Dispose() {
+  wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
+  for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    DatabaseConnection *db = iter->second;
+    wxLogDebug(_T(" Sending disconnect request to %s"), iter->first.c_str());
+    db->AddWork(new DisconnectWork());
+  }
+  for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    DatabaseConnection *db = iter->second;
+    wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
+    db->WaitUntilClosed();
+  }
+  connections.clear();
 }
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {

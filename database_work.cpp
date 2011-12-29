@@ -4,15 +4,85 @@
 
 using namespace std;
 
+static bool IsSimpleSymbol(const char *str) {
+  for (const char *p = str; *p != '\0'; p++) {
+    if (!( *p >= 'a' && *p <= 'z' || *p == '_' || *p >= '0' && *p <= '9' ))
+      return false;
+  }
+  return true;
+}
+
+// This tries to duplicate the fancy behaviour of quote_ident,
+// which avoids quoting identifiers when not necessary.
+// PQescapeIdentifier is "safe" in that it *always* quotes
+wxString DatabaseWork::QuoteIdent(const wxString &str) const {
+  if (IsSimpleSymbol(str.utf8_str()))
+    return str;
+#if PG_VERSION_NUM >= 90000
+  wxCharBuffer buf(str.utf8_str());
+  char *escaped = PQescapeIdentifier(conn, buf.data(), strlen(buf.data()));
+  wxString result = wxString::FromUTF8(escaped);
+  PQfreemem(escaped);
+#else
+  wxString result;
+  result.Alloc(str.length() + 2);
+  result << _T('\"');
+  for (int i = 0; i < str.length(); i++) {
+    if (str[i] == '\"')
+      result << _T("\"\"");
+    else
+      result << str[i];
+  }
+  result << _T('\"');
+#endif
+  return result;
+}
+
+#if PG_VERSION_NUM < 90000
+static bool standardConformingStrings(PGconn *conn) {
+  const char *value = PQparameterStatus(conn, "standard_conforming_strings");
+  return strcmp(value, "on") == 0;
+}
+#endif
+
+wxString DatabaseWork::QuoteLiteral(const wxString &str) const {
+#if PG_VERSION_NUM >= 90000
+  wxCharBuffer buf(str.utf8_str());
+  char *escaped = PQescapeLiteral(conn, buf.data(), strlen(buf.data()));
+  wxString result = wxString::FromUTF8(escaped);
+  PQfreemem(escaped);
+#else
+  wxString result;
+  bool useEscapeSyntax = !standardConformingStrings(conn);
+  bool usedEscapeSyntax = false;
+  result.Alloc(str.length() + 2);
+  result << _T('\'');
+  for (int i = 0; i < str.length(); i++) {
+    if (str[i] == '\'')
+      result << _T("\'\'");
+    else if (useEscapeSyntax && str[i] == '\\') {
+      result << _T("\\\\");
+      usedEscapeSyntax = true;
+    }
+    else
+      result << str[i];
+  }
+  result << _T('\'');
+  if (usedEscapeSyntax)
+    result = _T('E') + result;
+#endif
+  return result;
+}
+
 bool DatabaseWork::DoCommand(const char *sql) {
-  logger->LogSql(sql);
+  db->LogSql(sql);
 
   PGresult *rs = PQexec(conn, sql);
   wxASSERT(rs != NULL);
 
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_COMMAND_OK) {
-    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
     return false;
   }
 
@@ -22,7 +92,7 @@ bool DatabaseWork::DoCommand(const char *sql) {
 }
 
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
-  logger->LogSql(sql);
+  db->LogSql(sql);
 
 #ifdef PQWX_DEBUG
   struct timeval start;
@@ -45,7 +115,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
 #ifdef PQWX_DEBUG
-    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
 #endif
     return false; // expected data back
   }
@@ -58,7 +128,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
 }
 
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
-  logger->LogSql(sql);
+  db->LogSql(sql);
 
 #ifdef PQWX_DEBUG
   struct timeval start;
@@ -81,7 +151,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid paramType
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
 #ifdef PQWX_DEBUG
-    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
 #endif
     return false; // expected data back
   }
@@ -94,7 +164,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid paramType
 }
 
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
-  logger->LogSql(sql);
+  db->LogSql(sql);
 
 #ifdef PQWX_DEBUG
   struct timeval start;
@@ -124,7 +194,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Typ
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
 #ifdef PQWX_DEBUG
-    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
 #endif
     return false; // expected data back
   }
@@ -138,7 +208,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Typ
 
 
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
-  logger->LogSql(sql);
+  db->LogSql(sql);
 
 #ifdef PQWX_DEBUG
   struct timeval start;
@@ -170,7 +240,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Typ
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
 #ifdef PQWX_DEBUG
-    logger->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
 #endif
     return false; // expected data back
   }

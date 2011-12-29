@@ -1,10 +1,9 @@
 #include <deque>
-#if PG_VERSION_NUM < 90000
-#include <sstream>
-#endif
 #include "wx/log.h"
 #include "server_connection.h"
 #include "database_connection.h"
+#include "database_work.h"
+#include "disconnect_work.h"
 
 using namespace std;
 
@@ -147,7 +146,7 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       workQueue.pop_front();
       db->workQueueMutex.Unlock();
       SetState(DatabaseConnection::EXECUTING);
-      work->logger = db;
+      work->db = db;
       work->conn = conn;
       work->Execute();
       work->NotifyFinished();
@@ -218,15 +217,15 @@ bool DatabaseWorkerThread::Connect() {
 #if PG_VERSION_NUM >= 90000
   conn = PQconnectdbParams(options, values, 0);
 #else
-  stringstream conninfoBuilder;
+  wxString conninfo;
   for (int j = 0; options[j]; j++) {
     if (values[j])
-      conninfoBuilder << ' ' << options[j] << '=' << values[j];
+      conninfo << _T(' ') << wxString(options[j], wxConvUTF8) << _T('=') << wxString(values[j], wxConvUTF8);
   }
 #ifdef PQWX_DEBUG
-  fwprintf(stderr, wxT("conninfo: %s\n"), conninfoBuilder.str().c_str());
+  fwprintf(stderr, wxT("conninfo: %s\n"), conninfo.c_str());
 #endif
-  conn = PQconnectdb(conninfoBuilder.str().c_str());
+  conn = PQconnectdb(conninfo.utf8_str());
 #endif
 
   ConnStatusType status = PQstatus(conn);

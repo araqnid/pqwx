@@ -3,15 +3,15 @@
 #ifndef __database_connection_h
 #define __database_connection_h
 
+#include "libpq-fe.h"
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "wx/log.h"
 #include "server_connection.h"
-#include "database_work.h"
-#include "sql_logger.h"
 
 class DatabaseWorkerThread;
 class ServerConnection;
+class DatabaseWork;
 
 class ConnectionCallback {
 public:
@@ -20,7 +20,7 @@ public:
   virtual void OnConnectionNeedsPassword() = 0;
 };
 
-class DatabaseConnection : public SqlLogger {
+class DatabaseConnection {
 public:
 #if PG_VERSION_NUM >= 90000
   DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex), label(label) {

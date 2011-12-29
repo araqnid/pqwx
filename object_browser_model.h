@@ -3,6 +3,8 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
+#include "disconnect_work.h"
+
 class ObjectModel : public wxTreeItemData {
 public:
   wxString name;
@@ -152,20 +154,7 @@ public:
   bool versionNotBefore(int major, int minor) {
     return serverVersion >= (major * 10000 + minor * 100);
   }
-  void Dispose() {
-    wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
-    for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-      DatabaseConnection *db = iter->second;
-      wxLogDebug(_T(" Sending disconnect request to %s"), iter->first.c_str());
-      db->AddWork(new DisconnectWork());
-    }
-    for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-      DatabaseConnection *db = iter->second;
-      wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
-      db->WaitUntilClosed();
-    }
-    connections.clear();
-  }
+  void Dispose();
 };
 
 static inline bool emptySchema(vector<RelationModel*> schemaRelations) {

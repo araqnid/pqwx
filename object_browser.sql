@@ -421,7 +421,7 @@ FROM pg_namespace
                  SELECT pronamespace AS nspoid,
                         pg_proc.oid AS objid,
                         proname AS objname,
-                        pg_proc.oid::regprocedure::text AS objdisambig,
+                        substr(pg_proc.oid::regprocedure::text, position('(' in pg_proc.oid::regprocedure::text) + 1, length(pg_proc.oid::regprocedure::text) - position('(' in pg_proc.oid::regprocedure::text) - 1) AS objdisambig,
                         CASE WHEN prorettype = 'trigger'::regtype THEN 'ft' WHEN proretset THEN 'fs' WHEN proisagg THEN 'fa' ELSE 'f' END AS objtype
                  FROM pg_proc
 		 WHERE -- exclude functions with 'internal'/'cstring' arguments

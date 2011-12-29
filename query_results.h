@@ -3,6 +3,10 @@
 #ifndef __query_results_h
 #define __query_results_h
 
+#include <vector>
+#include "libpq-fe.h"
+#include "wx/string.h"
+
 typedef std::vector<wxString> QueryRow;
 typedef std::vector<QueryRow> QueryResults;
 

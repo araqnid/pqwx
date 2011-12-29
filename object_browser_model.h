@@ -3,7 +3,7 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
-#include "disconnect_work.h"
+#include "database_work.h"
 
 class ObjectModel : public wxTreeItemData {
 public:

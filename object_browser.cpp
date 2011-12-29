@@ -61,6 +61,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Function, Create)
   BIND_SCRIPT_HANDLERS(Function, Alter)
   BIND_SCRIPT_HANDLERS(Function, Drop)
+  BIND_SCRIPT_HANDLERS(Function, Select)
 END_EVENT_TABLE()
 
 #define IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, output)		\
@@ -92,6 +93,7 @@ IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
 class DatabaseLoader : public LazyLoader {
 public:

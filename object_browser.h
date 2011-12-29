@@ -96,6 +96,7 @@ private:
   DECLARE_SCRIPT_HANDLERS(Function, Create);
   DECLARE_SCRIPT_HANDLERS(Function, Alter);
   DECLARE_SCRIPT_HANDLERS(Function, Drop);
+  DECLARE_SCRIPT_HANDLERS(Function, Select);
   void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
   void AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
   void DivideSchemaMembers(vector<SchemaMemberModel*> &members, vector<SchemaMemberModel*> &userDivision, vector<SchemaMemberModel*> &systemDivision, map<wxString, vector<SchemaMemberModel*> > &extensionDivisions);

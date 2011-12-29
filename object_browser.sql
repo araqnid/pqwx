@@ -162,7 +162,11 @@ WHERE pg_class.oid = $1
 
 -- SQL :: Function Detail
 
-SELECT pg_get_function_arguments(pg_proc.oid),
+SELECT pg_proc.prorettype,
+       pg_proc.proargtypes,
+       pg_proc.proallargtypes,
+       pg_proc.proargmodes,
+       pg_proc.proargnames,
        owner.rolname,
        prolang,
        CASE WHEN procost <> 100 THEN procost ELSE -1 END,
@@ -178,6 +182,14 @@ SELECT pg_get_function_arguments(pg_proc.oid),
 FROM pg_proc
      JOIN pg_roles owner ON owner.oid = pg_proc.proowner
 WHERE pg_proc.oid = $1
+
+-- SQL :: Type Info
+
+SELECT nspname, CASE WHEN pg_type.typelem > 0 THEN elemtype.typname ELSE pg_type.typname END AS base_type_name, CASE WHEN pg_type.typelem > 0 THEN 1 ELSE 0 END AS array_depth
+FROM pg_type
+     JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace
+     LEFT JOIN pg_type elemtype ON elemtype.oid = pg_type.typelem
+WHERE pg_type.oid = $1
 
 -- SQL :: Functions :: 9.1
 SELECT pg_proc.oid, nspname, proname, pg_get_function_arguments(pg_proc.oid),

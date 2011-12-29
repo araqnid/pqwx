@@ -476,6 +476,23 @@ private:
   FunctionModel *function;
 protected:
   void Execute();
+private:
+  struct Typeinfo {
+    wxString schema;
+    wxString name;
+    int arrayDepth;
+  };
+  map<Oid, Typeinfo> FetchTypes(const vector<Oid> &types1, const vector<Oid> &types2) {
+    set<Oid> typeSet;
+    for (vector<Oid>::const_iterator iter = types1.begin(); iter != types1.end(); iter++) {
+      typeSet.insert(*iter);
+    }
+    for (vector<Oid>::const_iterator iter = types2.begin(); iter != types2.end(); iter++) {
+      typeSet.insert(*iter);
+    }
+    return FetchTypes(typeSet);
+  }
+  map<Oid, Typeinfo> FetchTypes(const set<Oid> &types);
 };
 
 #endif

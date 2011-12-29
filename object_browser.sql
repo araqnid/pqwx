@@ -206,15 +206,17 @@ FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 
 -- SQL :: Functions
-SELECT pg_proc.oid, nspname, proname, pg_get_function_arguments(pg_proc.oid),
+SELECT oid, nspname, proname, substr(longname, position('(' in longname) + 1, length(longname) - position('(' in longname) - 1),
+       type, NULL as extname
+FROM (
+SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure::text as longname,
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
-            ELSE 'f' END,
-       NULL AS extname
+            ELSE 'f' END AS type
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
-
+) x
 -- SQL :: Object Descriptions
 SELECT objoid, description
 FROM pg_description

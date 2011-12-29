@@ -184,9 +184,11 @@ bool DatabaseWorkerThread::Connect() {
   wxCharBuffer hostname = db->server->hostname.utf8_str();
   wxCharBuffer username = db->server->username.utf8_str();
   wxCharBuffer password = db->server->password.utf8_str();
+#if PG_VERSION_NUM >= 90000
   wxString appName(_T("pqwx"));
   if (!db->label.IsEmpty()) appName << _T(" - ") << db->label;
   wxCharBuffer appNameBuf = appName.utf8_str();
+#endif
   wxCharBuffer dbNameBuf = db->dbname.utf8_str();
 
   values[0] = db->server->hostname.IsEmpty() ? NULL : hostname.data();

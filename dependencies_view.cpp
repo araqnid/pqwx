@@ -128,15 +128,16 @@ private:
   bool dependenciesMode;
 };
 
-class LoadDependentsLazyLoader : public LazyLoader {
+class LoadDependenciesLazyLoader : public LazyLoader {
 public:
-  LoadDependentsLazyLoader(wxEvtHandler *dest, DatabaseConnection *db, DependencyModel *dep) : dest(dest), db(db), dep(dep) {}
+  LoadDependenciesLazyLoader(wxEvtHandler *dest, bool dependenciesMode, DatabaseConnection *db, DependencyModel *dep) : dest(dest), dependenciesMode(dependenciesMode), db(db), dep(dep) {}
 private:
   DependencyModel *dep;
   DatabaseConnection *db;
   wxEvtHandler *dest;
+  bool dependenciesMode;
   void load(wxTreeItemId item) {
-    db->AddWork(new LoadMoreDependenciesWork(dest, item, false, dep->regclass, dep->oid));
+    db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid));
   }
 };
 
@@ -181,16 +182,7 @@ void DependenciesView::OnLoadedRoot(wxCommandEvent &event) {
   tree->AddRoot(rootName);
   selectedNameCtrl->SetValue(rootName);
   selectedTypeCtrl->SetValue(rootType);
-  switch (mode) {
-  case DEPENDENTS:
-    db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), false, rootClass, rootObject));
-    break;
-  case DEPENDENCIES:
-    db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), true, rootClass, rootObject));
-    break;
-  default:
-    wxASSERT(false);
-  }
+  db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), mode == DEPENDENCIES, rootClass, rootObject));
 }
 
 void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
@@ -209,7 +201,7 @@ void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
     tree->SetItemData(newItem, dep);
     if (dep->hasMore) {
       wxTreeItemId dummyItem = tree->AppendItem(newItem, _T("Loading..."));
-      LazyLoader *loader = new LoadDependentsLazyLoader(this, db, dep);
+      LazyLoader *loader = new LoadDependenciesLazyLoader(this, mode == DEPENDENCIES, db, dep);
       tree->SetItemData(dummyItem, loader);
     }
   }

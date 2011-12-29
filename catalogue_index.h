@@ -27,13 +27,13 @@ public:
   };
 
   void Begin() {
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
     gettimeofday(&start, NULL);
 #endif
   }
   void AddDocument(const Document& document);
   void Commit() {
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
     gettimeofday(&finish, NULL);
     struct timeval elapsed;
     timersub(&finish, &start, &elapsed);
@@ -186,7 +186,7 @@ public:
   static wxString EntityTypeName(Type type);
 
 private:
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval start, finish;
 #endif
   class DocumentPosition {

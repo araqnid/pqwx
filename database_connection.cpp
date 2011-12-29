@@ -207,7 +207,7 @@ bool DatabaseWorkerThread::Connect() {
   values[5] = appNameBuf.data();
 #endif
 
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   wxLogDebug(_T("thr#%lx connecting to server"), GetId());
   for (int i = 0; options[i]; i++) {
     if (values[i])
@@ -223,7 +223,7 @@ bool DatabaseWorkerThread::Connect() {
     if (values[j])
       conninfo << _T(' ') << wxString(options[j], wxConvUTF8) << _T('=') << wxString(values[j], wxConvUTF8);
   }
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   wxLogDebug(_T("conninfo: %s"), conninfo.c_str());
 #endif
   conn = PQconnectdb(conninfo.utf8_str());
@@ -256,39 +256,27 @@ bool DatabaseWorkerThread::Connect() {
 }
 
 void DatabaseConnection::LogSql(const char *sql) {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] SQL: %s"), wxThread::GetCurrentId(), identification.c_str(), wxString(sql, wxConvUTF8).c_str());
-#endif
 }
 
 void DatabaseConnection::LogConnect() {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] connected"), wxThread::GetCurrentId(), identification.c_str());
-#endif
 }
 
 void DatabaseConnection::LogConnectFailed(const char *msg) {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] connection FAILED: %s"), wxThread::GetCurrentId(), identification.c_str(), wxString(msg, wxConvUTF8).c_str());
-#endif
 }
 
 void DatabaseConnection::LogConnectNeedsPassword() {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] connection needs password"), wxThread::GetCurrentId(), identification.c_str());
-#endif
 }
 
 void DatabaseConnection::LogDisconnect() {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] disconnected"), wxThread::GetCurrentId(), identification.c_str());
-#endif
 }
 
 void DatabaseConnection::LogSqlQueryFailed(const char *msg, ExecStatusType status) {
-#ifdef PQWX_DEBUG
   wxLogDebug(_T("thr#%lx [%s] query failed: %s | %s"), wxThread::GetCurrentId(), identification.c_str(), wxString(PQresStatus(status), wxConvUTF8).c_str(), wxString(msg, wxConvUTF8).c_str());
-#endif
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {

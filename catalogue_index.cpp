@@ -84,7 +84,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
 }
 
 vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, unsigned maxResults) const {
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
@@ -186,7 +186,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
     if (scoreDocs.size() > maxResults)
       scoreDocs.pop();
   }
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval finish;
   gettimeofday(&finish, NULL);
   struct timeval elapsed;

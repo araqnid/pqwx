@@ -77,7 +77,7 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   info.SetName(_T("PQWX"));
   info.SetVersion(_T(PQWX_VERSION));
   wxString description(_("PostgreSQL query tool"));
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   description << _(" - Debug build");
   description << _("\nlibpq ") << _T(PG_VERSION);
   description << _T("\n") << wxVERSION_STRING << _T(" ") << _T(WX_FLAVOUR);

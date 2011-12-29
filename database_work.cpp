@@ -94,7 +94,7 @@ bool DatabaseWork::DoCommand(const char *sql) {
 bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCount, Oid paramTypes[], const char *paramValues[]) {
   db->LogSql(sql);
 
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
@@ -103,7 +103,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
   if (!rs)
     return false;
 
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval finish;
   gettimeofday(&finish, NULL);
   struct timeval elapsed;
@@ -114,9 +114,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
 
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
     db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
     return false; // expected data back
   }
 
@@ -143,7 +141,7 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
 
     db->MarkStatementPrepared(name);
   }
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   else {
     const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
 
@@ -151,7 +149,7 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
   }
 #endif
 
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
@@ -159,7 +157,7 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
   PGresult *rs = PQexecPrepared(conn, name.utf8_str(), paramCount, paramValues, NULL, NULL, 0);
   wxCHECK(rs, false);
 
-#ifdef PQWX_DEBUG
+#ifdef __WXDEBUG__
   struct timeval finish;
   gettimeofday(&finish, NULL);
   struct timeval elapsed;

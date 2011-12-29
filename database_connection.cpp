@@ -292,8 +292,8 @@ void DatabaseConnection::LogSqlQueryFailed(const char *msg, ExecStatusType statu
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {
   wxMutexLocker stateLocker(workerStateMutex);
-  workerThread->workQueue.push_back(work);
   wxCHECK(workerThread != NULL, );
+  workerThread->workQueue.push_back(work);
   workCondition.Signal();
 }
 

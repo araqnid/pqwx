@@ -65,7 +65,7 @@ public:
     Filter(int capacity) : capacity(capacity) {
       data = new wxUint64[NumWords()];
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = 0UL;
+	data[i] = 0;
       }
     }
     Filter(const Filter &other) : capacity(other.capacity) {
@@ -79,15 +79,15 @@ public:
     }
     void Include(int pos) {
       wxASSERT(pos < capacity);
-      data[pos >> 6] |= 1UL<<(pos & 63);
+      data[pos >> 6] |= ((wxUint64) 1)<<(pos & 63);
     }
     bool Included(int pos) const {
       wxASSERT(pos < capacity);
-      return data[pos >> 6] & (1UL<<(pos & 63));
+      return data[pos >> 6] & (((wxUint64) 1)<<(pos & 63));
     }
     void Clear() {
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = 0UL;
+	data[i] = 0;
       }
     }
     void operator =(const Filter &other) {

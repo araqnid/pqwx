@@ -13,9 +13,9 @@
 
 class ServerConnection {
 public:
-  ServerConnection() : globalDbName(_T("postgres")), generatedIdentification(false) {
+  ServerConnection() : globalDbName(_T("postgres")) {
     port = -1;
-    GenerateIdentification();
+    GenerateIdentification(wxEmptyString);
   }
 
   // connection parameters
@@ -44,13 +44,7 @@ public:
 	port = portUL;
     }
 
-    if (identifiedAs.IsEmpty()) {
-      GenerateIdentification();
-    }
-    else {
-      identification = identifiedAs;
-      generatedIdentification = false;
-    }
+    GenerateIdentification(identifiedAs);
   }
 
   const wxString& Identification() const {
@@ -58,24 +52,28 @@ public:
   }
 
 private:
-  void GenerateIdentification() {
+  void GenerateIdentification(const wxString &identifiedAs) {
     identification.Clear();
     if (!username.IsEmpty()) {
       identification << username << _T('@');
     }
-    if (!hostname.IsEmpty()) {
-      identification << hostname;
+    if (!identifiedAs.IsEmpty()) {
+      identification << identifiedAs;
     }
     else {
-      identification << _("[local]");
-    }
-    if (port > 0) {
-      identification << _T(":") << wxString::Format(_T("%d"), port);
+      if (!hostname.IsEmpty()) {
+	identification << hostname;
+      }
+      else {
+	identification << _("[local]");
+      }
+      if (port > 0) {
+	identification << _T(":") << wxString::Format(_T("%d"), port);
+      }
     }
   }
 
   wxString identification;
-  bool generatedIdentification;
 };
 
 #endif

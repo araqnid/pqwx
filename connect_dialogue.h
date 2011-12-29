@@ -37,7 +37,7 @@ protected:
   wxButton *cancelButton;
 
 private:
-  static const int maxRecentServers = 10;
+  static const unsigned maxRecentServers = 10;
   ObjectBrowser *objectBrowser;
   void InitXRC(wxWindow *parent) {
     wxXmlResource::Get()->LoadDialog(this, parent, wxT("connect"));
@@ -73,6 +73,7 @@ private:
   void LoadRecentServers();
   void LoadRecentServer(const RecentServerParameters&);
   void SaveRecentServers();
+  void SetupDefaults();
 
   DECLARE_EVENT_TABLE();
 };

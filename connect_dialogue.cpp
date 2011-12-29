@@ -56,12 +56,18 @@ private:
 
 #ifdef USE_DEBIAN_PGCLUSTER
 
+#define PGCLUSTER_BINDIR "/usr/lib/postgresql"
+#define PGCLUSTER_CONFDIR "/etc/postgresql"
+
 #include "wx/regex.h"
 #include <fstream>
+#include <unistd.h>
+#include <dirent.h>
 
 static wxRegEx clusterPattern(_T("([0-9]+\\.[0-9]+)/(.+)"));
 static wxRegEx remoteClusterPattern(_T("([^:]+):([0-9]*)"));
 static wxRegEx settingPattern(_T("^([a-z_]+) *= *(.+)"));
+static wxRegEx versionPattern(_T("[0-9]+\\.[0-9]+"));
 
 static wxString ReadConfigValue(const wxString &filename, const wxString &keyword) {
   ifstream input(filename.fn_str());
@@ -99,7 +105,7 @@ static wxString ParseCluster(const wxString &server) {
       return clusterName;
   }
 
-  wxString localConfigFile = _T("/etc/postgresql/") + clusterPattern.GetMatch(server, 1) + _T("/") + clusterName + _T("/postgresql.conf");
+  wxString localConfigFile = _T(PGCLUSTER_CONFDIR "/") + clusterPattern.GetMatch(server, 1) + _T("/") + clusterName + _T("/postgresql.conf");
   wxString portString = ReadConfigValue(localConfigFile, _T("port"));
 
   if (portString.IsEmpty()) {
@@ -119,6 +125,124 @@ static wxString ParseCluster(const wxString &server) {
 
   return localServer;
 }
+
+struct PgCluster {
+  wxString version;
+  wxString name;
+  int port;
+};
+
+static vector<wxString> ClusterVersions() {
+  vector<wxString> versions;
+  wxLogDebug(_T("Scanning " PGCLUSTER_BINDIR " for versions"));
+  DIR *dir = opendir(PGCLUSTER_BINDIR);
+  if (dir != NULL) {
+    size_t len = offsetof(struct dirent, d_name) + pathconf(PGCLUSTER_BINDIR, _PC_NAME_MAX) + 1;
+    struct dirent *entryData = (struct dirent*) malloc(len);
+    struct dirent *result;
+    do {
+      if (readdir_r(dir, entryData, &result) != 0) {
+	wxLogSysError(_T("Unable to read " PGCLUSTER_BINDIR " directory"));
+	break;
+      }
+      if (result == NULL)
+	break;
+      wxString filename(entryData->d_name, wxConvUTF8);
+      if (versionPattern.Matches(filename)) {
+	wxLogDebug(_T(" Found '%s'"), filename.c_str());
+	versions.push_back(filename);
+      }
+      else {
+	wxLogDebug(_T(" Ignored '%s'"), filename.c_str());
+      }
+    } while (1);
+    closedir(dir);
+    free(entryData);
+  }
+#ifdef __WXDEBUG__
+  else {
+    wxLogSysError(_T("Unable to read " PGCLUSTER_BINDIR " directory"));
+  }
+#endif
+  return versions;
+}
+
+static vector<PgCluster> VersionClusters(const wxString &version) {
+  vector<PgCluster> clusters;
+  wxString versionDir = _T(PGCLUSTER_CONFDIR "/") + version + _T("/");
+  DIR *dir = opendir(versionDir.fn_str());
+  if (dir != NULL) {
+    size_t len = offsetof(struct dirent, d_name) + pathconf(PGCLUSTER_BINDIR, _PC_NAME_MAX) + 1;
+    struct dirent *entryData = (struct dirent*) malloc(len);
+    struct dirent *result;
+    do {
+      if (readdir_r(dir, entryData, &result) != 0) {
+	wxLogSysError(_T("Unable to read '%s' directory"), versionDir.c_str());
+	break;
+      }
+      if (result == NULL)
+	break;
+      wxString filename(entryData->d_name, wxConvUTF8);
+      wxString configFile = versionDir + filename + _T("/postgresql.conf");
+      struct stat statbuf;
+      if (stat(configFile.fn_str(), &statbuf) == 0) {
+	PgCluster cluster;
+	cluster.version = version;
+	cluster.name = filename;
+	wxString portString = ReadConfigValue(configFile, _T("port"));
+	long port;
+	if (!portString.ToLong(&port)) {
+	  wxLogError(_("Incomprehensible 'port' setting in %s: \"%s\""), configFile.c_str(), portString.c_str());
+	  continue;
+	}
+	cluster.port = (int) port;
+	clusters.push_back(cluster);
+      }
+    } while (1);
+    closedir(dir);
+    free(entryData);
+  }
+#ifdef __WXDEBUG__
+  else {
+    wxLogSysError(_T("Unable to read '%s' directory"), versionDir.c_str());
+  }
+#endif
+  return clusters;
+}
+
+static vector<PgCluster> LocalClusters() {
+  vector<PgCluster> clusters;
+  vector<wxString> versions = ClusterVersions();
+  for (vector<wxString>::const_iterator iter = versions.begin(); iter != versions.end(); iter++) {
+    wxLogDebug(_T("Finding clusters for version %s"), (*iter).c_str());
+    vector<PgCluster> versionClusters = VersionClusters(*iter);
+    for (vector<PgCluster>::const_iterator clusterIter = versionClusters.begin(); clusterIter != versionClusters.end(); clusterIter++) {
+      wxLogDebug(_T(" Found %s on port %d"), (*clusterIter).version.c_str(), (*clusterIter).port);
+      clusters.push_back(*clusterIter);
+    }
+  }
+  return clusters;
+}
+
+static wxString DefaultCluster(const vector<PgCluster> &clusters) {
+  // TODO check $HOME/.postgresqlrc
+  // TODO check /etc/postgresql-common/user_clusters
+
+  for (vector<PgCluster>::const_iterator iter = clusters.begin(); iter != clusters.end(); iter++) {
+    if ((*iter).port == DEF_PGPORT) {
+      wxLogDebug(_T("Using cluster %s/%s on default port"), (*iter).version.c_str(), (*iter).name.c_str());
+      return (*iter).version + _T("/") + (*iter).name;
+    }
+  }
+
+  if (!clusters.empty()) {
+    wxLogDebug(_T("Using first cluster, %s/%s"), clusters[0].version.c_str(), clusters[0].name.c_str());
+    return clusters[0].version + _T("/") + clusters[0].name;
+  }
+
+  return wxEmptyString;
+}
+
 #endif
 
 void ConnectDialogue::StartConnection() {
@@ -146,6 +270,9 @@ void ConnectDialogue::StartConnection() {
 #else
     server->SetServerName(hostname);
 #endif
+  }
+  else {
+    server->SetServerName(wxEmptyString);
   }
 
   wxASSERT(connection == NULL);
@@ -232,7 +359,7 @@ void ConnectDialogue::SaveRecentServers() {
   if (server.server == _T(":"))
     server.server = wxEmptyString;
 
-  LoadRecentServers(); // in case something external changed it?
+  ReadRecentServers(); // in case something external changed it?
 
   recentServerList.remove(server);
 
@@ -247,13 +374,30 @@ void ConnectDialogue::SaveRecentServers() {
 
 void ConnectDialogue::LoadRecentServers() {
   ReadRecentServers();
-  if (recentServerList.empty()) return;
 
   for (list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
     hostnameInput->Append(iter->server);
   }
 
-  LoadRecentServer(recentServerList.front());
+#ifdef USE_DEBIAN_PGCLUSTER
+  vector<PgCluster> localClusters = LocalClusters();
+  for (vector<PgCluster>::const_iterator iter = localClusters.begin(); iter != localClusters.end(); iter++) {
+    wxString clusterName = (*iter).version + _T("/") + (*iter).name;
+    if (hostnameInput->FindString(clusterName) == wxNOT_FOUND) {
+      hostnameInput->Append(clusterName);
+    }
+  }
+
+  wxString defaultCluster = DefaultCluster(localClusters);
+  if (!defaultCluster.IsEmpty()) {
+    hostnameInput->SetValue(defaultCluster);
+    usernameInput->SetValue(wxEmptyString);
+    passwordInput->SetValue(wxEmptyString);
+    savePasswordInput->SetValue(false);
+  }
+#endif
+  if (!recentServerList.empty())
+    LoadRecentServer(recentServerList.front());
 }
 
 void ConnectDialogue::LoadRecentServer(const RecentServerParameters &server) {
@@ -320,5 +464,14 @@ void ConnectDialogue::OnRecentServerChosen(wxCommandEvent& event) {
       return;
     }
   }
+
+#ifdef USE_DEBIAN_PGCLUSTER
+  // cluster hint
+  hostnameInput->SetValue(newServer);
+  usernameInput->SetValue(wxEmptyString);
+  passwordInput->SetValue(wxEmptyString);
+  savePasswordInput->SetValue(false);
+#else
   wxASSERT(false);
+#endif
 }

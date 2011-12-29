@@ -8,10 +8,14 @@ SELECT deptype, refclassid, refobjid, refobjsubid, refobjsubid,
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(relname) FROM pg_class JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE pg_class.oid = pg_depend.refobjid)
                  WHEN 'pg_type'::regclass
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(typname) FROM pg_type JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace WHERE pg_type.oid = pg_depend.refobjid)
+                 WHEN 'pg_constraint'::regclass
+                 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(conname) FROM pg_constraint JOIN pg_namespace ON pg_namespace.oid = pg_constraint.connamespace WHERE pg_constraint.oid = pg_depend.refobjid)
 		 WHEN 'pg_namespace'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' FROM pg_namespace WHERE pg_namespace.oid = pg_depend.refobjid)
 		 WHEN 'pg_proc'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(proname) || '(' || pg_get_function_arguments(pg_proc.oid) || ')' FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace WHERE pg_proc.oid = pg_depend.refobjid)
+		 WHEN 'pg_rewrite'::regclass
+		 THEN (SELECT rulename || ' on ' || ev_class::regclass FROM pg_rewrite WHERE pg_rewrite.oid = pg_depend.objid)
                  ELSE refclassid::regclass::text || '#' || refobjid
                  END
             ELSE CASE refclassid
@@ -45,10 +49,14 @@ SELECT deptype, refclassid, refobjid, refobjsubid, refobjsubid,
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(relname) FROM pg_class JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE pg_class.oid = pg_depend.refobjid)
                  WHEN 'pg_type'::regclass
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(typname) FROM pg_type JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace WHERE pg_type.oid = pg_depend.refobjid)
+                 WHEN 'pg_constraint'::regclass
+                 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(conname) FROM pg_constraint JOIN pg_namespace ON pg_namespace.oid = pg_constraint.connamespace WHERE pg_constraint.oid = pg_depend.refobjid)
 		 WHEN 'pg_namespace'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' FROM pg_namespace WHERE pg_namespace.oid = pg_depend.refobjid)
 		 WHEN 'pg_proc'::regclass
 		 THEN pg_depend.refobjid::regprocedure::text
+		 WHEN 'pg_rewrite'::regclass
+		 THEN (SELECT rulename || ' on ' || ev_class::regclass FROM pg_rewrite WHERE pg_rewrite.oid = pg_depend.refobjid)
                  ELSE refclassid::regclass::text || '#' || refobjid
                  END
             ELSE CASE refclassid
@@ -83,10 +91,14 @@ SELECT deptype, classid, objid, objsubid, refobjsubid,
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(relname) FROM pg_class JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE pg_class.oid = pg_depend.objid)
                  WHEN 'pg_type'::regclass
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(typname) FROM pg_type JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace WHERE pg_type.oid = pg_depend.objid)
+                 WHEN 'pg_constraint'::regclass
+                 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(conname) FROM pg_constraint JOIN pg_namespace ON pg_namespace.oid = pg_constraint.connamespace WHERE pg_constraint.oid = pg_depend.objid)
 		 WHEN 'pg_namespace'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' FROM pg_namespace WHERE pg_namespace.oid = pg_depend.objid)
 		 WHEN 'pg_proc'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(proname) || '(' || pg_get_function_arguments(pg_proc.oid) || ')' FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace WHERE pg_proc.oid = pg_depend.objid)
+		 WHEN 'pg_rewrite'::regclass
+		 THEN (SELECT rulename || ' on ' || ev_class::regclass FROM pg_rewrite WHERE pg_rewrite.oid = pg_depend.objid)
                  ELSE classid::regclass::text || '#' || objid
                  END
             ELSE CASE classid
@@ -120,10 +132,14 @@ SELECT deptype, classid, objid, objsubid, refobjsubid,
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(relname) FROM pg_class JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE pg_class.oid = pg_depend.objid)
                  WHEN 'pg_type'::regclass
                  THEN (SELECT quote_ident(nspname) || '.' || quote_ident(typname) FROM pg_type JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace WHERE pg_type.oid = pg_depend.objid)
+                 WHEN 'pg_constraint'::regclass
+                 THEN (SELECT quote_ident(nspname) || '.' || quote_ident(conname) FROM pg_constraint JOIN pg_namespace ON pg_namespace.oid = pg_constraint.connamespace WHERE pg_constraint.oid = pg_depend.objid)
 		 WHEN 'pg_namespace'::regclass
 		 THEN (SELECT quote_ident(nspname) || '.' FROM pg_namespace WHERE pg_namespace.oid = pg_depend.objid)
 		 WHEN 'pg_proc'::regclass
 		 THEN pg_depend.objid::regprocedure::text
+		 WHEN 'pg_rewrite'::regclass
+		 THEN (SELECT rulename || ' on ' || ev_class::regclass FROM pg_rewrite WHERE pg_rewrite.oid = pg_depend.objid)
                  ELSE classid::regclass::text || '#' || objid
                  END
             ELSE CASE classid

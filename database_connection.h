@@ -3,6 +3,7 @@
 #ifndef __database_connection_h
 #define __database_connection_h
 
+#include <set>
 #include "libpq-fe.h"
 #include "wx/string.h"
 #include "wx/thread.h"
@@ -55,6 +56,8 @@ public:
   enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING };
   State GetState();
   const wxString& Identification() const { return identification; }
+  bool IsStatementPrepared(const wxString& name) const { return preparedStatements.count(name); }
+  void MarkStatementPrepared(const wxString& name) { preparedStatements.insert(name); }
 private:
   void Setup();
   wxString identification;
@@ -70,6 +73,7 @@ private:
   wxCondition workerCompleteCondition;
   ConnectionCallback *connectionCallback;
   State state;
+  std::set<wxString> preparedStatements;
 
   friend class DatabaseWorkerThread;
 };

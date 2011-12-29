@@ -91,7 +91,7 @@ bool DatabaseWork::DoCommand(const char *sql) {
   return true;
 }
 
-bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
+bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCount, Oid paramTypes[], const char *paramValues[]) {
   db->LogSql(sql);
 
 #ifdef PQWX_DEBUG
@@ -99,7 +99,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
   gettimeofday(&start, NULL);
 #endif
 
-  PGresult *rs = PQexecParams(conn, sql, 0, NULL, NULL, NULL, NULL, 0);
+  PGresult *rs = PQexecParams(conn, sql, paramCount, paramTypes, paramValues, NULL, NULL, 0);
   if (!rs)
     return false;
 
@@ -127,106 +127,37 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results) {
   return true;
 }
 
-bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid paramType, const char *paramValue) {
-  db->LogSql(sql);
+bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int paramCount, Oid paramTypes[], const char *paramValues[]) {
+  if (!db->IsStatementPrepared(name)) {
+    const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
 
-#ifdef PQWX_DEBUG
-  struct timeval start;
-  gettimeofday(&start, NULL);
-#endif
+    db->LogSql((wxString(_T("/* prepare */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
 
-  PGresult *rs = PQexecParams(conn, sql, 1, &paramType, &paramValue, NULL, NULL, 0);
-  if (!rs)
-    return false;
+    PGresult *prepareResult = PQprepare(conn, name.utf8_str(), sql, paramCount, paramTypes);
+    wxCHECK(prepareResult, false);
+    ExecStatusType prepareStatus = PQresultStatus(prepareResult);
+    if (prepareStatus != PGRES_COMMAND_OK) {
+      db->LogSqlQueryFailed(PQresultErrorMessage(prepareResult), prepareStatus);
+      return false;
+    }
 
-#ifdef PQWX_DEBUG
-  struct timeval finish;
-  gettimeofday(&finish, NULL);
-  struct timeval elapsed;
-  timersub(&finish, &start, &elapsed);
-  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
-#endif
-
-  ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
-    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
-    return false; // expected data back
+    db->MarkStatementPrepared(name);
   }
-
-  ReadResultSet(rs, results);
-
-  PQclear(rs);
-
-  return true;
-}
-
-bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
-  db->LogSql(sql);
-
 #ifdef PQWX_DEBUG
-  struct timeval start;
-  gettimeofday(&start, NULL);
-#endif
+  else {
+    const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
 
-  Oid paramTypes[2];
-  paramTypes[0] = param1Type;
-  paramTypes[1] = param2Type;
-  const char *paramValues[2];
-  paramValues[0] = param1Value;
-  paramValues[1] = param2Value;
-
-  PGresult *rs = PQexecParams(conn, sql, 2, paramTypes, paramValues, NULL, NULL, 0);
-  if (!rs)
-    return false;
-
-#ifdef PQWX_DEBUG
-  struct timeval finish;
-  gettimeofday(&finish, NULL);
-  struct timeval elapsed;
-  timersub(&finish, &start, &elapsed);
-  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
-#endif
-
-  ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
-    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
-    return false; // expected data back
+    db->LogSql((wxString(_T("/* execute */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
   }
-
-  ReadResultSet(rs, results);
-
-  PQclear(rs);
-
-  return true;
-}
-
-
-bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
-  db->LogSql(sql);
+#endif
 
 #ifdef PQWX_DEBUG
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
 
-  Oid paramTypes[3];
-  paramTypes[0] = param1Type;
-  paramTypes[1] = param2Type;
-  paramTypes[2] = param3Type;
-  const char *paramValues[3];
-  paramValues[0] = param1Value;
-  paramValues[1] = param2Value;
-  paramValues[2] = param3Value;
-
-  PGresult *rs = PQexecParams(conn, sql, 3, paramTypes, paramValues, NULL, NULL, 0);
-  if (!rs)
-    return false;
+  PGresult *rs = PQexecPrepared(conn, name.utf8_str(), paramCount, paramValues, NULL, NULL, 0);
+  wxCHECK(rs, false);
 
 #ifdef PQWX_DEBUG
   struct timeval finish;
@@ -239,9 +170,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, Oid param1Typ
 
   ExecStatusType status = PQresultStatus(rs);
   if (status != PGRES_TUPLES_OK) {
-#ifdef PQWX_DEBUG
     db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
-#endif
     return false; // expected data back
   }
 

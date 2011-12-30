@@ -13,6 +13,7 @@
 class DatabaseWorkerThread;
 class ServerConnection;
 class DatabaseWork;
+class DisconnectWork;
 
 class ConnectionCallback {
 public:
@@ -47,6 +48,7 @@ public:
   bool WaitUntilClosed();
   void AddWork(DatabaseWork*); // will throw an assertion failure if database connection is not live
   bool AddWorkOnlyIfConnected(DatabaseWork *work); // returns true if work added, false if database connection not live
+  bool BeginDisconnection(); // returns true if work added, false if already disconnected
   void LogSql(const char *sql);
   void LogDisconnect();
   void LogConnect();

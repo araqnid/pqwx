@@ -3,7 +3,6 @@
 #include "server_connection.h"
 #include "database_connection.h"
 #include "database_work.h"
-#include "disconnect_work.h"
 
 class InitialiseWork : public DatabaseWork {
 public:
@@ -34,25 +33,33 @@ private:
   const wxString newLabel;
 };
 
+class DisconnectWork : public DatabaseWork {
+public:
+  DisconnectWork() {}
+  void Execute() {
+    PQfinish(conn);
+    db->LogDisconnect();
+  }
+  void NotifyFinished() {
+  }
+};
+
 class DatabaseWorkerThread : public wxThread {
 public:
   DatabaseWorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db) { }
+protected:
+  virtual ExitCode Entry();
 private:
   std::deque<DatabaseWork*> workQueue;
   PGconn *conn;
+  DatabaseConnection *db;
 
-protected:
-  virtual ExitCode Entry();
-
-private:
   bool Connect();
 
   void SetState(DatabaseConnection::State state) {
     wxMutexLocker locker(db->workerStateMutex);
     db->state = state;
   }
-
-  DatabaseConnection *db;
 
   friend class DatabaseConnection;
 };
@@ -149,12 +156,15 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
       delete work;
       SetState(DatabaseConnection::IDLE);
       db->workQueueMutex.Lock();
+
+      ConnStatusType connStatus = PQstatus(conn);
+      if (connStatus == CONNECTION_BAD) {
+	wxLogDebug(_T("thr#%lx [%s] connection invalid, exiting"), wxThread::GetCurrentId(), db->identification.c_str());
+	SetState(DatabaseConnection::DISCONNECTED);
+	return 0;
+      }
     }
-    ConnStatusType connStatus = PQstatus(conn);
-    if (connStatus == CONNECTION_BAD) {
-      SetState(DatabaseConnection::DISCONNECTED);
-      break;
-    }
+
     db->workCondition.Wait();
   } while (true);
 
@@ -291,6 +301,18 @@ bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
     return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
   workerThread->workQueue.push_back(work);
+  workCondition.Signal();
+  return true;
+}
+
+bool DatabaseConnection::BeginDisconnection() {
+  wxMutexLocker stateLocker(workerStateMutex);
+  if (workerThread == NULL)
+    return false;
+  if (state == DISCONNECTED)
+    return false;
+  wxMutexLocker workQueueLocker(workQueueMutex);
+  workerThread->workQueue.push_back(new DisconnectWork());
   workCondition.Signal();
   return true;
 }

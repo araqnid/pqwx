@@ -17,7 +17,6 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 #include "dependencies_view.h"
-#include "disconnect_work.h"
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
@@ -235,7 +234,7 @@ void ObjectBrowser::Dispose() {
 void ServerModel::BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting) {
   for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     DatabaseConnection *db = iter->second;
-    if (db->AddWorkOnlyIfConnected(new DisconnectWork())) {
+    if (db->BeginDisconnection()) {
       wxLogDebug(_T(" Sent disconnect request to %s"), db->Identification().c_str());
       disconnecting.push_back(db);
     }

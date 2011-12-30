@@ -155,6 +155,7 @@ public:
     return serverVersion >= (major * 10000 + minor * 100);
   }
   void Dispose();
+  void BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting);
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

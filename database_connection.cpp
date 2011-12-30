@@ -287,6 +287,8 @@ bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
   wxMutexLocker stateLocker(workerStateMutex);
   if (workerThread == NULL)
     return false;
+  if (state == DISCONNECTED)
+    return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
   workerThread->workQueue.push_back(work);
   workCondition.Signal();

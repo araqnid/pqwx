@@ -217,24 +217,51 @@ DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, co
 }
 
 void ObjectBrowser::Dispose() {
-  wxLogDebug(_T("Disposing of ObjectBrowser"));
+  wxLogDebug(_T("Disposing of ObjectBrowser- sending disconnection request to all server databases"));
+  std::vector<DatabaseConnection*> disconnecting;
+  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    ServerModel *server = *iter;
+    server->BeginDisconnectAll(disconnecting);
+  }
+  wxLogDebug(_T("Disposing of ObjectBrowser- waiting for %d database connections to terminate"), disconnecting.size());
+  for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
+    DatabaseConnection *db = *iter;
+    wxLogDebug(_T(" Waiting for database connection %s to exit"), db->Identification().c_str());
+    db->WaitUntilClosed();
+  }
+  wxLogDebug(_T("Disposing of ObjectBrowser- disposing of servers"));
   for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *server = *iter;
     server->Dispose();
+  }
+  wxLogDebug(_T("Disposing of ObjectBrowser- clearing server list"));
+  servers.clear();
+}
+
+void ServerModel::BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting) {
+  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    DatabaseConnection *db = iter->second;
+    if (db->AddWorkOnlyIfConnected(new DisconnectWork())) {
+      wxLogDebug(_T(" Sent disconnect request to %s"), db->Identification().c_str());
+      disconnecting.push_back(db);
+    }
+    else {
+      wxLogDebug(_T(" Already disconnected from %s"), db->Identification().c_str());
+    }
   }
 }
 
 void ServerModel::Dispose() {
   wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
-  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    DatabaseConnection *db = iter->second;
-    wxLogDebug(_T(" Sending disconnect request to %s"), iter->first.c_str());
-    db->AddWork(new DisconnectWork());
+  std::vector<DatabaseConnection*> disconnecting;
+  BeginDisconnectAll(disconnecting);
+  for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
+    DatabaseConnection *db = *iter;
+    wxLogDebug(_T(" Waiting for database connection %s to exit"), db->Identification().c_str());
+    db->WaitUntilClosed();
   }
   for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     DatabaseConnection *db = iter->second;
-    wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
-    db->WaitUntilClosed();
     delete db;
   }
   connections.clear();

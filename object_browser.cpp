@@ -18,6 +18,14 @@
 #include "object_browser_database_work.h"
 #include "dependencies_view.h"
 
+inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work) {
+  ConnectAndAddWork(server->GetServerAdminConnection(), work);
+}
+
+inline void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {
+  ConnectAndAddWork(database->GetDatabaseConnection(), work);
+}
+
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "File"), ObjectBrowser::On##menu##MenuScript##mode##File) \
@@ -198,13 +206,29 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
 
 DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
   std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(dbname);
-  if (iter != connections.end()) return iter->second;
-  wxLogDebug(_T("Allocating connection to %s database %s"), Identification().c_str(), dbname.c_str());
+  if (iter != connections.end()) {
+    DatabaseConnection *db = iter->second;
+    if (db->IsConnected()) {
+      wxLogDebug(_T("Using existing connection %s"), db->Identification().c_str());
+      return db;
+    }
+    wxLogDebug(_T("Cleaning stale connection %s"), db->Identification().c_str());
+    db->Dispose();
+    delete db;
+    connections.erase(dbname);
+  }
 #if PG_VERSION_NUM >= 90000
   DatabaseConnection *db = new DatabaseConnection(conn, dbname, _("Object Browser"));
 #else
   DatabaseConnection *db = new DatabaseConnection(conn, dbname);
 #endif
+  wxLogDebug(_T("Allocating connection to %s"), db->Identification().c_str());
+  for (std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    if (iter->second->IsConnected()) {
+      wxLogDebug(_T(" Closing existing connection to %s"), iter->second->Identification().c_str());
+      iter->second->BeginDisconnection();
+    }
+  }
   connections[dbname] = db;
   return db;
 }
@@ -255,6 +279,7 @@ void ServerModel::Dispose() {
   }
   for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     DatabaseConnection *db = iter->second;
+    db->Dispose();
     delete db;
   }
   connections.clear();
@@ -265,11 +290,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel, serverItem));
 }
 
-void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, ObjectBrowserWork *work) {
-  ConnectAndAddWork(serverModel, serverModel->GetServerAdminConnection(), work);
-}
-
-void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnection *db, ObjectBrowserWork *work) {
+void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work) {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
@@ -339,10 +360,6 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *datab
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
   wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
   SubmitDatabaseWork(relation->database, new LoadRelationWork(relation, relationItem));
-}
-
-void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {
-  ConnectAndAddWork(database->server, database->GetDatabaseConnection(), work);
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {

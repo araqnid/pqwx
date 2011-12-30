@@ -49,7 +49,7 @@ public:
 
   void SubmitServerWork(ServerModel *server, ObjectBrowserWork *work);
   void SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work);
-  void ConnectAndAddWork(ServerModel *server, DatabaseConnection *db, ObjectBrowserWork *work);
+  void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 
   void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<DatabaseModel*> &databases);

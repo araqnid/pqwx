@@ -40,12 +40,13 @@ public:
   }
 #endif
   ~DatabaseConnection() {
-    wxCHECK(workerThread == NULL, );
+    wxCHECK_MSG(workerThread == NULL, , identification.c_str());
   }
 
   void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();
   bool WaitUntilClosed();
+  void Dispose();
   void AddWork(DatabaseWork*); // will throw an assertion failure if database connection is not live
   bool AddWorkOnlyIfConnected(DatabaseWork *work); // returns true if work added, false if database connection not live
   bool BeginDisconnection(); // returns true if work added, false if already disconnected
@@ -55,7 +56,7 @@ public:
   void LogConnectFailed(const char *msg);
   void LogConnectNeedsPassword();
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
-  bool IsConnected();
+  bool IsConnected() const;
   const wxString& DbName() const { return dbname; }
   void Relabel(const wxString &newLabel);
   enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING, DISCONNECTED };
@@ -66,13 +67,14 @@ public:
 private:
   void Setup();
   void CleanUpWorkerThread();
+  void FinishDisconnection();
   wxString identification;
   const ServerConnection *server;
   const wxString dbname;
   DatabaseWorkerThread *workerThread;
   wxMutex workQueueMutex;
   wxCondition workCondition;
-  wxMutex workerStateMutex;
+  mutable wxMutex workerStateMutex;
 #if PG_VERSION_NUM >= 90000
   wxString label;
 #endif
@@ -81,6 +83,7 @@ private:
   std::set<wxString> preparedStatements;
 
   friend class DatabaseWorkerThread;
+  friend class DisconnectWork;
 };
 
 #endif

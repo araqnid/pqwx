@@ -41,18 +41,20 @@ public:
     db->LogDisconnect();
   }
   void NotifyFinished() {
+    db->FinishDisconnection();
   }
 };
 
 class DatabaseWorkerThread : public wxThread {
 public:
-  DatabaseWorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db) { }
+  DatabaseWorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false) { }
 protected:
   virtual ExitCode Entry();
 private:
   std::deque<DatabaseWork*> workQueue;
   PGconn *conn;
   DatabaseConnection *db;
+  bool disconnect;
 
   bool Connect();
 
@@ -70,6 +72,7 @@ void DatabaseConnection::Setup() {
 
 void DatabaseConnection::CleanUpWorkerThread() {
   wxASSERT(workerThread != NULL);
+  workerThread->Wait();
   wxLogDebug(_T("%s: deleting worker thread"), identification.c_str());
   delete workerThread;
   workerThread = NULL;
@@ -129,9 +132,9 @@ bool DatabaseConnection::WaitUntilClosed() {
   return true;
 }
 
-bool DatabaseConnection::IsConnected() {
+bool DatabaseConnection::IsConnected() const {
   wxMutexLocker locker(workerStateMutex);
-  return state != NOT_CONNECTED;
+  return state != NOT_CONNECTED && state != DISCONNECTED;
 }
 
 wxThread::ExitCode DatabaseWorkerThread::Entry() {
@@ -163,6 +166,12 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
 	SetState(DatabaseConnection::DISCONNECTED);
 	return 0;
       }
+    }
+
+    if (disconnect) {
+      wxLogDebug(_T("thr#%lx [%s] disconnection completed"), wxThread::GetCurrentId(), db->identification.c_str());
+      SetState(DatabaseConnection::DISCONNECTED);
+      return 0;
     }
 
     db->workCondition.Wait();
@@ -317,6 +326,38 @@ bool DatabaseConnection::BeginDisconnection() {
   return true;
 }
 
+void DatabaseConnection::FinishDisconnection() {
+  wxMutexLocker stateLocker(workerStateMutex);
+  if (workerThread == NULL)
+    return;
+  if (state == DISCONNECTED)
+    return;
+  wxMutexLocker workQueueLocker(workQueueMutex);
+  workerThread->disconnect = true;
+  workCondition.Signal();
+}
+
 void DatabaseConnection::Relabel(const wxString &newLabel) {
   AddWork(new RelabelWork(_T("pqwx - ") + newLabel));
+}
+
+void DatabaseConnection::Dispose() {
+  if (state == NOT_CONNECTED) {
+    wxLogDebug(_T("%s: Dispose: not connected"), identification.c_str());
+    wxASSERT(workerThread == NULL);
+    return;
+  }
+
+  if (state == DISCONNECTED) {
+    wxLogDebug(_T("%s: Dispose: disconnected"), identification.c_str());
+    if (workerThread != NULL) {
+      wxLogDebug(_T("%s: Dispose: cleaning up worker thread"), identification.c_str());
+      CleanUpWorkerThread();
+    }
+    state = NOT_CONNECTED;
+    return;
+  }
+
+  wxLogDebug(_T("%s: Dispose: currently connected, doing synchronous close"), identification.c_str());
+  CloseSync();
 }

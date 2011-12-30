@@ -60,8 +60,11 @@ private:
     wxString password;
     friend class ConnectDialogue;
   public:
-    bool operator==(const RecentServerParameters &other) {
+    bool operator==(const RecentServerParameters &other) const {
       return server == other.server;
+    }
+    bool operator==(const wxString &otherName) const {
+      return server == otherName;
     }
   };
   std::list<RecentServerParameters> recentServerList;

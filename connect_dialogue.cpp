@@ -390,10 +390,20 @@ void ConnectDialogue::LoadRecentServers() {
 
   wxString defaultCluster = DefaultCluster(localClusters);
   if (!defaultCluster.IsEmpty()) {
-    hostnameInput->SetValue(defaultCluster);
-    usernameInput->SetValue(wxEmptyString);
-    passwordInput->SetValue(wxEmptyString);
-    savePasswordInput->SetValue(false);
+    // is the default cluster in the recent server list? if so, pick up its additional parameters
+    std::list<RecentServerParameters>::const_iterator defaultAsRecentServer = std::find(recentServerList.begin(), recentServerList.end(), defaultCluster);
+    if (defaultAsRecentServer != recentServerList.end()) {
+      wxLogDebug(_T("Taking default cluster parameters from recent server list"));
+      LoadRecentServer(*defaultAsRecentServer);
+    }
+    else {
+      wxLogDebug(_T("Using default cluster with default parameters"));
+      hostnameInput->SetValue(defaultCluster);
+      usernameInput->SetValue(wxEmptyString);
+      passwordInput->SetValue(wxEmptyString);
+      savePasswordInput->SetValue(false);
+    }
+    return;
   }
 #endif
   if (!recentServerList.empty())

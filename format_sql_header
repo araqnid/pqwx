@@ -74,7 +74,7 @@ sub process_header {
     my $line = 0;
     while (<$input>) {
 	++$line;
-	if (/^-- SQL :: ([[:alnum:][:blank:]]+)(?: :: (\d+)\.(\d+))?$/) {
+	if (/^-- SQL :: ([[:alnum:][:blank:]]+)(?: :: (\d+)\.(\d+))?/) {
 	    my $new_tag = [$1, $line, $2, $3];
 	    flush_sql($output, $tag, $buffer) if ($tag);
 	    $tag = $new_tag;

@@ -23,8 +23,11 @@ int DumpCatalogueApp::OnRun() {
   wxString conninfo;
   if (!dbname.IsEmpty()) conninfo << _T("dbname=") << dbname;
   PGconn *conn = PQconnectdb(conninfo.utf8_str());
+  ConnStatusType connStatus = PQstatus(conn);
+  wxCHECK_MSG(connStatus == CONNECTION_OK, 1, wxString(PQerrorMessage(conn), wxConvUTF8));
   const char *sql = sqlDictionary->GetSql(_T("IndexSchema"), PQserverVersion(conn));
   PGresult *rs = PQexec(conn, sql);
+  wxCHECK(rs != NULL, 1);
   ExecStatusType status = PQresultStatus(rs);
   wxCHECK_MSG(status == PGRES_TUPLES_OK, 1, wxString(PQresultErrorMessage(rs), wxConvUTF8));
   for (int rowNum = 0; rowNum < PQntuples(rs); rowNum++) {

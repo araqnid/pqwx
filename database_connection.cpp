@@ -72,7 +72,6 @@ void DatabaseConnection::Setup() {
 
 void DatabaseConnection::CleanUpWorkerThread() {
   wxASSERT(workerThread != NULL);
-  workerThread->Wait();
   wxLogDebug(_T("%s: deleting worker thread"), identification.c_str());
   delete workerThread;
   workerThread = NULL;
@@ -352,6 +351,7 @@ void DatabaseConnection::Dispose() {
     wxLogDebug(_T("%s: Dispose: disconnected"), identification.c_str());
     if (workerThread != NULL) {
       wxLogDebug(_T("%s: Dispose: cleaning up worker thread"), identification.c_str());
+      workerThread->Wait();
       CleanUpWorkerThread();
     }
     state = NOT_CONNECTED;

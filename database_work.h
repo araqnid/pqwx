@@ -22,7 +22,7 @@ public:
   wxString QuoteIdent(const wxString &str) const;
   wxString QuoteLiteral(const wxString &str) const;
 
-  bool DoCommand(const wxString &sql) { return DoCommand(sql.utf8_str()); }
+  bool DoCommand(const wxString &sql) { return DoCommand((const char*) sql.utf8_str()); }
   bool DoCommand(const char *sql);
   bool DoQuery(const char *sql, QueryResults &rs, int paramCount, Oid paramTypes[], const char *paramValues[]);
   bool DoQuery(const char *sql, QueryResults &rs) { return DoQuery(sql, rs, 0, NULL, NULL); }

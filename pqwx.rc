@@ -1,0 +1,5 @@
+aa_pqwx ICON "pqwx-appicon.ico"
+
+Pqwx_appicon ICON "pqwx-appicon.ico"
+
+#include "wx/msw/wx.rc"

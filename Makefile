@@ -9,6 +9,8 @@ vcs_version.mk pqwx_version.h: FORCE
 PG_CONFIG := pg_config
 WX_CONFIG := wx-config
 
+host_system := $(shell uname -s)
+
 ifeq (pg_config,$(PG_CONFIG))
 debversion := $(shell cat /etc/debian_version 2>/dev/null)
 ifneq (,$(debversion))
@@ -36,7 +38,10 @@ XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/
 PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp object_finder_resources_yml.cpp dependencies_view.cpp database_work.cpp object_browser_sql.cpp dependencies_view_sql.cpp object_browser_scripts.cpp
 PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
-OBJS = $(SOURCES:.cpp=.o)
+PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o)
+ifneq (,$(findstring MINGW,$(host_system)))
+PQWX_OBJS += pqwx_rc.o
+endif
 
 wx_flavour.h build_settings: FORCE
 	@settings='$(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --selected-config)'; \
@@ -46,7 +51,7 @@ wx_flavour.h build_settings: FORCE
 		echo "#define WX_FLAVOUR \"$$settings\"" > wx_flavour.h; \
 	fi
 
-pqwx: $(PQWX_SOURCES:.cpp=.o)
+pqwx: $(PQWX_OBJS)
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 test_catalogue: catalogue_index.o test_catalogue.o
@@ -56,6 +61,9 @@ dump_catalogue: dump_catalogue.o object_browser_sql.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 -include $(SOURCES:.cpp=.d)
+
+pqwx_rc.o: pqwx.rc
+	$(shell $(WX_CONFIG) --rescomp) $^ $@
 
 %.o: %.cpp build_settings
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp

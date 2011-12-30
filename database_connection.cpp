@@ -192,7 +192,7 @@ static const char *options[] = {
 };
 
 bool DatabaseWorkerThread::Connect() {
-  const char *values[5];
+  const char *values[6];
   char portbuf[10];
   // buffer these for the duration of this scope
   wxCharBuffer hostname = db->server->hostname.utf8_str();

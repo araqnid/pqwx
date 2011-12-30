@@ -169,15 +169,17 @@ bool TestCatalogueApp::OnCmdLineParsed(wxCmdLineParser &parser) {
 
 std::vector<CatalogueIndex::Type> TestCatalogueApp::ParseTypeListString(const wxString &input) {
   std::vector<CatalogueIndex::Type> result;
-  wxWCharBuffer buffer = input.wc_str();
-  wchar_t *ptr;
-  wchar_t *tok;
   std::map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
+  size_t mark = 0;
+  size_t pos;
 
-  for (tok = wcstok(buffer.data(), L",", &ptr); tok != NULL; tok = wcstok(NULL, L",", &ptr)) {
-    wxASSERT(typeMap.count(tok) > 0);
+  do {
+    pos = input.find(_T(','), mark);
+    wxString tok = input.substr(mark, pos - mark);
+    wxASSERT_MSG(typeMap.count(tok) > 0, tok);
     result.push_back(typeMap[tok]);
-  }
+    mark = pos + 1;
+  } while (pos < input.length());
 
   return result;
 }

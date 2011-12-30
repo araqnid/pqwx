@@ -16,8 +16,6 @@ debversion := $(shell cat /etc/debian_version 2>/dev/null)
 ifneq (,$(debversion))
 LOCAL_CXXFLAGS += -DUSE_DEBIAN_PGCLUSTER
 endif
-else
-LOCAL_LIBS += -Wl,-rpath,$(shell $(PG_CONFIG) --libdir)
 endif
 
 ifdef RELEASE

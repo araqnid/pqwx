@@ -27,6 +27,7 @@ VARIANT_CXXFLAGS = -ggdb
 endif
 
 WX_MODULES := xrc adv html core base
+WXRC := $(shell $(WX_CONFIG) --utility=wxrc)
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
@@ -61,10 +62,10 @@ dump_catalogue: dump_catalogue.o object_browser_sql.o
 	@g++ $(CXXFLAGS) -MM -o $*.d $*.cpp
 
 resources.cpp: $(XRC)
-	wxrc -c -o $*.cpp $(XRC)
+	$(WXRC) -c -o $*.cpp $(XRC)
 
 resources.h: $(XRC)
-	wxrc -c -e -o $*.cpp $(XRC)
+	$(WXRC) -c -e -o $*.cpp $(XRC)
 
 object_browser_sql.cpp: object_browser.sql format_sql_header
 	./format_sql_header -c ObjectBrowserSql -f 'ObjectBrowser::GetSqlDictionary' -h object_browser.h object_browser.sql $@

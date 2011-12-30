@@ -83,8 +83,7 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
 
 std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, unsigned maxResults) const {
 #ifdef __WXDEBUG__
-  struct timeval start;
-  gettimeofday(&start, NULL);
+  wxStopWatch stopwatch;
 #endif
   if (filter.IsEmpty()) return std::vector<CatalogueIndex::Result>();
   std::vector<Token> tokens = Analyse(input);
@@ -185,12 +184,7 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
       scoreDocs.pop();
   }
 #ifdef __WXDEBUG__
-  struct timeval finish;
-  gettimeofday(&finish, NULL);
-  struct timeval elapsed;
-  timersub(&finish, &start, &elapsed);
-  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d/%d results"), elapsedFP, scoreDocs.size(), hitCount);
+  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d/%d results"), stopwatch.Time() / 1000.0, scoreDocs.size(), hitCount);
 #endif
   std::vector<Result> resultVector;
   resultVector.reserve(scoreDocs.size());

@@ -1,4 +1,4 @@
-#include <sys/time.h>
+#include "wx/stopwatch.h"
 #include "database_work.h"
 #include "database_connection.h"
 
@@ -93,8 +93,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
   db->LogSql(sql);
 
 #ifdef __WXDEBUG__
-  struct timeval start;
-  gettimeofday(&start, NULL);
+  wxStopWatch stopwatch;
 #endif
 
   PGresult *rs = PQexecParams(conn, sql, paramCount, paramTypes, paramValues, NULL, NULL, 0);
@@ -102,12 +101,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
     return false;
 
 #ifdef __WXDEBUG__
-  struct timeval finish;
-  gettimeofday(&finish, NULL);
-  struct timeval elapsed;
-  timersub(&finish, &start, &elapsed);
-  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
+  wxLogDebug(_T("(%.3lf seconds)"), stopwatch.Time() / 1000.0);
 #endif
 
   ExecStatusType status = PQresultStatus(rs);
@@ -148,20 +142,14 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
 #endif
 
 #ifdef __WXDEBUG__
-  struct timeval start;
-  gettimeofday(&start, NULL);
+  wxStopWatch stopwatch;
 #endif
 
   PGresult *rs = PQexecPrepared(conn, name.utf8_str(), paramCount, paramValues, NULL, NULL, 0);
   wxCHECK(rs, false);
 
 #ifdef __WXDEBUG__
-  struct timeval finish;
-  gettimeofday(&finish, NULL);
-  struct timeval elapsed;
-  timersub(&finish, &start, &elapsed);
-  double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-  wxLogDebug(_T("(%.4lf seconds)"), elapsedFP);
+  wxLogDebug(_T("(%.3lf seconds)"), stopwatch.Time() / 1000.0);
 #endif
 
   ExecStatusType status = PQresultStatus(rs);

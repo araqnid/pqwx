@@ -6,9 +6,9 @@
 #include <vector>
 #include <map>
 #include <iterator>
-#include <sys/time.h>
 #include "wx/string.h"
 #include "wx/log.h"
+#include "wx/stopwatch.h"
 
 class CatalogueIndex {
 public:
@@ -28,17 +28,13 @@ public:
 
   void Begin() {
 #ifdef __WXDEBUG__
-    gettimeofday(&start, NULL);
+    stopwatch.Start();
 #endif
   }
   void AddDocument(const Document& document);
   void Commit() {
 #ifdef __WXDEBUG__
-    gettimeofday(&finish, NULL);
-    struct timeval elapsed;
-    timersub(&finish, &start, &elapsed);
-    double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
-    wxLogDebug(_T("** Indexed %d terms over %d documents in %.3lf seconds"), terms.size(), documents.size(), elapsedFP);
+    wxLogDebug(_T("** Indexed %d terms over %d documents in %.3lf seconds"), terms.size(), documents.size(), stopwatch.Time() / 1000.0);
 #endif
   }
 
@@ -187,7 +183,7 @@ public:
 
 private:
 #ifdef __WXDEBUG__
-  struct timeval start, finish;
+  wxStopWatch stopwatch;
 #endif
   class DocumentPosition {
   public:

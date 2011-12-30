@@ -6,7 +6,6 @@
     #include "wx/wx.h"
 #endif
 
-#include <sys/time.h>
 #include <vector>
 #include "wx/treectrl.h"
 #include "wx/xrc/xmlres.h"

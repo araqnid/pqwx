@@ -58,6 +58,7 @@ private:
 
 #define PGCLUSTER_BINDIR "/usr/lib/postgresql"
 #define PGCLUSTER_CONFDIR "/etc/postgresql"
+#define DEFAULT_UNIX_SOCKET_DIRECTORY "/var/run/postgresql"
 
 #include "wx/regex.h"
 #include <fstream>
@@ -85,7 +86,22 @@ static wxString ReadConfigValue(const wxString &filename, const wxString &keywor
       int comment = value.Find(_T('#'));
       if (comment != wxNOT_FOUND) value = value.Left(comment);
 
-      return value.Trim();
+      value = value.Trim();
+      if (value[0] == _T('\'') && value[value.length() - 1] == _T('\'')) {
+	wxString unquoted;
+	for (size_t pos = 1; pos < (value.length() - 1); pos++) {
+	  if (value[pos] == _T('\'') && value[pos+1] == _T('\'')) {
+	    unquoted << _T('\'');
+	    pos++;
+	  }
+	  else {
+	    unquoted << value[pos];
+	  }
+	}
+	return unquoted;
+      }
+      else
+	return value;
     }
   }
 
@@ -119,9 +135,15 @@ static wxString ParseCluster(const wxString &server) {
     return wxEmptyString;
   }
 
-  // TODO might need to put in an alternative unix_socket_directory too
+  wxString unixSocketDirectory = ReadConfigValue(localConfigFile, _T("unix_socket_directory"));
+
   wxString localServer;
-  localServer << _T(":") << port;
+  if (!unixSocketDirectory.IsEmpty() && !unixSocketDirectory.IsSameAs(_T(DEFAULT_UNIX_SOCKET_DIRECTORY))) {
+    localServer << unixSocketDirectory;
+  }
+  localServer << _T(':');
+  if (port != DEF_PGPORT)
+    localServer << port;
 
   return localServer;
 }

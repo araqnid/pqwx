@@ -5,17 +5,17 @@
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
         <object class="wxRadioBox" name="DependenciesView_mode">
+          <label>Mode</label>
           <dimension>2</dimension>
           <content>
             <item>Objects that depend on %s</item>
             <item>Objects on which %s depends</item>
           </content>
-          <dimension>2</dimension>
+          <dimension>1</dimension>
         </object>
         <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
         <border>2</border>
       </object>
-      
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
           <object class="sizeritem">

@@ -78,6 +78,9 @@ public:
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
 
+  wxString Identification() const;
+  DatabaseConnection *GetDatabaseConnection();
+
   class Divisions {
   public:
     std::vector<SchemaMemberModel*> userDivision;
@@ -131,25 +134,44 @@ public:
 
 class ServerModel : public wxTreeItemData {
 public:
-  ServerModel() {}
-  ServerModel(DatabaseConnection *db) {
+  ServerModel(ServerConnection *conn) : conn(conn) {}
+  ServerModel(ServerConnection *conn, DatabaseConnection *db) : conn(conn) {
     connections[db->DbName()] = db;
     db->Relabel(_("Object Browser"));
   }
-  const ServerConnection *conn;
-  std::vector<DatabaseModel*> databases;
-  int serverVersion;
-  bool usingSSL;
-  std::map<wxString, DatabaseConnection*> connections;
-  void SetVersion(int version) {
-    serverVersion = version;
+  void ReadServerParameters(const char *serverVersionRaw, int serverVersion_, void *ssl) {
+    serverVersion = serverVersion_;
+    serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
+    usingSSL = (ssl != NULL);
   }
   void Dispose();
   void BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting);
+  const wxString& Identification() const { return conn->Identification(); }
+  const wxString& GlobalDbName() const { return conn->globalDbName; }
+  const wxString& VersionString() const { return serverVersionString; }
+  bool IsUsingSSL() const { return usingSSL; }
+  DatabaseConnection *GetDatabaseConnection(const wxString &dbname);
+  DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
+  //const ServerConnection* ConnectionProperties() const { return conn; }
+private:
+  const ServerConnection *conn;
+  std::vector<DatabaseModel*> databases;
+  int serverVersion;
+  wxString serverVersionString;
+  bool usingSSL;
+  std::map<wxString, DatabaseConnection*> connections;
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {
   return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
+}
+
+inline wxString DatabaseModel::Identification() const {
+  return server->Identification() + _T(' ') + name;
+}
+
+inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
+  return server->GetDatabaseConnection(name);
 }
 
 #endif

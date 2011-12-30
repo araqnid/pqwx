@@ -174,7 +174,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
   wxString serverId = server->Identification();
   for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
-    if (serverModel->conn->Identification().IsSameAs(serverId)) {
+    if (serverModel->Identification().IsSameAs(serverId)) {
       wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
       if (db != NULL) {
 	db->CloseSync();
@@ -184,8 +184,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
     }
   }
 
-  ServerModel *serverModel = db ? new ServerModel(db) : new ServerModel();
-  serverModel->conn = server;
+  ServerModel *serverModel = db ? new ServerModel(server, db) : new ServerModel(server);
   servers.push_back(serverModel);
 
   // setting the text twice is a bug workaround for wx 2.8
@@ -198,21 +197,16 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
   RefreshDatabaseList(serverItem);
 }
 
-DatabaseConnection *ObjectBrowser::GetServerAdminConnection(ServerModel *server) {
-  return GetDatabaseConnection(server, server->conn->globalDbName);
-}
-
-DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, const wxString &dbname) {
-  DatabaseConnection *db = server->connections[dbname];
-  if (db == NULL) {
-    wxLogDebug(_T("Allocating connection to %s database %s"), server->conn->Identification().c_str(), dbname.c_str());
+DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
+  std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(dbname);
+  if (iter != connections.end()) return iter->second;
+  wxLogDebug(_T("Allocating connection to %s database %s"), Identification().c_str(), dbname.c_str());
 #if PG_VERSION_NUM >= 90000
-    db = new DatabaseConnection(server->conn, dbname, _("Object Browser"));
+  DatabaseConnection *db = new DatabaseConnection(conn, dbname, _("Object Browser"));
 #else
-    db = new DatabaseConnection(server->conn, dbname);
+  DatabaseConnection *db = new DatabaseConnection(conn, dbname);
 #endif
-    server->connections[dbname] = db;
-  }
+  connections[dbname] = db;
   return db;
 }
 
@@ -273,7 +267,7 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
 }
 
 void ObjectBrowser::SubmitServerWork(ServerModel *serverModel, ObjectBrowserWork *work) {
-  ConnectAndAddWork(serverModel, GetServerAdminConnection(serverModel), work);
+  ConnectAndAddWork(serverModel, serverModel->GetServerAdminConnection(), work);
 }
 
 void ObjectBrowser::ConnectAndAddWork(ServerModel *serverModel, DatabaseConnection *db, ObjectBrowserWork *work) {
@@ -349,13 +343,11 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 }
 
 void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {
-  ConnectAndAddWork(database->server, GetDatabaseConnection(database->server, database->name), work);
+  ConnectAndAddWork(database->server, database->GetDatabaseConnection(), work);
 }
 
-void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString &serverVersionString, int serverVersion, bool usingSSL) {
-  serverModel->SetVersion(serverVersion);
-  serverModel->usingSSL = usingSSL;
-  SetItemText(serverItem, serverModel->conn->Identification() + _T(" (") + serverVersionString + _T(")") + (usingSSL ? _T(" [SSL]") : wxEmptyString));
+void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
+  SetItemText(serverItem, serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")") + (serverModel->IsUsingSSL() ? _T(" [SSL]") : wxEmptyString));
 }
 
 static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
@@ -609,7 +601,7 @@ void ObjectBrowser::DisconnectSelected() {
   ServerModel *server = dynamic_cast<ServerModel*>(data);
   wxASSERT(server != NULL);
 
-  wxLogDebug(_T("Disconnect: %s (menubar)"), server->conn->Identification().c_str());
+  wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
   servers.remove(server);
   server->Dispose(); // still does nasty synchronous disconnect for now
   Delete(cursor);
@@ -667,7 +659,7 @@ void ObjectBrowser::FindObject() {
   DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
   wxASSERT(database != NULL);
 
-  wxLogDebug(_T("Find object in %s %s"), database->server->conn->Identification().c_str(), database->name.c_str());
+  wxLogDebug(_T("Find object in %s %s"), database->server->Identification().c_str(), database->name.c_str());
 
   // TODO - should be able to open the dialogue and have it start loading this if it's not already done
   if (!database->loaded) {
@@ -726,7 +718,7 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const
 }
 
 void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIndex::Document *document) {
-  wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\" of \"%s\""), document->symbol.c_str(), database->name.c_str(), database->server->conn->Identification().c_str());
+  wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\""), document->symbol.c_str(), database->Identification().c_str());
   if (database->symbolItemLookup.count(document->entityId) == 0) {
     wxTreeItemId item = FindSystemSchemasItem(database);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
@@ -795,39 +787,39 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
-  wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->conn->Identification().c_str());
+  wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->Identification().c_str());
   servers.remove(contextMenuServer);
   contextMenuServer->Dispose();
   Delete(contextMenuItem);
 }
 
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Refresh server: ") + contextMenuServer->conn->Identification());
+  wxMessageBox(_T("TODO Refresh server: ") + contextMenuServer->Identification());
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Show server properties: ") + contextMenuServer->conn->Identification());
+  wxMessageBox(_T("TODO Show server properties: ") + contextMenuServer->Identification());
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Refresh database: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
+  wxMessageBox(_T("TODO Refresh database: ") + contextMenuDatabase->server->Identification() + _T(" ") + contextMenuDatabase->name);
 }
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->conn->Identification() + _T(" ") + contextMenuDatabase->name);
+  wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->Identification() + _T(" ") + contextMenuDatabase->name);
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuDatabase->FormatName(), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuRelation->FormatName(), 1259 /* pg_class */, (Oid) contextMenuRelation->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), 1259 /* pg_class */, (Oid) contextMenuRelation->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, GetDatabaseConnection(contextMenuDatabase->server, contextMenuDatabase->name), contextMenuRelation->FormatName(), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }

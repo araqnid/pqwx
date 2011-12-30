@@ -80,7 +80,7 @@ protected:
     ReadRoles();
   }
   void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInServer(serverModel, serverItem, serverVersionString, serverVersion, usingSSL);
+    ob->FillInServer(serverModel, serverItem);
     ob->FillInDatabases(serverModel, serverItem, databases);
     ob->FillInRoles(serverModel, serverItem, roles);
 
@@ -97,11 +97,7 @@ private:
   int serverVersion;
   bool usingSSL;
   void ReadServer() {
-    const char *serverVersionRaw = PQparameterStatus(owner->conn, "server_version");
-    serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
-    serverVersion = PQserverVersion(owner->conn);
-    void *ssl = PQgetssl(owner->conn);
-    usingSSL = (ssl != NULL);
+    serverModel->ReadServerParameters(PQparameterStatus(owner->conn, "server_version"), PQserverVersion(owner->conn), PQgetssl(owner->conn));
   }
   void ReadDatabases() {
     QueryResults databaseRows;

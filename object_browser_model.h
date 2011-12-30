@@ -144,16 +144,6 @@ public:
   void SetVersion(int version) {
     serverVersion = version;
   }
-  DatabaseModel *findDatabase(unsigned long oid) {
-    for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-      if ((*iter)->oid == oid)
-	return *iter;
-    }
-    return NULL;
-  }
-  bool versionNotBefore(int major, int minor) {
-    return serverVersion >= (major * 10000 + minor * 100);
-  }
   void Dispose();
   void BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting);
 };

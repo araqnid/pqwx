@@ -58,12 +58,12 @@ private:
 
 #define PGCLUSTER_BINDIR "/usr/lib/postgresql"
 #define PGCLUSTER_CONFDIR "/etc/postgresql"
-#define DEFAULT_UNIX_SOCKET_DIRECTORY "/var/run/postgresql"
 
 #include "wx/regex.h"
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
+#include "pg_config_manual.h"
 
 static wxRegEx clusterPattern(_T("([0-9]+\\.[0-9]+)/(.+)"));
 static wxRegEx remoteClusterPattern(_T("([^:]+):([0-9]*)"));
@@ -138,7 +138,7 @@ static wxString ParseCluster(const wxString &server) {
   wxString unixSocketDirectory = ReadConfigValue(localConfigFile, _T("unix_socket_directory"));
 
   wxString localServer;
-  if (!unixSocketDirectory.IsEmpty() && !unixSocketDirectory.IsSameAs(_T(DEFAULT_UNIX_SOCKET_DIRECTORY))) {
+  if (!unixSocketDirectory.IsEmpty() && !unixSocketDirectory.IsSameAs(_T(DEFAULT_PGSOCKET_DIR))) {
     localServer << unixSocketDirectory;
   }
   localServer << _T(':');

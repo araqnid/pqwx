@@ -14,8 +14,6 @@
 #include "object_finder.h"
 #include "object_browser.h"
 
-using namespace std;
-
 BEGIN_EVENT_TABLE(ObjectFinder, wxDialog)
   EVT_TEXT(XRCID("query"), ObjectFinder::OnQueryChanged)
   EVT_BUTTON(wxID_OK, ObjectFinder::OnOk)
@@ -45,10 +43,10 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   }
 
   wxArrayString htmlList;
-  map<wxString, unsigned> seenSymbols;
-  set<wxString> dupeSymbols;
+  std::map<wxString, unsigned> seenSymbols;
+  std::set<wxString> dupeSymbols;
 
-  for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
+  for (std::vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
     wxString html;
 
     wxString icon = findIcon(iter->document->entityType);
@@ -57,7 +55,7 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
 
     const wxString &symbol = iter->document->symbol;
     size_t pos = 0;
-    for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
+    for (std::vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
       int skip = (*extentIter).offset - pos;
       if (skip > 0) {
 	html << symbol.Mid(pos, skip);

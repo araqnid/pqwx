@@ -14,8 +14,6 @@
 #include "database_work.h"
 #include "lazy_loader.h"
 
-using namespace std;
-
 static const int EVENT_LOADED_ROOT = 10000;
 static const int EVENT_LOADED_MORE = 10001;
 
@@ -66,11 +64,11 @@ public:
 
 class DependencyResult {
 public:
-  DependencyResult(wxTreeItemId item, const vector<DependencyModel*> &objects) : item(item), objects(objects) {}
+  DependencyResult(wxTreeItemId item, const std::vector<DependencyModel*> &objects) : item(item), objects(objects) {}
   wxString name;
   wxString type;
   wxTreeItemId item;
-  vector<DependencyModel*> objects;
+  std::vector<DependencyModel*> objects;
 };
 
 class LoadMoreDependenciesWork : public DatabaseWork {
@@ -82,7 +80,7 @@ public:
 protected:
   void Execute() {
     QueryResults rs;
-    vector<DependencyModel*> objects;
+    std::vector<DependencyModel*> objects;
     if (DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"), rs))
       for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
 	DependencyModel *dep = new DependencyModel();
@@ -186,7 +184,7 @@ void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
   DependencyResult *result = static_cast< DependencyResult* >(event.GetClientData());
   wxASSERT(result);
   wxLogDebug(_T("Dependencies work finished"));
-  for (vector<DependencyModel*>::iterator iter = result->objects.begin(); iter != result->objects.end(); iter++) {
+  for (std::vector<DependencyModel*>::iterator iter = result->objects.begin(); iter != result->objects.end(); iter++) {
     DependencyModel *dep = *iter;
     wxString itemText;
     if (!dep->parentSubobject.IsEmpty())

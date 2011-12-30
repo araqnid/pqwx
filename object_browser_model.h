@@ -23,7 +23,7 @@ public:
 class IndexModel : public ObjectModel {
 public:
   RelationModel *relation;
-  vector<wxString> columns;
+  std::vector<wxString> columns;
   wxString type;
 };
 
@@ -74,23 +74,23 @@ public:
   bool IsSystem() {
     return name.IsSameAs(_T("postgres")) || name.IsSameAs(_T("template0")) || name.IsSameAs(_T("template1"));
   }
-  map<unsigned long,wxTreeItemId> symbolItemLookup;
-  vector<RelationModel*> relations;
-  vector<FunctionModel*> functions;
+  std::map<unsigned long,wxTreeItemId> symbolItemLookup;
+  std::vector<RelationModel*> relations;
+  std::vector<FunctionModel*> functions;
 
   class Divisions {
   public:
-    vector<SchemaMemberModel*> userDivision;
-    vector<SchemaMemberModel*> systemDivision;
-    map<wxString, vector<SchemaMemberModel*> > extensionDivisions;
+    std::vector<SchemaMemberModel*> userDivision;
+    std::vector<SchemaMemberModel*> systemDivision;
+    std::map<wxString, std::vector<SchemaMemberModel*> > extensionDivisions;
   };
 
   Divisions DivideSchemaMembers() const {
-    vector<SchemaMemberModel*> members;
-    for (vector<RelationModel*>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
+    std::vector<SchemaMemberModel*> members;
+    for (std::vector<RelationModel*>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
       members.push_back(*iter);
     }
-    for (vector<FunctionModel*>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
+    for (std::vector<FunctionModel*>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
       members.push_back(*iter);
     }
 
@@ -98,7 +98,7 @@ public:
   
     Divisions result;
 
-    for (vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+    for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
       SchemaMemberModel *member = *iter;
       if (!member->extension.IsEmpty())
 	result.extensionDivisions[member->extension].push_back(member);
@@ -137,15 +137,15 @@ public:
     db->Relabel(_("Object Browser"));
   }
   const ServerConnection *conn;
-  vector<DatabaseModel*> databases;
+  std::vector<DatabaseModel*> databases;
   int serverVersion;
   bool usingSSL;
-  map<wxString, DatabaseConnection*> connections;
+  std::map<wxString, DatabaseConnection*> connections;
   void SetVersion(int version) {
     serverVersion = version;
   }
   DatabaseModel *findDatabase(unsigned long oid) {
-    for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
       if ((*iter)->oid == oid)
 	return *iter;
     }
@@ -157,7 +157,7 @@ public:
   void Dispose();
 };
 
-static inline bool emptySchema(vector<RelationModel*> schemaRelations) {
+static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {
   return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
 }
 

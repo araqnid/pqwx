@@ -4,23 +4,21 @@
 #include <vector>
 #include <fstream>
 
-using namespace std;
-
 class TestCatalogueApp : public wxAppConsole {
 public:
   int OnRun();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
 private:
-  vector<wxString> queries;
-  vector<CatalogueIndex::Type> ParseTypeListString(const wxString &input);
+  std::vector<wxString> queries;
+  std::vector<CatalogueIndex::Type> ParseTypeListString(const wxString &input);
   wxString inputFile;
 };
 
 IMPLEMENT_APP(TestCatalogueApp)
 
-static vector<wxString> Split(const wxString& input, const wxChar sep) {
-  vector<wxString> result;
+static std::vector<wxString> Split(const wxString& input, const wxChar sep) {
+  std::vector<wxString> result;
 
   int mark = 0;
   for (unsigned i = 0; i < input.length(); i++) {
@@ -34,8 +32,8 @@ static vector<wxString> Split(const wxString& input, const wxChar sep) {
   return result;
 }
 
-static map<wxString, CatalogueIndex::Type> getTypeMap() {
-  map<wxString, CatalogueIndex::Type> typeMap;
+static std::map<wxString, CatalogueIndex::Type> getTypeMap() {
+  std::map<wxString, CatalogueIndex::Type> typeMap;
   typeMap[_T("t")] = CatalogueIndex::TABLE;
   typeMap[_T("v")] = CatalogueIndex::VIEW;
   typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
@@ -52,15 +50,15 @@ static map<wxString, CatalogueIndex::Type> getTypeMap() {
 
 int TestCatalogueApp::OnRun() {
   CatalogueIndex index;
-  map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
+  std::map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
   index.Begin();
-  ifstream inputStream(inputFile.fn_str());
+  std::ifstream inputStream(inputFile.fn_str());
   char buf[8192];
   do {
     inputStream.getline(buf, sizeof(buf));
     if (inputStream.eof())
       break;
-    vector<wxString> parts = Split(wxString(buf, wxConvUTF8), _T('|'));
+    std::vector<wxString> parts = Split(wxString(buf, wxConvUTF8), _T('|'));
     wxASSERT(parts.size() == 4);
     long entityId;
     parts[0].ToLong(&entityId);
@@ -86,7 +84,7 @@ int TestCatalogueApp::OnRun() {
   int maxResults = 10;
   CatalogueIndex::Filter baseFilter = index.CreateNonSystemFilter();
   CatalogueIndex::Filter typesFilter = index.CreateMatchEverythingFilter();
-  for (vector<wxString>::iterator iter = queries.begin(); iter != queries.end(); iter++) {
+  for (std::vector<wxString>::iterator iter = queries.begin(); iter != queries.end(); iter++) {
     if (iter->IsSameAs(_T("+S"))) {
       baseFilter = index.CreateMatchEverythingFilter();
     }
@@ -95,8 +93,8 @@ int TestCatalogueApp::OnRun() {
     }
     else if ((*iter)[0] == _T('@')) {
       typesFilter.Clear();
-      vector<CatalogueIndex::Type> types = ParseTypeListString((*iter).Mid(1));
-      for (vector<CatalogueIndex::Type>::iterator iter = types.begin(); iter != types.end(); iter++) {
+      std::vector<CatalogueIndex::Type> types = ParseTypeListString((*iter).Mid(1));
+      for (std::vector<CatalogueIndex::Type>::iterator iter = types.begin(); iter != types.end(); iter++) {
 	wxLogDebug(_T("Filtering on %s"), CatalogueIndex::EntityTypeName(*iter).c_str());
 	typesFilter |= index.CreateTypeFilter(*iter);
       }
@@ -112,7 +110,7 @@ int TestCatalogueApp::OnRun() {
       }
     }
     else {
-      vector<CatalogueIndex::Result> results;
+      std::vector<CatalogueIndex::Result> results;
       const wxString &query = (*iter);
       int dot = query.Find(_T('.'));
       CatalogueIndex::Filter filter = baseFilter & typesFilter;
@@ -122,7 +120,7 @@ int TestCatalogueApp::OnRun() {
 
       results = index.Search(query, filter, maxResults);
 
-      for (vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
+      for (std::vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
 	wxString resultDump = iter->document->symbol;
 
 	if (!iter->document->disambig.IsEmpty()) {
@@ -135,7 +133,7 @@ int TestCatalogueApp::OnRun() {
 	wxString extentsLine1;
 	wxString extentsLine2;
 	size_t pos = 0;
-	for (vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
+	for (std::vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
 	  for (; pos < (*extentIter).offset; pos++) {
 	    extentsLine1 << _T(' ');
 	    extentsLine2 << _T(' ');
@@ -169,12 +167,12 @@ bool TestCatalogueApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   return true;
 }
 
-vector<CatalogueIndex::Type> TestCatalogueApp::ParseTypeListString(const wxString &input) {
-  vector<CatalogueIndex::Type> result;
+std::vector<CatalogueIndex::Type> TestCatalogueApp::ParseTypeListString(const wxString &input) {
+  std::vector<CatalogueIndex::Type> result;
   wxWCharBuffer buffer = input.wc_str();
   wchar_t *ptr;
   wchar_t *tok;
-  map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
+  std::map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
 
   for (tok = wcstok(buffer.data(), L",", &ptr); tok != NULL; tok = wcstok(NULL, L",", &ptr)) {
     wxASSERT(typeMap.count(tok) > 0);

@@ -91,8 +91,8 @@ protected:
 private:
   ServerModel *serverModel;
   wxTreeItemId serverItem;
-  vector<DatabaseModel*> databases;
-  vector<RoleModel*> roles;
+  std::vector<DatabaseModel*> databases;
+  std::vector<RoleModel*> roles;
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
@@ -149,7 +149,7 @@ protected:
   }
   void LoadRelations() {
     QueryResults relationRows;
-    map<wxString, RelationModel::Type> typemap;
+    std::map<wxString, RelationModel::Type> typemap;
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
@@ -171,7 +171,7 @@ protected:
   }
   void LoadFunctions() {
     QueryResults functionRows;
-    map<wxString, FunctionModel::Type> typemap;
+    std::map<wxString, FunctionModel::Type> typemap;
     typemap[_T("f")] = FunctionModel::SCALAR;
     typemap[_T("ft")] = FunctionModel::TRIGGER;
     typemap[_T("fs")] = FunctionModel::RECORDSET;
@@ -211,7 +211,7 @@ public:
   }
 private:
   DatabaseModel *databaseModel;
-  map<unsigned long, wxString> descriptions;
+  std::map<unsigned long, wxString> descriptions;
 protected:
   void Execute() {
     QueryResults rs;
@@ -226,15 +226,15 @@ protected:
   }
   void LoadIntoView(ObjectBrowser *ob) {
     int count = 0;
-    for (vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
-      map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+    for (std::vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
+      std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
       if (ptr != descriptions.end()) {
 	(*iter)->description = (*ptr).second;
 	++count;
       }
     }
-    for (vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
-      map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+    for (std::vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
+      std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
       if (ptr != descriptions.end()) {
 	(*iter)->description = (*ptr).second;
 	++count;
@@ -260,7 +260,7 @@ private:
   CatalogueIndex *catalogueIndex;
 protected:
   void Execute() {
-    map<wxString, CatalogueIndex::Type> typeMap;
+    std::map<wxString, CatalogueIndex::Type> typeMap;
     typeMap[_T("t")] = CatalogueIndex::TABLE;
     typeMap[_T("v")] = CatalogueIndex::VIEW;
     typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
@@ -319,9 +319,9 @@ public:
 private:
   RelationModel *relationModel;
   wxTreeItemId relationItem;
-  vector<ColumnModel*> columns;
-  vector<IndexModel*> indices;
-  vector<TriggerModel*> triggers;
+  std::vector<ColumnModel*> columns;
+  std::vector<IndexModel*> indices;
+  std::vector<TriggerModel*> triggers;
 protected:
   void Execute() {
     ReadColumns();
@@ -508,17 +508,17 @@ private:
     wxString name;
     int arrayDepth;
   };
-  map<Oid, Typeinfo> FetchTypes(const vector<Oid> &types1, const vector<Oid> &types2) {
-    set<Oid> typeSet;
-    for (vector<Oid>::const_iterator iter = types1.begin(); iter != types1.end(); iter++) {
+  std::map<Oid, Typeinfo> FetchTypes(const std::vector<Oid> &types1, const std::vector<Oid> &types2) {
+    std::set<Oid> typeSet;
+    for (std::vector<Oid>::const_iterator iter = types1.begin(); iter != types1.end(); iter++) {
       typeSet.insert(*iter);
     }
-    for (vector<Oid>::const_iterator iter = types2.begin(); iter != types2.end(); iter++) {
+    for (std::vector<Oid>::const_iterator iter = types2.begin(); iter != types2.end(); iter++) {
       typeSet.insert(*iter);
     }
     return FetchTypes(typeSet);
   }
-  map<Oid, Typeinfo> FetchTypes(const set<Oid> &types);
+  std::map<Oid, Typeinfo> FetchTypes(const std::set<Oid> &types);
 };
 
 #endif

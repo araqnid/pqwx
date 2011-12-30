@@ -5,8 +5,6 @@
 #include "database_work.h"
 #include "disconnect_work.h"
 
-using namespace std;
-
 class InitialiseWork : public DatabaseWork {
 public:
   void Execute() {
@@ -47,7 +45,7 @@ public:
     db->workerCompleteCondition.Signal();
   }
 private:
-  deque<DatabaseWork*> workQueue;
+  std::deque<DatabaseWork*> workQueue;
   PGconn *conn;
 
 protected:

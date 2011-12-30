@@ -12,8 +12,6 @@
 #include "catalogue_index.h"
 #include "lazy_loader.h"
 
-using namespace std;
-
 class ServerModel;
 class DatabaseModel;
 class RoleModel;
@@ -56,17 +54,17 @@ public:
   void ConnectAndAddWork(ServerModel *server, DatabaseConnection *db, ObjectBrowserWork *work);
 
   void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem, const wxString& serverVersionString, int serverVersion, bool usingSSL);
-  void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases);
-  void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles);
+  void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<DatabaseModel*> &databases);
+  void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<RoleModel*> &roles);
 
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem);
 
-  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers);
+  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers);
 
-  void AppendDatabaseItems(wxTreeItemId parent, vector<DatabaseModel*> &database);
-  void AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
-  void DivideSchemaMembers(vector<SchemaMemberModel*> &members, vector<SchemaMemberModel*> &userDivision, vector<SchemaMemberModel*> &systemDivision, map<wxString, vector<SchemaMemberModel*> > &extensionDivisions);
-  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members);
+  void AppendDatabaseItems(wxTreeItemId parent, std::vector<DatabaseModel*> &database);
+  void AppendDivision(std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  void DivideSchemaMembers(std::vector<SchemaMemberModel*> &members, std::vector<SchemaMemberModel*> &userDivision, std::vector<SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<SchemaMemberModel*> > &extensionDivisions);
+  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
   wxTreeItemId FindServerItem(ServerModel *server) const;
   wxTreeItemId FindDatabaseItem(DatabaseModel *db) const;
@@ -77,7 +75,7 @@ public:
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
-  list<ServerModel*> servers;
+  std::list<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnGetTooltip(wxTreeEvent&);

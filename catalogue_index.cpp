@@ -3,15 +3,13 @@
 #include <algorithm>
 #include <queue>
 
-using namespace std;
-
 void CatalogueIndex::AddDocument(const Document& document) {
   int documentId = documents.size();
   documents.push_back(document);
-  vector<Token> tokens(Analyse(document.symbol));
+  std::vector<Token> tokens(Analyse(document.symbol));
   int pos = 0;
-  for (vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++, pos++) {
-    map<wxString, int>::iterator termIter = termsIndex.find((*iter).value);
+  for (std::vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++, pos++) {
+    std::map<wxString, int>::iterator termIter = termsIndex.find((*iter).value);
     int termId;
     if (termIter == termsIndex.end()) {
       termId = terms.size();
@@ -30,8 +28,8 @@ void CatalogueIndex::AddDocument(const Document& document) {
   }
 }
 
-vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) const {
-  vector<CatalogueIndex::Token> output;
+std::vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) const {
+  std::vector<CatalogueIndex::Token> output;
 
   int mark = -1; // start of current token
   // [mark,pos) is the token when we find an edge
@@ -57,17 +55,17 @@ vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input) con
   if (mark >= 0)
     output.push_back(Token(input.Mid(mark), (size_t) mark)); // moved to end-of-string
 
-  for (vector<Token>::iterator iter = output.begin(); iter != output.end(); iter++) {
+  for (std::vector<Token>::iterator iter = output.begin(); iter != output.end(); iter++) {
     (*iter).value.MakeLower();
   }
 
   return output;
 }
 
-vector<int> CatalogueIndex::MatchTerms(const wxString &token) const {
-  map<wxString, vector<int> >::const_iterator iter = prefixes.find(token);
+std::vector<int> CatalogueIndex::MatchTerms(const wxString &token) const {
+  std::map<wxString, std::vector<int> >::const_iterator iter = prefixes.find(token);
   if (iter == prefixes.end()) {
-    vector<int> empty;
+    std::vector<int> empty;
     return empty;
   }
   return iter->second;
@@ -83,21 +81,21 @@ wxString CatalogueIndex::EntityTypeName(Type type) {
   return TYPE_NAMES[type];
 }
 
-vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, unsigned maxResults) const {
+std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, const Filter &filter, unsigned maxResults) const {
 #ifdef __WXDEBUG__
   struct timeval start;
   gettimeofday(&start, NULL);
 #endif
-  if (filter.IsEmpty()) return vector<CatalogueIndex::Result>();
-  vector<Token> tokens = Analyse(input);
-  if (tokens.empty()) return vector<CatalogueIndex::Result>();
-  vector< map<const DocumentPosition, const Occurrence*> > tokenMatches;
-  for (vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
-    map<const DocumentPosition, const Occurrence*> tokenOccurrences;
-    vector<int> matchedTerms = MatchTerms((*iter).value);
-    for (vector<int>::iterator matchedTermsIter = matchedTerms.begin(); matchedTermsIter != matchedTerms.end(); matchedTermsIter++) {
-      const vector<Occurrence> * termOccurrences = TermOccurrences(*matchedTermsIter);
-      for (vector<Occurrence>::const_iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
+  if (filter.IsEmpty()) return std::vector<CatalogueIndex::Result>();
+  std::vector<Token> tokens = Analyse(input);
+  if (tokens.empty()) return std::vector<CatalogueIndex::Result>();
+  std::vector< std::map<const DocumentPosition, const Occurrence*> > tokenMatches;
+  for (std::vector<Token>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+    std::map<const DocumentPosition, const Occurrence*> tokenOccurrences;
+    std::vector<int> matchedTerms = MatchTerms((*iter).value);
+    for (std::vector<int>::iterator matchedTermsIter = matchedTerms.begin(); matchedTermsIter != matchedTerms.end(); matchedTermsIter++) {
+      const std::vector<Occurrence> * termOccurrences = TermOccurrences(*matchedTermsIter);
+      for (std::vector<Occurrence>::const_iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
 	tokenOccurrences[*occurrenceIter] = &(*occurrenceIter);
       }
     }
@@ -105,18 +103,18 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   }
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
   int dumpTokenPosition = 0;
-  for (vector< map<DocumentPosition, Occurrence*> >::iterator iter = tokenMatches.begin(); iter != tokenMatches.end(); iter++, dumpTokenPosition++) {
+  for (std::vector< std::map<DocumentPosition, Occurrence*> >::iterator iter = tokenMatches.begin(); iter != tokenMatches.end(); iter++, dumpTokenPosition++) {
     wxLogDebug(_T("Token %d=\"%s\":"), dumpTokenPosition, tokens[dumpTokenPosition].c_str());
-    for (map<DocumentPosition, Occurrence*>::iterator iter2 = iter->begin(); iter2 != iter->end(); iter2++) {
+    for (std::map<DocumentPosition, Occurrence*>::iterator iter2 = iter->begin(); iter2 != iter->end(); iter2++) {
       wxLogDebug(_T(" Document#%d at %d => Document#%d at %d %d:\"%s\""), iter2->first.documentId, iter2->first.position,
 		 iter2->second->documentId, iter2->second->position, iter2->second->termId,
 		 terms[iter2->second->termId].c_str());
     }
   }
 #endif
-  priority_queue<Result> scoreDocs;
+  std::priority_queue<Result> scoreDocs;
   int hitCount = 0;
-  for (map<const DocumentPosition, const Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
+  for (std::map<const DocumentPosition, const Occurrence*>::iterator iter = tokenMatches[0].begin(); iter != tokenMatches[0].end(); iter++) {
     const Occurrence *firstTerm = iter->second;
     int documentId = firstTerm->documentId;
     if (!filter.Included(documentId)) {
@@ -126,7 +124,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
       continue;
     }
     int position = firstTerm->position;
-    vector<const Occurrence*> matched;
+    std::vector<const Occurrence*> matched;
     matched.push_back(firstTerm);
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T("Matched first term %d:\"%s\" in Document#%d at %d"), firstTerm->termId, terms[firstTerm->termId].c_str(), firstTerm->documentId, firstTerm->position);
@@ -145,15 +143,15 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
       continue;
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxString matchDump;
-    for (vector<Occurrence*>::iterator iter = matched.begin(); iter != matched.end(); iter++) {
+    for (std::vector<Occurrence*>::iterator iter = matched.begin(); iter != matched.end(); iter++) {
       matchDump << _T(" | ") << terms[(*iter)->termId];
     }
     wxString queryDump;
-    for (vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+    for (std::vector<wxString>::iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
       queryDump << _T(" | ") << *iter;
     }
     wxString documentDump;
-    for (vector<int>::iterator iter = documentTerms[documentId].begin(); iter != documentTerms[documentId].end(); iter++) {
+    for (std::vector<int>::iterator iter = documentTerms[documentId].begin(); iter != documentTerms[documentId].end(); iter++) {
       documentDump << _T(" | ") << *iter;
     }
     wxLogDebug(_T("%s    matched: \"%s\" against \"%s\""), documents[documentId].symbol.c_str(), matchDump.Mid(3).c_str(), queryDump.Mid(3).c_str());
@@ -166,9 +164,9 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
 #endif
     int lastLengthDifference;
     int totalLengthDifference = 0;
-    vector<const Occurrence*>::iterator matchIter = matched.begin();
-    vector<Token>::iterator tokenIter = tokens.begin();
-    vector<Result::Extent> extents;
+    std::vector<const Occurrence*>::iterator matchIter = matched.begin();
+    std::vector<Token>::iterator tokenIter = tokens.begin();
+    std::vector<Result::Extent> extents;
     for (; matchIter != matched.end(); matchIter++, tokenIter++) {
       wxString termToken = terms[(*matchIter)->termId];
       lastLengthDifference = termToken.length() - (*tokenIter).value.length();
@@ -194,7 +192,7 @@ vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input, con
   double elapsedFP = (double) elapsed.tv_sec + ((double) elapsed.tv_usec / 1000000.0);
   wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d/%d results"), elapsedFP, scoreDocs.size(), hitCount);
 #endif
-  vector<Result> resultVector;
+  std::vector<Result> resultVector;
   resultVector.reserve(scoreDocs.size());
   while (!scoreDocs.empty()) {
     resultVector.push_back(scoreDocs.top());
@@ -208,7 +206,7 @@ CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() const {
   Filter filter(documents.size());
 
   int documentId = 0;
-  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+  for (std::vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (!iter->system) filter.Include(documentId);
   }
 
@@ -219,7 +217,7 @@ CatalogueIndex::Filter CatalogueIndex::CreateTypeFilter(CatalogueIndex::Type typ
   Filter filter(documents.size());
 
   int documentId = 0;
-  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+  for (std::vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (iter->entityType == type) filter.Include(documentId);
   }
 
@@ -231,7 +229,7 @@ CatalogueIndex::Filter CatalogueIndex::CreateSchemaFilter(const wxString &schema
   wxString prefix = schema + _T(".");
 
   int documentId = 0;
-  for (vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+  for (std::vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (iter->symbol.StartsWith(prefix)) filter.Include(documentId);
   }
 

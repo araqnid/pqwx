@@ -2,8 +2,6 @@
 #include "database_work.h"
 #include "database_connection.h"
 
-using namespace std;
-
 static bool IsSimpleSymbol(const char *str) {
   for (const char *p = str; *p != '\0'; p++) {
     if (!( (*p >= 'a' && *p <= 'z') || *p == '_' || (*p >= '0' && *p <= '9') ))
@@ -184,7 +182,7 @@ void DatabaseWork::ReadResultSet(PGresult *rs, QueryResults &results) {
   int colCount = PQnfields(rs);
   results.reserve(rowCount);
   for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-    vector<wxString> row;
+    std::vector<wxString> row;
     row.reserve(colCount);
     for (int colNum = 0; colNum < colCount; colNum++) {
       const char *value = PQgetvalue(rs, rowNum, colNum);

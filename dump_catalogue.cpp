@@ -4,8 +4,6 @@
 #include "object_browser.h"
 #include "versioned_sql.h"
 
-using namespace std;
-
 extern VersionedSql *GetObjectBrowserSql();
 
 class DumpCatalogueApp : public wxAppConsole {
@@ -32,10 +30,10 @@ int DumpCatalogueApp::OnRun() {
   for (int rowNum = 0; rowNum < PQntuples(rs); rowNum++) {
     for (int colNum = 0; colNum < PQnfields(rs); colNum++) {
       const char *value = PQgetvalue(rs, rowNum, colNum);
-      if (colNum > 0) cout << '|';
-      if (value != NULL) cout << value;
+      if (colNum > 0) std::cout << '|';
+      if (value != NULL) std::cout << value;
     }
-    cout << endl;
+    std::cout << std::endl;
   }
   PQclear(rs);
   PQfinish(conn);

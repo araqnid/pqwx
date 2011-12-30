@@ -3,7 +3,7 @@
 #include "object_browser_database_work.h"
 
 void TableScriptWork::Execute() {
-  vector< wxString > tableDetail;
+  std::vector< wxString > tableDetail;
   QueryResults columns;
   DoQuery(_T("Table Detail"), tableDetail, 26 /* oid */, table->oid);
   DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, table->oid);
@@ -11,7 +11,7 @@ void TableScriptWork::Execute() {
   switch (mode) {
   case Create: {
     wxString sql;
-    vector< wxString > alterSql;
+    std::vector< wxString > alterSql;
     sql << _T("CREATE TABLE ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("(\n");
     unsigned n = 0;
@@ -57,7 +57,7 @@ void TableScriptWork::Execute() {
       wxString prefix;
       prefix << _T("ALTER TABLE ")
 	     << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("\n\t");
-      for (vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
+      for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
 	statements.push_back(prefix + *moreSqlIter);
       }
     }
@@ -153,7 +153,7 @@ void TableScriptWork::Execute() {
 }
 
 void ViewScriptWork::Execute() {
-  vector< wxString > viewDetail;
+  std::vector< wxString > viewDetail;
   QueryResults columns;
   DoQuery(_T("View Detail"), viewDetail, 26 /* oid */, view->oid);
   DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, view->oid);
@@ -214,7 +214,7 @@ void ViewScriptWork::Execute() {
 }
 
 void SequenceScriptWork::Execute() {
-  vector< wxString > sequenceDetail;
+  std::vector< wxString > sequenceDetail;
   DoQuery(_T("Sequence Detail"), sequenceDetail, 26 /* oid */, sequence->oid);
 }
 
@@ -238,8 +238,8 @@ static void EscapeCode(const wxString &src, wxString &buf) {
   }
 }
 
-static vector<Oid> ParseOidVector(const wxString &str) {
-  vector<Oid> result;
+static std::vector<Oid> ParseOidVector(const wxString &str) {
+  std::vector<Oid> result;
   unsigned mark = 0;
   for (unsigned pos = 0; pos < str.length(); pos++) {
     if (str[pos] == ' ') {
@@ -261,13 +261,13 @@ static vector<Oid> ParseOidVector(const wxString &str) {
   return result;
 }
 
-static inline vector<Oid> ReadOidVector(const vector<wxString> &row, unsigned index) {
+static inline std::vector<Oid> ReadOidVector(const std::vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   return ParseOidVector(row[index]);
 }
 
-static vector<wxString> ParseTextArray(const wxString &str) {
-  vector<wxString> result;
+static std::vector<wxString> ParseTextArray(const wxString &str) {
+  std::vector<wxString> result;
   if (str.IsEmpty()) return result;
   wxASSERT(str[0] == _T('{'));
   int state = 0;
@@ -309,17 +309,17 @@ static vector<wxString> ParseTextArray(const wxString &str) {
   return result;
 }
 
-static inline vector<wxString> ReadTextArray(const vector<wxString> &row, unsigned index) {
+static inline std::vector<wxString> ReadTextArray(const std::vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
   return ParseTextArray(row[index]);
 }
 
-static inline vector<Oid> ReadOidArray(const vector<wxString> &row, unsigned index) {
+static inline std::vector<Oid> ReadOidArray(const std::vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
-  vector<wxString> strings = ParseTextArray(row[index]);
-  vector<Oid> result;
+  std::vector<wxString> strings = ParseTextArray(row[index]);
+  std::vector<Oid> result;
   result.reserve(strings.size());
-  for (vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
+  for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
     long value;
     if ((*iter).ToLong(&value)) {
       result.push_back((Oid) value);
@@ -328,22 +328,22 @@ static inline vector<Oid> ReadOidArray(const vector<wxString> &row, unsigned ind
   return result;
 }
 
-static inline vector<bool> ReadIOModeArray(const vector<wxString> &row, unsigned index) {
+static inline std::vector<bool> ReadIOModeArray(const std::vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
-  vector<wxString> strings = ParseTextArray(row[index]);
-  vector<bool> result;
+  std::vector<wxString> strings = ParseTextArray(row[index]);
+  std::vector<bool> result;
   result.reserve(strings.size());
-  for (vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
+  for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
     wxASSERT_MSG((*iter).IsSameAs(_T("o")) || (*iter).IsSameAs(_T("i")), *iter);
     result.push_back((*iter).IsSameAs(_T("o")));
   }
   return result;
 }
 
-map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const set<Oid> &types) {
-  map<Oid, Typeinfo> typeMap;
-  for (set<Oid>::const_iterator iter = types.begin(); iter != types.end(); iter++) {
-    vector<wxString> typeInfo;
+std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const std::set<Oid> &types) {
+  std::map<Oid, Typeinfo> typeMap;
+  for (std::set<Oid>::const_iterator iter = types.begin(); iter != types.end(); iter++) {
+    std::vector<wxString> typeInfo;
     DoQuery(_T("Type Info"), typeInfo, 26 /* oid */, *iter);
     Typeinfo typeinfo;
     typeinfo.schema = ReadText(typeInfo, 0);
@@ -367,13 +367,13 @@ static void DumpCollection(const wxString &tag, T collection) {
 }
 
 void FunctionScriptWork::Execute() {
-  vector< wxString > functionDetail;
+  std::vector< wxString > functionDetail;
   DoQuery(_T("Function Detail"), functionDetail, 26 /* oid */, function->oid);
-  vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
-  vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
-  vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 3);
-  vector<wxString> extendedArgNames = ReadTextArray(functionDetail, 4);
-  map<Oid, Typeinfo> typeMap = FetchTypes(basicArgTypes, extendedArgTypes);
+  std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
+  std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
+  std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 3);
+  std::vector<wxString> extendedArgNames = ReadTextArray(functionDetail, 4);
+  std::map<Oid, Typeinfo> typeMap = FetchTypes(basicArgTypes, extendedArgTypes);
 
   switch (mode) {
   case Create:
@@ -387,7 +387,7 @@ void FunctionScriptWork::Execute() {
 	<< _T("(");
     if (!extendedArgTypes.empty()) {
       unsigned pos = 0;
-      for (vector<Oid>::const_iterator iter = extendedArgTypes.begin(); iter != extendedArgTypes.end(); iter++, pos++) {
+      for (std::vector<Oid>::const_iterator iter = extendedArgTypes.begin(); iter != extendedArgTypes.end(); iter++, pos++) {
 	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
 	Typeinfo typeinfo = typeMap[*iter];
 	if (pos < extendedArgNames.size())
@@ -404,7 +404,7 @@ void FunctionScriptWork::Execute() {
     }
     else {
       unsigned pos = 0;
-      for (vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
+      for (std::vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
 	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
 	Typeinfo typeinfo = typeMap[*iter];
 	if (pos < extendedArgNames.size())
@@ -466,7 +466,7 @@ void FunctionScriptWork::Execute() {
     sql << QuoteIdent(function->schema) << _T('.') << QuoteIdent(function->name) << _T('(');
     if (!basicArgTypes.empty()) {
       unsigned pos = 0;
-      for (vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
+      for (std::vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
 	Typeinfo typeinfo = typeMap[*iter];
 	sql << _T('<');
 	if (pos < extendedArgNames.size())

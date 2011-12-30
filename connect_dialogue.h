@@ -64,7 +64,7 @@ private:
       return server == other.server;
     }
   };
-  list<RecentServerParameters> recentServerList;
+  std::list<RecentServerParameters> recentServerList;
   const wxString recentServersConfigPath;
   // read/write just transfers recentServerList (model) to configuration file
   void ReadRecentServers();

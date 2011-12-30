@@ -127,7 +127,7 @@ private:
 
 class SystemSchemasLoader : public LazyLoader {
 public:
-  SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
+  SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, std::vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
 
   bool load(wxTreeItemId parent) {
     ob->AppendDivision(division, parent);
@@ -137,7 +137,7 @@ public:
 private:
   ObjectBrowser *ob;
   DatabaseModel *db;
-  vector<SchemaMemberModel*> division;
+  std::vector<SchemaMemberModel*> division;
 };
 
 static wxImage LoadVFSImage(const wxString &vfilename) {
@@ -172,7 +172,7 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
   wxString serverId = server->Identification();
-  for (list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
     if (serverModel->conn->Identification().IsSameAs(serverId)) {
       wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
@@ -218,7 +218,7 @@ DatabaseConnection *ObjectBrowser::GetDatabaseConnection(ServerModel *server, co
 
 void ObjectBrowser::Dispose() {
   wxLogDebug(_T("Disposing of ObjectBrowser"));
-  for (list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *server = *iter;
     server->Dispose();
   }
@@ -226,12 +226,12 @@ void ObjectBrowser::Dispose() {
 
 void ServerModel::Dispose() {
   wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
-  for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     DatabaseConnection *db = iter->second;
     wxLogDebug(_T(" Sending disconnect request to %s"), iter->first.c_str());
     db->AddWork(new DisconnectWork());
   }
-  for (map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     DatabaseConnection *db = iter->second;
     wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
     db->WaitUntilClosed();
@@ -334,12 +334,12 @@ static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
   return d1->name < d2->name;
 }
 
-void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, vector<DatabaseModel*> &databases) {
+void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<DatabaseModel*> &databases) {
   sort(databases.begin(), databases.end(), CollateDatabases);
-  vector<DatabaseModel*> systemDatabases;
-  vector<DatabaseModel*> templateDatabases;
-  vector<DatabaseModel*> userDatabases;
-  for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+  std::vector<DatabaseModel*> systemDatabases;
+  std::vector<DatabaseModel*> templateDatabases;
+  std::vector<DatabaseModel*> userDatabases;
+  for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     if (database->IsSystem()) {
       systemDatabases.push_back(database);
@@ -364,8 +364,8 @@ void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serve
   }
 }
 
-void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, vector<DatabaseModel*> &databases) {
-  for (vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<DatabaseModel*> &databases) {
+  for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
     SetItemData(databaseItem, database);
@@ -378,11 +378,11 @@ static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
   return r1->name < r2->name;
 }
 
-void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, vector<RoleModel*> &roles) {
+void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<RoleModel*> &roles) {
   sort(roles.begin(), roles.end(), CollateRoles);
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
-  for (vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+  for (std::vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
     RoleModel *role = *iter;
     wxTreeItemId roleItem;
     if (role->canLogin) {
@@ -395,7 +395,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
   }
 }
 
-void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const vector<SchemaMemberModel*> &members) {
+void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
     AppendItem(parent, schemaName + _T("."));
     return;
@@ -407,7 +407,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
 
   int relationsCount = 0;
   int functionsCount = 0;
-  for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+  for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) continue;
     RelationModel *relation = dynamic_cast<RelationModel*>(member);
@@ -449,7 +449,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     functionsItem = parent;
   }
 
-  for (vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+  for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) continue;
     FunctionModel *function = dynamic_cast<FunctionModel*>(member);
@@ -476,16 +476,16 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
   }
 }
 
-void ObjectBrowser::AppendDivision(vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
-  map<wxString, vector<SchemaMemberModel*> > schemas;
+void ObjectBrowser::AppendDivision(std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
+  std::map<wxString, std::vector<SchemaMemberModel*> > schemas;
 
-  for (vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+  for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     schemas[member->schema].push_back(member);
   }
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
-  for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
+  for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
     AppendSchemaMembers(parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
   }
 }
@@ -499,7 +499,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
-    for (map<wxString, vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
+    for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
       wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
       AppendDivision(iter->second, extensionItem);
     }
@@ -510,8 +510,8 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, vector<ColumnModel*> &columns, vector<IndexModel*> &indices, vector<TriggerModel*> &triggers) {
-  for (vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
+void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers) {
+  for (std::vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
 
@@ -532,7 +532,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
   if (!indices.empty()) {
     wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
-    for (vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
+    for (std::vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
     }
@@ -540,7 +540,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
   if (!triggers.empty()) {
     wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
-    for (vector<TriggerModel*>::iterator iter = triggers.begin(); iter != triggers.end(); iter++) {
+    for (std::vector<TriggerModel*>::iterator iter = triggers.begin(); iter != triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
       SetItemData(triggerItem, *iter);
     }

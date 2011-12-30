@@ -70,7 +70,7 @@ static wxRegEx settingPattern(_T("^([a-z_]+) *= *(.+)"));
 static wxRegEx versionPattern(_T("[0-9]+\\.[0-9]+"));
 
 static wxString ReadConfigValue(const wxString &filename, const wxString &keyword) {
-  ifstream input(filename.fn_str());
+  std::ifstream input(filename.fn_str());
   if (!input.is_open()) {
     return wxEmptyString;
   }
@@ -132,8 +132,8 @@ struct PgCluster {
   int port;
 };
 
-static vector<wxString> ClusterVersions() {
-  vector<wxString> versions;
+static std::vector<wxString> ClusterVersions() {
+  std::vector<wxString> versions;
   wxLogDebug(_T("Scanning " PGCLUSTER_BINDIR " for versions"));
   DIR *dir = opendir(PGCLUSTER_BINDIR);
   if (dir != NULL) {
@@ -167,8 +167,8 @@ static vector<wxString> ClusterVersions() {
   return versions;
 }
 
-static vector<PgCluster> VersionClusters(const wxString &version) {
-  vector<PgCluster> clusters;
+static std::vector<PgCluster> VersionClusters(const wxString &version) {
+  std::vector<PgCluster> clusters;
   wxString versionDir = _T(PGCLUSTER_CONFDIR "/") + version + _T("/");
   DIR *dir = opendir(versionDir.fn_str());
   if (dir != NULL) {
@@ -210,13 +210,13 @@ static vector<PgCluster> VersionClusters(const wxString &version) {
   return clusters;
 }
 
-static vector<PgCluster> LocalClusters() {
-  vector<PgCluster> clusters;
-  vector<wxString> versions = ClusterVersions();
-  for (vector<wxString>::const_iterator iter = versions.begin(); iter != versions.end(); iter++) {
+static std::vector<PgCluster> LocalClusters() {
+  std::vector<PgCluster> clusters;
+  std::vector<wxString> versions = ClusterVersions();
+  for (std::vector<wxString>::const_iterator iter = versions.begin(); iter != versions.end(); iter++) {
     wxLogDebug(_T("Finding clusters for version %s"), (*iter).c_str());
-    vector<PgCluster> versionClusters = VersionClusters(*iter);
-    for (vector<PgCluster>::const_iterator clusterIter = versionClusters.begin(); clusterIter != versionClusters.end(); clusterIter++) {
+    std::vector<PgCluster> versionClusters = VersionClusters(*iter);
+    for (std::vector<PgCluster>::const_iterator clusterIter = versionClusters.begin(); clusterIter != versionClusters.end(); clusterIter++) {
       wxLogDebug(_T(" Found %s on port %d"), (*clusterIter).version.c_str(), (*clusterIter).port);
       clusters.push_back(*clusterIter);
     }
@@ -224,11 +224,11 @@ static vector<PgCluster> LocalClusters() {
   return clusters;
 }
 
-static wxString DefaultCluster(const vector<PgCluster> &clusters) {
+static wxString DefaultCluster(const std::vector<PgCluster> &clusters) {
   // TODO check $HOME/.postgresqlrc
   // TODO check /etc/postgresql-common/user_clusters
 
-  for (vector<PgCluster>::const_iterator iter = clusters.begin(); iter != clusters.end(); iter++) {
+  for (std::vector<PgCluster>::const_iterator iter = clusters.begin(); iter != clusters.end(); iter++) {
     if ((*iter).port == DEF_PGPORT) {
       wxLogDebug(_T("Using cluster %s/%s on default port"), (*iter).version.c_str(), (*iter).name.c_str());
       return (*iter).version + _T("/") + (*iter).name;
@@ -375,13 +375,13 @@ void ConnectDialogue::SaveRecentServers() {
 void ConnectDialogue::LoadRecentServers() {
   ReadRecentServers();
 
-  for (list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
+  for (std::list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
     hostnameInput->Append(iter->server);
   }
 
 #ifdef USE_DEBIAN_PGCLUSTER
-  vector<PgCluster> localClusters = LocalClusters();
-  for (vector<PgCluster>::const_iterator iter = localClusters.begin(); iter != localClusters.end(); iter++) {
+  std::vector<PgCluster> localClusters = LocalClusters();
+  for (std::vector<PgCluster>::const_iterator iter = localClusters.begin(); iter != localClusters.end(); iter++) {
     wxString clusterName = (*iter).version + _T("/") + (*iter).name;
     if (hostnameInput->FindString(clusterName) == wxNOT_FOUND) {
       hostnameInput->Append(clusterName);
@@ -434,7 +434,7 @@ void ConnectDialogue::WriteRecentServers() {
   cfg->SetPath(recentServersConfigPath);
 
   int pos = 0;
-  for (list<RecentServerParameters>::const_iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++, pos++) {
+  for (std::list<RecentServerParameters>::const_iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++, pos++) {
     wxString key = wxString::Format(_T("%d"), pos);
     cfg->Write(key + _T("/Server"), iter->server);
     if (!iter->username.IsEmpty())
@@ -458,7 +458,7 @@ void ConnectDialogue::WriteRecentServers() {
 
 void ConnectDialogue::OnRecentServerChosen(wxCommandEvent& event) {
   wxString newServer = hostnameInput->GetValue();
-  for (list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
+  for (std::list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
     if (iter->server == newServer) {
       LoadRecentServer(*iter);
       return;

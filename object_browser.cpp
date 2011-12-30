@@ -235,6 +235,7 @@ void ServerModel::Dispose() {
     DatabaseConnection *db = iter->second;
     wxLogDebug(_T(" Waiting for connection to %s to exit"), iter->first.c_str());
     db->WaitUntilClosed();
+    delete db;
   }
   connections.clear();
 }

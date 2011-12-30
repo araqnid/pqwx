@@ -24,7 +24,7 @@ public:
 class DatabaseConnection {
 public:
 #if PG_VERSION_NUM >= 90000
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex), label(label) {
+  DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), label(label) {
     workerThread = NULL;
     state = NOT_CONNECTED;
     connectionCallback = NULL;
@@ -38,6 +38,9 @@ public:
     Setup();
   }
 #endif
+  ~DatabaseConnection() {
+    wxCHECK(workerThread == NULL, );
+  }
 
   void Connect(ConnectionCallback *callback = NULL);
   void CloseSync();
@@ -53,13 +56,14 @@ public:
   bool IsConnected();
   const wxString& DbName() const { return dbname; }
   void Relabel(const wxString &newLabel);
-  enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING };
+  enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING, DISCONNECTED };
   State GetState();
   const wxString& Identification() const { return identification; }
   bool IsStatementPrepared(const wxString& name) const { return preparedStatements.count(name); }
   void MarkStatementPrepared(const wxString& name) { preparedStatements.insert(name); }
 private:
   void Setup();
+  void CleanUpWorkerThread();
   wxString identification;
   const ServerConnection *server;
   const wxString dbname;
@@ -67,7 +71,6 @@ private:
   wxMutex workQueueMutex;
   wxCondition workCondition;
   wxMutex workerStateMutex;
-  wxCondition workerCompleteCondition;
 #if PG_VERSION_NUM >= 90000
   wxString label;
 #endif

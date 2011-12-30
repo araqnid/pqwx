@@ -166,7 +166,7 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   viewMenu = wxXmlResource::Get()->LoadMenu(_T("ViewMenu"));
   sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
-  wxImageList *images = new wxImageList();
+  wxImageList *images = new wxImageList(13, 13, true);
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));

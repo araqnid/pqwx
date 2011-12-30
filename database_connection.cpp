@@ -193,9 +193,9 @@ static const char *options[] = {
 
 bool DatabaseWorkerThread::Connect() {
   const char *values[6];
-  char portbuf[10];
   // buffer these for the duration of this scope
   wxCharBuffer hostname = db->server->hostname.utf8_str();
+  wxCharBuffer portstring = wxString::Format(_T("%d"), db->server->port).utf8_str();
   wxCharBuffer username = db->server->username.utf8_str();
   wxCharBuffer password = db->server->password.utf8_str();
 #if PG_VERSION_NUM >= 90000
@@ -208,8 +208,7 @@ bool DatabaseWorkerThread::Connect() {
   values[0] = db->server->hostname.IsEmpty() ? NULL : hostname.data();
 
   if (db->server->port > 0) {
-    values[1] = portbuf;
-    sprintf(portbuf, "%d", db->server->port);
+    values[1] = portstring.data();
   }
   else {
     values[1] = NULL;

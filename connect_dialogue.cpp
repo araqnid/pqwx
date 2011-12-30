@@ -449,6 +449,9 @@ void ConnectDialogue::WriteRecentServers() {
 
   do {
     wxString key = wxString::Format(_T("%d"), pos++);
+    if (!cfg->Exists(key))
+        break;
+    wxLogDebug(_T("Pruning configuration group \"%s\""), key.c_str());
     if (!cfg->DeleteGroup(key))
       break;
   } while (1);

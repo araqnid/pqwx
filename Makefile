@@ -1,6 +1,13 @@
 -include local_build.mk
 
-all: pqwx test_catalogue dump_catalogue
+host_system := $(shell uname -s)
+ifneq (,$(findstring MINGW,$(host_system)))
+dotEXE = .exe
+else
+dotEXE =
+endif
+
+all: pqwx$(dotEXE) test_catalogue$(dotEXE) dump_catalogue$(dotEXE)
 
 vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
@@ -8,8 +15,6 @@ vcs_version.mk pqwx_version.h: FORCE
 
 PG_CONFIG := pg_config
 WX_CONFIG := wx-config
-
-host_system := $(shell uname -s)
 
 ifeq (pg_config,$(PG_CONFIG))
 debversion := $(shell cat /etc/debian_version 2>/dev/null)
@@ -49,13 +54,13 @@ wx_flavour.h build_settings: FORCE
 		echo "#define WX_FLAVOUR \"$$settings\"" > wx_flavour.h; \
 	fi
 
-pqwx: $(PQWX_OBJS)
+pqwx$(dotEXE): $(PQWX_OBJS)
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
-test_catalogue: catalogue_index.o test_catalogue.o
+test_catalogue$(dotEXE): catalogue_index.o test_catalogue.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
-dump_catalogue: dump_catalogue.o object_browser_sql.o
+dump_catalogue$(dotEXE): dump_catalogue.o object_browser_sql.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 -include $(SOURCES:.cpp=.d)

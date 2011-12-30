@@ -16,3 +16,4 @@ wx_flavour.h
 dependencies_view_sql.cpp
 dump_catalogue
 dump_catalogue.exe
+pqwx.exe

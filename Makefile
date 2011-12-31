@@ -65,8 +65,8 @@ dump_catalogue$(dotEXE): dump_catalogue.o object_browser_sql.o
 
 -include $(SOURCES:.cpp=.d)
 
-pqwx_rc.o: pqwx.rc
-	$(shell $(WX_CONFIG) --rescomp) $^ $@
+pqwx_rc.o: pqwx.rc pqwx_version.h
+	$(shell $(WX_CONFIG) --rescomp) pqwx.rc $@
 
 %.o: %.cpp build_settings
 	g++ $(CXXFLAGS) -c -o $@ $*.cpp

@@ -22,6 +22,7 @@ public:
 
   void OpenNewScript();
   void OpenScriptFile(const wxString &filename);
+  void OpenScriptWithText(const wxString &text);
 
 private:
   int documentCounter;

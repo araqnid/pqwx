@@ -101,6 +101,8 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
+DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_TO_WINDOW)
+
 class DatabaseLoader : public LazyLoader {
 public:
   DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}

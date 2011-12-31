@@ -17,6 +17,7 @@
 #include "connect_dialogue.h"
 #include "scripts_notebook.h"
 #include "results_notebook.h"
+#include "script_events.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
     #include "pqwx-appicon.xpm"
@@ -31,6 +32,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
+  EVT_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -114,4 +116,9 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
   if (dbox.ShowModal() == wxID_OK) {
     scriptsBook->OpenScriptFile(dbox.GetPath());
   }
+}
+
+void PqwxFrame::OnScriptToWindow(wxCommandEvent& event)
+{
+  scriptsBook->OpenScriptWithText(event.GetString());
 }

@@ -3,9 +3,10 @@
 #ifndef __object_browser_database_work_h
 #define __object_browser_database_work_h
 
+#include "wx/msgdlg.h"
 #include "query_results.h"
 #include "database_work.h"
-#include "wx/msgdlg.h"
+#include "script_events.h"
 
 class ObjectBrowserWork {
 public:
@@ -387,8 +388,16 @@ protected:
   void LoadIntoView(ObjectBrowser *ob) {
     wxString message;
     switch (output) {
-    case Window:
-      message << _T("TODO Send to query window:\n\n");
+    case Window: {
+      wxCommandEvent evt(PQWX_SCRIPT_TO_WINDOW);
+      wxString script;
+      for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
+	script << *iter << _T("\n\n");
+      }
+      evt.SetString(script);
+      ob->ProcessEvent(evt);
+      return;
+    }
       break;
     case File:
       message << _T("TODO Send to file:\n\n");

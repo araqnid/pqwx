@@ -21,6 +21,7 @@ public:
   void OnFindObject(wxCommandEvent& event);
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
+  void OnScriptToWindow(wxCommandEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 

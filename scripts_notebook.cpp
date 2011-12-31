@@ -23,6 +23,17 @@ void ScriptsNotebook::OpenNewScript() {
   AddPage(editor, tabName, true);
 }
 
+void ScriptsNotebook::OpenScriptWithText(const wxString &text) {
+  wxString tabName;
+  tabName << _("Query-") << ++documentCounter;
+
+  ScriptModel *model = new ScriptModel(tabName);
+  ScriptEditor *editor = new ScriptEditor(this, wxID_ANY, model);
+  editor->AddText(text);
+
+  AddPage(editor, tabName, true);
+}
+
 void ScriptsNotebook::OpenScriptFile(const wxString &filename) {
   wxString tabName;
 

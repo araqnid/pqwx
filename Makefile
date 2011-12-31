@@ -31,14 +31,14 @@ WX_CONFIG_FLAGS = --debug=yes
 VARIANT_CXXFLAGS = -ggdb
 endif
 
-WX_MODULES := xrc adv html xml core base
+WX_MODULES := stc xrc adv html xml core base
 WXRC := $(shell $(WX_CONFIG) --utility=wxrc)
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs $(WX_MODULES))
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc
-PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp object_finder_resources_yml.cpp dependencies_view.cpp database_work.cpp object_browser_sql.cpp dependencies_view_sql.cpp object_browser_scripts.cpp scripts_notebook.cpp results_notebook.cpp
+PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp object_finder_resources_yml.cpp dependencies_view.cpp database_work.cpp object_browser_sql.cpp dependencies_view_sql.cpp object_browser_scripts.cpp scripts_notebook.cpp results_notebook.cpp script_editor.cpp
 PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h versioned_sql.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o)

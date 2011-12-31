@@ -72,7 +72,7 @@ public:
     return allowConnections && havePrivsToConnect;
   }
   bool IsSystem() {
-    return name.IsSameAs(_T("postgres")) || name.IsSameAs(_T("template0")) || name.IsSameAs(_T("template1"));
+    return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
   std::map<unsigned long,wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
@@ -117,7 +117,7 @@ public:
 private:
   static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
     if (r1->schema < r2->schema) return true;
-    if (r1->schema.IsSameAs(r2->schema)) {
+    if (r1->schema == r2->schema) {
       return r1->name < r2->name;
     }
     return false;
@@ -163,7 +163,7 @@ private:
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {
-  return schemaRelations.size() == 1 && schemaRelations[0]->name.IsSameAs(_T(""));
+  return schemaRelations.size() == 1 && schemaRelations[0]->name.IsEmpty();
 }
 
 inline wxString DatabaseModel::Identification() const {

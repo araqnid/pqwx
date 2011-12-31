@@ -190,7 +190,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
   wxString serverId = server->Identification();
   for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
-    if (serverModel->Identification().IsSameAs(serverId)) {
+    if (serverModel->Identification() == serverId) {
       wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
       if (db != NULL) {
 	db->CloseSync();
@@ -715,7 +715,7 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const
   do {
     wxASSERT(childItem.IsOk());
     // nasty
-    if (GetItemText(childItem).IsSameAs(_("System schemas"))) {
+    if (GetItemText(childItem) == _("System schemas")) {
       return childItem;
     }
     childItem = GetNextChild(databaseItem, cookie);

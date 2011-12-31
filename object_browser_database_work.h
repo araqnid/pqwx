@@ -197,7 +197,7 @@ protected:
   }
 private:
   static inline bool IsSystemSchema(wxString schema) {
-    return schema.StartsWith(_T("pg_")) || schema.IsSameAs(_T("information_schema"));
+    return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
   }
 };
 

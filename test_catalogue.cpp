@@ -85,10 +85,10 @@ int TestCatalogueApp::OnRun() {
   CatalogueIndex::Filter baseFilter = index.CreateNonSystemFilter();
   CatalogueIndex::Filter typesFilter = index.CreateMatchEverythingFilter();
   for (std::vector<wxString>::iterator iter = queries.begin(); iter != queries.end(); iter++) {
-    if (iter->IsSameAs(_T("+S"))) {
+    if ((*iter) == _T("+S")) {
       baseFilter = index.CreateMatchEverythingFilter();
     }
-    else if (iter->IsSameAs(_T("-S"))) {
+    else if ((*iter) == _T("-S")) {
       baseFilter = index.CreateNonSystemFilter();
     }
     else if ((*iter)[0] == _T('@')) {

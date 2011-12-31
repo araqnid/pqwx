@@ -23,7 +23,7 @@ static inline Oid ReadOid(QueryResults::iterator iter, unsigned index) {
 
 static inline bool ReadBool(const std::vector<wxString> &row, unsigned index) {
   wxASSERT(index < row.size());
-  return row[index].IsSameAs(_T("t"));
+  return row[index] == _T("t");
 }
 
 static inline bool ReadBool(QueryResults::iterator iter, unsigned index) {

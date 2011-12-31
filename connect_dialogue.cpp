@@ -80,7 +80,7 @@ static wxString ReadConfigValue(const wxString &filename, const wxString &keywor
   while (input.good()) {
     getline(input, line);
     wxString recoded(line.c_str(), wxConvUTF8);
-    if (settingPattern.Matches(recoded) && settingPattern.GetMatch(recoded, 1).IsSameAs(keyword)) {
+    if (settingPattern.Matches(recoded) && settingPattern.GetMatch(recoded, 1) == keyword) {
       wxString value = settingPattern.GetMatch(recoded, 2);
 
       int comment = value.Find(_T('#'));
@@ -138,7 +138,7 @@ static wxString ParseCluster(const wxString &server) {
   wxString unixSocketDirectory = ReadConfigValue(localConfigFile, _T("unix_socket_directory"));
 
   wxString localServer;
-  if (!unixSocketDirectory.IsEmpty() && !unixSocketDirectory.IsSameAs(_T(DEFAULT_PGSOCKET_DIR))) {
+  if (!unixSocketDirectory.IsEmpty() && unixSocketDirectory != _T(DEFAULT_PGSOCKET_DIR)) {
     localServer << unixSocketDirectory;
   }
   localServer << _T(':');
@@ -284,7 +284,7 @@ void ConnectDialogue::StartConnection() {
     wxString resolvedHostname = ParseCluster(hostname);
     if (resolvedHostname.IsEmpty())
       return;
-    if (resolvedHostname.IsSameAs(hostname))
+    if (resolvedHostname == hostname)
       server->SetServerName(hostname);
     else {
       server->SetServerName(resolvedHostname, hostname);

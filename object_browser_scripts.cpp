@@ -334,8 +334,8 @@ static inline std::vector<bool> ReadIOModeArray(const std::vector<wxString> &row
   std::vector<bool> result;
   result.reserve(strings.size());
   for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
-    wxASSERT_MSG((*iter).IsSameAs(_T("o")) || (*iter).IsSameAs(_T("i")), *iter);
-    result.push_back((*iter).IsSameAs(_T("o")));
+    wxASSERT_MSG((*iter) == _T("o") || (*iter) == _T("i"), *iter);
+    result.push_back((*iter) == _T("o"));
   }
   return result;
 }
@@ -394,7 +394,7 @@ void FunctionScriptWork::Execute() {
 	  sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
 	if (extendedArgModes[pos])
 	  sql << _T("OUT ");
-	if (typeinfo.schema.IsSameAs(_T("pg_catalog")))
+	if (typeinfo.schema == _T("pg_catalog"))
 	  sql << QuoteIdent(typeinfo.name);
 	else
 	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
@@ -409,7 +409,7 @@ void FunctionScriptWork::Execute() {
 	Typeinfo typeinfo = typeMap[*iter];
 	if (pos < extendedArgNames.size())
 	  sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
-	if (typeinfo.schema.IsSameAs(_T("pg_catalog")))
+	if (typeinfo.schema == _T("pg_catalog"))
 	  sql << QuoteIdent(typeinfo.name);
 	else
 	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
@@ -473,7 +473,7 @@ void FunctionScriptWork::Execute() {
 	  sql << QuoteIdent(extendedArgNames[pos]);
 	else
 	  sql << _("Argument ") << pos;
-	if (typeinfo.schema.IsSameAs(_T("pg_catalog")))
+	if (typeinfo.schema == _T("pg_catalog"))
 	  sql << QuoteIdent(typeinfo.name);
 	else
 	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);

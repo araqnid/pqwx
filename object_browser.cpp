@@ -167,6 +167,9 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
+  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
+  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
@@ -200,6 +203,7 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
   wxTreeItemId serverItem = AppendItem(GetRootItem(), server->Identification());
   SetItemText(serverItem, server->Identification());
   SetItemData(serverItem, serverModel);
+  SetItemImage(serverItem, img_server);
 
   RefreshDatabaseList(serverItem);
 }
@@ -392,10 +396,12 @@ void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serve
   }
   if (!templateDatabases.empty()) {
     wxTreeItemId templateDatabasesItem = AppendItem(serverItem, _("Template Databases"));
+    SetItemImage(templateDatabasesItem, img_folder);
     AppendDatabaseItems(templateDatabasesItem, templateDatabases);
   }
   if (!systemDatabases.empty()) {
     wxTreeItemId systemDatabasesItem = AppendItem(serverItem, _("System Databases"));
+    SetItemImage(systemDatabasesItem, img_folder);
     AppendDatabaseItems(systemDatabasesItem, systemDatabases);
   }
 }
@@ -405,6 +411,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
     DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
     SetItemData(databaseItem, database);
+    SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
       SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, database));
   }
@@ -417,7 +424,9 @@ static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
 void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<RoleModel*> &roles) {
   sort(roles.begin(), roles.end(), CollateRoles);
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
+  SetItemImage(usersItem, img_folder);
   wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
+  SetItemImage(groupsItem, img_folder);
   for (std::vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
     RoleModel *role = *iter;
     wxTreeItemId roleItem;
@@ -433,12 +442,14 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
 
 void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
-    AppendItem(parent, schemaName + _T("."));
+    wxTreeItemId emptySchemaItem = AppendItem(parent, schemaName + _T("."));
+    SetItemImage(emptySchemaItem, img_folder);
     return;
   }
 
   if (createSchemaItem) {
     parent = AppendItem(parent, schemaName + _T("."));
+    SetItemImage(parent, img_folder);
   }
 
   int relationsCount = 0;
@@ -458,16 +469,15 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     relation->database->symbolItemLookup[relation->oid] = memberItem;
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
       SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
-    // see images->Add calls in constructor for the list that the 2nd param of SetItemImage indexes
     switch (relation->type) {
     case RelationModel::TABLE:
-      SetItemImage(memberItem, 0);
+      SetItemImage(memberItem, img_table);
       break;
     case RelationModel::VIEW:
-      SetItemImage(memberItem, 1);
+      SetItemImage(memberItem, img_view);
       break;
     case RelationModel::SEQUENCE:
-      SetItemImage(memberItem, 2);
+      SetItemImage(memberItem, img_sequence);
       break;
 
     }
@@ -479,6 +489,7 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
   wxTreeItemId functionsItem = parent;
   if (relationsCount != 0 && createSchemaItem) {
     functionsItem = AppendItem(parent, _("Functions"));
+    SetItemImage(functionsItem, img_folder);
   }
   else {
     // no relations, so add functions directly in the schema item
@@ -497,16 +508,16 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     switch (function->type) {
     case FunctionModel::SCALAR:
     case FunctionModel::RECORDSET:
-      SetItemImage(memberItem, 3);
+      SetItemImage(memberItem, img_function);
       break;
     case FunctionModel::AGGREGATE:
-      SetItemImage(memberItem, 4);
+      SetItemImage(memberItem, img_function_aggregate);
       break;
     case FunctionModel::TRIGGER:
-      SetItemImage(memberItem, 5);
+      SetItemImage(memberItem, img_function_trigger);
       break;
     case FunctionModel::WINDOW:
-      SetItemImage(memberItem, 6);
+      SetItemImage(memberItem, img_function_window);
       break;
     }
   }
@@ -535,13 +546,16 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
+    SetItemImage(extensionsItem, img_folder);
     for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
       wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
+      SetItemImage(extensionItem, img_folder);
       AppendDivision(iter->second, extensionItem);
     }
   }
 
   wxTreeItemId systemDivisionItem = AppendItem(databaseItem, _("System schemas"));
+  SetItemImage(systemDivisionItem, img_folder);
   wxTreeItemId systemDivisionLoaderItem = AppendItem(systemDivisionItem, _T("Loading..."));
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
@@ -568,6 +582,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
   if (!indices.empty()) {
     wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
+    SetItemImage(indicesItem, img_folder);
     for (std::vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
@@ -576,6 +591,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
   if (!triggers.empty()) {
     wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
+    SetItemImage(triggersItem, img_folder);
     for (std::vector<TriggerModel*>::iterator iter = triggers.begin(); iter != triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
       SetItemData(triggerItem, *iter);

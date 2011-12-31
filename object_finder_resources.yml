@@ -1,4 +1,16 @@
 ---
+class: ObjectBrowser
+filename: icon_folder.png
+mime_type: image/png
+---
+class: ObjectBrowser
+filename: icon_server.png
+mime_type: image/png
+---
+class: ObjectBrowser
+filename: icon_database.png
+mime_type: image/png
+---
 class: ObjectFinder
 filename: icon_table.png
 mime_type: image/png

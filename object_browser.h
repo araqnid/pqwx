@@ -122,6 +122,17 @@ private:
   RelationModel *contextMenuRelation;
   FunctionModel *contextMenuFunction;
   wxTreeItemId contextMenuItem;
+  // see constructor implementation for the image list initialisation these correspond to
+  static const int img_folder = 0;
+  static const int img_server = 1;
+  static const int img_database = 2;
+  static const int img_table = 3;
+  static const int img_view = img_table + 1;
+  static const int img_sequence = img_view + 1;
+  static const int img_function = img_sequence + 1;
+  static const int img_function_aggregate = img_function + 1;
+  static const int img_function_trigger = img_function_aggregate + 1;
+  static const int img_function_window = img_function_trigger + 1;
 };
 
 const int EVENT_WORK_FINISHED = 10000;

@@ -9,7 +9,7 @@ class ScriptModel;
 
 class ScriptEditor : public wxStyledTextCtrl {
 public:
-  ScriptEditor(wxWindow *parent, wxWindowID id, ScriptModel *model) : wxStyledTextCtrl(parent, id), model(model) {}
+  ScriptEditor(wxWindow *parent, wxWindowID id, ScriptModel *model);
 
 private:
   ScriptModel *model;

@@ -9,11 +9,24 @@ version_header=$2
 srcdir=$(dirname $0)
 cd "$srcdir"
 git=${GIT-git}
+quadversion=""
 
 if [ -f version ]; then
     version=$(cat version)
+    quadversion="$(echo $version | tr '.' ','),0"
 elif [ -d .git ]; then
     version=$($git describe --always --match "v[0-9]*" --abbrev=4 HEAD 2>/dev/null | sed -e 's/^v//' | tr '-' '.')
+    case "$version" in
+	*.*.*.*.g*)
+	    quadversion="$(echo $version | tr '.' ',' | sed -e 's/,g.*//')"
+	    ;;
+	*.*.*)
+	    quadversion="$(echo $version | tr '.' ','),0"
+	    ;;
+	*)
+	    quadversion="0,0,0,0"
+	    ;;
+    esac
     if [ -n "$version" ]; then
 	$git update-index -q --refresh
 	changed=$($git diff-index --name-only HEAD --)
@@ -23,6 +36,7 @@ elif [ -d .git ]; then
     fi
 else
     version="unknown"
+    quadversion="0,0,0,0"
 fi
 
 if [ -r "$version_file" ]; then
@@ -32,11 +46,13 @@ else
 fi
 
 if ! [ "$version" = "$old_version" ]; then
-    echo "PQWX_VERSION = $version"
+    echo "PQWX_VERSION = $version ($quadversion)"
     echo "PQWX_VERSION = $version" > $version_file
     cat <<EOF >$version_header
 #ifndef PQWX_VERSION
 #define PQWX_VERSION "$version"
+#define PQWX_MSW_VERSION $quadversion
+#define PQWX_MSW_VERSION_STRING "$version\0"
 #endif
 EOF
 fi

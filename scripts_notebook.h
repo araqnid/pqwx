@@ -12,11 +12,11 @@ class ScriptEditor;
 
 class ScriptModel {
 public:
-  ScriptModel(const wxString &title, const wxString &filename = wxEmptyString) : title(title), filename(filename) {}
+  ScriptModel(const wxString &title, const wxString &filename = wxEmptyString) : title(title), filename(filename), modified(false) {}
 private:
   wxString title;
   wxString filename;
-  friend class ScriptEditor;
+  bool modified;
   friend class ScriptsNotebook;
 };
 
@@ -29,11 +29,15 @@ public:
   void OpenScriptFile(const wxString &filename);
   void OpenScriptWithText(const wxString &text);
 
+  void EmitScriptSelected(ScriptModel &);
+  void MarkScriptModified(ScriptModel &);
+  void MarkScriptUnmodified(ScriptModel &);
 private:
   int documentCounter;
   std::vector<ScriptModel> scripts;
 
   ScriptModel& FindScriptForEditor(const ScriptEditor *);
+  unsigned FindScriptPage(const ScriptModel&) const;
 
   friend class ScriptEditor;
 

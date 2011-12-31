@@ -13,6 +13,8 @@ public:
   ScriptEditor(ScriptsNotebook *owner, wxWindowID id);
 
   void OnSetFocus(wxFocusEvent &event);
+  void OnSavePointLeft(wxStyledTextEvent &event);
+  void OnSavePointReached(wxStyledTextEvent &event);
 
 private:
   ScriptsNotebook *owner;

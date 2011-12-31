@@ -13,6 +13,8 @@
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_SET_FOCUS(ScriptEditor::OnSetFocus)
+  EVT_STC_SAVEPOINTLEFT(wxID_ANY, ScriptEditor::OnSavePointLeft)
+  EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
 END_EVENT_TABLE()
 
 ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner)
@@ -115,12 +117,20 @@ year zone"));
   StyleSetSpec(wxSTC_SQL_USER4, _T("fore:#800080"));
 }
 
-void ScriptEditor::OnSetFocus(wxFocusEvent &event) {
+void ScriptEditor::OnSetFocus(wxFocusEvent &event)
+{
   wxStyledTextCtrl::OnGainFocus(event);
+  owner->EmitScriptSelected(owner->FindScriptForEditor(this));
+}
 
+void ScriptEditor::OnSavePointLeft(wxStyledTextEvent &event)
+{
   ScriptModel& script = owner->FindScriptForEditor(this);
+  owner->MarkScriptModified(script);
+}
 
-  wxCommandEvent selectionChangedEvent(PQWX_SCRIPT_SELECTED);
-  selectionChangedEvent.SetString(script.title);
-  ProcessEvent(selectionChangedEvent);
+void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
+{
+  ScriptModel& script = owner->FindScriptForEditor(this);
+  owner->MarkScriptUnmodified(script);
 }

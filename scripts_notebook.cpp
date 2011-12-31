@@ -33,8 +33,9 @@ void ScriptsNotebook::OpenScriptWithText(const wxString &text) {
 
   scripts.push_back(ScriptModel(tabName));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
-  editor->AddText(text);
   AddPage(editor, tabName, true);
+  editor->AddText(text);
+  editor->EmptyUndoBuffer();
   editor->SetFocus();
 }
 
@@ -63,4 +64,34 @@ ScriptModel& ScriptsNotebook::FindScriptForEditor(const ScriptEditor *editor) {
   }
   wxASSERT(false);
   abort(); // quiet, gcc
+}
+
+unsigned ScriptsNotebook::FindScriptPage(const ScriptModel &script) const {
+  unsigned pos = 0;
+  for (std::vector<ScriptModel>::const_iterator iter = scripts.begin(); iter != scripts.end(); iter++, pos++) {
+    if (&(*iter) == &script) return pos;
+  }
+  wxASSERT(false);
+  abort(); // quiet, gcc
+}
+
+void ScriptsNotebook::MarkScriptModified(ScriptModel &script)
+{
+  script.modified = true;
+  EmitScriptSelected(script);
+  SetPageText(FindScriptPage(script), script.title + _T(" *"));
+}
+
+void ScriptsNotebook::MarkScriptUnmodified(ScriptModel &script)
+{
+  script.modified = false;
+  EmitScriptSelected(script);
+  SetPageText(FindScriptPage(script), script.title);
+}
+
+void ScriptsNotebook::EmitScriptSelected(ScriptModel &script)
+{
+  wxCommandEvent selectionChangedEvent(PQWX_SCRIPT_SELECTED);
+  selectionChangedEvent.SetString(script.title + (script.modified ? _T(" *") : wxEmptyString));
+  ProcessEvent(selectionChangedEvent);
 }

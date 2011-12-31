@@ -240,7 +240,7 @@ void ObjectBrowser::Dispose() {
     ServerModel *server = *iter;
     server->BeginDisconnectAll(disconnecting);
   }
-  wxLogDebug(_T("Disposing of ObjectBrowser- waiting for %d database connections to terminate"), disconnecting.size());
+  wxLogDebug(_T("Disposing of ObjectBrowser- waiting for %lu database connections to terminate"), disconnecting.size());
   for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
     DatabaseConnection *db = *iter;
     wxLogDebug(_T(" Waiting for database connection %s to exit"), db->Identification().c_str());

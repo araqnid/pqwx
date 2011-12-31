@@ -184,7 +184,7 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
       scoreDocs.pop();
   }
 #ifdef __WXDEBUG__
-  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %d/%d results"), stopwatch.Time() / 1000.0, scoreDocs.size(), hitCount);
+  wxLogDebug(_T("** Completed search in %.3lf seconds, and produced %lu/%d results"), stopwatch.Time() / 1000.0, scoreDocs.size(), hitCount);
 #endif
   std::vector<Result> resultVector;
   resultVector.reserve(scoreDocs.size());

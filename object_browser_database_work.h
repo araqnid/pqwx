@@ -236,7 +236,7 @@ protected:
 	++count;
       }
     }
-    wxLogDebug(_T("Loaded %d/%d descriptions"), count, descriptions.size());
+    wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
   }
 };
 

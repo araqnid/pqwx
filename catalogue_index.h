@@ -34,7 +34,7 @@ public:
   void AddDocument(const Document& document);
   void Commit() {
 #ifdef __WXDEBUG__
-    wxLogDebug(_T("** Indexed %d terms over %d documents in %.3lf seconds"), terms.size(), documents.size(), stopwatch.Time() / 1000.0);
+    wxLogDebug(_T("** Indexed %lu terms over %lu documents in %.3lf seconds"), terms.size(), documents.size(), stopwatch.Time() / 1000.0);
 #endif
   }
 

@@ -35,7 +35,7 @@ public:
 class SchemaMemberModel : public ObjectModel {
 public:
   DatabaseModel *database;
-  unsigned long oid;
+  Oid oid;
   wxString schema;
   wxString extension;
   bool user;
@@ -61,7 +61,7 @@ public:
     if (catalogueIndex != NULL)
       delete catalogueIndex;
   }
-  unsigned long oid;
+  Oid oid;
   bool isTemplate;
   bool allowConnections;
   bool havePrivsToConnect;
@@ -127,7 +127,7 @@ private:
 
 class RoleModel : public ObjectModel {
 public:
-  unsigned long oid;
+  Oid oid;
   bool superuser;
   bool canLogin;
 };

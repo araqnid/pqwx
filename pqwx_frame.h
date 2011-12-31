@@ -22,6 +22,8 @@ public:
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
   void OnScriptToWindow(wxCommandEvent& event);
+  void OnScriptSelected(wxCommandEvent& event);
+  void OnObjectSelected(wxCommandEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 

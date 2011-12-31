@@ -35,6 +35,8 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_EXPANDING(Pqwx_ObjectBrowser, ObjectBrowser::BeforeExpand)
   EVT_TREE_ITEM_GETTOOLTIP(Pqwx_ObjectBrowser, ObjectBrowser::OnGetTooltip)
   EVT_TREE_ITEM_RIGHT_CLICK(Pqwx_ObjectBrowser, ObjectBrowser::OnItemRightClick)
+  EVT_TREE_SEL_CHANGED(Pqwx_ObjectBrowser, ObjectBrowser::OnItemSelected)
+  EVT_SET_FOCUS(ObjectBrowser::OnSetFocus)
   EVT_COMMAND(EVENT_WORK_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ObjectBrowser::OnWorkFinished)
 
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
@@ -102,6 +104,7 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_TO_WINDOW)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_OBJECT_SELECTED)
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -180,6 +183,7 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
   images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
   AssignImageList(images);
+  currentlySelected = false;
 }
 
 void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
@@ -616,29 +620,15 @@ void ObjectBrowser::DisconnectSelected() {
     wxLogDebug(_T("selected item was not ok -- nothing is selected?"));
     return;
   }
-  if (selected == GetRootItem()) {
-    wxLogDebug(_T("selected item was root -- nothing is selected"));
-    return;
+  ServerModel *server;
+  DatabaseModel *database;
+  FindItemContext(selected, &server, &database);
+  if (server != NULL) {
+    wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
+    servers.remove(server);
+    server->Dispose(); // still does nasty synchronous disconnect for now
+    Delete(FindServerItem(server));
   }
-  wxTreeItemId cursor = selected;
-  do {
-    wxTreeItemId parent = GetItemParent(cursor);
-    if (parent == GetRootItem())
-      break;
-    cursor = parent;
-  } while (1);
-
-  wxTreeItemData *data = GetItemData(cursor);
-  wxASSERT(data != NULL);
-
-  // in one of the top-level items, we'd better have a server model
-  ServerModel *server = dynamic_cast<ServerModel*>(data);
-  wxASSERT(server != NULL);
-
-  wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
-  servers.remove(server);
-  server->Dispose(); // still does nasty synchronous disconnect for now
-  Delete(cursor);
 }
 
 class ZoomToFoundObjectOnCompletion : public ObjectFinder::Completion {
@@ -669,35 +659,19 @@ void ObjectBrowser::FindObject() {
     wxLogDebug(_T("selected item was not ok -- nothing is selected?"));
     return;
   }
-  if (selected == GetRootItem()) {
-    wxLogDebug(_T("selected item was root -- nothing is selected"));
-    return;
-  }
-  wxTreeItemId cursor = selected;
-  wxTreeItemId previous;
-  do {
-    wxTreeItemId parent = GetItemParent(cursor);
-    if (parent == GetRootItem())
-      break;
-    previous = cursor;
-    cursor = parent;
-  } while (1);
-  if (!previous.IsOk()) {
-    wxLogDebug(_T("selection is above database level?"));
-    return;
+
+  ServerModel *server;
+  DatabaseModel *database;
+  FindItemContext(selected, &server, &database);
+  if (database == NULL) {
+    wxLogDebug(_T("No database selected, can't open find object here"));
   }
 
-  wxTreeItemData *data = GetItemData(previous);
-  wxASSERT(data != NULL);
-
-  DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
-  wxASSERT(database != NULL);
-
-  wxLogDebug(_T("Find object in %s %s"), database->server->Identification().c_str(), database->name.c_str());
+  wxLogDebug(_T("Find object in %s"), database->Identification().c_str());
 
   // TODO - should be able to open the dialogue and have it start loading this if it's not already done
   if (!database->loaded) {
-    LoadDatabase(previous, database, new OpenObjectFinderOnIndexSchemaCompletion());
+    LoadDatabase(FindDatabaseItem(database), database, new OpenObjectFinderOnIndexSchemaCompletion());
     return;
   }
   wxASSERT(database->catalogueIndex != NULL);
@@ -711,8 +685,7 @@ wxTreeItemId ObjectBrowser::FindServerItem(ServerModel *server) const {
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
-    if (!childItem.IsOk())
-      return childItem; // not found
+    wxASSERT(childItem.IsOk());
     ServerModel *itemServer = static_cast<ServerModel*>(GetItemData(childItem));
     if (itemServer == server)
       return childItem;
@@ -726,8 +699,7 @@ wxTreeItemId ObjectBrowser::FindDatabaseItem(DatabaseModel *database) const {
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(serverItem, cookie);
   do {
-    if (!childItem.IsOk())
-      return childItem; // not found
+    wxASSERT(childItem.IsOk());
     DatabaseModel *itemDatabase = static_cast<DatabaseModel*>(GetItemData(childItem));
     if (itemDatabase == database)
       return childItem;
@@ -741,8 +713,7 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(databaseItem, cookie);
   do {
-    if (!childItem.IsOk())
-      return childItem; // not found
+    wxASSERT(childItem.IsOk());
     // nasty
     if (GetItemText(childItem).IsSameAs(_("System schemas"))) {
       return childItem;
@@ -817,6 +788,70 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
     contextMenuFunction = function;
     PopupMenu(functionMenu);
     return;
+  }
+}
+
+void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **server, DatabaseModel **database) const
+{
+  *database = NULL;
+  *server = NULL;
+  for (wxTreeItemId cursor = item; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
+    wxTreeItemData *data = GetItemData(cursor);
+    if (data != NULL) {
+      if (*database == NULL)
+	*database = dynamic_cast<DatabaseModel*>(data);
+      if (*server == NULL)
+	*server = dynamic_cast<ServerModel*>(data);
+    }
+  }
+}
+
+void ObjectBrowser::OnItemSelected(wxTreeEvent &event)
+{
+  UpdateSelectedDatabase();
+}
+
+void ObjectBrowser::OnSetFocus(wxFocusEvent &event)
+{
+  wxTreeCtrl::OnSetFocus(event);
+  UpdateSelectedDatabase();
+}
+
+void ObjectBrowser::UpdateSelectedDatabase() {
+  wxTreeItemId selected = GetSelection();
+  DatabaseModel *database = NULL;
+  ServerModel *server = NULL;
+  FindItemContext(selected, &server, &database);
+
+  if (server == NULL) {
+    if (currentlySelected) {
+      currentlySelected = false;
+      selectedServer = NULL;
+      selectedDatabase = NULL;
+    }
+    return;
+  }
+
+  bool changed;
+  if (!currentlySelected)
+    changed = true;
+  else if (database == NULL)
+    changed = selectedDatabase != NULL || selectedServer != server;
+  else
+    changed = selectedDatabase != database;
+
+  if (changed) {
+    selectedServer = server;
+    selectedDatabase = database;
+    currentlySelected = true;
+    wxCommandEvent evt(PQWX_OBJECT_SELECTED);
+    if (database != NULL) {
+      evt.SetString(database->Identification());
+    }
+    else {
+      evt.SetString(server->Identification());
+    }
+    ProcessEvent(evt);
   }
 }
 

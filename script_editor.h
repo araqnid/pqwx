@@ -6,13 +6,16 @@
 #include "wx/stc/stc.h"
 
 class ScriptModel;
+class ScriptsNotebook;
 
 class ScriptEditor : public wxStyledTextCtrl {
 public:
-  ScriptEditor(wxWindow *parent, wxWindowID id, ScriptModel *model);
+  ScriptEditor(ScriptsNotebook *owner, wxWindowID id);
+
+  void OnSetFocus(wxFocusEvent &event);
 
 private:
-  ScriptModel *model;
+  ScriptsNotebook *owner;
 
   DECLARE_EVENT_TABLE()
 };

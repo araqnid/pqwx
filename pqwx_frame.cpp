@@ -33,6 +33,8 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
   EVT_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
+  EVT_SCRIPT_SELECTED(wxID_ANY, PqwxFrame::OnScriptSelected)
+  EVT_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -121,4 +123,15 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 void PqwxFrame::OnScriptToWindow(wxCommandEvent& event)
 {
   scriptsBook->OpenScriptWithText(event.GetString());
+}
+
+void PqwxFrame::OnScriptSelected(wxCommandEvent &event)
+{
+  SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
+  objectBrowser->UnmarkSelected();
+}
+
+void PqwxFrame::OnObjectSelected(wxCommandEvent &event)
+{
+  SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
 }

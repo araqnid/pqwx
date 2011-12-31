@@ -23,6 +23,12 @@ class FunctionModel;
 class SchemaMemberModel;
 class ObjectBrowserWork;
 
+BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_OBJECT_SELECTED, -1)
+END_DECLARE_EVENT_TYPES()
+
+#define EVT_OBJECT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_OBJECT_SELECTED, fn)
+
 #define DECLARE_SCRIPT_HANDLERS(menu, mode) \
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
   void On##menu##MenuScript##mode##File(wxCommandEvent&); \
@@ -70,12 +76,16 @@ public:
   LazyLoader* GetLazyLoader(wxTreeItemId item) const;
   void DeleteLazyLoader(wxTreeItemId item);
 
+  void UnmarkSelected() { currentlySelected = false; }
+
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
   std::list<ServerModel*> servers;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
+  void OnItemSelected(wxTreeEvent&);
+  void OnSetFocus(wxFocusEvent&);
   void OnGetTooltip(wxTreeEvent&);
   void OnItemRightClick(wxTreeEvent&);
   void OnWorkFinished(wxCommandEvent&);
@@ -108,6 +118,8 @@ private:
   DECLARE_SCRIPT_HANDLERS(Function, Drop);
   DECLARE_SCRIPT_HANDLERS(Function, Select);
 
+  void FindItemContext(const wxTreeItemId &item, ServerModel **server, DatabaseModel **database) const;
+
   // context menus
   wxMenu *serverMenu;
   wxMenu *databaseMenu;
@@ -122,6 +134,13 @@ private:
   RelationModel *contextMenuRelation;
   FunctionModel *contextMenuFunction;
   wxTreeItemId contextMenuItem;
+
+  // remember which server/database was last mentioned in an object-selected event
+  ServerModel *selectedServer;
+  DatabaseModel *selectedDatabase;
+  bool currentlySelected;
+  void UpdateSelectedDatabase();
+
   // see constructor implementation for the image list initialisation these correspond to
   static const int img_folder = 0;
   static const int img_server = 1;

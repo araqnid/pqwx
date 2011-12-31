@@ -7,15 +7,18 @@
 #endif
 
 #include "wx/stc/stc.h"
+#include "scripts_notebook.h"
 #include "script_editor.h"
+#include "script_events.h"
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
+  EVT_SET_FOCUS(ScriptEditor::OnSetFocus)
 END_EVENT_TABLE()
 
-ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id, ScriptModel *model)
-: wxStyledTextCtrl(parent, id), model(model)
+ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner)
 {
   SetLexer(wxSTC_LEX_SQL);
+  SetCodePage(wxSTC_CP_UTF8);
   // taken from sql.properties in scite
   SetKeyWords(0, _T("absolute action add admin after aggregate \
 alias all allocate alter and any are array as asc \
@@ -110,4 +113,14 @@ year zone"));
   StyleSetSpec(wxSTC_SQL_USER2, _T("fore:#b00040"));
   StyleSetSpec(wxSTC_SQL_USER3, _T("fore:#8b0000"));
   StyleSetSpec(wxSTC_SQL_USER4, _T("fore:#800080"));
+}
+
+void ScriptEditor::OnSetFocus(wxFocusEvent &event) {
+  wxStyledTextCtrl::OnGainFocus(event);
+
+  ScriptModel& script = owner->FindScriptForEditor(this);
+
+  wxCommandEvent selectionChangedEvent(PQWX_SCRIPT_SELECTED);
+  selectionChangedEvent.SetString(script.title);
+  ProcessEvent(selectionChangedEvent);
 }

@@ -7,12 +7,17 @@
 #include "wx/notebook.h"
 #include "pqwx.h"
 
+class ScriptsNotebook;
+class ScriptEditor;
+
 class ScriptModel {
 public:
   ScriptModel(const wxString &title, const wxString &filename = wxEmptyString) : title(title), filename(filename) {}
 private:
-  const wxString title;
-  const wxString filename;
+  wxString title;
+  wxString filename;
+  friend class ScriptEditor;
+  friend class ScriptsNotebook;
 };
 
 class ScriptsNotebook : public wxNotebook {
@@ -27,6 +32,10 @@ public:
 private:
   int documentCounter;
   std::vector<ScriptModel> scripts;
+
+  ScriptModel& FindScriptForEditor(const ScriptEditor *);
+
+  friend class ScriptEditor;
 
   DECLARE_EVENT_TABLE()
 };

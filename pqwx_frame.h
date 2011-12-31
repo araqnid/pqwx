@@ -19,6 +19,8 @@ public:
   void OnConnectObjectBrowser(wxCommandEvent& event);
   void OnDisconnectObjectBrowser(wxCommandEvent& event);
   void OnFindObject(wxCommandEvent& event);
+  void OnNewScript(wxCommandEvent& event);
+  void OnOpenScript(wxCommandEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 

@@ -11,6 +11,9 @@ public:
   ScriptsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size) {
   }
 
+  void OpenNewScript();
+  void OpenScriptFile(const wxString &filename);
+
 private:
   DECLARE_EVENT_TABLE()
 };

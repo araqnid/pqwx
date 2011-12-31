@@ -11,3 +11,11 @@
 
 BEGIN_EVENT_TABLE(ScriptsNotebook, wxNotebook)
 END_EVENT_TABLE()
+
+void ScriptsNotebook::OpenNewScript() {
+  wxMessageBox(_T("TODO: new file"));
+}
+
+void ScriptsNotebook::OpenScriptFile(const wxString &filename) {
+  wxMessageBox(_T("TODO: open file: ") + filename);
+}

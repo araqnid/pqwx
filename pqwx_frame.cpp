@@ -28,6 +28,8 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
+  EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
+  EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
 END_EVENT_TABLE()
 
@@ -97,4 +99,19 @@ void PqwxFrame::OnFindObject(wxCommandEvent& event) {
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
   Destroy();
+}
+
+void PqwxFrame::OnNewScript(wxCommandEvent& event)
+{
+  scriptsBook->OpenNewScript();
+}
+
+void PqwxFrame::OnOpenScript(wxCommandEvent& event)
+{
+  wxFileDialog dbox(this, _("Open File"), wxEmptyString, wxEmptyString,
+		    _("SQL files (*.sql)|*.sql"));
+  dbox.CentreOnParent();
+  if (dbox.ShowModal() == wxID_OK) {
+    scriptsBook->OpenScriptFile(dbox.GetPath());
+  }
 }

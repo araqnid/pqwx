@@ -52,7 +52,7 @@ int TestCatalogueApp::OnRun() {
   CatalogueIndex index;
   std::map<wxString, CatalogueIndex::Type> typeMap = getTypeMap();
   index.Begin();
-  std::ifstream inputStream(inputFile.fn_str());
+  std::ifstream inputStream(inputFile.utf8_str());
   char buf[8192];
   do {
     inputStream.getline(buf, sizeof(buf));

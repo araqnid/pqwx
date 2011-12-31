@@ -15,6 +15,8 @@
 #include "wx_flavour.h"
 #include "object_browser.h"
 #include "connect_dialogue.h"
+#include "scripts_notebook.h"
+#include "results_notebook.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
     #include "pqwx-appicon.xpm"
@@ -41,17 +43,8 @@ PqwxFrame::PqwxFrame(const wxString& title)
   CreateStatusBar(1);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
-  scriptsBook = new wxNotebook(this, Pqwx_ScriptsNotebook);
-  resultsBook = new wxNotebook(this, Pqwx_ResultsNotebook);
-
-  resultsPanel = new wxPanel(resultsBook, Pqwx_ResultsPage);
-  resultsBook->AddPage(resultsPanel, _("&Results"), true);
-
-  messagesPanel = new wxPanel(resultsBook, Pqwx_MessagesPage);
-  resultsBook->AddPage(messagesPanel, _("&Messages"), false);
-
-  planPanel = new wxPanel(resultsBook, Pqwx_PlanPage);
-  resultsBook->AddPage(planPanel, _("&Query Plan"), false);
+  scriptsBook = new ScriptsNotebook(this, Pqwx_ScriptsNotebook);
+  resultsBook = new ResultsNotebook(this, Pqwx_ResultsNotebook);
 
   wxSizer *editorSizer = new wxBoxSizer(wxVERTICAL);
   editorSizer->Add(scriptsBook, 3, wxEXPAND);

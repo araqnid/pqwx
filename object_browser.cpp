@@ -813,7 +813,6 @@ void ObjectBrowser::OnItemSelected(wxTreeEvent &event)
 
 void ObjectBrowser::OnSetFocus(wxFocusEvent &event)
 {
-  wxTreeCtrl::OnSetFocus(event);
   UpdateSelectedDatabase();
 }
 

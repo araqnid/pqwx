@@ -24,7 +24,7 @@ END_EVENT_TABLE()
 
 class ConnectionWork : public ConnectionCallback {
 public:
-  ConnectionWork(ConnectDialogue *owner, ServerConnection *server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
+  ConnectionWork(ConnectDialogue *owner, const ServerConnection &server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
   void OnConnection(bool usedPassword_) {
     state = CONNECTED;
     usedPassword = usedPassword_;
@@ -48,7 +48,7 @@ private:
     owner->AddPendingEvent(event);
   }
   ConnectDialogue *owner;
-  ServerConnection *server;
+  ServerConnection server;
   DatabaseConnection *db;
   bool usedPassword;
   friend class ConnectDialogue;
@@ -268,16 +268,16 @@ static wxString DefaultCluster(const std::vector<PgCluster> &clusters) {
 #endif
 
 void ConnectDialogue::StartConnection() {
-  ServerConnection *server = new ServerConnection();
+  ServerConnection server;
   wxString username = usernameInput->GetValue();
   wxString password = passwordInput->GetValue();
   wxString hostname = hostnameInput->GetValue();
 
   if (!username.IsEmpty()) {
-    server->username = username;
+    server.username = username;
   }
   if (!password.IsEmpty()) {
-    server->password = password;
+    server.password = password;
   }
   if (!hostname.IsEmpty()) {
 #ifdef USE_DEBIAN_PGCLUSTER
@@ -285,21 +285,21 @@ void ConnectDialogue::StartConnection() {
     if (resolvedHostname.IsEmpty())
       return;
     if (resolvedHostname == hostname)
-      server->SetServerName(hostname);
+      server.SetServerName(hostname);
     else {
-      server->SetServerName(resolvedHostname, hostname);
+      server.SetServerName(resolvedHostname, hostname);
     }
 #else
-    server->SetServerName(hostname);
+    server.SetServerName(hostname);
 #endif
   }
   else {
-    server->SetServerName(wxEmptyString);
+    server.SetServerName(wxEmptyString);
   }
 
   wxASSERT(connection == NULL);
 
-  DatabaseConnection *db = new DatabaseConnection(server, server->globalDbName);
+  DatabaseConnection *db = new DatabaseConnection(server, server.globalDbName);
   connection = new ConnectionWork(this, server, db);
   db->Connect(connection);
   MarkBusy();
@@ -331,7 +331,7 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
     return;
 
   if (work->state == ConnectionWork::CONNECTED) {
-    work->server->passwordNeededToConnect = work->usedPassword;
+    work->server.passwordNeededToConnect = work->usedPassword;
     objectBrowser->AddServerConnection(work->server, work->db);
     if (!passwordInput->GetValue().empty()) {
       if (!work->usedPassword)

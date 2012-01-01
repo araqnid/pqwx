@@ -134,8 +134,8 @@ public:
 
 class ServerModel : public wxTreeItemData {
 public:
-  ServerModel(ServerConnection *conn) : conn(conn) {}
-  ServerModel(ServerConnection *conn, DatabaseConnection *db) : conn(conn) {
+  ServerModel(const ServerConnection &conninfo) : conninfo(conninfo) {}
+  ServerModel(const ServerConnection &conninfo, DatabaseConnection *db) : conninfo(conninfo) {
     connections[db->DbName()] = db;
     db->Relabel(_("Object Browser"));
   }
@@ -146,15 +146,14 @@ public:
   }
   void Dispose();
   void BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting);
-  const wxString& Identification() const { return conn->Identification(); }
-  const wxString& GlobalDbName() const { return conn->globalDbName; }
+  const wxString& Identification() const { return conninfo.Identification(); }
+  const wxString& GlobalDbName() const { return conninfo.globalDbName; }
   const wxString& VersionString() const { return serverVersionString; }
   bool IsUsingSSL() const { return usingSSL; }
   DatabaseConnection *GetDatabaseConnection(const wxString &dbname);
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
-  //const ServerConnection* ConnectionProperties() const { return conn; }
 private:
-  const ServerConnection *conn;
+  const ServerConnection conninfo;
   std::vector<DatabaseModel*> databases;
   int serverVersion;
   wxString serverVersionString;

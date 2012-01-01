@@ -23,7 +23,7 @@ public:
 
 class DatabaseConnection {
 public:
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname
+  DatabaseConnection(const ServerConnection &server, const wxString &dbname
 #if PG_VERSION_NUM >= 90000
 		     , const wxString &label = wxEmptyString
 #endif
@@ -34,7 +34,7 @@ public:
 #endif
     workerThread(this), connectionCallback(NULL), disconnectQueued(false)
   {
-    identification = server->Identification() + _T(" ") + dbname;
+    identification = server.Identification() + _T(" ") + dbname;
   }
 
   ~DatabaseConnection() {
@@ -96,7 +96,7 @@ private:
 
   void FinishDisconnection();
   wxString identification;
-  const ServerConnection *server;
+  ServerConnection server;
   const wxString dbname;
   std::deque<DatabaseWork*> workQueue;
   wxMutex workQueueMutex;

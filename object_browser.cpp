@@ -186,8 +186,8 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   currentlySelected = false;
 }
 
-void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnection *db) {
-  wxString serverId = server->Identification();
+void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
+  wxString serverId = server.Identification();
   for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
     if (serverModel->Identification() == serverId) {
@@ -205,9 +205,9 @@ void ObjectBrowser::AddServerConnection(ServerConnection *server, DatabaseConnec
 
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
-  wxLogDebug(_T("Connection added to object browser: %s"), server->Identification().c_str());
-  wxTreeItemId serverItem = AppendItem(GetRootItem(), server->Identification());
-  SetItemText(serverItem, server->Identification());
+  wxLogDebug(_T("Connection added to object browser: %s"), server.Identification().c_str());
+  wxTreeItemId serverItem = AppendItem(GetRootItem(), server.Identification());
+  SetItemText(serverItem, server.Identification());
   SetItemData(serverItem, serverModel);
   SetItemImage(serverItem, img_server);
 
@@ -228,9 +228,9 @@ DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
     connections.erase(dbname);
   }
 #if PG_VERSION_NUM >= 90000
-  DatabaseConnection *db = new DatabaseConnection(conn, dbname, _("Object Browser"));
+  DatabaseConnection *db = new DatabaseConnection(conninfo, dbname, _("Object Browser"));
 #else
-  DatabaseConnection *db = new DatabaseConnection(conn, dbname);
+  DatabaseConnection *db = new DatabaseConnection(conninfo, dbname);
 #endif
   wxLogDebug(_T("Allocating connection to %s"), db->Identification().c_str());
   for (std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.begin(); iter != connections.end(); iter++) {
@@ -279,7 +279,7 @@ void ServerModel::BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnec
 }
 
 void ServerModel::Dispose() {
-  wxLogDebug(_T("Disposing of server %s"), conn->Identification().c_str());
+  wxLogDebug(_T("Disposing of server %s"), Identification().c_str());
   std::vector<DatabaseConnection*> disconnecting;
   BeginDisconnectAll(disconnecting);
   for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {

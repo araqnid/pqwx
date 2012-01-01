@@ -156,10 +156,10 @@ static const char *options[] = {
 bool DatabaseConnection::WorkerThread::Connect() {
   const char *values[6];
   // buffer these for the duration of this scope
-  wxCharBuffer hostname = db->server->hostname.utf8_str();
-  wxCharBuffer portstring = wxString::Format(_T("%d"), db->server->port).utf8_str();
-  wxCharBuffer username = db->server->username.utf8_str();
-  wxCharBuffer password = db->server->password.utf8_str();
+  wxCharBuffer hostname = db->server.hostname.utf8_str();
+  wxCharBuffer portstring = wxString::Format(_T("%d"), db->server.port).utf8_str();
+  wxCharBuffer username = db->server.username.utf8_str();
+  wxCharBuffer password = db->server.password.utf8_str();
 #if PG_VERSION_NUM >= 90000
   wxString appName(_T("pqwx"));
   if (!db->label.IsEmpty()) appName << _T(" - ") << db->label;
@@ -167,17 +167,17 @@ bool DatabaseConnection::WorkerThread::Connect() {
 #endif
   wxCharBuffer dbNameBuf = db->dbname.utf8_str();
 
-  values[0] = db->server->hostname.IsEmpty() ? NULL : hostname.data();
+  values[0] = db->server.hostname.IsEmpty() ? NULL : hostname.data();
 
-  if (db->server->port > 0) {
+  if (db->server.port > 0) {
     values[1] = portstring.data();
   }
   else {
     values[1] = NULL;
   }
 
-  values[2] = db->server->username.IsEmpty() ? NULL : username.data();
-  values[3] = db->server->password.IsEmpty() ? NULL : password.data();
+  values[2] = db->server.username.IsEmpty() ? NULL : username.data();
+  values[3] = db->server.password.IsEmpty() ? NULL : password.data();
   values[4] = dbNameBuf.data();
 #if PG_VERSION_NUM >= 90000
   values[5] = appNameBuf.data();

@@ -44,7 +44,7 @@ public:
     Dispose();
   }
 
-  void AddServerConnection(ServerConnection *server, DatabaseConnection *db);
+  void AddServerConnection(const ServerConnection& server, DatabaseConnection *db);
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *db, IndexSchemaCompletionCallback *indexCompletion = NULL);
   void LoadRelation(wxTreeItemId parent, RelationModel *rel);
   void DisconnectSelected();

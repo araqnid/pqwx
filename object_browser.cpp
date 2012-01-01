@@ -218,7 +218,7 @@ DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
   std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(dbname);
   if (iter != connections.end()) {
     DatabaseConnection *db = iter->second;
-    if (db->IsConnected()) {
+    if (db->IsAcceptingWork()) {
       wxLogDebug(_T("Using existing connection %s"), db->Identification().c_str());
       return db;
     }

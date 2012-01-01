@@ -23,15 +23,20 @@ public:
 
 class DatabaseConnection {
 public:
+  DatabaseConnection(const ServerConnection *server, const wxString &dbname
 #if PG_VERSION_NUM >= 90000
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), label(label), workerThread(this), connectionCallback(NULL) {
-    Setup();
-  }
-#else
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex), workerThread(this), connectionCallback(NULL) {
-    Setup();
-  }
+		     , const wxString &label = wxEmptyString
 #endif
+		     )
+  : server(server), dbname(dbname), workCondition(workQueueMutex),
+#if PG_VERSION_NUM >= 90000
+    label(label),
+#endif
+    workerThread(this), connectionCallback(NULL), disconnectQueued(false)
+  {
+    identification = server->Identification() + _T(" ") + dbname;
+  }
+
   ~DatabaseConnection() {
     wxCHECK2_MSG(GetState() == NOT_CONNECTED, Dispose(), identification.c_str());
   }
@@ -50,6 +55,7 @@ public:
   void LogConnectNeedsPassword();
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
   bool IsConnected() const { State state = workerThread.GetState(); return state != NOT_CONNECTED && state != DISCONNECTED; };
+  bool IsAcceptingWork() const { return IsConnected() && !disconnectQueued; }
   const wxString& DbName() const { return dbname; }
   void Relabel(const wxString &newLabel);
   // NOT_CONNECTED - worker thread not started or already joined
@@ -88,7 +94,6 @@ private:
     friend class DatabaseConnection;
   };
 
-  void Setup() { identification = server->Identification() + _T(" ") + dbname; }
   void FinishDisconnection();
   wxString identification;
   const ServerConnection *server;
@@ -102,6 +107,7 @@ private:
   WorkerThread workerThread;
   ConnectionCallback *connectionCallback;
   std::set<wxString> preparedStatements;
+  bool disconnectQueued;
 
   friend class WorkerThread;
   friend class DisconnectWork;

@@ -279,6 +279,7 @@ bool DatabaseConnection::BeginDisconnection() {
   wxMutexLocker workQueueLocker(workQueueMutex);
   workQueue.push_back(new DisconnectWork());
   workCondition.Signal();
+  disconnectQueued = true;
   return true;
 }
 

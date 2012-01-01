@@ -51,6 +51,8 @@ private:
   ScriptModel& FindScriptForEditor(const ScriptEditor *);
   unsigned FindScriptPage(const ScriptModel&) const;
 
+  wxString GenerateDocumentName() { return wxString::Format(_("Query-%d.sql"), ++documentCounter); }
+
   friend class ScriptEditor;
 
   DECLARE_EVENT_TABLE()

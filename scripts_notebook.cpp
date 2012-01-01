@@ -18,10 +18,7 @@ END_EVENT_TABLE()
 DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_SELECTED)
 
 ScriptEditor* ScriptsNotebook::OpenNewScript() {
-  wxString tabName;
-  tabName << _("Query-") << ++documentCounter;
-
-  scripts.push_back(ScriptModel(tabName));
+  scripts.push_back(ScriptModel(GenerateDocumentName()));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
   AddPage(editor, scripts.back().FormatTitle(), true);
   editor->SetFocus();
@@ -30,10 +27,7 @@ ScriptEditor* ScriptsNotebook::OpenNewScript() {
 }
 
 ScriptEditor* ScriptsNotebook::OpenScriptWithText(const wxString &text) {
-  wxString tabName;
-  tabName << _("Query-") << ++documentCounter;
-
-  scripts.push_back(ScriptModel(tabName));
+  scripts.push_back(ScriptModel(GenerateDocumentName()));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
   AddPage(editor, scripts.back().FormatTitle(), true);
   editor->AddText(text);
@@ -51,6 +45,8 @@ ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
     tabName = filename;
   else
     tabName = filename.Mid(slash + 1);
+
+  documentCounter++;
 
   scripts.push_back(ScriptModel(tabName, filename));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);

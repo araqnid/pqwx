@@ -39,8 +39,13 @@ ScriptEditor* ScriptsNotebook::OpenScriptWithText(const wxString &text) {
 
 ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
   wxString tabName;
+#ifdef __WXMSW__
+  static const wxChar PathSeparator = _T('\\');
+#else
+  static const wxChar PathSeparator = _T('/');
+#endif
 
-  size_t slash = filename.find_last_of(_T('/'));
+  size_t slash = filename.find_last_of(PathSeparator);
   if (slash == wxString::npos)
     tabName = filename;
   else

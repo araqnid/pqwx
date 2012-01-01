@@ -18,20 +18,29 @@ public:
     virtual void OnCancelled() = 0;
   };
 
-  ObjectFinder(wxWindow *parent, Completion *callback, const CatalogueIndex *catalogue)
-    : wxDialog(), catalogue(catalogue), completion(callback), filter(catalogue->CreateNonSystemFilter()) {
-    Init(parent);
-
-    filter &= catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
-	       | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
-	       ;
+  static CatalogueIndex::Filter CreateFilter(const CatalogueIndex *catalogue) {
+    return catalogue->CreateNonSystemFilter()
+      & (catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
+	 );
   }
-  virtual ~ObjectFinder() {
+
+  ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue)
+    : wxDialog(), catalogue(catalogue), completion(NULL), filter(CreateFilter(catalogue)) {
+    Init(parent);
+  }
+
+  ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue, Completion *callback)
+    : wxDialog(), catalogue(catalogue), completion(callback), filter(CreateFilter(catalogue)) {
+    Init(parent);
+  }
+
+  ~ObjectFinder() {
     delete completion;
   }
 

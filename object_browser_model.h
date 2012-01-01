@@ -74,7 +74,7 @@ public:
   bool IsSystem() {
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
-  std::map<unsigned long,wxTreeItemId> symbolItemLookup;
+  std::map<Oid, wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
 

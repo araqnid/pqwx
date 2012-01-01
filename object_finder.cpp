@@ -108,18 +108,35 @@ void ObjectFinder::OnDoubleClickResult(wxCommandEvent &event) {
   wxASSERT(((unsigned) n) < results.size());
   const CatalogueIndex::Result &result = results[n];
   wxLogDebug(_T("Open object: %s"), result.document->symbol.c_str());
-  completion->OnObjectChosen(result.document);
-
+  if (completion != NULL) {
+    completion->OnObjectChosen(result.document);
+    delete completion;
+  }
+  else {
+    EndModal(result.document->entityId);
+  }
   Destroy();
 }
 
 void ObjectFinder::OnCancel(wxCommandEvent &event) {
-  completion->OnCancelled();
+  if (completion != NULL) {
+    completion->OnCancelled();
+    delete completion;
+  }
+  else {
+    EndModal(0);
+  }
   Destroy();
 }
 
 void ObjectFinder::OnClose(wxCloseEvent &event) {
-  completion->OnCancelled();
+  if (completion != NULL) {
+    completion->OnCancelled();
+    delete completion;
+  }
+  else {
+    EndModal(0);
+  }
   Destroy();
 }
 

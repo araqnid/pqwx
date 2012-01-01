@@ -647,9 +647,7 @@ private:
 class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
 protected:
   void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *catalogue) {
-    ObjectFinder *finder = new ObjectFinder(NULL, new ZoomToFoundObjectOnCompletion(ob, db), catalogue);
-    finder->Show();
-    finder->SetFocus();
+    ob->FindObject(db);
   }
 };
 
@@ -667,21 +665,27 @@ void ObjectBrowser::FindObject() {
     wxLogDebug(_T("No database selected, can't open find object here"));
   }
 
-  wxLogDebug(_T("Find object in %s"), database->Identification().c_str());
-
-  // TODO - should be able to open the dialogue and have it start loading this if it's not already done
   if (!database->loaded) {
     LoadDatabase(FindDatabaseItem(database), database, new OpenObjectFinderOnIndexSchemaCompletion());
     return;
   }
-  wxASSERT(database->catalogueIndex != NULL);
 
-  ObjectFinder *finder = new ObjectFinder(NULL, new ZoomToFoundObjectOnCompletion(this, database), database->catalogueIndex);
-  finder->Show();
-  finder->SetFocus();
+  FindObject(database);
 }
 
-wxTreeItemId ObjectBrowser::FindServerItem(ServerModel *server) const {
+void ObjectBrowser::FindObject(const DatabaseModel *database) {
+  wxASSERT(database->loaded);
+  wxASSERT(database->catalogueIndex != NULL);
+
+  ObjectFinder *finder = new ObjectFinder(NULL, database->catalogueIndex);
+  finder->SetFocus();
+  Oid entityId = finder->ShowModal();
+  if (entityId > 0) {
+    ZoomToFoundObject(database, entityId);
+  }
+}
+
+wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const {
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
@@ -693,7 +697,7 @@ wxTreeItemId ObjectBrowser::FindServerItem(ServerModel *server) const {
   } while (1);
 }
 
-wxTreeItemId ObjectBrowser::FindDatabaseItem(DatabaseModel *database) const {
+wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const {
   wxTreeItemId serverItem = FindServerItem(database->server);
   wxASSERT(serverItem.IsOk());
   wxTreeItemIdValue cookie;
@@ -707,7 +711,7 @@ wxTreeItemId ObjectBrowser::FindDatabaseItem(DatabaseModel *database) const {
   } while (1);
 }
 
-wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const {
+wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database) const {
   wxTreeItemId databaseItem = FindDatabaseItem(database);
   wxASSERT(databaseItem.IsOk());
   wxTreeItemIdValue cookie;
@@ -722,9 +726,8 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(DatabaseModel *database) const
   } while (1);
 }
 
-void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIndex::Document *document) {
-  wxLogDebug(_T("Zoom to found object \"%s\" in database \"%s\""), document->symbol.c_str(), database->Identification().c_str());
-  if (database->symbolItemLookup.count(document->entityId) == 0) {
+void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
+  if (database->symbolItemLookup.count(entityId) == 0) {
     wxTreeItemId item = FindSystemSchemasItem(database);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
     if (systemSchemasLoader != NULL) {
@@ -734,8 +737,9 @@ void ObjectBrowser::ZoomToFoundObject(DatabaseModel *database, const CatalogueIn
       DeleteLazyLoader(item);
     }
   }
-  wxASSERT(database->symbolItemLookup.count(document->entityId) > 0);
-  wxTreeItemId item = database->symbolItemLookup[document->entityId];
+  std::map<Oid, wxTreeItemId>::const_iterator iter = database->symbolItemLookup.find(entityId);
+  wxASSERT(iter != database->symbolItemLookup.end());
+  wxTreeItemId item = iter->second;
   EnsureVisible(item);
   SelectItem(item);
   Expand(item);

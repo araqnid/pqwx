@@ -49,7 +49,9 @@ public:
   void LoadRelation(wxTreeItemId parent, RelationModel *rel);
   void DisconnectSelected();
   void FindObject();
-  void ZoomToFoundObject(DatabaseModel*, const CatalogueIndex::Document*);
+  void FindObject(const DatabaseModel*);
+  void ZoomToFoundObject(const DatabaseModel *database, const CatalogueIndex::Document *document) { ZoomToFoundObject(database, document->entityId); }
+  void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
 
   void Dispose();
 
@@ -70,9 +72,9 @@ public:
   void DivideSchemaMembers(std::vector<SchemaMemberModel*> &members, std::vector<SchemaMemberModel*> &userDivision, std::vector<SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<SchemaMemberModel*> > &extensionDivisions);
   void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
-  wxTreeItemId FindServerItem(ServerModel *server) const;
-  wxTreeItemId FindDatabaseItem(DatabaseModel *db) const;
-  wxTreeItemId FindSystemSchemasItem(DatabaseModel *db) const;
+  wxTreeItemId FindServerItem(const ServerModel *server) const;
+  wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
+  wxTreeItemId FindSystemSchemasItem(const DatabaseModel *db) const;
   LazyLoader* GetLazyLoader(wxTreeItemId item) const;
   void DeleteLazyLoader(wxTreeItemId item);
 

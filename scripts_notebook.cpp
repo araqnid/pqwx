@@ -17,29 +17,33 @@ END_EVENT_TABLE()
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_SELECTED)
 
-void ScriptsNotebook::OpenNewScript() {
+ScriptEditor* ScriptsNotebook::OpenNewScript() {
   wxString tabName;
   tabName << _("Query-") << ++documentCounter;
 
   scripts.push_back(ScriptModel(tabName));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
-  AddPage(editor, tabName, true);
+  AddPage(editor, scripts.back().FormatTitle(), true);
   editor->SetFocus();
+
+  return editor;
 }
 
-void ScriptsNotebook::OpenScriptWithText(const wxString &text) {
+ScriptEditor* ScriptsNotebook::OpenScriptWithText(const wxString &text) {
   wxString tabName;
   tabName << _("Query-") << ++documentCounter;
 
   scripts.push_back(ScriptModel(tabName));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
-  AddPage(editor, tabName, true);
+  AddPage(editor, scripts.back().FormatTitle(), true);
   editor->AddText(text);
   editor->EmptyUndoBuffer();
   editor->SetFocus();
+
+  return editor;
 }
 
-void ScriptsNotebook::OpenScriptFile(const wxString &filename) {
+ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
   wxString tabName;
 
   size_t slash = filename.find_last_of(_T('/'));
@@ -50,8 +54,11 @@ void ScriptsNotebook::OpenScriptFile(const wxString &filename) {
 
   scripts.push_back(ScriptModel(tabName, filename));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
-  AddPage(editor, tabName, true);
+  AddPage(editor, scripts.back().FormatTitle(), true);
   editor->SetFocus();
+
+  return editor;
+
 }
 
 ScriptModel& ScriptsNotebook::FindScriptForEditor(const ScriptEditor *editor) {
@@ -79,19 +86,25 @@ void ScriptsNotebook::MarkScriptModified(ScriptModel &script)
 {
   script.modified = true;
   EmitScriptSelected(script);
-  SetPageText(FindScriptPage(script), script.title + _T(" *"));
+  SetPageText(FindScriptPage(script), script.FormatTitle());
 }
 
 void ScriptsNotebook::MarkScriptUnmodified(ScriptModel &script)
 {
   script.modified = false;
   EmitScriptSelected(script);
-  SetPageText(FindScriptPage(script), script.title);
+  SetPageText(FindScriptPage(script), script.FormatTitle());
+}
+
+void ScriptsNotebook::UpdateScriptDatabase(ScriptModel &script, const wxString &database) {
+  script.database = database;
+  EmitScriptSelected(script);
+  SetPageText(FindScriptPage(script), script.FormatTitle());
 }
 
 void ScriptsNotebook::EmitScriptSelected(ScriptModel &script)
 {
   wxCommandEvent selectionChangedEvent(PQWX_SCRIPT_SELECTED);
-  selectionChangedEvent.SetString(script.title + (script.modified ? _T(" *") : wxEmptyString));
+  selectionChangedEvent.SetString(script.FormatTitle());
   ProcessEvent(selectionChangedEvent);
 }

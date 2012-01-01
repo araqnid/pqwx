@@ -13,25 +13,37 @@ class ScriptEditor;
 class ScriptModel {
 public:
   ScriptModel(const wxString &title, const wxString &filename = wxEmptyString) : title(title), filename(filename), modified(false) {}
+  wxString FormatTitle() {
+    wxString output;
+    if (database.empty())
+      output << _("<disconnected>");
+    else
+      output = database;
+    output << _T(" - ") << title;
+    if (modified) output << _T(" *");
+    return output;
+  }
 private:
+  ScriptsNotebook *owner;
   wxString title;
   wxString filename;
+  wxString database;
   bool modified;
   friend class ScriptsNotebook;
 };
 
 class ScriptsNotebook : public wxNotebook {
 public:
-  ScriptsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size), documentCounter(0) {
-  }
+  ScriptsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size), documentCounter(0) { }
 
-  void OpenNewScript();
-  void OpenScriptFile(const wxString &filename);
-  void OpenScriptWithText(const wxString &text);
+  ScriptEditor *OpenNewScript();
+  ScriptEditor *OpenScriptFile(const wxString &filename);
+  ScriptEditor *OpenScriptWithText(const wxString &text);
 
   void EmitScriptSelected(ScriptModel &);
   void MarkScriptModified(ScriptModel &);
   void MarkScriptUnmodified(ScriptModel &);
+  void UpdateScriptDatabase(ScriptModel &, const wxString &database);
 private:
   int documentCounter;
   std::vector<ScriptModel> scripts;

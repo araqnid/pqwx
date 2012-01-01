@@ -17,7 +17,7 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
 END_EVENT_TABLE()
 
-ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner)
+ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner), db(NULL)
 {
   SetLexer(wxSTC_LEX_SQL);
 #if wxUSE_UNICODE
@@ -135,4 +135,14 @@ void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
 {
   ScriptModel& script = owner->FindScriptForEditor(this);
   owner->MarkScriptUnmodified(script);
+}
+
+void ScriptEditor::Connect(const ServerConnection &server, const wxString &dbname)
+{
+  wxASSERT(db == NULL);
+  db = new DatabaseConnection(server, dbname, _("Query"));
+  // TODO handle connection problems, direct through connection dialogue
+  db->Connect();
+  ScriptModel& script = owner->FindScriptForEditor(this);
+  owner->UpdateScriptDatabase(script, db->Identification());
 }

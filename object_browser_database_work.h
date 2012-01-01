@@ -380,9 +380,9 @@ protected:
 
 class ScriptWork : public ObjectBrowserWork {
 public:
-  const enum Mode { Create, Alter, Drop, Select, Insert, Update, Delete } mode;
-  const enum Output { Window, File, Clipboard } output;
-  ScriptWork(Mode mode, Output output): mode(mode), output(output) {}
+  enum Mode { Create, Alter, Drop, Select, Insert, Update, Delete };
+  enum Output { Window, File, Clipboard };
+  ScriptWork(DatabaseModel *database, Mode mode, Output output) : database(database), mode(mode), output(output) {}
 protected:
   std::vector<wxString> statements;
   void LoadIntoView(ObjectBrowser *ob) {
@@ -395,6 +395,7 @@ protected:
 	script << *iter << _T("\n\n");
       }
       evt.SetString(script);
+      evt.SetClientObject(database);
       ob->ProcessEvent(evt);
       return;
     }
@@ -414,15 +415,17 @@ protected:
     wxLogDebug(_T("%s"), message.c_str());
     wxMessageBox(message);
   }
+  DatabaseModel *database;
+  const Mode mode;
+private:
+  const Output output;
 };
 
 class DatabaseScriptWork : public ScriptWork {
 public:
-  DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), database(database) {
+  DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(database, mode, output) {
     wxLogDebug(_T("%p: work to generate database script"), this);
   }
-private:
-  DatabaseModel *database;
 protected:
   void Execute() {
     QueryResults rs;
@@ -467,7 +470,7 @@ protected:
 
 class TableScriptWork : public ScriptWork {
 public:
-  TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), table(table) {
+  TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(table->database, mode, output), table(table) {
     wxLogDebug(_T("%p: work to generate table script"), this);
   }
 private:
@@ -478,7 +481,7 @@ protected:
 
 class ViewScriptWork : public ScriptWork {
 public:
-  ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), view(view) {
+  ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view->database, mode, output), view(view) {
     wxLogDebug(_T("%p: work to generate view script"), this);
   }
 private:
@@ -489,7 +492,7 @@ protected:
 
 class SequenceScriptWork : public ScriptWork {
 public:
-  SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), sequence(sequence) {
+  SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequence->database, mode, output), sequence(sequence) {
     wxLogDebug(_T("%p: work to generate sequence script"), this);
   }
 private:
@@ -500,7 +503,7 @@ protected:
 
 class FunctionScriptWork : public ScriptWork {
 public:
-  FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(mode, output), function(function) {
+  FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(function->database, mode, output), function(function) {
     wxLogDebug(_T("%p: work to generate function script"), this);
   }
 private:

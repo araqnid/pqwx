@@ -14,10 +14,12 @@
 #include "pqwx_version.h"
 #include "wx_flavour.h"
 #include "object_browser.h"
+#include "object_browser_model.h"
 #include "connect_dialogue.h"
 #include "scripts_notebook.h"
 #include "results_notebook.h"
 #include "script_events.h"
+#include "script_editor.h"
 
 #if !defined(__WXMSW__) && !defined(__WXPM__)
     #include "pqwx-appicon.xpm"
@@ -122,7 +124,9 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 
 void PqwxFrame::OnScriptToWindow(wxCommandEvent& event)
 {
-  scriptsBook->OpenScriptWithText(event.GetString());
+  DatabaseModel *database = (DatabaseModel*) event.GetClientObject();
+  ScriptEditor *editor = scriptsBook->OpenScriptWithText(event.GetString());
+  editor->Connect(database->server->conninfo, database->name);
 }
 
 void PqwxFrame::OnScriptSelected(wxCommandEvent &event)

@@ -161,7 +161,7 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
     wxLogDebug(_T(" trailing terms not matched: %d"), suffixLength);
 #endif
-    int lastLengthDifference;
+    int lastLengthDifference = 0;
     int totalLengthDifference = 0;
     std::vector<const Occurrence*>::iterator matchIter = matched.begin();
     std::vector<Token>::iterator tokenIter = tokens.begin();

@@ -20,7 +20,9 @@ END_EVENT_TABLE()
 ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner)
 {
   SetLexer(wxSTC_LEX_SQL);
+#if wxUSE_UNICODE
   SetCodePage(wxSTC_CP_UTF8);
+#endif
   // taken from sql.properties in scite
   SetKeyWords(0, _T("absolute action add admin after aggregate \
 alias all allocate alter and any are array as asc \

@@ -133,12 +133,13 @@ private:
 
 class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
-  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem) : databaseModel(databaseModel), databaseItem(databaseItem) {
+  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem, bool expandAfter) : databaseModel(databaseModel), databaseItem(databaseItem), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
   DatabaseModel *databaseModel;
   wxTreeItemId databaseItem;
+  bool expandAfter;
 protected:
   void Execute() {
     LoadRelations();
@@ -192,7 +193,7 @@ protected:
   }
   void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInDatabaseSchema(databaseModel, databaseItem);
-    ob->Expand(databaseItem);
+    if (expandAfter) ob->Expand(databaseItem);
     ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
   }
 private:

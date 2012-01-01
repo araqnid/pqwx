@@ -820,6 +820,9 @@ void ObjectBrowser::UpdateSelectedDatabase() {
   wxTreeItemId selected = GetSelection();
   DatabaseModel *database = NULL;
   ServerModel *server = NULL;
+
+  if (!selected.IsOk()) return;
+
   FindItemContext(selected, &server, &database);
 
   if (server == NULL) {

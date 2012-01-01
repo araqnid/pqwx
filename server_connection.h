@@ -9,7 +9,6 @@
 
 #include "wx/intl.h"
 #include "pg_config.h"
-#include "database_connection.h"
 
 class ServerConnection {
 public:

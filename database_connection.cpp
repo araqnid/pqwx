@@ -45,55 +45,24 @@ public:
   }
 };
 
-class DatabaseWorkerThread : public wxThread {
-public:
-  DatabaseWorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false) { }
-protected:
-  virtual ExitCode Entry();
-private:
-  std::deque<DatabaseWork*> workQueue;
-  PGconn *conn;
-  DatabaseConnection *db;
-  bool disconnect;
-
-  bool Connect();
-
-  void SetState(DatabaseConnection::State state) {
-    wxMutexLocker locker(db->workerStateMutex);
-    db->state = state;
-  }
-
-  friend class DatabaseConnection;
-};
-
-void DatabaseConnection::Setup() {
-  identification = server->Identification() + _T(" ") + dbname;
-}
-
-void DatabaseConnection::CleanUpWorkerThread() {
-  wxASSERT(workerThread != NULL);
-  wxLogDebug(_T("%s: deleting worker thread"), identification.c_str());
-  delete workerThread;
-  workerThread = NULL;
-}
-
 void DatabaseConnection::Connect(ConnectionCallback *callback) {
   connectionCallback = callback;
 
-  wxMutexLocker stateLocker(workerStateMutex);
-  wxASSERT(workerThread == NULL);
-  state = INITIALISING;
-  workerThread = new DatabaseWorkerThread(this);
-  workerThread->Create();
-  workerThread->Run();
+  wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
+  wxASSERT(workerThread.state == NOT_CONNECTED);
+  workerThread.state = INITIALISING;
+  workerThread.Create();
+  workerThread.Run();
 
   wxMutexLocker queueLocker(workQueueMutex);
-  workerThread->workQueue.push_back(new InitialiseWork());
+  workQueue.push_back(new InitialiseWork());
   workCondition.Signal();
-  wxLogDebug(_T("thr#%lx: new database connection worker for '%s'"), workerThread->GetId(), dbname.c_str());
+  wxLogDebug(_T("thr#%lx: new database connection worker for '%s'"), workerThread.GetId(), dbname.c_str());
 }
 
 void DatabaseConnection::CloseSync() {
+  State state = GetState();
+
   if (state == NOT_CONNECTED) {
     wxLogDebug(_T("%s: CloseSync: not connected"), identification.c_str());
     return;
@@ -108,35 +77,28 @@ void DatabaseConnection::CloseSync() {
   }
 
   wxLogDebug(_T("%s: CloseSync: waiting for worker completion"), identification.c_str());
-  workerThread->Wait();
-  CleanUpWorkerThread();
+  workerThread.Wait();
+  workerThread.state = NOT_CONNECTED;
 
   wxLogDebug(_T("%s: CloseSync: worker completed after waiting"), identification.c_str());
 }
 
 bool DatabaseConnection::WaitUntilClosed() {
-  if (state == NOT_CONNECTED) {
+  if (GetState() == NOT_CONNECTED) {
     wxLogDebug(_T("%s: WaitUntilClosed: not connected"), identification.c_str());
     return false;
   }
 
-  wxASSERT(workerThread != NULL);
-
   wxLogDebug(_T("%s: WaitUntilClosed: waiting for worker completion"), identification.c_str());
-  workerThread->Wait();
-  CleanUpWorkerThread();
+  workerThread.Wait();
+  workerThread.state = NOT_CONNECTED;
 
   wxLogDebug(_T("%s: WaitUntilClosed: worker completed after waiting"), identification.c_str());
 
   return true;
 }
 
-bool DatabaseConnection::IsConnected() const {
-  wxMutexLocker locker(workerStateMutex);
-  return state != NOT_CONNECTED && state != DISCONNECTED;
-}
-
-wxThread::ExitCode DatabaseWorkerThread::Entry() {
+wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
   SetState(DatabaseConnection::CONNECTING);
 
   if (!Connect()) {
@@ -146,9 +108,9 @@ wxThread::ExitCode DatabaseWorkerThread::Entry() {
   wxMutexLocker locker(db->workQueueMutex);
 
   do {
-    while (!workQueue.empty()) {
-      DatabaseWork *work = workQueue.front();
-      workQueue.pop_front();
+    while (!db->workQueue.empty()) {
+      DatabaseWork *work = db->workQueue.front();
+      db->workQueue.pop_front();
       db->workQueueMutex.Unlock();
       SetState(DatabaseConnection::EXECUTING);
       work->db = db;
@@ -191,7 +153,7 @@ static const char *options[] = {
   NULL
 };
 
-bool DatabaseWorkerThread::Connect() {
+bool DatabaseConnection::WorkerThread::Connect() {
   const char *values[6];
   // buffer these for the duration of this scope
   wxCharBuffer hostname = db->server->hostname.utf8_str();
@@ -294,44 +256,38 @@ void DatabaseConnection::LogSqlQueryFailed(const char *msg, ExecStatusType statu
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {
-  wxMutexLocker stateLocker(workerStateMutex);
-  wxCHECK(workerThread != NULL, );
-  workerThread->workQueue.push_back(work);
+  wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
+  wxCHECK(workerThread.state != NOT_CONNECTED && workerThread.state != DISCONNECTED, );
+  workQueue.push_back(work);
   workCondition.Signal();
 }
 
 bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
-  wxMutexLocker stateLocker(workerStateMutex);
-  if (workerThread == NULL)
-    return false;
-  if (state == DISCONNECTED)
+  wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
+  if (workerThread.state == DISCONNECTED)
     return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
-  workerThread->workQueue.push_back(work);
+  workQueue.push_back(work);
   workCondition.Signal();
   return true;
 }
 
 bool DatabaseConnection::BeginDisconnection() {
-  wxMutexLocker stateLocker(workerStateMutex);
-  if (workerThread == NULL)
-    return false;
-  if (state == DISCONNECTED)
+  wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
+  if (workerThread.state == DISCONNECTED)
     return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
-  workerThread->workQueue.push_back(new DisconnectWork());
+  workQueue.push_back(new DisconnectWork());
   workCondition.Signal();
   return true;
 }
 
 void DatabaseConnection::FinishDisconnection() {
-  wxMutexLocker stateLocker(workerStateMutex);
-  if (workerThread == NULL)
-    return;
-  if (state == DISCONNECTED)
+  wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
+  if (workerThread.state == DISCONNECTED)
     return;
   wxMutexLocker workQueueLocker(workQueueMutex);
-  workerThread->disconnect = true;
+  workerThread.disconnect = true;
   workCondition.Signal();
 }
 
@@ -340,20 +296,17 @@ void DatabaseConnection::Relabel(const wxString &newLabel) {
 }
 
 void DatabaseConnection::Dispose() {
+  State state = GetState();
+
   if (state == NOT_CONNECTED) {
     wxLogDebug(_T("%s: Dispose: not connected"), identification.c_str());
-    wxASSERT(workerThread == NULL);
     return;
   }
 
   if (state == DISCONNECTED) {
-    wxLogDebug(_T("%s: Dispose: disconnected"), identification.c_str());
-    if (workerThread != NULL) {
-      wxLogDebug(_T("%s: Dispose: cleaning up worker thread"), identification.c_str());
-      workerThread->Wait();
-      CleanUpWorkerThread();
-    }
-    state = NOT_CONNECTED;
+    wxLogDebug(_T("%s: Dispose: disconnected, joining worker thread"), identification.c_str());
+    workerThread.Wait();
+    workerThread.state = NOT_CONNECTED;
     return;
   }
 

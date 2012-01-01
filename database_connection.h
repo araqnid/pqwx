@@ -4,14 +4,13 @@
 #define __database_connection_h
 
 #include <set>
+#include <deque>
 #include "libpq-fe.h"
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "wx/log.h"
 #include "server_connection.h"
 
-class DatabaseWorkerThread;
-class ServerConnection;
 class DatabaseWork;
 class DisconnectWork;
 
@@ -25,22 +24,16 @@ public:
 class DatabaseConnection {
 public:
 #if PG_VERSION_NUM >= 90000
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), label(label) {
-    workerThread = NULL;
-    state = NOT_CONNECTED;
-    connectionCallback = NULL;
+  DatabaseConnection(const ServerConnection *server, const wxString &dbname, const wxString &label = wxEmptyString) : server(server), dbname(dbname), workCondition(workQueueMutex), label(label), workerThread(this), connectionCallback(NULL) {
     Setup();
   }
 #else
-  DatabaseConnection(const ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex) {
-    workerThread = NULL;
-    state = NOT_CONNECTED;
-    connectionCallback = NULL;
+  DatabaseConnection(const ServerConnection *server, const wxString &dbname) : server(server), dbname(dbname), workCondition(workQueueMutex), workerCompleteCondition(workerStateMutex), workerThread(this), connectionCallback(NULL) {
     Setup();
   }
 #endif
   ~DatabaseConnection() {
-    wxCHECK_MSG(workerThread == NULL, , identification.c_str());
+    wxCHECK2_MSG(GetState() == NOT_CONNECTED, Dispose(), identification.c_str());
   }
 
   void Connect(ConnectionCallback *callback = NULL);
@@ -56,33 +49,61 @@ public:
   void LogConnectFailed(const char *msg);
   void LogConnectNeedsPassword();
   void LogSqlQueryFailed(const char *msg, ExecStatusType status);
-  bool IsConnected() const;
+  bool IsConnected() const { State state = workerThread.GetState(); return state != NOT_CONNECTED && state != DISCONNECTED; };
   const wxString& DbName() const { return dbname; }
   void Relabel(const wxString &newLabel);
+  // NOT_CONNECTED - worker thread not started or already joined
+  // DISCONNECTED - worker thread finished running, but not joined
+  // all others - worker thread is running
   enum State { NOT_CONNECTED, INITIALISING, CONNECTING, IDLE, EXECUTING, DISCONNECTED };
-  State GetState();
+  State GetState() const { return workerThread.GetState(); }
   const wxString& Identification() const { return identification; }
   bool IsStatementPrepared(const wxString& name) const { return preparedStatements.count(name); }
   void MarkStatementPrepared(const wxString& name) { preparedStatements.insert(name); }
 private:
-  void Setup();
-  void CleanUpWorkerThread();
+  class WorkerThread : public wxThread {
+  public:
+    WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED) { }
+  protected:
+    virtual ExitCode Entry();
+  private:
+    PGconn *conn;
+    DatabaseConnection *db;
+    bool disconnect;
+    mutable wxCriticalSection stateCriticalSection;
+    State state;
+
+    bool Connect();
+
+    State GetState() const {
+      wxCriticalSectionLocker locker(stateCriticalSection);
+      return state;
+    }
+
+    void SetState(State state_) {
+      wxCriticalSectionLocker locker(stateCriticalSection);
+      state = state_;
+    }
+
+    friend class DatabaseConnection;
+  };
+
+  void Setup() { identification = server->Identification() + _T(" ") + dbname; }
   void FinishDisconnection();
   wxString identification;
   const ServerConnection *server;
   const wxString dbname;
-  DatabaseWorkerThread *workerThread;
+  std::deque<DatabaseWork*> workQueue;
   wxMutex workQueueMutex;
   wxCondition workCondition;
-  mutable wxMutex workerStateMutex;
 #if PG_VERSION_NUM >= 90000
   wxString label;
 #endif
+  WorkerThread workerThread;
   ConnectionCallback *connectionCallback;
-  State state;
   std::set<wxString> preparedStatements;
 
-  friend class DatabaseWorkerThread;
+  friend class WorkerThread;
   friend class DisconnectWork;
 };
 

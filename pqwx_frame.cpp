@@ -43,6 +43,8 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   PQWX_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
   PQWX_SCRIPT_SELECTED(wxID_ANY, PqwxFrame::OnScriptSelected)
   PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
+  PQWX_SCRIPT_EXECUTION_BEGINNING(wxID_ANY, PqwxFrame::OnScriptExecutionBeginning)
+  PQWX_SCRIPT_EXECUTION_FINISHING(wxID_ANY, PqwxFrame::OnScriptExecutionFinishing)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -60,11 +62,13 @@ PqwxFrame::PqwxFrame(const wxString& title)
   scriptsBook = new ScriptsNotebook(this, Pqwx_ScriptsNotebook);
   resultsBook = new ResultsNotebook(this, Pqwx_ResultsNotebook);
 
-  wxSizer *editorSizer = new wxBoxSizer(wxVERTICAL);
+  editorSizer = new wxBoxSizer(wxVERTICAL);
   editorSizer->Add(scriptsBook, 3, wxEXPAND);
   editorSizer->Add(resultsBook, 1, wxEXPAND);
+  editorSizer->Hide(1);
+  editorSizer->Layout();
 
-  wxSizer *mainSizer = new wxBoxSizer(wxHORIZONTAL);
+  mainSizer = new wxBoxSizer(wxHORIZONTAL);
   mainSizer->Add(objectBrowser, 1, wxEXPAND);
   mainSizer->Add(editorSizer, 3, wxEXPAND);
   SetSizer(mainSizer);
@@ -174,6 +178,7 @@ void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
   else {
     haveCurrentServer = false;
   }
+  GetStatusBar()->SetStatusText(wxEmptyString);
 }
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
@@ -182,6 +187,7 @@ void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
   currentServer = event.GetServer();
   currentDatabase = event.GetDatabase();
   haveCurrentServer = true;
+  GetStatusBar()->SetStatusText(wxEmptyString);
 }
 
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
@@ -204,4 +210,19 @@ void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
 
   wxCommandEvent cmd(PQWX_ScriptReconnect);
   currentEditor->ProcessEvent(cmd);
+}
+
+void PqwxFrame::OnScriptExecutionBeginning(wxCommandEvent &event)
+{
+  resultsBook->Reset();
+  editorSizer->Show(1, true);
+  editorSizer->Layout();
+  scriptExecutionStopwatch.Start();
+  event.SetEventObject(resultsBook);
+}
+
+void PqwxFrame::OnScriptExecutionFinishing(wxCommandEvent &event)
+{
+  long elapsed = scriptExecutionStopwatch.Time();
+  GetStatusBar()->SetStatusText(wxString::Format(_("Finished in %.2lf seconds"), ((double) elapsed) / 1000.0));
 }

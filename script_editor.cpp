@@ -30,7 +30,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
 
 ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
-: wxStyledTextCtrl(owner, id), owner(owner), db(NULL), lexer(NULL)
+: wxStyledTextCtrl(owner, id), owner(owner), db(NULL), lexer(NULL), resultsHandler(NULL)
 {
   SetLexer(wxSTC_LEX_SQL);
 #if wxUSE_UNICODE
@@ -204,8 +204,10 @@ void ScriptEditor::OnExecute(wxCommandEvent &event)
   wxCommandEvent beginEvt = wxCommandEvent(PQWX_ScriptExecutionBeginning);
   beginEvt.SetEventObject(this);
   ProcessEvent(beginEvt);
-
-  executionStopwatch.Start();
+  // the handler should give us an object to pass results to
+  wxASSERT(beginEvt.GetEventObject() != this);
+  resultsHandler = dynamic_cast<ExecutionResultsHandler*>(beginEvt.GetEventObject());
+  wxASSERT(resultsHandler != NULL);
 
   int start, end;
   GetSelection(&start, &end);
@@ -259,7 +261,7 @@ void ScriptEditor::FinishExecution()
   delete lexer;
 
   lexer = NULL;
-  wxLogDebug(_T("Script execution took %ldms"), executionStopwatch.Time());
+  resultsHandler = NULL;
 }
 
 void ScriptEditor::OnQueryComplete(wxCommandEvent &event)
@@ -268,13 +270,16 @@ void ScriptEditor::OnQueryComplete(wxCommandEvent &event)
   wxASSERT(result != NULL);
 
   if (result->status == PGRES_TUPLES_OK) {
-    wxLogDebug(_T("Got results with %lu tuples"), result->data.size());
+    wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data.size());
+    resultsHandler->ScriptResultSet(result->statusTag, result->data);
   }
   else if (result->status == PGRES_COMMAND_OK) {
-    wxLogDebug(_T("Got results with no tuples"));
+    wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
+    resultsHandler->ScriptCommandCompleted(result->statusTag);
   }
   else if (result->status == PGRES_FATAL_ERROR) {
-    wxLogDebug(_T("Got error"));
+    wxLogDebug(_T("Got error: %s"), result->error.primary.c_str());
+    resultsHandler->ScriptError(result->error);
   }
   else {
     wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
@@ -301,7 +306,10 @@ void ScriptEditor::OnConnectionNotice(const PGresult *rs)
 {
   wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
   PgError error(rs);
-  wxLogDebug(_T("diagnostic: (%s) %s"), error.severity.c_str(), error.primary.c_str());
+  if (resultsHandler != NULL)
+    resultsHandler->ScriptNotice(error);
+  else
+    wxLogDebug(_T("asynchronous diagnostic: (%s) %s"), error.severity.c_str(), error.primary.c_str());
 }
 
 void ScriptEditor::OnDisconnect(wxCommandEvent &event)

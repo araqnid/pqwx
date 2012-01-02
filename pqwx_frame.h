@@ -28,6 +28,8 @@ public:
   void OnScriptToWindow(PQWXDatabaseEvent& event);
   void OnScriptSelected(PQWXDatabaseEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);
+  void OnScriptExecutionBeginning(wxCommandEvent& event);
+  void OnScriptExecutionFinishing(wxCommandEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 
@@ -48,10 +50,14 @@ private:
   ResultsNotebook *resultsBook;
   ScriptsNotebook *scriptsBook;
   ScriptEditor *currentEditor;
+  wxSizer *editorSizer;
+  wxSizer *mainSizer;
 
   bool haveCurrentServer;
   ServerConnection currentServer;
   wxString currentDatabase;
+
+  wxStopWatch scriptExecutionStopwatch;
 
   friend class AddConnectionToObjectBrowser;
 

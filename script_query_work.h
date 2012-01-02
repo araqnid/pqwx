@@ -17,6 +17,10 @@ public:
     QueryResults data;
     long elapsed;
     PgError error;
+    wxString statusTag;
+    unsigned long tuplesProcessedCount;
+    Oid oidValue;
+    bool tuplesProcessedCountValid;
     friend class ScriptEditor; // so, effectively all public...
     friend class ScriptQueryWork;
   };
@@ -36,12 +40,15 @@ public:
     output->status = PQresultStatus(rs);
     if (output->status == PGRES_TUPLES_OK) {
       ReadResultSet(rs, output->data);
-      wxLogDebug(_T("Read %lu tuples"), output->data.size());
     }
     else if (output->status == PGRES_FATAL_ERROR) {
       db->LogSqlQueryFailed(PgError(rs));
       output->error = PgError(rs);
     }
+
+    ReadStatus(rs);
+
+    PQclear(rs);
 
     output->complete = true;
 
@@ -59,6 +66,18 @@ private:
   const ExecutionLexer::Token token;
   wxStopWatch stopwatch;
   Result *output;
+
+  void ReadStatus(PGresult *rs) {
+    output->statusTag = wxString(PQcmdStatus(rs), wxConvUTF8);
+    wxString tuplesCount = wxString(PQcmdTuples(rs), wxConvUTF8);
+    if (tuplesCount.empty())
+      output->tuplesProcessedCountValid = false;
+    else {
+      output->tuplesProcessedCountValid = tuplesCount.ToULong(&output->tuplesProcessedCount);
+    }
+    output->oidValue = PQoidValue(rs);
+  }
+
 };
 
 #endif

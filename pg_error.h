@@ -31,6 +31,7 @@ private:
 
   friend class ScriptEditor;
   friend class DatabaseConnection;
+  friend class ResultsNotebook;
 };
 
 #endif

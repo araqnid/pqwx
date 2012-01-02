@@ -13,6 +13,7 @@
 class ScriptModel;
 class ScriptsNotebook;
 class ScriptQueryWork;
+class ExecutionResultsHandler;
 
 extern "C" void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs);
 
@@ -52,9 +53,9 @@ private:
   void EmitScriptSelected();
 
   // execution
-  wxStopWatch executionStopwatch;
   wxCharBuffer source;
   ExecutionLexer *lexer;
+  ExecutionResultsHandler *resultsHandler;
 
   bool ProcessExecution();
   void FinishExecution();

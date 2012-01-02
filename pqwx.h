@@ -13,10 +13,8 @@ enum {
   Pqwx_EditorSplitter,
   Pqwx_ScriptsNotebook,
   Pqwx_ResultsNotebook,
-  Pqwx_ResultsPage,
   Pqwx_MessagesPage,
   Pqwx_MessagesDisplay,
-  Pqwx_PlanPage,
   Pqwx_ObjectFinderResults,
 };
 

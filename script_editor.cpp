@@ -271,7 +271,7 @@ void ScriptEditor::OnQueryComplete(wxCommandEvent &event)
 
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data.size());
-    resultsHandler->ScriptResultSet(result->statusTag, result->data);
+    resultsHandler->ScriptResultSet(result->statusTag, result->fields, result->data);
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());

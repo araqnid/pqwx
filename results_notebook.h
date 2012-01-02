@@ -11,20 +11,25 @@
 
 class ResultsNotebook : public wxNotebook, public ExecutionResultsHandler {
 public:
-  ResultsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size), resultsPanel(NULL), messagesPanel(NULL), messagesDisplay(NULL), planPanel(NULL) { }
+  ResultsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size), messagesPanel(NULL), messagesDisplay(NULL) { }
 
   void Reset();
 
   void ScriptCommandCompleted(const wxString& statusTag);
-  void ScriptResultSet(const wxString &statusTag, const QueryResults &data);
+  void ScriptResultSet(const wxString &statusTag,
+		       const std::vector<ResultField> &fields,
+		       const QueryResults &data);
   void ScriptError(const PgError &error);
   void ScriptNotice(const PgError &notice);
 
 private:
-  wxPanel *resultsPanel;
   wxPanel *messagesPanel;
   wxStyledTextCtrl *messagesDisplay;
-  wxPanel *planPanel;
+
+  void AddResultSet(wxPanel *parent, const std::vector<ResultField>& fields, const QueryResults &data);
+  bool addedResultSet;
+  bool addedError;
+
   DECLARE_EVENT_TABLE()
 };
 

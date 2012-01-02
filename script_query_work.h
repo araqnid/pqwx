@@ -15,6 +15,7 @@ public:
     ExecStatusType status;
     bool complete;
     QueryResults data;
+    std::vector<ResultField> fields;
     long elapsed;
     PgError error;
     wxString statusTag;
@@ -39,6 +40,7 @@ public:
 
     output->status = PQresultStatus(rs);
     if (output->status == PGRES_TUPLES_OK) {
+      ReadColumns(rs);
       ReadResultSet(rs, output->data);
     }
     else if (output->status == PGRES_FATAL_ERROR) {
@@ -67,7 +69,16 @@ private:
   wxStopWatch stopwatch;
   Result *output;
 
-  void ReadStatus(PGresult *rs) {
+  void ReadColumns(PGresult *rs)
+  {
+    int nfields = PQnfields(rs);
+    for (int index = 0; index < nfields; index++) {
+      output->fields.push_back(ResultField(rs, index));
+    }
+  }
+
+  void ReadStatus(PGresult *rs)
+  {
     output->statusTag = wxString(PQcmdStatus(rs), wxConvUTF8);
     wxString tuplesCount = wxString(PQcmdTuples(rs), wxConvUTF8);
     if (tuplesCount.empty())

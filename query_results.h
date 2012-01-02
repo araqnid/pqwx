@@ -7,6 +7,25 @@
 #include "libpq-fe.h"
 #include "wx/string.h"
 
+class ResultField {
+public:
+  ResultField(PGresult *rs, int index) {
+    name = wxString(PQfname(rs, index), wxConvUTF8);
+    table = PQftable(rs, index);
+    if (table != InvalidOid) tableColumn = PQftablecol(rs, index);
+    type = PQftype(rs, index);
+    typemod = PQfmod(rs, index);
+  }
+private:
+  wxString name;
+  Oid table;
+  int tableColumn;
+  Oid type;
+  int typemod;
+
+  friend class ResultsNotebook;
+};
+
 typedef std::vector<wxString> QueryRow;
 typedef std::vector<QueryRow> QueryResults;
 

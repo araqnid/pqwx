@@ -59,7 +59,18 @@ private:
 
   bool ProcessExecution();
   void FinishExecution();
+
+#ifdef __WXMSW__
+  const char *ExtractSQL(const ExecutionLexer::Token &token) const
+  {
+    char *str = (char*) malloc(token.length + 1);
+    memcpy(str, source.data() + token.offset, token.length);
+    str[token.length] = '\0';
+    return str;
+  }
+#else
   const char *ExtractSQL(const ExecutionLexer::Token &token) const { return strndup(source.data() + token.offset, token.length); }
+#endif
 
   friend class ScriptQueryWork;
 

@@ -817,6 +817,7 @@ void ObjectBrowser::OnItemSelected(wxTreeEvent &event)
 
 void ObjectBrowser::OnSetFocus(wxFocusEvent &event)
 {
+  event.Skip();
   UpdateSelectedDatabase();
 }
 

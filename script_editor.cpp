@@ -125,13 +125,13 @@ year zone"));
 
 void ScriptEditor::OnSetFocus(wxFocusEvent &event)
 {
-  wxStyledTextCtrl::OnGainFocus(event);
+  event.Skip();
   EmitScriptSelected();
 }
 
 void ScriptEditor::OnLoseFocus(wxFocusEvent &event)
 {
-  wxStyledTextCtrl::OnLoseFocus(event);
+  event.Skip();
 }
 
 void ScriptEditor::OnSavePointLeft(wxStyledTextEvent &event)

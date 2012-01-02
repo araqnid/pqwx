@@ -34,6 +34,7 @@ protected:
   wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
   wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
   DatabaseWork *owner;
+  PGconn *conn;
   friend class ObjectBrowserDatabaseWork;
 };
 
@@ -44,6 +45,7 @@ public:
   void Execute() {
     ChangeState(PENDING, EXECUTED);
     work->owner = this;
+    work->conn = conn;
     work->Execute();
     state = EXECUTED;
   }
@@ -98,7 +100,7 @@ private:
   int serverVersion;
   bool usingSSL;
   void ReadServer() {
-    serverModel->ReadServerParameters(PQparameterStatus(owner->conn, "server_version"), PQserverVersion(owner->conn), PQgetssl(owner->conn));
+    serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), PQgetssl(conn));
   }
   void ReadDatabases() {
     QueryResults databaseRows;

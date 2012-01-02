@@ -73,14 +73,13 @@ public:
     return DoNamedQuery(name, rs, 3, paramTypes, paramValues);
   }
 
+protected:
   DatabaseConnection *db;
   PGconn *conn;
   const VersionedSql *sqlDictionary;
-
-private:
   void ReadResultSet(PGresult *rs, QueryResults &results);
 
-  friend class DatabaseWorkerThread;
+  friend class DatabaseConnection::WorkerThread;
 };
 
 #endif

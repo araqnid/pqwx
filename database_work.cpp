@@ -79,8 +79,11 @@ bool DatabaseWork::DoCommand(const char *sql) {
   wxASSERT(rs != NULL);
 
   ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_COMMAND_OK) {
-    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+  if (status == PGRES_FATAL_ERROR) {
+    db->LogSqlQueryFailed(PgError(rs));
+  }
+  else if (status != PGRES_COMMAND_OK) {
+    db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
     return false;
   }
 
@@ -105,8 +108,12 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
 #endif
 
   ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_TUPLES_OK) {
-    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+  if (status == PGRES_FATAL_ERROR) {
+    db->LogSqlQueryFailed(PgError(rs));
+    return false;
+  }
+  else if (status != PGRES_TUPLES_OK) {
+    db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
     return false; // expected data back
   }
 
@@ -126,8 +133,12 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
     PGresult *prepareResult = PQprepare(conn, name.utf8_str(), sql, paramCount, paramTypes);
     wxCHECK(prepareResult, false);
     ExecStatusType prepareStatus = PQresultStatus(prepareResult);
-    if (prepareStatus != PGRES_COMMAND_OK) {
-      db->LogSqlQueryFailed(PQresultErrorMessage(prepareResult), prepareStatus);
+    if (prepareStatus == PGRES_FATAL_ERROR) {
+      db->LogSqlQueryFailed(PgError(prepareResult));
+      return false;
+    }
+    else if (prepareStatus != PGRES_COMMAND_OK) {
+      db->LogSqlQueryInvalidStatus(PQresultErrorMessage(prepareResult), prepareStatus);
       return false;
     }
 
@@ -153,8 +164,12 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
 #endif
 
   ExecStatusType status = PQresultStatus(rs);
-  if (status != PGRES_TUPLES_OK) {
-    db->LogSqlQueryFailed(PQresultErrorMessage(rs), status);
+  if (status == PGRES_FATAL_ERROR) {
+    db->LogSqlQueryFailed(PgError(rs));
+    return false;
+  }
+  else if (status != PGRES_TUPLES_OK) {
+    db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
     return false; // expected data back
   }
 

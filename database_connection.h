@@ -10,6 +10,7 @@
 #include "wx/thread.h"
 #include "wx/log.h"
 #include "server_connection.h"
+#include "pg_error.h"
 
 class DatabaseWork;
 class DisconnectWork;
@@ -53,7 +54,8 @@ public:
   void LogConnect();
   void LogConnectFailed(const char *msg);
   void LogConnectNeedsPassword();
-  void LogSqlQueryFailed(const char *msg, ExecStatusType status);
+  void LogSqlQueryInvalidStatus(const char *msg, ExecStatusType status);
+  void LogSqlQueryFailed(const PgError &error);
   bool IsConnected() const { State state = workerThread.GetState(); return state != NOT_CONNECTED && state != DISCONNECTED; };
   bool IsAcceptingWork() const { return IsConnected() && !disconnectQueued; }
   const wxString& DbName() const { return dbname; }
@@ -111,6 +113,7 @@ private:
 
   friend class WorkerThread;
   friend class DisconnectWork;
+  friend class DatabaseWork;
 };
 
 #endif

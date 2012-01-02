@@ -10,6 +10,8 @@
 #include "scripts_notebook.h"
 #include "script_editor.h"
 #include "script_events.h"
+#include "database_work.h"
+#include "script_query_work.h"
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_SET_FOCUS(ScriptEditor::OnSetFocus)
@@ -17,11 +19,16 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_STC_SAVEPOINTLEFT(wxID_ANY, ScriptEditor::OnSavePointLeft)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
   PQWX_SCRIPT_EXECUTE(wxID_ANY, ScriptEditor::OnExecute)
+  PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditor::OnQueryComplete)
 END_EVENT_TABLE()
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptSelected)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
 
-ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner), db(NULL)
+ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
+: wxStyledTextCtrl(owner, id), owner(owner), db(NULL), lexer(NULL)
 {
   SetLexer(wxSTC_LEX_SQL);
 #if wxUSE_UNICODE
@@ -154,6 +161,7 @@ void ScriptEditor::Connect(const ServerConnection &server, const wxString &dbnam
   db = new DatabaseConnection(server, dbname, _("Query"));
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
+  db->AddWork(new SetupNoticeProcessorWork(this));
   ScriptModel& script = owner->FindScriptForEditor(this);
   script.database = db->Identification();
   EmitScriptSelected();
@@ -169,5 +177,108 @@ void ScriptEditor::EmitScriptSelected()
 
 void ScriptEditor::OnExecute(wxCommandEvent &event)
 {
-  wxMessageBox(_T("TODO begin execution"));
+  wxASSERT(db != NULL);
+  wxASSERT(lexer == NULL);
+
+  wxCommandEvent beginEvt = wxCommandEvent(PQWX_ScriptExecutionBeginning);
+  beginEvt.SetEventObject(this);
+  ProcessEvent(beginEvt);
+
+  executionStopwatch.Start();
+
+  int start, end;
+  GetSelection(&start, &end);
+
+  int length;
+
+  if (start == end) {
+    source = GetTextRaw();
+    length = GetLength();
+  }
+  else {
+    source = GetTextRangeRaw(start, end);
+    length = end - start;
+  }
+
+  // wxCharBuffer works like auto_ptr, so can't copy it.
+  lexer = new ExecutionLexer(source.data(), length);
+
+  while (true) {
+    if (!ProcessExecution()) {
+      break;
+    }
+  }
+}
+
+bool ScriptEditor::ProcessExecution()
+{
+  ExecutionLexer::Token t = lexer->Pull();
+  if (t.type == ExecutionLexer::Token::END) {
+    FinishExecution();
+    return false;
+  }
+
+  if (t.type == ExecutionLexer::Token::SQL) {
+    bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t));
+    wxASSERT(added);
+    return false;
+  }
+  else {
+    wxLogDebug(_T("psql | %s"), lexer->GetWXString(t).c_str());
+    return true;
+  }
+}
+
+void ScriptEditor::FinishExecution()
+{
+  wxCommandEvent finishEvt = wxCommandEvent(PQWX_ScriptExecutionFinishing);
+  finishEvt.SetEventObject(this);
+  ProcessEvent(finishEvt);
+
+  delete lexer;
+
+  lexer = NULL;
+  wxLogDebug(_T("Script execution took %ldms"), executionStopwatch.Time());
+}
+
+void ScriptEditor::OnQueryComplete(wxCommandEvent &event)
+{
+  ScriptQueryWork::Result *result = (ScriptQueryWork::Result*) event.GetClientData();
+  wxASSERT(result != NULL);
+
+  if (result->status == PGRES_TUPLES_OK) {
+    wxLogDebug(_T("Got results with %lu tuples"), result->data.size());
+  }
+  else if (result->status == PGRES_COMMAND_OK) {
+    wxLogDebug(_T("Got results with no tuples"));
+  }
+  else if (result->status == PGRES_FATAL_ERROR) {
+    wxLogDebug(_T("Got error"));
+  }
+  else {
+    wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
+  }
+
+  delete result;
+
+  wxASSERT(lexer != NULL);
+
+  while (true) {
+    if (!ProcessExecution()) {
+      break;
+    }
+  }
+}
+
+void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs)
+{
+  ScriptEditor *editor = (ScriptEditor*) arg;
+  editor->OnConnectionNotice(rs);
+}
+
+void ScriptEditor::OnConnectionNotice(const PGresult *rs)
+{
+  wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
+  PgError error(rs);
+  wxLogDebug(_T("diagnostic: (%s) %s"), error.severity.c_str(), error.primary.c_str());
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include "wx/notebook.h"
 #include "pqwx.h"
+#include "database_event_type.h"
 
 class ScriptsNotebook;
 class ScriptEditor;
@@ -41,7 +42,7 @@ public:
   ScriptEditor *OpenScriptFile(const wxString &filename);
   ScriptEditor *OpenScriptWithText(const wxString &text);
 
-  void OnScriptSelected(wxCommandEvent&);
+  void OnScriptSelected(PQWXDatabaseEvent&);
 
 private:
   int documentCounter;

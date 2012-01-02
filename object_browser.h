@@ -11,6 +11,7 @@
 #include "versioned_sql.h"
 #include "catalogue_index.h"
 #include "lazy_loader.h"
+#include "database_event_type.h"
 
 class ServerModel;
 class DatabaseModel;
@@ -27,7 +28,7 @@ BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
 
-#define PQWX_OBJECT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_ObjectSelected, fn)
+#define PQWX_OBJECT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_ObjectSelected, fn)
 
 #define DECLARE_SCRIPT_HANDLERS(menu, mode) \
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
@@ -48,7 +49,7 @@ public:
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *db, IndexSchemaCompletionCallback *indexCompletion = NULL);
   void LoadRelation(wxTreeItemId parent, RelationModel *rel);
   void DisconnectSelected();
-  void FindObject();
+  void FindObject(const ServerConnection &server, const wxString &dbname);
   void FindObject(const DatabaseModel*);
   void ZoomToFoundObject(const DatabaseModel *database, const CatalogueIndex::Document *document) { ZoomToFoundObject(database, document->entityId); }
   void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
@@ -72,6 +73,9 @@ public:
   void DivideSchemaMembers(std::vector<SchemaMemberModel*> &members, std::vector<SchemaMemberModel*> &userDivision, std::vector<SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<SchemaMemberModel*> > &extensionDivisions);
   void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
+  ServerModel *FindServer(const ServerConnection &server) const;
+  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+
   wxTreeItemId FindServerItem(const ServerModel *server) const;
   wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
   wxTreeItemId FindSystemSchemasItem(const DatabaseModel *db) const;
@@ -94,6 +98,7 @@ private:
   void OnServerMenuDisconnect(wxCommandEvent&);
   void OnServerMenuRefresh(wxCommandEvent&);
   void OnServerMenuProperties(wxCommandEvent&);
+  void OnDatabaseMenuQuery(wxCommandEvent&);
   void OnDatabaseMenuRefresh(wxCommandEvent&);
   void OnDatabaseMenuProperties(wxCommandEvent&);
   void OnDatabaseMenuViewDependencies(wxCommandEvent&);

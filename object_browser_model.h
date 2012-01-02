@@ -152,6 +152,7 @@ public:
   bool IsUsingSSL() const { return usingSSL; }
   DatabaseConnection *GetDatabaseConnection(const wxString &dbname);
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
+  DatabaseModel *FindDatabase(const wxString &dbname) const;
   const ServerConnection conninfo;
 private:
   std::vector<DatabaseModel*> databases;

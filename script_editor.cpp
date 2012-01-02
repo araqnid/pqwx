@@ -160,8 +160,8 @@ void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
 void ScriptEditor::Connect(const ServerConnection &server_, const wxString &dbname)
 {
   wxASSERT(db == NULL);
-  db = new DatabaseConnection(server, dbname, _("Query"));
   server = server_;
+  db = new DatabaseConnection(server, dbname.empty() ? server.globalDbName : dbname, _("Query"));
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
   db->AddWork(new SetupNoticeProcessorWork(this));
@@ -188,7 +188,9 @@ void ScriptEditor::SetConnection(const ServerConnection &server_, DatabaseConnec
 
 void ScriptEditor::EmitScriptSelected()
 {
-  wxCommandEvent selectionChangedEvent(PQWX_ScriptSelected);
+  wxString dbname;
+  if (db) dbname = db->DbName();
+  PQWXDatabaseEvent selectionChangedEvent(server, dbname, PQWX_ScriptSelected);
   selectionChangedEvent.SetString(owner->FindScriptForEditor(this).FormatTitle());
   selectionChangedEvent.SetEventObject(this);
   ProcessEvent(selectionChangedEvent);

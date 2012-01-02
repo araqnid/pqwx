@@ -25,9 +25,9 @@ public:
   void OnReconnectScript(wxCommandEvent& event);
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
-  void OnScriptToWindow(wxCommandEvent& event);
-  void OnScriptSelected(wxCommandEvent& event);
-  void OnObjectSelected(wxCommandEvent& event);
+  void OnScriptToWindow(PQWXDatabaseEvent& event);
+  void OnScriptSelected(PQWXDatabaseEvent& event);
+  void OnObjectSelected(PQWXDatabaseEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 
@@ -48,6 +48,10 @@ private:
   ResultsNotebook *resultsBook;
   ScriptsNotebook *scriptsBook;
   ScriptEditor *currentEditor;
+
+  bool haveCurrentServer;
+  ServerConnection currentServer;
+  wxString currentDatabase;
 
   friend class AddConnectionToObjectBrowser;
 

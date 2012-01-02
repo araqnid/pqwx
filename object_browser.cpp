@@ -46,6 +46,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
   EVT_MENU(XRCID("DatabaseMenu_ViewDependencies"), ObjectBrowser::OnDatabaseMenuViewDependencies)
+  EVT_MENU(XRCID("DatabaseMenu_Query"), ObjectBrowser::OnDatabaseMenuQuery)
   EVT_MENU(XRCID("TableMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
   EVT_MENU(XRCID("ViewMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
   EVT_MENU(XRCID("SequenceMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
@@ -186,21 +187,46 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   currentlySelected = false;
 }
 
-void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
+ServerModel *ObjectBrowser::FindServer(const ServerConnection &server) const
+{
   wxString serverId = server.Identification();
-  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+  for (std::list<ServerModel*>::const_iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
     if (serverModel->Identification() == serverId) {
-      wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), serverId.c_str());
-      if (db != NULL) {
-	db->CloseSync();
-	delete db;
-      }
-      return;
+      return serverModel;
     }
   }
 
-  ServerModel *serverModel = db ? new ServerModel(server, db) : new ServerModel(server);
+  return NULL;
+}
+
+inline DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const {
+  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    if ((*iter)->name == dbname)
+      return *iter;
+  }
+  return NULL;
+}
+
+DatabaseModel *ObjectBrowser::FindDatabase(const ServerConnection &server, const wxString &dbname) const
+{
+  ServerModel *serverModel = FindServer(server);
+  if (serverModel == NULL) return NULL;
+  return serverModel->FindDatabase(dbname);
+}
+
+void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
+  ServerModel *serverModel = FindServer(server);
+  if (serverModel != NULL) {
+    wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), server.Identification().c_str());
+    if (db != NULL) {
+      db->CloseSync();
+      delete db;
+    }
+    return;
+  }
+
+  serverModel = db ? new ServerModel(server, db) : new ServerModel(server);
   servers.push_back(serverModel);
 
   // setting the text twice is a bug workaround for wx 2.8
@@ -651,19 +677,9 @@ protected:
   }
 };
 
-void ObjectBrowser::FindObject() {
-  wxTreeItemId selected = GetSelection();
-  if (!selected.IsOk()) {
-    wxLogDebug(_T("selected item was not ok -- nothing is selected?"));
-    return;
-  }
-
-  ServerModel *server;
-  DatabaseModel *database;
-  FindItemContext(selected, &server, &database);
-  if (database == NULL) {
-    wxLogDebug(_T("No database selected, can't open find object here"));
-  }
+void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &dbname) {
+  DatabaseModel *database = FindDatabase(server, dbname);
+  wxASSERT(database != NULL);
 
   if (!database->loaded) {
     LoadDatabase(FindDatabaseItem(database), database, new OpenObjectFinderOnIndexSchemaCompletion());
@@ -851,7 +867,9 @@ void ObjectBrowser::UpdateSelectedDatabase() {
     selectedServer = server;
     selectedDatabase = database;
     currentlySelected = true;
-    wxCommandEvent evt(PQWX_ObjectSelected);
+    wxString dbname;
+    if (database) dbname = database->name;
+    PQWXDatabaseEvent evt(server->conninfo, dbname, PQWX_ObjectSelected);
     if (database != NULL) {
       evt.SetString(database->Identification());
     }
@@ -875,6 +893,11 @@ void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
   wxMessageBox(_T("TODO Show server properties: ") + contextMenuServer->Identification());
+}
+
+void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
+{
+  
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {

@@ -14,7 +14,6 @@
 #include "pqwx_version.h"
 #include "wx_flavour.h"
 #include "object_browser.h"
-#include "object_browser_model.h"
 #include "connect_dialogue.h"
 #include "scripts_notebook.h"
 #include "results_notebook.h"
@@ -49,7 +48,7 @@ END_EVENT_TABLE()
 const int TOOLBAR_MAIN = 500;
 
 PqwxFrame::PqwxFrame(const wxString& title)
-  : wxFrame(NULL, wxID_ANY, title)
+  : wxFrame(NULL, wxID_ANY, title), currentEditor(NULL), haveCurrentServer(false)
 {
   SetIcon(wxICON(Pqwx_appicon));
 
@@ -107,7 +106,8 @@ void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)
 }
 
 void PqwxFrame::OnFindObject(wxCommandEvent& event) {
-  objectBrowser->FindObject();
+  if (haveCurrentServer)
+    objectBrowser->FindObject(currentServer, currentDatabase);
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
@@ -116,27 +116,49 @@ void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
 
 void PqwxFrame::OnNewScript(wxCommandEvent& event)
 {
-  scriptsBook->OpenNewScript();
+  bool suggest = haveCurrentServer;
+  ServerConnection suggestServer;
+  wxString suggestDatabase;
+  if (suggest) {
+    suggestServer = currentServer;
+    suggestDatabase = currentDatabase;
+  }
+
+  ScriptEditor *editor = scriptsBook->OpenNewScript();
+  if (suggest)
+    editor->Connect(suggestServer, suggestDatabase);
+  editor->SetFocus();
 }
 
 void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 {
+  bool suggest = haveCurrentServer;
+  ServerConnection suggestServer;
+  wxString suggestDatabase;
+  if (suggest) {
+    suggestServer = currentServer;
+    suggestDatabase = currentDatabase;
+  }
+
   wxFileDialog dbox(this, _("Open File"), wxEmptyString, wxEmptyString,
 		    _("SQL files (*.sql)|*.sql"));
   dbox.CentreOnParent();
   if (dbox.ShowModal() == wxID_OK) {
-    scriptsBook->OpenScriptFile(dbox.GetPath());
+    ScriptEditor *editor = scriptsBook->OpenScriptFile(dbox.GetPath());
+    if (suggest)
+      editor->Connect(suggestServer, suggestDatabase);
+    editor->SetFocus();
   }
 }
 
-void PqwxFrame::OnScriptToWindow(wxCommandEvent& event)
+void PqwxFrame::OnScriptToWindow(PQWXDatabaseEvent& event)
 {
-  DatabaseModel *database = (DatabaseModel*) event.GetClientObject();
   ScriptEditor *editor = scriptsBook->OpenScriptWithText(event.GetString());
-  editor->Connect(database->server->conninfo, database->name);
+  editor->Connect(event.GetServer(), event.GetDatabase());
+  editor->SetFocus();
 }
 
-void PqwxFrame::OnScriptSelected(wxCommandEvent &event)
+void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
@@ -144,11 +166,22 @@ void PqwxFrame::OnScriptSelected(wxCommandEvent &event)
   ScriptEditor *editor = dynamic_cast<ScriptEditor*>(obj);
   wxASSERT(editor != NULL);
   currentEditor = editor;
+  if (event.DatabaseSpecified()) {
+    currentServer = event.GetServer();
+    currentDatabase = event.GetDatabase();
+    haveCurrentServer = true;
+  }
+  else {
+    haveCurrentServer = false;
+  }
 }
 
-void PqwxFrame::OnObjectSelected(wxCommandEvent &event)
+void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
+  currentServer = event.GetServer();
+  currentDatabase = event.GetDatabase();
+  haveCurrentServer = true;
 }
 
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)

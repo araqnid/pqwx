@@ -20,7 +20,6 @@ ScriptEditor* ScriptsNotebook::OpenNewScript() {
   scripts.push_back(ScriptModel(GenerateDocumentName()));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
   AddPage(editor, scripts.back().FormatTitle(), true);
-  editor->SetFocus();
 
   return editor;
 }
@@ -31,7 +30,6 @@ ScriptEditor* ScriptsNotebook::OpenScriptWithText(const wxString &text) {
   AddPage(editor, scripts.back().FormatTitle(), true);
   editor->AddText(text);
   editor->EmptyUndoBuffer();
-  editor->SetFocus();
 
   return editor;
 }
@@ -55,7 +53,6 @@ ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
   scripts.push_back(ScriptModel(tabName, filename));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
   AddPage(editor, scripts.back().FormatTitle(), true);
-  editor->SetFocus();
 
   return editor;
 
@@ -84,7 +81,7 @@ unsigned ScriptsNotebook::FindScriptPage(const ScriptModel &script) const
   abort(); // quiet, gcc
 }
 
-void ScriptsNotebook::OnScriptSelected(wxCommandEvent& event)
+void ScriptsNotebook::OnScriptSelected(PQWXDatabaseEvent& event)
 {
   event.Skip(); // want the frame to process this as well
   ScriptEditor *editor = (ScriptEditor*) event.GetEventObject();

@@ -392,13 +392,12 @@ protected:
     wxString message;
     switch (output) {
     case Window: {
-      wxCommandEvent evt(PQWX_ScriptToWindow);
+      PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
       wxString script;
       for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
 	script << *iter << _T("\n\n");
       }
       evt.SetString(script);
-      evt.SetClientObject(database);
       ob->ProcessEvent(evt);
       return;
     }

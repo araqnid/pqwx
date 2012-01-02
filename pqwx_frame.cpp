@@ -45,6 +45,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
   PQWX_SCRIPT_EXECUTION_BEGINNING(wxID_ANY, PqwxFrame::OnScriptExecutionBeginning)
   PQWX_SCRIPT_EXECUTION_FINISHING(wxID_ANY, PqwxFrame::OnScriptExecutionFinishing)
+  PQWX_SCRIPT_NEW(wxID_ANY, PqwxFrame::OnScriptNew)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -133,6 +134,13 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
   ScriptEditor *editor = scriptsBook->OpenNewScript();
   if (suggest)
     editor->Connect(suggestServer, suggestDatabase);
+  editor->SetFocus();
+}
+
+void PqwxFrame::OnScriptNew(PQWXDatabaseEvent& event)
+{
+  ScriptEditor *editor = scriptsBook->OpenNewScript();
+  editor->Connect(event.GetServer(), event.GetDatabase());
   editor->SetFocus();
 }
 

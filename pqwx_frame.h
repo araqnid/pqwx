@@ -30,6 +30,7 @@ public:
   void OnObjectSelected(PQWXDatabaseEvent& event);
   void OnScriptExecutionBeginning(wxCommandEvent& event);
   void OnScriptExecutionFinishing(wxCommandEvent& event);
+  void OnScriptNew(PQWXDatabaseEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 

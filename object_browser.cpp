@@ -104,6 +104,7 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 
@@ -891,7 +892,8 @@ void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
 
 void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
 {
-  
+  PQWXDatabaseEvent evt(contextMenuDatabase->server->conninfo, contextMenuDatabase->name, PQWX_ScriptNew);
+  ProcessEvent(evt);
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {

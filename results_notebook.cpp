@@ -91,6 +91,7 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const std::vector<ResultFiel
   const unsigned maxRowsForAutoSize = 500;
   unsigned firstChunkSize = data.size() > maxRowsForAutoSize ? maxRowsForAutoSize : data.size();
   grid->CreateGrid(firstChunkSize, fields.size());
+  grid->BeginBatch();
 
   unsigned columnIndex = 0;
   for (std::vector<ResultField>::const_iterator iter = fields.begin(); iter != fields.end(); iter++, columnIndex++) {
@@ -151,5 +152,6 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const std::vector<ResultFiel
     }
   }
 
+  grid->EndBatch();
   parent->GetSizer()->Add(grid, 1, wxEXPAND);
 }

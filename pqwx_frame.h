@@ -62,6 +62,9 @@ private:
 
   void UpdateStatusBar(const PQWXDatabaseEvent &);
 
+  void SaveFrameGeometry() const;
+  void LoadFrameGeometry();
+
   friend class AddConnectionToObjectBrowser;
 
   static const int StatusBar_Message = 0;

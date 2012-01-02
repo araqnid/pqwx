@@ -9,6 +9,8 @@
 #include "wx/aboutdlg.h"
 #include "wx/listbox.h"
 #include "wx/notebook.h"
+#include "wx/config.h"
+#include "wx/regex.h"
 
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
@@ -76,8 +78,7 @@ PqwxFrame::PqwxFrame(const wxString& title)
   mainSizer->Add(editorSizer, 3, wxEXPAND);
   SetSizer(mainSizer);
 
-  SetPosition(wxPoint(100,100));
-  SetSize(wxSize(1000,800));
+  LoadFrameGeometry();
 }
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
@@ -118,7 +119,34 @@ void PqwxFrame::OnFindObject(wxCommandEvent& event) {
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
+  if (!IsFullScreen())
+    SaveFrameGeometry();
   Destroy();
+}
+
+void PqwxFrame::LoadFrameGeometry() {
+  wxConfigBase *cfg = wxConfig::Get();
+  wxString geometry;
+  if (cfg->Read(_T("/Geometry"), &geometry)) {
+    wxRegEx pattern(_T("([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)"));
+    if (pattern.Matches(geometry)) {
+      wxLogDebug(_T("Restoring frame geometry: %s"), geometry.c_str());
+      SetSize(wxSize(wxAtoi(pattern.GetMatch(geometry, 1)), wxAtoi(pattern.GetMatch(geometry, 2))));
+      SetPosition(wxPoint(wxAtoi(pattern.GetMatch(geometry, 3)), wxAtoi(pattern.GetMatch(geometry, 4))));
+      return;
+    }
+  }
+
+  wxLogDebug(_T("Setting default frame geometry"));
+  SetPosition(wxPoint(100,100));
+  SetSize(wxSize(800,600));
+}
+
+void PqwxFrame::SaveFrameGeometry() const {
+  wxConfigBase *cfg = wxConfig::Get();
+  wxPoint pos = GetPosition();
+  wxSize size = GetSize();
+  cfg->Write(_T("/Geometry"), wxString::Format(_T("%dx%d+%d+%d"), size.GetWidth(), size.GetHeight(), pos.x, pos.y));
 }
 
 void PqwxFrame::OnNewScript(wxCommandEvent& event)

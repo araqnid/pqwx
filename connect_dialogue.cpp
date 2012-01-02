@@ -314,13 +314,28 @@ void ConnectDialogue::OnCancel(wxCommandEvent &event) {
     delete connection;
     connection = NULL;
   }
+  callback->Cancelled();
+  delete callback;
   Destroy();
 }
 
-void ConnectDialogue::DoInitialConnection(const wxString& server, const wxString& user, const wxString& password) {
-  hostnameInput->SetValue(server);
-  usernameInput->SetValue(user);
-  passwordInput->SetValue(password);
+void ConnectDialogue::Suggest(const ServerConnection &conninfo)
+{
+  if (!conninfo.identifiedAs.empty())
+    hostnameInput->SetValue(conninfo.identifiedAs);
+  else if (conninfo.port > 0)
+    hostnameInput->SetValue(wxString::Format(_T("%s:%d"), conninfo.hostname.c_str(), conninfo.port));
+  else
+    hostnameInput->SetValue(conninfo.hostname);
+  usernameInput->SetValue(conninfo.username);
+  passwordInput->SetValue(conninfo.password);
+}
+
+void ConnectDialogue::DoInitialConnection(const ServerConnection &conninfo)
+{
+  hostnameInput->SetValue(conninfo.identifiedAs);
+  usernameInput->SetValue(conninfo.username);
+  passwordInput->SetValue(conninfo.password);
   StartConnection();
 }
 
@@ -332,12 +347,17 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
 
   if (work->state == ConnectionWork::CONNECTED) {
     work->server.passwordNeededToConnect = work->usedPassword;
-    objectBrowser->AddServerConnection(work->server, work->db);
     if (!passwordInput->GetValue().empty()) {
       if (!work->usedPassword)
 	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
     }
     SaveRecentServers();
+    ServerConnection &server = work->server;
+    if (!savePasswordInput->IsChecked()) {
+      server.password = wxEmptyString;
+    }
+    callback->Connected(server, work->db);
+    delete callback;
     Destroy();
   }
   else if (work->state == ConnectionWork::NEEDS_PASSWORD) {

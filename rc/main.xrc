@@ -31,6 +31,12 @@
         <accel>F5</accel>
       </object>
       <label>&amp;Query</label>
+      <object class="wxMenuItem" name="DisconnectScript">
+        <label>&amp;Disconnect</label>
+      </object>
+      <object class="wxMenuItem" name="ReconnectScript">
+        <label>Change &amp;Connection...</label>
+      </object>
     </object>
     <object class="wxMenu" name="helpmenu">
       <label>&amp;Help</label>

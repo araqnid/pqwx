@@ -18,16 +18,17 @@ public:
   }
 
   // connection parameters
+  wxString identifiedAs;
   wxString hostname;
   int port;
   wxString username;
   wxString password;
-  const wxString globalDbName;
+  wxString globalDbName;
 
   // discovered attributes
   bool passwordNeededToConnect;
 
-  void SetServerName(const wxString& serverName, const wxString& identifiedAs = wxEmptyString) {
+  void SetServerName(const wxString& serverName, const wxString& identifiedAs_ = wxEmptyString) {
     int colon = serverName.Find(_T(':'));
     if (colon == wxNOT_FOUND) {
       hostname = serverName;
@@ -43,6 +44,7 @@ public:
 	port = portUL;
     }
 
+    identifiedAs = identifiedAs_;
     GenerateIdentification(identifiedAs);
   }
 

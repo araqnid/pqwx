@@ -8,6 +8,7 @@
 #include "object_browser.h"
 #include "results_notebook.h"
 #include "scripts_notebook.h"
+#include "connect_dialogue.h"
 
 class PqwxFrame: public wxFrame {
 public:
@@ -20,6 +21,8 @@ public:
   void OnDisconnectObjectBrowser(wxCommandEvent& event);
   void OnFindObject(wxCommandEvent& event);
   void OnExecuteScript(wxCommandEvent& event);
+  void OnDisconnectScript(wxCommandEvent& event);
+  void OnReconnectScript(wxCommandEvent& event);
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
   void OnScriptToWindow(wxCommandEvent& event);
@@ -28,13 +31,25 @@ public:
 
   void OnCloseFrame(wxCloseEvent& event);
 
+  class AddConnectionToObjectBrowser : public ConnectDialogue::CompletionCallback {
+  public:
+    AddConnectionToObjectBrowser(PqwxFrame *owner) : owner(owner) {}
+    void Connected(const ServerConnection &server, DatabaseConnection *db) {
+      owner->objectBrowser->AddServerConnection(server, db);
+    }
+    void Cancelled() {
+    }
+  private:
+    PqwxFrame *const owner;
+  };
+
 private:
   ObjectBrowser *objectBrowser;
   ResultsNotebook *resultsBook;
   ScriptsNotebook *scriptsBook;
   ScriptEditor *currentEditor;
 
-  friend class PQWXApp;
+  friend class AddConnectionToObjectBrowser;
 
   DECLARE_EVENT_TABLE();
 };

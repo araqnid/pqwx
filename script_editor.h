@@ -8,6 +8,7 @@
 #include "execution_lexer.h"
 #include "database_work.h"
 #include "pg_error.h"
+#include "connect_dialogue.h"
 
 class ScriptModel;
 class ScriptsNotebook;
@@ -20,6 +21,7 @@ public:
   ScriptEditor(ScriptsNotebook *owner, wxWindowID id);
   ~ScriptEditor() {
     if (db != NULL) {
+      wxLogDebug(_T("Disposing of editor database connection from destructor"));
       db->Dispose();
       delete db;
     }
@@ -30,10 +32,13 @@ public:
   void OnSavePointLeft(wxStyledTextEvent &event);
   void OnSavePointReached(wxStyledTextEvent &event);
   void OnExecute(wxCommandEvent &event);
+  void OnDisconnect(wxCommandEvent &event);
+  void OnReconnect(wxCommandEvent &event);
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(const PGresult *rs);
 
   void Connect(const ServerConnection &server, const wxString &dbname);
+  void SetConnection(const ServerConnection &server, DatabaseConnection *db);
   bool HasConnection() const { return db != NULL; }
   bool IsConnected() const { return db != NULL && db->IsConnected(); }
   wxString ConnectionIdentification() const { wxASSERT(db != NULL); return db->Identification(); }
@@ -41,6 +46,7 @@ public:
 
 private:
   ScriptsNotebook *owner;
+  ServerConnection server;
   DatabaseConnection *db;
 
   void EmitScriptSelected();
@@ -67,6 +73,22 @@ private:
   private:
     ScriptEditor * const editor;
   };
+
+  class ChangeScriptConnection : public ConnectDialogue::CompletionCallback {
+  public:
+    ChangeScriptConnection(ScriptEditor *owner) : owner(owner) {}
+    void Connected(const ServerConnection &server, DatabaseConnection *db)
+    {
+      owner->SetConnection(server, db);
+    }
+    void Cancelled()
+    {
+    }
+  private:
+    ScriptEditor *const owner;
+  };
+
+  friend class ChangeScriptConnection;
 
   DECLARE_EVENT_TABLE()
 };

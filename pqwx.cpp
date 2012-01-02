@@ -32,10 +32,14 @@ bool PQWXApp::OnInit()
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
-  ConnectDialogue *connect = new ConnectDialogue(NULL, frame->objectBrowser);
+  ConnectDialogue *connect = new ConnectDialogue(NULL, new PqwxFrame::AddConnectionToObjectBrowser(frame));
   connect->Show();
   if (haveInitial) {
-    connect->DoInitialConnection(initialServer, initialUser, initialPassword);
+    ServerConnection server;
+    server.identifiedAs = initialServer;
+    server.username = initialUser;
+    server.password = initialPassword;
+    connect->DoInitialConnection(server);
   }
 
   return true;

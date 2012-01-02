@@ -19,6 +19,8 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_STC_SAVEPOINTLEFT(wxID_ANY, ScriptEditor::OnSavePointLeft)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
   PQWX_SCRIPT_EXECUTE(wxID_ANY, ScriptEditor::OnExecute)
+  PQWX_SCRIPT_DISCONNECT(wxID_ANY, ScriptEditor::OnDisconnect)
+  PQWX_SCRIPT_RECONNECT(wxID_ANY, ScriptEditor::OnReconnect)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditor::OnQueryComplete)
 END_EVENT_TABLE()
 
@@ -155,12 +157,29 @@ void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
   EmitScriptSelected();
 }
 
-void ScriptEditor::Connect(const ServerConnection &server, const wxString &dbname)
+void ScriptEditor::Connect(const ServerConnection &server_, const wxString &dbname)
 {
   wxASSERT(db == NULL);
   db = new DatabaseConnection(server, dbname, _("Query"));
+  server = server_;
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
+  db->AddWork(new SetupNoticeProcessorWork(this));
+  ScriptModel& script = owner->FindScriptForEditor(this);
+  script.database = db->Identification();
+  EmitScriptSelected();
+}
+
+void ScriptEditor::SetConnection(const ServerConnection &server_, DatabaseConnection *db_)
+{
+  if (db != NULL) {
+    db->Dispose();
+    delete db;
+  }
+
+  db = db_;
+  server = server_;
+  db->Relabel(_("Query"));
   db->AddWork(new SetupNoticeProcessorWork(this));
   ScriptModel& script = owner->FindScriptForEditor(this);
   script.database = db->Identification();
@@ -281,4 +300,27 @@ void ScriptEditor::OnConnectionNotice(const PGresult *rs)
   wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
   PgError error(rs);
   wxLogDebug(_T("diagnostic: (%s) %s"), error.severity.c_str(), error.primary.c_str());
+}
+
+void ScriptEditor::OnDisconnect(wxCommandEvent &event)
+{
+  wxASSERT(lexer == NULL); // must not be executing
+  wxASSERT(db != NULL);
+  db->Dispose();
+  delete db;
+  db = NULL;
+  ScriptModel& script = owner->FindScriptForEditor(this);
+  script.database = wxEmptyString;
+  EmitScriptSelected(); // recalculate title etc
+}
+
+void ScriptEditor::OnReconnect(wxCommandEvent &event)
+{
+  wxASSERT(lexer == NULL); // must not be executing
+
+  ConnectDialogue *dbox = new ConnectDialogue(NULL, new ChangeScriptConnection(this));
+  if (db != NULL)
+    dbox->Suggest(server);
+  dbox->Show();
+  dbox->SetFocus();
 }

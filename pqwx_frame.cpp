@@ -26,6 +26,8 @@
 #endif
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptDisconnect)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptReconnect)
 
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_EXIT, PqwxFrame::OnQuit)
@@ -34,6 +36,8 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
   EVT_MENU(XRCID("ExecuteScript"), PqwxFrame::OnExecuteScript)
+  EVT_MENU(XRCID("DisconnectScript"), PqwxFrame::OnDisconnectScript)
+  EVT_MENU(XRCID("ReconnectScript"), PqwxFrame::OnReconnectScript)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
@@ -93,7 +97,7 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 {
-  wxDialog *connect = new ConnectDialogue(NULL, objectBrowser);
+  wxDialog *connect = new ConnectDialogue(NULL, new AddConnectionToObjectBrowser(this));
   connect->Show();
 }
 
@@ -152,5 +156,19 @@ void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
   wxASSERT(currentEditor != NULL);
 
   wxCommandEvent cmd(PQWX_ScriptExecute);
+  currentEditor->ProcessEvent(cmd);
+}
+
+void PqwxFrame::OnDisconnectScript(wxCommandEvent &event) {
+  wxASSERT(currentEditor != NULL);
+
+  wxCommandEvent cmd(PQWX_ScriptDisconnect);
+  currentEditor->ProcessEvent(cmd);
+}
+
+void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
+  wxASSERT(currentEditor != NULL);
+
+  wxCommandEvent cmd(PQWX_ScriptReconnect);
   currentEditor->ProcessEvent(cmd);
 }

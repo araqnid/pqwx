@@ -11,8 +11,14 @@ class ConnectionWork;
 
 class ConnectDialogue : public wxDialog {
 public:
-  ConnectDialogue(wxWindow *parent, ObjectBrowser *objectBrowser) : wxDialog(), objectBrowser(objectBrowser),
-								    recentServersConfigPath(_T("RecentServers")) {
+  class CompletionCallback {
+  public:
+    virtual void Connected(const ServerConnection &server, DatabaseConnection *db) = 0;
+    virtual void Cancelled() = 0;
+  };
+
+  ConnectDialogue(wxWindow *parent, CompletionCallback *callback)
+    : wxDialog(), callback(callback), recentServersConfigPath(_T("RecentServers")) {
     InitXRC(parent);
     LoadRecentServers();
     connection = NULL;
@@ -26,7 +32,8 @@ public:
   void OnRecentServerChosen(wxCommandEvent& event);
   void OnConnectionFinished(wxCommandEvent& event);
 
-  void DoInitialConnection(const wxString& server, const wxString& user, const wxString& password);
+  void Suggest(const ServerConnection &conninfo);
+  void DoInitialConnection(const ServerConnection &conninfo);
 
 protected:
   wxComboBox *hostnameInput;
@@ -38,7 +45,7 @@ protected:
 
 private:
   static const unsigned maxRecentServers = 10;
-  ObjectBrowser *objectBrowser;
+  CompletionCallback *callback;
   void InitXRC(wxWindow *parent) {
     wxXmlResource::Get()->LoadDialog(this, parent, wxT("connect"));
     hostnameInput = XRCCTRL(*this, "hostname_value", wxComboBox);

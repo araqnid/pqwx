@@ -429,45 +429,7 @@ public:
     wxLogDebug(_T("%p: work to generate database script"), this);
   }
 protected:
-  void Execute() {
-    QueryResults rs;
-    DoQuery(_T("Database Detail"), rs, 26 /* oid */, database->oid);
-    wxASSERT(rs.size() == 1);
-    wxASSERT(rs[0].size() >= 5);
-    wxString ownerName = rs[0][0];
-    wxString encoding = rs[0][1];
-    wxString collation = rs[0][2];
-    wxString ctype = rs[0][3];
-    long connectionLimit;
-    rs[0][4].ToLong(&connectionLimit);
-
-    wxString sql;
-    switch (mode) {
-    case Create:
-      sql << _T("CREATE DATABASE ") << QuoteIdent(database->name);
-      sql << _T("\n\tENCODING = ") << QuoteLiteral(encoding);
-      sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(collation);
-      sql << _T("\n\tLC_CTYPE = ") << QuoteLiteral(ctype);
-      sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
-      sql << _T("\n\tOWNER = ") << QuoteLiteral(ownerName);
-      break;
-
-    case Alter:
-      sql << _T("ALTER DATABASE ") << QuoteIdent(database->name);
-      sql << _T("\n\tOWNER = ") << QuoteLiteral(ownerName);
-      sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
-      break;
-
-    case Drop:
-      sql << _T("DROP DATABASE ") << QuoteIdent(database->name);
-      break;
-
-    default:
-      wxASSERT(false);
-    }
-
-    statements.push_back(sql);
-  }
+  void Execute();
 };
 
 class TableScriptWork : public ScriptWork {

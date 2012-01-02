@@ -84,9 +84,6 @@ protected:
   }
   void LoadIntoView(ObjectBrowser *ob) {
     ob->FillInServer(serverModel, serverItem);
-    ob->FillInDatabases(serverModel, serverItem, databases);
-    ob->FillInRoles(serverModel, serverItem, roles);
-
     ob->EnsureVisible(serverItem);
     ob->SelectItem(serverItem);
     ob->Expand(serverItem);
@@ -94,14 +91,17 @@ protected:
 private:
   ServerModel *serverModel;
   wxTreeItemId serverItem;
-  std::vector<DatabaseModel*> databases;
-  std::vector<RoleModel*> roles;
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
   void ReadServer() {
     serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), PQgetssl(conn));
   }
+
+  static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
+    return d1->name < d2->name;
+  }
+
   void ReadDatabases() {
     QueryResults databaseRows;
     DoQuery(_T("Databases"), databaseRows);
@@ -115,9 +115,15 @@ private:
       database->allowConnections = ReadBool(iter, 3);
       database->havePrivsToConnect = ReadBool(iter, 4);
       database->description = ReadText(iter, 5);
-      databases.push_back(database);
+      serverModel->databases.push_back(database);
     }
+    sort(serverModel->databases.begin(), serverModel->databases.end(), CollateDatabases);
   }
+
+  static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
+    return r1->name < r2->name;
+  }
+
   void ReadRoles() {
     QueryResults roleRows;
     DoQuery(_T("Roles"), roleRows);
@@ -128,8 +134,9 @@ private:
       role->canLogin = ReadBool(iter, 2);
       role->superuser = ReadBool(iter, 3);
       role->description = ReadText(iter, 4);
-      roles.push_back(role);
+      serverModel->roles.push_back(role);
     }
+    sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
   }
 };
 

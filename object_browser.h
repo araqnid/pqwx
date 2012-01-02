@@ -61,9 +61,6 @@ public:
   void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 
   void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem);
-  void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<DatabaseModel*> &databases);
-  void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<RoleModel*> &roles);
-
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem);
 
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers);
@@ -104,6 +101,10 @@ private:
   void OnDatabaseMenuViewDependencies(wxCommandEvent&);
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
+
+  void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
+  void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
+
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);
   DECLARE_SCRIPT_HANDLERS(Database, Drop);

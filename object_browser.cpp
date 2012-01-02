@@ -400,18 +400,16 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
   SetItemText(serverItem, serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")") + (serverModel->IsUsingSSL() ? _T(" [SSL]") : wxEmptyString));
+  FillInDatabases(serverModel, serverItem);
+  FillInRoles(serverModel, serverItem);
 }
 
-static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
-  return d1->name < d2->name;
-}
-
-void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<DatabaseModel*> &databases) {
-  sort(databases.begin(), databases.end(), CollateDatabases);
+void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem) {
+  const std::vector<DatabaseModel*> &databases = serverModel->GetDatabases();
   std::vector<DatabaseModel*> systemDatabases;
   std::vector<DatabaseModel*> templateDatabases;
   std::vector<DatabaseModel*> userDatabases;
-  for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     if (database->IsSystem()) {
       systemDatabases.push_back(database);
@@ -449,17 +447,13 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
   }
 }
 
-static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
-  return r1->name < r2->name;
-}
-
-void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem, std::vector<RoleModel*> &roles) {
-  sort(roles.begin(), roles.end(), CollateRoles);
+void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem) {
+  const std::vector<RoleModel*> &roles = serverModel->GetRoles();
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   SetItemImage(usersItem, img_folder);
   wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
   SetItemImage(groupsItem, img_folder);
-  for (std::vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+  for (std::vector<RoleModel*>::const_iterator iter = roles.begin(); iter != roles.end(); iter++) {
     RoleModel *role = *iter;
     wxTreeItemId roleItem;
     if (role->canLogin) {

@@ -154,12 +154,16 @@ public:
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
   DatabaseModel *FindDatabase(const wxString &dbname) const;
   const ServerConnection conninfo;
+  const std::vector<DatabaseModel*>& GetDatabases() const { return databases; }
+  const std::vector<RoleModel*>& GetRoles() const { return roles; }
 private:
   std::vector<DatabaseModel*> databases;
+  std::vector<RoleModel*> roles;
   int serverVersion;
   wxString serverVersionString;
   bool usingSSL;
   std::map<wxString, DatabaseConnection*> connections;
+  friend class RefreshDatabaseListWork;
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

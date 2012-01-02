@@ -6,7 +6,6 @@
     #include "wx/wx.h"
 #endif
 
-#include "wx/wupdlock.h"
 #include "wx/grid.h"
 #include "pqwx.h"
 #include "results_notebook.h"
@@ -17,8 +16,6 @@ END_EVENT_TABLE()
 
 void ResultsNotebook::Reset()
 {
-  wxWindowUpdateLocker noUpdates(this);
-
   DeleteAllPages();
   addedResultSet = false;
   addedError = false;
@@ -50,8 +47,6 @@ void ResultsNotebook::ScriptResultSet(const wxString& statusTag,
 				      const std::vector<ResultField> &fields,
 				      const QueryResults& data)
 {
-  wxWindowUpdateLocker noUpdates(this);
-
   wxPanel *resultsPanel = new wxPanel(this, wxID_ANY);
   AddPage(resultsPanel, _("&Results"), !addedResultSet && !addedError);
   wxSizer *resultsSizer = new wxBoxSizer(wxVERTICAL);

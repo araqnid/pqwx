@@ -221,11 +221,9 @@ void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
 {
-  SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   currentServer = event.GetServer();
   currentDatabase = event.GetDatabase();
   haveCurrentServer = true;
-  UpdateStatusBar(event);
 }
 
 void PqwxFrame::UpdateStatusBar(const PQWXDatabaseEvent &event)

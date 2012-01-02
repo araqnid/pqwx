@@ -49,6 +49,7 @@ private:
   ScriptsNotebook *owner;
   ServerConnection server;
   DatabaseConnection *db;
+  DatabaseConnectionState state;
 
   void EmitScriptSelected();
 
@@ -99,6 +100,11 @@ private:
   private:
     ScriptEditor *const owner;
   };
+
+  void UpdateConnectionState(DatabaseConnectionState newState) {
+    state = newState;
+    EmitScriptSelected();
+  }
 
   friend class ChangeScriptConnection;
 

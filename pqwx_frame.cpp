@@ -56,7 +56,9 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
   SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("mainmenu")));
 
-  CreateStatusBar(1);
+  CreateStatusBar(StatusBar_Fields);
+  const int StatusBar_Widths[] = { -1, 120, 80, 80 };
+  SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
   scriptsBook = new ScriptsNotebook(this, Pqwx_ScriptsNotebook);
@@ -178,7 +180,7 @@ void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
   else {
     haveCurrentServer = false;
   }
-  GetStatusBar()->SetStatusText(wxEmptyString);
+  UpdateStatusBar(event);
 }
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
@@ -187,7 +189,42 @@ void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
   currentServer = event.GetServer();
   currentDatabase = event.GetDatabase();
   haveCurrentServer = true;
-  GetStatusBar()->SetStatusText(wxEmptyString);
+  UpdateStatusBar(event);
+}
+
+void PqwxFrame::UpdateStatusBar(const PQWXDatabaseEvent &event)
+{
+  GetStatusBar()->SetStatusText(event.GetServer().Identification(), StatusBar_Server);
+
+  if (event.DatabaseSpecified())
+    GetStatusBar()->SetStatusText(event.GetDatabase(), StatusBar_Database);
+  else
+    GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_Database);
+
+  if (!event.HasConnectionState()) {
+    GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
+  }
+  else {
+    switch (event.GetConnectionState()) {
+    case Idle:
+      GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
+      break;
+    case IdleInTransaction:
+      GetStatusBar()->SetStatusText(_("TXN"), StatusBar_State);
+      break;
+    case TransactionAborted:
+      GetStatusBar()->SetStatusText(_("ERROR"), StatusBar_State);
+      break;
+    case CopyToServer:
+    case CopyToClient:
+      GetStatusBar()->SetStatusText(_("COPY"), StatusBar_State);
+      break;
+    default:
+      GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
+    }
+  }
+
+  GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_Message);
 }
 
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
@@ -224,5 +261,5 @@ void PqwxFrame::OnScriptExecutionBeginning(wxCommandEvent &event)
 void PqwxFrame::OnScriptExecutionFinishing(wxCommandEvent &event)
 {
   long elapsed = scriptExecutionStopwatch.Time();
-  GetStatusBar()->SetStatusText(wxString::Format(_("Finished in %.2lf seconds"), ((double) elapsed) / 1000.0));
+  GetStatusBar()->SetStatusText(wxString::Format(_("Finished in %.2lf seconds"), ((double) elapsed) / 1000.0), StatusBar_Message);
 }

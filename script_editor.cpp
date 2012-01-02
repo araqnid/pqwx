@@ -28,6 +28,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
 
 ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
 : wxStyledTextCtrl(owner, id), owner(owner), db(NULL), lexer(NULL), resultsHandler(NULL)
@@ -164,6 +165,7 @@ void ScriptEditor::Connect(const ServerConnection &server_, const wxString &dbna
   db = new DatabaseConnection(server, dbname.empty() ? server.globalDbName : dbname, _("Query"));
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
+  state = Idle;
   db->AddWork(new SetupNoticeProcessorWork(this));
   ScriptModel& script = owner->FindScriptForEditor(this);
   script.database = db->Identification();
@@ -183,6 +185,7 @@ void ScriptEditor::SetConnection(const ServerConnection &server_, DatabaseConnec
   db->AddWork(new SetupNoticeProcessorWork(this));
   ScriptModel& script = owner->FindScriptForEditor(this);
   script.database = db->Identification();
+  state = Idle;
   EmitScriptSelected();
 }
 
@@ -193,6 +196,7 @@ void ScriptEditor::EmitScriptSelected()
   PQWXDatabaseEvent selectionChangedEvent(server, dbname, PQWX_ScriptSelected);
   selectionChangedEvent.SetString(owner->FindScriptForEditor(this).FormatTitle());
   selectionChangedEvent.SetEventObject(this);
+  if (db) selectionChangedEvent.SetConnectionState(state);
   ProcessEvent(selectionChangedEvent);
 }
 
@@ -284,6 +288,8 @@ void ScriptEditor::OnQueryComplete(wxCommandEvent &event)
   else {
     wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
   }
+
+  UpdateConnectionState(result->newConnectionState);
 
   delete result;
 

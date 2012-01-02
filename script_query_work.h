@@ -22,6 +22,7 @@ public:
     unsigned long tuplesProcessedCount;
     Oid oidValue;
     bool tuplesProcessedCountValid;
+    DatabaseConnectionState newConnectionState;
     friend class ScriptEditor; // so, effectively all public...
     friend class ScriptQueryWork;
   };
@@ -42,10 +43,21 @@ public:
     if (output->status == PGRES_TUPLES_OK) {
       ReadColumns(rs);
       ReadResultSet(rs, output->data);
+      output->newConnectionState = Decode(PQtransactionStatus(conn));
     }
     else if (output->status == PGRES_FATAL_ERROR) {
       db->LogSqlQueryFailed(PgError(rs));
       output->error = PgError(rs);
+      output->newConnectionState = Decode(PQtransactionStatus(conn));
+    }
+    else if (output->status == PGRES_COMMAND_OK) {
+      output->newConnectionState = Decode(PQtransactionStatus(conn));
+    }
+    else if (output->status == PGRES_COPY_OUT) {
+      output->newConnectionState = CopyToClient;
+    }
+    else if (output->status == PGRES_COPY_IN) {
+      output->newConnectionState = CopyToServer;
     }
 
     ReadStatus(rs);
@@ -89,6 +101,17 @@ private:
     output->oidValue = PQoidValue(rs);
   }
 
+  static DatabaseConnectionState Decode(PGTransactionStatusType txStatus) {
+    if (txStatus == PQTRANS_IDLE)
+      return Idle;
+    else if (txStatus == PQTRANS_INTRANS)
+      return IdleInTransaction;
+    else if (txStatus == PQTRANS_INERROR)
+      return TransactionAborted;
+    wxString msg = _T("Invalid txStatus: ") + txStatus;
+    wxFAIL_MSG(msg);
+    abort();
+  }
 };
 
 #endif

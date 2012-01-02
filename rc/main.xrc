@@ -25,6 +25,13 @@
         <accel>Ctrl-Shift-T</accel>
       </object>
     </object>
+    <object class="wxMenu" name="querymenu">
+      <object class="wxMenuItem" name="ExecuteScript">
+        <label>E&amp;xecute</label>
+        <accel>F5</accel>
+      </object>
+      <label>&amp;Query</label>
+    </object>
     <object class="wxMenu" name="helpmenu">
       <label>&amp;Help</label>
       <object class="wxMenuItem" name="wxID_ABOUT"/>

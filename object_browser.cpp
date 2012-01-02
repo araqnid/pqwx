@@ -103,8 +103,8 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
 IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 
-DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_TO_WINDOW)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_OBJECT_SELECTED)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -850,7 +850,7 @@ void ObjectBrowser::UpdateSelectedDatabase() {
     selectedServer = server;
     selectedDatabase = database;
     currentlySelected = true;
-    wxCommandEvent evt(PQWX_OBJECT_SELECTED);
+    wxCommandEvent evt(PQWX_ObjectSelected);
     if (database != NULL) {
       evt.SetString(database->Identification());
     }

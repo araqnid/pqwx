@@ -25,18 +25,21 @@
     #include "pqwx-appicon.xpm"
 #endif
 
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
+
 BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_EXIT, PqwxFrame::OnQuit)
   EVT_MENU(wxID_ABOUT, PqwxFrame::OnAbout)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
+  EVT_MENU(XRCID("ExecuteScript"), PqwxFrame::OnExecuteScript)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
-  EVT_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
-  EVT_SCRIPT_SELECTED(wxID_ANY, PqwxFrame::OnScriptSelected)
-  EVT_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
+  PQWX_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
+  PQWX_SCRIPT_SELECTED(wxID_ANY, PqwxFrame::OnScriptSelected)
+  PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
 END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
@@ -133,9 +136,21 @@ void PqwxFrame::OnScriptSelected(wxCommandEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
+  wxObject *obj = event.GetEventObject();
+  ScriptEditor *editor = dynamic_cast<ScriptEditor*>(obj);
+  wxASSERT(editor != NULL);
+  currentEditor = editor;
 }
 
 void PqwxFrame::OnObjectSelected(wxCommandEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
+}
+
+void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
+{
+  wxASSERT(currentEditor != NULL);
+
+  wxCommandEvent cmd(PQWX_ScriptExecute);
+  currentEditor->ProcessEvent(cmd);
 }

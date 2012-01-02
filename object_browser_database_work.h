@@ -390,7 +390,7 @@ protected:
     wxString message;
     switch (output) {
     case Window: {
-      wxCommandEvent evt(PQWX_SCRIPT_TO_WINDOW);
+      wxCommandEvent evt(PQWX_ScriptToWindow);
       wxString script;
       for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
 	script << *iter << _T("\n\n");

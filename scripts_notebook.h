@@ -30,6 +30,7 @@ private:
   wxString database;
   bool modified;
   friend class ScriptsNotebook;
+  friend class ScriptEditor;
 };
 
 class ScriptsNotebook : public wxNotebook {
@@ -40,10 +41,8 @@ public:
   ScriptEditor *OpenScriptFile(const wxString &filename);
   ScriptEditor *OpenScriptWithText(const wxString &text);
 
-  void EmitScriptSelected(ScriptModel &);
-  void MarkScriptModified(ScriptModel &);
-  void MarkScriptUnmodified(ScriptModel &);
-  void UpdateScriptDatabase(ScriptModel &, const wxString &database);
+  void OnScriptSelected(wxCommandEvent&);
+
 private:
   int documentCounter;
   std::vector<ScriptModel> scripts;

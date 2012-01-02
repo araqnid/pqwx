@@ -13,9 +13,13 @@
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_SET_FOCUS(ScriptEditor::OnSetFocus)
+  EVT_KILL_FOCUS(ScriptEditor::OnLoseFocus)
   EVT_STC_SAVEPOINTLEFT(wxID_ANY, ScriptEditor::OnSavePointLeft)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
+  PQWX_SCRIPT_EXECUTE(wxID_ANY, ScriptEditor::OnExecute)
 END_EVENT_TABLE()
+
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptSelected)
 
 ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id) : wxStyledTextCtrl(owner, id), owner(owner), db(NULL)
 {
@@ -122,19 +126,26 @@ year zone"));
 void ScriptEditor::OnSetFocus(wxFocusEvent &event)
 {
   wxStyledTextCtrl::OnGainFocus(event);
-  owner->EmitScriptSelected(owner->FindScriptForEditor(this));
+  EmitScriptSelected();
+}
+
+void ScriptEditor::OnLoseFocus(wxFocusEvent &event)
+{
+  wxStyledTextCtrl::OnLoseFocus(event);
 }
 
 void ScriptEditor::OnSavePointLeft(wxStyledTextEvent &event)
 {
   ScriptModel& script = owner->FindScriptForEditor(this);
-  owner->MarkScriptModified(script);
+  script.modified = true;
+  EmitScriptSelected();
 }
 
 void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
 {
   ScriptModel& script = owner->FindScriptForEditor(this);
-  owner->MarkScriptUnmodified(script);
+  script.modified = false;
+  EmitScriptSelected();
 }
 
 void ScriptEditor::Connect(const ServerConnection &server, const wxString &dbname)
@@ -144,5 +155,19 @@ void ScriptEditor::Connect(const ServerConnection &server, const wxString &dbnam
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
   ScriptModel& script = owner->FindScriptForEditor(this);
-  owner->UpdateScriptDatabase(script, db->Identification());
+  script.database = db->Identification();
+  EmitScriptSelected();
+}
+
+void ScriptEditor::EmitScriptSelected()
+{
+  wxCommandEvent selectionChangedEvent(PQWX_ScriptSelected);
+  selectionChangedEvent.SetString(owner->FindScriptForEditor(this).FormatTitle());
+  selectionChangedEvent.SetEventObject(this);
+  ProcessEvent(selectionChangedEvent);
+}
+
+void ScriptEditor::OnExecute(wxCommandEvent &event)
+{
+  wxMessageBox(_T("TODO begin execution"));
 }

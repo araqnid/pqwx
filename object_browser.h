@@ -24,10 +24,10 @@ class SchemaMemberModel;
 class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
-  DECLARE_EVENT_TYPE(PQWX_OBJECT_SELECTED, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
 
-#define EVT_OBJECT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_OBJECT_SELECTED, fn)
+#define PQWX_OBJECT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_ObjectSelected, fn)
 
 #define DECLARE_SCRIPT_HANDLERS(menu, mode) \
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \

@@ -20,8 +20,10 @@ public:
   }
 
   void OnSetFocus(wxFocusEvent &event);
+  void OnLoseFocus(wxFocusEvent &event);
   void OnSavePointLeft(wxStyledTextEvent &event);
   void OnSavePointReached(wxStyledTextEvent &event);
+  void OnExecute(wxCommandEvent &event);
 
   void Connect(const ServerConnection &server, const wxString &dbname);
   bool HasConnection() const { return db != NULL; }
@@ -31,6 +33,8 @@ public:
 private:
   ScriptsNotebook *owner;
   DatabaseConnection *db;
+
+  void EmitScriptSelected();
 
   DECLARE_EVENT_TABLE()
 };

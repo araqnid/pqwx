@@ -13,9 +13,8 @@
 #include "script_events.h"
 
 BEGIN_EVENT_TABLE(ScriptsNotebook, wxNotebook)
+  PQWX_SCRIPT_SELECTED(wxID_ANY, ScriptsNotebook::OnScriptSelected)
 END_EVENT_TABLE()
-
-DEFINE_LOCAL_EVENT_TYPE(PQWX_SCRIPT_SELECTED)
 
 ScriptEditor* ScriptsNotebook::OpenNewScript() {
   scripts.push_back(ScriptModel(GenerateDocumentName()));
@@ -62,7 +61,8 @@ ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
 
 }
 
-ScriptModel& ScriptsNotebook::FindScriptForEditor(const ScriptEditor *editor) {
+ScriptModel& ScriptsNotebook::FindScriptForEditor(const ScriptEditor *editor)
+{
   for (size_t i = 0; i < GetPageCount(); i++) {
     wxNotebookPage *page = GetPage(i);
     if (page == editor) {
@@ -74,7 +74,8 @@ ScriptModel& ScriptsNotebook::FindScriptForEditor(const ScriptEditor *editor) {
   abort(); // quiet, gcc
 }
 
-unsigned ScriptsNotebook::FindScriptPage(const ScriptModel &script) const {
+unsigned ScriptsNotebook::FindScriptPage(const ScriptModel &script) const
+{
   unsigned pos = 0;
   for (std::vector<ScriptModel>::const_iterator iter = scripts.begin(); iter != scripts.end(); iter++, pos++) {
     if (&(*iter) == &script) return pos;
@@ -83,29 +84,10 @@ unsigned ScriptsNotebook::FindScriptPage(const ScriptModel &script) const {
   abort(); // quiet, gcc
 }
 
-void ScriptsNotebook::MarkScriptModified(ScriptModel &script)
+void ScriptsNotebook::OnScriptSelected(wxCommandEvent& event)
 {
-  script.modified = true;
-  EmitScriptSelected(script);
-  SetPageText(FindScriptPage(script), script.FormatTitle());
-}
-
-void ScriptsNotebook::MarkScriptUnmodified(ScriptModel &script)
-{
-  script.modified = false;
-  EmitScriptSelected(script);
-  SetPageText(FindScriptPage(script), script.FormatTitle());
-}
-
-void ScriptsNotebook::UpdateScriptDatabase(ScriptModel &script, const wxString &database) {
-  script.database = database;
-  EmitScriptSelected(script);
-  SetPageText(FindScriptPage(script), script.FormatTitle());
-}
-
-void ScriptsNotebook::EmitScriptSelected(ScriptModel &script)
-{
-  wxCommandEvent selectionChangedEvent(PQWX_SCRIPT_SELECTED);
-  selectionChangedEvent.SetString(script.FormatTitle());
-  ProcessEvent(selectionChangedEvent);
+  event.Skip(); // want the frame to process this as well
+  ScriptEditor *editor = (ScriptEditor*) event.GetEventObject();
+  unsigned page = FindScriptPage(FindScriptForEditor(editor));
+  SetPageText(page, event.GetString());
 }

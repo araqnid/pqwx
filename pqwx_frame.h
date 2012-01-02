@@ -19,6 +19,7 @@ public:
   void OnConnectObjectBrowser(wxCommandEvent& event);
   void OnDisconnectObjectBrowser(wxCommandEvent& event);
   void OnFindObject(wxCommandEvent& event);
+  void OnExecuteScript(wxCommandEvent& event);
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
   void OnScriptToWindow(wxCommandEvent& event);
@@ -27,10 +28,14 @@ public:
 
   void OnCloseFrame(wxCloseEvent& event);
 
+private:
   ObjectBrowser *objectBrowser;
   ResultsNotebook *resultsBook;
   ScriptsNotebook *scriptsBook;
-private:
+  ScriptEditor *currentEditor;
+
+  friend class PQWXApp;
+
   DECLARE_EVENT_TABLE();
 };
 

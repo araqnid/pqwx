@@ -11,6 +11,7 @@
 #include "wx/notebook.h"
 #include "wx/config.h"
 #include "wx/regex.h"
+#include "wx/splitter.h"
 
 #include "pqwx_frame.h"
 #include "pqwx_version.h"
@@ -64,20 +65,16 @@ PqwxFrame::PqwxFrame(const wxString& title)
   SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
-  wxPanel *editorPanel = new wxPanel(this, wxID_ANY);
-  scriptsBook = new ScriptsNotebook(editorPanel, Pqwx_ScriptsNotebook);
-  resultsBook = new ResultsNotebook(editorPanel, Pqwx_ResultsNotebook);
+  editorSplitter = new wxSplitterWindow(this, wxID_ANY);
+  scriptsBook = new ScriptsNotebook(editorSplitter, Pqwx_ScriptsNotebook);
+  resultsBook = new ResultsNotebook(editorSplitter, Pqwx_ResultsNotebook);
+  editorSplitter->Initialize(scriptsBook);
+  editorSplitter->SetMinimumPaneSize(100);
+  editorSplitter->SetSashGravity(1.0);
 
-  editorSizer = new wxBoxSizer(wxVERTICAL);
-  editorSizer->Add(scriptsBook, 3, wxEXPAND);
-  editorSizer->Add(resultsBook, 1, wxEXPAND);
-  editorSizer->Hide(1);
-  editorSizer->Layout();
-  editorPanel->SetSizer(editorSizer);
-
-  mainSizer = new wxBoxSizer(wxHORIZONTAL);
+  wxSizer *mainSizer = new wxBoxSizer(wxHORIZONTAL);
   mainSizer->Add(objectBrowser, 1, wxEXPAND);
-  mainSizer->Add(editorPanel, 3, wxEXPAND);
+  mainSizer->Add(editorSplitter, 3, wxEXPAND);
   SetSizer(mainSizer);
 
   LoadFrameGeometry();
@@ -288,8 +285,7 @@ void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
 void PqwxFrame::OnScriptExecutionBeginning(wxCommandEvent &event)
 {
   resultsBook->Reset();
-  editorSizer->Show(1, true);
-  editorSizer->Layout();
+  editorSplitter->SplitHorizontally(scriptsBook, resultsBook);
   scriptExecutionStopwatch.Start();
   event.SetEventObject(resultsBook);
 }

@@ -64,18 +64,20 @@ PqwxFrame::PqwxFrame(const wxString& title)
   SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
 
   objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
-  scriptsBook = new ScriptsNotebook(this, Pqwx_ScriptsNotebook);
-  resultsBook = new ResultsNotebook(this, Pqwx_ResultsNotebook);
+  wxPanel *editorPanel = new wxPanel(this, wxID_ANY);
+  scriptsBook = new ScriptsNotebook(editorPanel, Pqwx_ScriptsNotebook);
+  resultsBook = new ResultsNotebook(editorPanel, Pqwx_ResultsNotebook);
 
   editorSizer = new wxBoxSizer(wxVERTICAL);
   editorSizer->Add(scriptsBook, 3, wxEXPAND);
   editorSizer->Add(resultsBook, 1, wxEXPAND);
   editorSizer->Hide(1);
   editorSizer->Layout();
+  editorPanel->SetSizer(editorSizer);
 
   mainSizer = new wxBoxSizer(wxHORIZONTAL);
   mainSizer->Add(objectBrowser, 1, wxEXPAND);
-  mainSizer->Add(editorSizer, 3, wxEXPAND);
+  mainSizer->Add(editorPanel, 3, wxEXPAND);
   SetSizer(mainSizer);
 
   LoadFrameGeometry();

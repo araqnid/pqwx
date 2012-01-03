@@ -5,6 +5,7 @@
 
 #include "wx/notebook.h"
 #include "wx/panel.h"
+#include "wx/splitter.h"
 #include "object_browser.h"
 #include "results_notebook.h"
 #include "scripts_notebook.h"
@@ -51,8 +52,7 @@ private:
   ResultsNotebook *resultsBook;
   ScriptsNotebook *scriptsBook;
   ScriptEditor *currentEditor;
-  wxSizer *editorSizer;
-  wxSizer *mainSizer;
+  wxSplitterWindow *editorSplitter;
 
   bool haveCurrentServer;
   ServerConnection currentServer;

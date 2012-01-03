@@ -64,20 +64,23 @@ PqwxFrame::PqwxFrame(const wxString& title)
   const int StatusBar_Widths[] = { -1, 120, 80, 80 };
   SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
 
-  objectBrowser = new ObjectBrowser(this, Pqwx_ObjectBrowser);
-  editorSplitter = new wxSplitterWindow(this, wxID_ANY);
+  wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
+
+  objectBrowser = new ObjectBrowser(mainSplitter, Pqwx_ObjectBrowser);
+  editorSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY);
+  mainSplitter->SplitVertically(objectBrowser, editorSplitter);
+  mainSplitter->SetSashGravity(0.2);
+  mainSplitter->SetMinimumPaneSize(100);
+
   scriptsBook = new ScriptsNotebook(editorSplitter, Pqwx_ScriptsNotebook);
   resultsBook = new ResultsNotebook(editorSplitter, Pqwx_ResultsNotebook);
   editorSplitter->Initialize(scriptsBook);
   editorSplitter->SetMinimumPaneSize(100);
   editorSplitter->SetSashGravity(1.0);
 
-  wxSizer *mainSizer = new wxBoxSizer(wxHORIZONTAL);
-  mainSizer->Add(objectBrowser, 1, wxEXPAND);
-  mainSizer->Add(editorSplitter, 3, wxEXPAND);
-  SetSizer(mainSizer);
-
   LoadFrameGeometry();
+
+  mainSplitter->SetSashPosition(GetSize().GetWidth()/4);
 }
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))

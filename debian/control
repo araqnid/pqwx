@@ -1,0 +1,17 @@
+Source: pqwx
+Section: database
+Priority: optional
+Maintainer: Steve Haslam <araqnid@googlemail.com>
+Build-Depends: debhelper (>= 8.0.0), docbook-to-man
+Standards-Version: 3.9.2
+Homepage: https://github.com/araqnid/pqwx
+Vcs-Git: git://github.com/araqnid/pqwx.git
+Vcs-Browser: https://github.com/araqnid/pqwx
+
+Package: pqwx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: PostgreSQL desktop client
+ A GTK application providing an interface to PostgreSQL, with support
+ for browsing the database schemata and development and execution of
+ SQL scripts.

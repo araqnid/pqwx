@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	make RELEASE=1 clean
+	-rm -f debian/pqwx.1
+
+override_dh_auto_build:
+	make RELEASE=1 pqwx
+	docbook-to-man debian/pqwx.sgml > debian/pqwx.1
+
+override_dh_auto_install:
+	mkdir -p debian/pqwx/usr/bin
+	install -c -m 755 pqwx debian/pqwx/usr/bin
+	mkdir -p debian/pqwx/usr/share/pixmaps
+	install -c -m 644 pqwx-appicon.xpm debian/pqwx/usr/share/pixmaps

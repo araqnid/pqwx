@@ -1,0 +1,3 @@
+?package(pqwx):needs="X11" section="Applications/Data Management"\
+  title="PQWX" command="/usr/bin/pqwx" \
+  icon="/usr/share/pixmaps/pqwx-appicon.xpm"

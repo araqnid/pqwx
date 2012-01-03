@@ -1,0 +1,6 @@
+files
+pqwx.1
+*.debhelper.log
+*.debhelper
+*.substvars
+pqwx

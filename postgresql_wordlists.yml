@@ -37,6 +37,7 @@ keywords:
 - end
 - exclusion
 - exists
+- explain
 - family
 - foreign
 - from

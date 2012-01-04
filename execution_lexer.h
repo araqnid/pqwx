@@ -24,7 +24,6 @@ public:
   };
 
   Token Pull() { if (pos >= length) return Token(Token::END); return Pull0(); }
-  Token Pull0();
 
   wxString GetWXString(unsigned offset, unsigned length) const { return wxString(buffer + offset, wxConvUTF8, length); }
   wxString GetWXString(const Token& t) const { return GetWXString(t.offset, t.length); }
@@ -42,6 +41,9 @@ private:
   void PassDoubleQuotedString();
   void PassSingleQuotedString(bool escapeSyntax);
   void ProcessDollarQuote();
+  Token Pull0();
+  Token PullPsql();
+  Token PullSql();
 };
 
 #endif

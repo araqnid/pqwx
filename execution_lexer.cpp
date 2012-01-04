@@ -5,21 +5,42 @@ ExecutionLexer::Token ExecutionLexer::Pull0()
   SkipWhitespace();
   if (Done()) return Token(Token::END);
 
-  int start = pos;
-  Token::Type type;
   if (Peek() == '\\') {
-    type = Token::PSQL;
-    ++pos;
+    return PullPsql();
   }
   else {
-    type = Token::SQL;
+    return PullSql();
   }
+}
+
+ExecutionLexer::Token ExecutionLexer::PullPsql()
+{
+  int start = pos;
+  Take(); // consume the starting backslash
+
+  do {
+    int c = Take();
+
+    if (c < 0 || c == '\n') {
+      return Token(Token::PSQL, start, pos - start);
+    }
+    else if (c == '\\') {
+      BackUp();
+      return Token(Token::PSQL, start, pos - start);
+    }
+
+  } while (true);
+}
+
+ExecutionLexer::Token ExecutionLexer::PullSql()
+{
+  int start = pos;
 
   do {
     int c = Take();
 
     if (c < 0) {
-      return Token(type, start, pos - start);
+      return Token(Token::SQL, start, pos - start);
     }
 
     // note that dollar-quoting takes priority over *everything* (except end of input of course)
@@ -33,12 +54,12 @@ ExecutionLexer::Token ExecutionLexer::Pull0()
       PassDoubleQuotedString();
       else if (c == ';') {
 	// inclusive end character
-	return Token(type, start, pos - start + 1);
+	return Token(Token::SQL, start, pos - start + 1);
       }
       else if (c == '\\') {
 	// exclusive end character
 	BackUp();
-	return Token(type, start, pos - start);
+	return Token(Token::SQL, start, pos - start);
       }
     }
   } while (true);

@@ -16,6 +16,7 @@ keywords:
 - class
 - collation
 - column
+- commit
 - committed
 - configuration
 - connection
@@ -63,6 +64,7 @@ keywords:
 - level
 - limit
 - not
+- on
 - operator
 - or
 - order
@@ -80,6 +82,7 @@ keywords:
 - revoke
 - right
 - role
+- rollback
 - rows
 - rule
 - schema
@@ -95,7 +98,9 @@ keywords:
 - stable
 - strict
 - table
+- temp
 - template
+- temporary
 - text
 - then
 - transaction

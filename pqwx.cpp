@@ -14,7 +14,7 @@
 #include "object_finder.h"
 
 extern void InitXmlResource(void);
-extern void InitObjectFinderResources(void);
+extern void InitStaticResources(void);
 
 IMPLEMENT_APP(PQWXApp)
 
@@ -26,7 +26,7 @@ bool PQWXApp::OnInit()
   InitXmlResource();
   wxXmlResource::Get()->InitAllHandlers();
 
-  InitObjectFinderResources();
+  InitStaticResources();
   wxImage::AddHandler(new wxPNGHandler());
 
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));

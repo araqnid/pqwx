@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=PQWX
+GenericName=PostgreSQL Interface
+Exec=pqwx
+Icon=pqwx
+Type=Application
+Terminal=false
+Categories=Development;Database;

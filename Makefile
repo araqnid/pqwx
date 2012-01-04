@@ -97,6 +97,12 @@ pqwx.pot: $(PQWX_SOURCES) $(patsubst rc/%.xrc,rc/%.c,$(XRC))
 
 pot: pqwx.pot
 
+pqwx-appicon-%-8.png: pqwx-appicon-%.png
+	convert -depth 8 $^ $@
+
+pqwx-appicon.ico: pqwx-appicon-16-8.png pqwx-appicon-32-8.png pqwx-appicon-64-8.png pqwx-appicon-16.png pqwx-appicon-32.png pqwx-appicon-64.png
+	icotool -c -o $@ $^
+
 clean:
 	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp resources.h rc/*.c build_settings wx_flavour.h object_browser_sql.cpp dependencies_view_sql.cpp
 

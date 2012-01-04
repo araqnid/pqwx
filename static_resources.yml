@@ -38,3 +38,19 @@ mime_type: image/png
 class: ObjectFinder
 filename: icon_sequence.png
 mime_type: image/png
+---
+class: PqwxFrame
+filename: pqwx-appicon-32.png
+mime_type: image/png
+---
+class: PqwxFrame
+filename: pqwx-appicon-48.png
+mime_type: image/png
+---
+class: PqwxFrame
+filename: pqwx-appicon-64.png
+mime_type: image/png
+---
+class: PqwxFrame
+filename: pqwx-appicon-16.png
+mime_type: image/png

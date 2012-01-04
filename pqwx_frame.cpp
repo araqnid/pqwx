@@ -23,10 +23,6 @@
 #include "script_events.h"
 #include "script_editor.h"
 
-#if !defined(__WXMSW__) && !defined(__WXPM__)
-    #include "pqwx-appicon.xpm"
-#endif
-
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptDisconnect)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptReconnect)
@@ -53,10 +49,38 @@ END_EVENT_TABLE()
 
 const int TOOLBAR_MAIN = 500;
 
+#ifndef __WXMSW__
+static wxImage LoadVFSImage(const wxString &vfilename) {
+  wxFileSystem fs;
+  wxFSFile *fsfile = fs.OpenFile(vfilename);
+  wxASSERT_MSG(fsfile != NULL, vfilename);
+  wxImage im;
+  wxInputStream *stream = fsfile->GetStream();
+  im.LoadFile(*stream, fsfile->GetMimeType());
+  delete fsfile;
+  return im;
+}
+
+static wxIcon LoadVFSIcon(const wxString &vfilename) {
+  wxIcon icon;
+  icon.CopyFromBitmap(LoadVFSImage(vfilename));
+  return icon;
+}
+#endif
+
 PqwxFrame::PqwxFrame(const wxString& title)
   : wxFrame(NULL, wxID_ANY, title), currentEditor(NULL), haveCurrentServer(false)
 {
-  SetIcon(wxICON(Pqwx_appicon));
+#ifdef __WXMSW__
+  SetIcon(wxIcon(_T("Pqwx_appicon")));
+#else
+  wxIconBundle icons;
+  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-64.png")));
+  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-48.png")));
+  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-32.png")));
+  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-16.png")));
+  SetIcons(icons);
+#endif
 
   SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("mainmenu")));
 

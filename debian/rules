@@ -24,4 +24,16 @@ override_dh_auto_install:
 	mkdir -p debian/pqwx/usr/bin
 	install -c -m 755 pqwx debian/pqwx/usr/bin
 	mkdir -p debian/pqwx/usr/share/pixmaps
-	install -c -m 644 pqwx-appicon.xpm debian/pqwx/usr/share/pixmaps
+	install -c -m 644 pqwx-appicon-32.xpm debian/pqwx/usr/share/pixmaps/pqwx.xpm
+	install -c -m 644 pqwx-appicon-32.png debian/pqwx/usr/share/pixmaps/pqwx.png
+	mkdir -p debian/pqwx/usr/share/icons/hicolor/16x16/apps
+	install -c -m 644 pqwx-appicon-16.xpm debian/pqwx/usr/share/icons/hicolor/16x16/apps/pqwx.xpm
+	install -c -m 644 pqwx-appicon-16.png debian/pqwx/usr/share/icons/hicolor/16x16/apps/pqwx.png
+	mkdir -p debian/pqwx/usr/share/icons/hicolor/48x48/apps
+	install -c -m 644 pqwx-appicon-48.png debian/pqwx/usr/share/icons/hicolor/48x48/apps/pqwx.png
+	mkdir -p debian/pqwx/usr/share/icons/hicolor/64x64/apps
+	install -c -m 644 pqwx-appicon-64.png debian/pqwx/usr/share/icons/hicolor/64x64/apps/pqwx.png
+	mkdir -p debian/pqwx/usr/share/icons/hicolor/128x128/apps
+	install -c -m 644 pqwx-appicon-128.png debian/pqwx/usr/share/icons/hicolor/128x128/apps/pqwx.png
+	mkdir -p debian/pqwx/usr/share/applications
+	install -c -m 644 pqwx.desktop debian/pqwx/usr/share/applications

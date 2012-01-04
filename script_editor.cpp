@@ -50,19 +50,21 @@ ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
 
   // taken from sql.properties in scite
   StyleSetSpec(wxSTC_SQL_DEFAULT, _T("fore:#808080"));
-  StyleSetSpec(wxSTC_SQL_COMMENT, _T("fore:#007f00"));
-  StyleSetSpec(wxSTC_SQL_COMMENTLINE, _T("fore:#007f00"));
+  StyleSetSpec(wxSTC_SQL_COMMENT, _T("fore:#007f00")); // + font.comment
+  StyleSetSpec(wxSTC_SQL_COMMENTLINE, _T("fore:#007f00")); // + font.comment
   StyleSetSpec(wxSTC_SQL_COMMENTDOC, _T("fore:#7f7f7f"));
   StyleSetSpec(wxSTC_SQL_NUMBER, _T("fore:#007f7f"));
   StyleSetSpec(wxSTC_SQL_WORD, _T("fore:#00007F,bold"));
-  StyleSetSpec(wxSTC_SQL_STRING, _T("fore:#7f007f"));
-  StyleSetSpec(wxSTC_SQL_CHARACTER, _T("fore:#7f007f"));
+  StyleSetSpec(wxSTC_SQL_STRING, _T("fore:#7f007f")); // + font.monospace
+  StyleSetSpec(wxSTC_SQL_CHARACTER, _T("fore:#7f007f")); // + font.monospace
+  StyleSetSpec(wxSTC_SQL_SQLPLUS, _T("fore:#7F7F00")); // colour.preproc
+  StyleSetSpec(wxSTC_SQL_SQLPLUS_PROMPT, _T("fore:#007F00,back:#E0FFE0,eolfilled")); // + font.monospace
   StyleSetSpec(wxSTC_SQL_OPERATOR, _T("bold"));
   StyleSetSpec(wxSTC_SQL_IDENTIFIER, _T(""));
-  StyleSetSpec(wxSTC_SQL_COMMENTLINEDOC, _T("fore:#007f00"));
+  StyleSetSpec(wxSTC_SQL_COMMENTLINEDOC, _T("fore:#007f00")); // + font.comment
   StyleSetSpec(wxSTC_SQL_WORD2, _T("fore:#b00040"));
-  StyleSetSpec(wxSTC_SQL_COMMENTDOCKEYWORD, _T("fore:#3060a0"));
-  StyleSetSpec(wxSTC_SQL_COMMENTDOCKEYWORDERROR, _T("fore:#804020"));
+  StyleSetSpec(wxSTC_SQL_COMMENTDOCKEYWORD, _T("fore:#3060a0")); // + font.code.comment.doc
+  StyleSetSpec(wxSTC_SQL_COMMENTDOCKEYWORDERROR, _T("fore:#804020")); // + font.code.comment.doc
   StyleSetSpec(wxSTC_SQL_USER1, _T("fore:#4b0082"));
   StyleSetSpec(wxSTC_SQL_USER2, _T("fore:#b00040"));
   StyleSetSpec(wxSTC_SQL_USER3, _T("fore:#8b0000"));

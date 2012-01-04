@@ -87,8 +87,8 @@ dependencies_view_sql.cpp: dependencies_view.sql format_sql_header
 static_resources_yml.cpp: static_resources.yml
 	./format_static_resources -f 'InitStaticResources' -o $@ -d static_resources.d static_resources.yml
 
-postgresql_wordlists_yml.h: postgresql_wordlists.yml
-	./format_wordlists $^
+postgresql_wordlists_yml.h: postgresql_wordlists.yml ./format_wordlists
+	./format_wordlists postgresql_wordlists.yml
 
 script_editor.o: postgresql_wordlists_yml.h
 

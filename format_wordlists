@@ -13,6 +13,12 @@ getopts('p:o:') && @ARGV == 1 or die "Syntax: $0 [-p symbol_prefix] [-o output-f
 my $symbol_prefix = $opt_p || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; $n })->($ARGV[0]);
 my $output_file = $opt_o || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; "$n.h" })->($ARGV[0]);
 
+sub escape {
+  my $str = shift;
+  $str =~ s{([\\\'\"])}{sprintf("\\x%02x", ord($1))}ge;
+  return $str;
+}
+
 open STDOUT, ">", $output_file or die "Unable to write $output_file: $!\n";
 
 print "// -*- mode: c++ -*-\n\n// auto-generated from $ARGV[0]\n\n";
@@ -31,7 +37,7 @@ while (my($listname, $wordlist) = each %$wordlists) {
   for my $word (@$wordlist) {
     $wordmap{$word}++;
   };
-  print join(" ", keys %wordmap);
+  print join(" ", map { escape($_) } keys %wordmap);
   print "\");\n";
 }
 

@@ -6,6 +6,7 @@
     #include "wx/wx.h"
 #endif
 
+#include <fstream>
 #include "wx/stc/stc.h"
 #include "scripts_notebook.h"
 #include "script_editor.h"
@@ -277,4 +278,17 @@ void ScriptEditor::OnReconnect(wxCommandEvent &event)
     dbox->Suggest(server);
   dbox->Show();
   dbox->SetFocus();
+}
+
+void ScriptEditor::LoadFile(const wxString &filename)
+{
+  // assume input files are in the correct coding system for now
+  std::ifstream input(filename.utf8_str(), std::ifstream::in);
+  char buf[8193];
+  while (input.good()) {
+    input.read(buf, sizeof(buf));
+    size_t got = input.gcount();
+    buf[got] = '\0';
+    AddTextRaw(buf);
+  }
 }

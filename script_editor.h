@@ -38,6 +38,7 @@ public:
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(const PGresult *rs);
 
+  void LoadFile(const wxString &filename);
   void Connect(const ServerConnection &server, const wxString &dbname);
   void SetConnection(const ServerConnection &server, DatabaseConnection *db);
   bool HasConnection() const { return db != NULL; }

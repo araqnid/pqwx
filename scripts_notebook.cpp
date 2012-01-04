@@ -53,6 +53,9 @@ ScriptEditor* ScriptsNotebook::OpenScriptFile(const wxString &filename) {
   scripts.push_back(ScriptModel(tabName, filename));
   ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
   AddPage(editor, scripts.back().FormatTitle(), true);
+  editor->LoadFile(filename);
+  editor->SetSavePoint();
+  editor->EmptyUndoBuffer();
 
   return editor;
 

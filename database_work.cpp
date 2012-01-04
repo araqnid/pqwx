@@ -92,7 +92,7 @@ bool DatabaseWork::DoCommand(const char *sql) {
   return true;
 }
 
-bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCount, Oid paramTypes[], const char *paramValues[]) {
+QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) {
   db->LogSql(sql);
 
 #ifdef __WXDEBUG__
@@ -101,7 +101,7 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
 
   PGresult *rs = PQexecParams(conn, sql, paramCount, paramTypes, paramValues, NULL, NULL, 0);
   if (!rs)
-    return false;
+    throw PgResourceFailure();
 
 #ifdef __WXDEBUG__
   wxLogDebug(_T("(%.3lf seconds)"), stopwatch.Time() / 1000.0);
@@ -110,36 +110,36 @@ bool DatabaseWork::DoQuery(const char *sql, QueryResults &results, int paramCoun
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {
     db->LogSqlQueryFailed(PgError(rs));
-    return false;
+    throw PgQueryFailure(PgError(rs));
   }
   else if (status != PGRES_TUPLES_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    return false; // expected data back
+    throw PgInvalidQuery(_T("expected data back"));
   }
 
-  ReadResultSet(rs, results);
+  QueryResults results(rs);
 
   PQclear(rs);
 
-  return true;
+  return results;
 }
 
-bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int paramCount, Oid paramTypes[], const char *paramValues[]) {
+QueryResults DatabaseWork::DoNamedQuery(const wxString &name, int paramCount, Oid paramTypes[], const char *paramValues[]) {
   if (!db->IsStatementPrepared(name)) {
     const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
 
     db->LogSql((wxString(_T("/* prepare */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
 
     PGresult *prepareResult = PQprepare(conn, name.utf8_str(), sql, paramCount, paramTypes);
-    wxCHECK(prepareResult, false);
+    wxCHECK2(prepareResult, throw PgResourceFailure());
     ExecStatusType prepareStatus = PQresultStatus(prepareResult);
     if (prepareStatus == PGRES_FATAL_ERROR) {
       db->LogSqlQueryFailed(PgError(prepareResult));
-      return false;
+      throw PgQueryFailure(PgError(prepareResult));
     }
     else if (prepareStatus != PGRES_COMMAND_OK) {
       db->LogSqlQueryInvalidStatus(PQresultErrorMessage(prepareResult), prepareStatus);
-      return false;
+      throw PgInvalidQuery(_T("unexpected status"));
     }
 
     db->MarkStatementPrepared(name);
@@ -157,7 +157,7 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
 #endif
 
   PGresult *rs = PQexecPrepared(conn, name.utf8_str(), paramCount, paramValues, NULL, NULL, 0);
-  wxCHECK(rs, false);
+  wxCHECK2(rs, throw PgResourceFailure());
 
 #ifdef __WXDEBUG__
   wxLogDebug(_T("(%.3lf seconds)"), stopwatch.Time() / 1000.0);
@@ -166,31 +166,16 @@ bool DatabaseWork::DoNamedQuery(const wxString &name, QueryResults &results, int
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {
     db->LogSqlQueryFailed(PgError(rs));
-    return false;
+    throw PgQueryFailure(PgError(rs));
   }
   else if (status != PGRES_TUPLES_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    return false; // expected data back
+    throw PgInvalidQuery(_T("expected data back"));
   }
 
-  ReadResultSet(rs, results);
+  QueryResults results(rs);
 
   PQclear(rs);
 
-  return true;
-}
-
-void DatabaseWork::ReadResultSet(PGresult *rs, QueryResults &results) {
-  int rowCount = PQntuples(rs);
-  int colCount = PQnfields(rs);
-  results.reserve(rowCount);
-  for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-    std::vector<wxString> row;
-    row.reserve(colCount);
-    for (int colNum = 0; colNum < colCount; colNum++) {
-      const char *value = PQgetvalue(rs, rowNum, colNum);
-      row.push_back(wxString(value, wxConvUTF8));
-    }
-    results.push_back(row);
-  }
+  return results;
 }

@@ -17,7 +17,6 @@ public:
 
   void ScriptCommandCompleted(const wxString& statusTag);
   void ScriptResultSet(const wxString &statusTag,
-		       const std::vector<ResultField> &fields,
 		       const QueryResults &data);
   void ScriptError(const PgError &error);
   void ScriptNotice(const PgError &notice);
@@ -26,7 +25,7 @@ private:
   wxPanel *messagesPanel;
   wxStyledTextCtrl *messagesDisplay;
 
-  void AddResultSet(wxPanel *parent, const std::vector<ResultField>& fields, const QueryResults &data);
+  void AddResultSet(wxPanel *parent, const QueryResults &data);
   bool addedResultSet;
   bool addedError;
 

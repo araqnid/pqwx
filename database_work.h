@@ -24,19 +24,19 @@ public:
 
   bool DoCommand(const wxString &sql) { return DoCommand((const char*) sql.utf8_str()); }
   bool DoCommand(const char *sql);
-  bool DoQuery(const char *sql, QueryResults &rs, int paramCount, Oid paramTypes[], const char *paramValues[]);
-  bool DoQuery(const char *sql, QueryResults &rs) { return DoQuery(sql, rs, 0, NULL, NULL); }
-  bool DoQuery(const char *sql, QueryResults &rs, Oid paramType, const char *paramValue) { return DoQuery(sql, rs, 1, &paramType, &paramValue); }
-  bool DoQuery(const char *sql, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
+  QueryResults DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]);
+  QueryResults DoQuery(const char *sql) { return DoQuery(sql, 0, NULL, NULL); }
+  QueryResults DoQuery(const char *sql, Oid paramType, const char *paramValue) { return DoQuery(sql, 1, &paramType, &paramValue); }
+  QueryResults DoQuery(const char *sql, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
     Oid paramTypes[2];
     paramTypes[0] = param1Type;
     paramTypes[1] = param2Type;
     const char *paramValues[2];
     paramValues[0] = param1Value;
     paramValues[1] = param2Value;
-    return DoQuery(sql, rs, 2, paramTypes, paramValues);
+    return DoQuery(sql, 2, paramTypes, paramValues);
   }
-  bool DoQuery(const char *sql, QueryResults &rs, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
+  QueryResults DoQuery(const char *sql, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
     Oid paramTypes[3];
     paramTypes[0] = param1Type;
     paramTypes[1] = param2Type;
@@ -45,23 +45,23 @@ public:
     paramValues[0] = param1Value;
     paramValues[1] = param2Value;
     paramValues[2] = param3Value;
-    return DoQuery(sql, rs, 3, paramTypes, paramValues);
+    return DoQuery(sql, 3, paramTypes, paramValues);
   }
 
   bool DoNamedCommand(const wxString &name) { return DoCommand(sqlDictionary->GetSql(name, PQserverVersion(conn))); }
-  bool DoNamedQuery(const wxString &name, QueryResults &rs, int paramCount, Oid paramTypes[], const char *paramValues[]);
-  bool DoNamedQuery(const wxString &name, QueryResults &rs) { return DoNamedQuery(name, rs, 0, NULL, NULL); }
-  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid paramType, const char *paramValue) { return DoNamedQuery(name, rs, 1, &paramType, &paramValue); }
-  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
+  QueryResults DoNamedQuery(const wxString &name, int paramCount, Oid paramTypes[], const char *paramValues[]);
+  QueryResults DoNamedQuery(const wxString &name) { return DoNamedQuery(name, 0, NULL, NULL); }
+  QueryResults DoNamedQuery(const wxString &name, Oid paramType, const char *paramValue) { return DoNamedQuery(name, 1, &paramType, &paramValue); }
+  QueryResults DoNamedQuery(const wxString &name, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
     Oid paramTypes[2];
     paramTypes[0] = param1Type;
     paramTypes[1] = param2Type;
     const char *paramValues[2];
     paramValues[0] = param1Value;
     paramValues[1] = param2Value;
-    return DoNamedQuery(name, rs, 2, paramTypes, paramValues);
+    return DoNamedQuery(name, 2, paramTypes, paramValues);
   }
-  bool DoNamedQuery(const wxString &name, QueryResults &rs, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
+  QueryResults DoNamedQuery(const wxString &name, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
     Oid paramTypes[3];
     paramTypes[0] = param1Type;
     paramTypes[1] = param2Type;
@@ -70,14 +70,13 @@ public:
     paramValues[0] = param1Value;
     paramValues[1] = param2Value;
     paramValues[2] = param3Value;
-    return DoNamedQuery(name, rs, 3, paramTypes, paramValues);
+    return DoNamedQuery(name, 3, paramTypes, paramValues);
   }
 
 protected:
   DatabaseConnection *db;
   PGconn *conn;
   const VersionedSql *sqlDictionary;
-  void ReadResultSet(PGresult *rs, QueryResults &results);
 
   friend class DatabaseConnection::WorkerThread;
 };

@@ -3,6 +3,7 @@
 #ifndef __script_query_work_h
 #define __script_query_work_h
 
+#include <memory>
 #include "pg_error.h"
 
 class ScriptQueryWork : public DatabaseWork {
@@ -14,8 +15,7 @@ public:
     const ExecutionLexer::Token token;
     ExecStatusType status;
     bool complete;
-    QueryResults data;
-    std::vector<ResultField> fields;
+    std::auto_ptr<QueryResults> data;
     long elapsed;
     PgError error;
     wxString statusTag;
@@ -41,8 +41,7 @@ public:
 
     output->status = PQresultStatus(rs);
     if (output->status == PGRES_TUPLES_OK) {
-      ReadColumns(rs);
-      ReadResultSet(rs, output->data);
+      output->data = std::auto_ptr<QueryResults>(new QueryResults(rs));
       output->newConnectionState = Decode(PQtransactionStatus(conn));
     }
     else if (output->status == PGRES_FATAL_ERROR) {
@@ -80,14 +79,6 @@ private:
   const ExecutionLexer::Token token;
   wxStopWatch stopwatch;
   Result *output;
-
-  void ReadColumns(PGresult *rs)
-  {
-    int nfields = PQnfields(rs);
-    for (int index = 0; index < nfields; index++) {
-      output->fields.push_back(ResultField(rs, index));
-    }
-  }
 
   void ReadStatus(PGresult *rs)
   {

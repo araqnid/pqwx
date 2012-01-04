@@ -3,8 +3,7 @@
 #include "object_browser_database_work.h"
 
 void DatabaseScriptWork::Execute() {
-  QueryResults rs;
-  DoQuery(_T("Database Detail"), rs, 26 /* oid */, database->oid);
+  QueryResults rs = DoQuery(_T("Database Detail"), 26 /* oid */, database->oid);
   wxASSERT(rs.size() == 1);
   wxASSERT(rs[0].size() >= 5);
   wxString ownerName = rs[0][0];
@@ -43,10 +42,8 @@ void DatabaseScriptWork::Execute() {
 }
 
 void TableScriptWork::Execute() {
-  std::vector< wxString > tableDetail;
-  QueryResults columns;
-  DoQuery(_T("Table Detail"), tableDetail, 26 /* oid */, table->oid);
-  DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, table->oid);
+  QueryResults::Row tableDetail = DoSingleRowQuery(_T("Table Detail"), 26 /* oid */, table->oid);
+  QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, table->oid);
 
   switch (mode) {
   case Create: {
@@ -55,24 +52,24 @@ void TableScriptWork::Execute() {
     sql << _T("CREATE TABLE ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("(\n");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0)),
-	type(ReadText(iter, 1));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0)),
+	type((*iter).ReadText(1));
       sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
 
-      bool notnull = ReadBool(iter, 2);
+      bool notnull = (*iter).ReadBool(2);
       if (notnull) sql << _T(" NOT NULL");
 
-      bool hasdefault = ReadBool(iter, 3);
+      bool hasdefault = (*iter).ReadBool(3);
       if (hasdefault) {
-	wxString defaultexpr(ReadText(iter, 4));
+	wxString defaultexpr((*iter).ReadText(4));
 	sql << _T(" DEFAULT ") << defaultexpr;
       }
 
-      wxString collation(ReadText(iter, 5));
+      wxString collation((*iter).ReadText(5));
       if (!collation.IsEmpty()) sql << _T(" COLLATE ") << collation; // already quoted
 
-      long statsTarget(ReadInt4(iter, 6));
+      long statsTarget((*iter).ReadInt4(6));
       if (statsTarget >= 0) {
 	wxString statsSql;
 	statsSql << _T("ALTER COLUMN ") << QuoteIdent(name)
@@ -80,7 +77,7 @@ void TableScriptWork::Execute() {
 	alterSql.push_back(statsSql);
       }
 
-      wxString storageType(ReadText(iter, 7));
+      wxString storageType((*iter).ReadText(7));
       if (!storageType.IsEmpty()) {
 	wxString storageSql;
 	storageSql << _T("ALTER COLUMN ") << QuoteIdent(name)
@@ -117,8 +114,8 @@ void TableScriptWork::Execute() {
     wxString sql;
     sql << _T("SELECT ");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
       if (n != (columns.size()-1))
 	sql << _T(",\n       ");
@@ -136,8 +133,8 @@ void TableScriptWork::Execute() {
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	<< _T("(\n");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0));
       sql << _T("            ") << QuoteIdent(name);
       if (n != (columns.size()-1))
 	sql << _T(",\n");
@@ -146,8 +143,8 @@ void TableScriptWork::Execute() {
     }
     sql << _T(") VALUES (\n");
     n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << _T("            <") << QuoteIdent(name) << _T(", ") << type << _T(">");
       if (n != (columns.size()-1))
 	sql << _T(",\n");
@@ -165,8 +162,8 @@ void TableScriptWork::Execute() {
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
 	<< _T("\nSET ");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << QuoteIdent(name) << _T(" = ")
 	  << _T("<") << QuoteIdent(name) << _T(", ") << type << _T(">");
       if (n != (columns.size()-1))
@@ -193,15 +190,13 @@ void TableScriptWork::Execute() {
 }
 
 void ViewScriptWork::Execute() {
-  std::vector< wxString > viewDetail;
-  QueryResults columns;
-  DoQuery(_T("View Detail"), viewDetail, 26 /* oid */, view->oid);
-  DoQuery(_T("Relation Column Detail"), columns, 26 /* oid */, view->oid);
+  QueryResults::Row viewDetail = DoSingleRowQuery(_T("View Detail"), 26 /* oid */, view->oid);
+  QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, view->oid);
 
   switch (mode) {
   case Create:
   case Alter: {
-    wxString definition = ReadText(viewDetail, 1);
+    wxString definition = viewDetail.ReadText(1);
 
     wxString sql;
     if (mode == Create)
@@ -210,8 +205,8 @@ void ViewScriptWork::Execute() {
       sql << _T("CREATE OR REPLACE VIEW ");
     sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name) << _T("(\n");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0)), type(ReadText(iter, 1));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
       if (n != (columns.size()-1))
 	sql << _T(",\n");
@@ -226,8 +221,8 @@ void ViewScriptWork::Execute() {
     wxString sql;
     sql << _T("SELECT ");
     unsigned n = 0;
-    for (QueryResults::iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name(ReadText(iter, 0));
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+      wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
       if (n != (columns.size()-1))
 	sql << _T(",\n       ");
@@ -254,8 +249,7 @@ void ViewScriptWork::Execute() {
 }
 
 void SequenceScriptWork::Execute() {
-  std::vector< wxString > sequenceDetail;
-  DoQuery(_T("Sequence Detail"), sequenceDetail, 26 /* oid */, sequence->oid);
+  QueryResults::Row sequenceDetail = DoSingleRowQuery(_T("Sequence Detail"), 26 /* oid */, sequence->oid);
 }
 
 static void EscapeCode(const wxString &src, wxString &buf) {
@@ -301,8 +295,7 @@ static std::vector<Oid> ParseOidVector(const wxString &str) {
   return result;
 }
 
-static inline std::vector<Oid> ReadOidVector(const std::vector<wxString> &row, unsigned index) {
-  wxASSERT(index < row.size());
+static inline std::vector<Oid> ReadOidVector(const QueryResults::Row &row, unsigned index) {
   return ParseOidVector(row[index]);
 }
 
@@ -349,13 +342,11 @@ static std::vector<wxString> ParseTextArray(const wxString &str) {
   return result;
 }
 
-static inline std::vector<wxString> ReadTextArray(const std::vector<wxString> &row, unsigned index) {
-  wxASSERT(index < row.size());
+static inline std::vector<wxString> ReadTextArray(const QueryResults::Row &row, unsigned index) {
   return ParseTextArray(row[index]);
 }
 
-static inline std::vector<Oid> ReadOidArray(const std::vector<wxString> &row, unsigned index) {
-  wxASSERT(index < row.size());
+static inline std::vector<Oid> ReadOidArray(const QueryResults::Row &row, unsigned index) {
   std::vector<wxString> strings = ParseTextArray(row[index]);
   std::vector<Oid> result;
   result.reserve(strings.size());
@@ -368,7 +359,7 @@ static inline std::vector<Oid> ReadOidArray(const std::vector<wxString> &row, un
   return result;
 }
 
-static inline std::vector<bool> ReadIOModeArray(const std::vector<wxString> &row, unsigned index) {
+static inline std::vector<bool> ReadIOModeArray(const QueryResults::Row &row, unsigned index) {
   wxASSERT(index < row.size());
   std::vector<wxString> strings = ParseTextArray(row[index]);
   std::vector<bool> result;
@@ -383,12 +374,11 @@ static inline std::vector<bool> ReadIOModeArray(const std::vector<wxString> &row
 std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const std::set<Oid> &types) {
   std::map<Oid, Typeinfo> typeMap;
   for (std::set<Oid>::const_iterator iter = types.begin(); iter != types.end(); iter++) {
-    std::vector<wxString> typeInfo;
-    DoQuery(_T("Type Info"), typeInfo, 26 /* oid */, *iter);
+    QueryResults::Row typeInfo = DoSingleRowQuery(_T("Type Info"), 26 /* oid */, *iter);
     Typeinfo typeinfo;
-    typeinfo.schema = ReadText(typeInfo, 0);
-    typeinfo.name = ReadText(typeInfo, 1);
-    typeinfo.arrayDepth = ReadInt4(typeInfo, 2);
+    typeinfo.schema = typeInfo.ReadText(0);
+    typeinfo.name = typeInfo.ReadText(1);
+    typeinfo.arrayDepth = typeInfo.ReadInt4(2);
     typeMap[*iter] = typeinfo;
   }
   return typeMap;
@@ -407,8 +397,7 @@ static void DumpCollection(const wxString &tag, T collection) {
 }
 
 void FunctionScriptWork::Execute() {
-  std::vector< wxString > functionDetail;
-  DoQuery(_T("Function Detail"), functionDetail, 26 /* oid */, function->oid);
+  QueryResults::Row functionDetail = DoSingleRowQuery(_T("Function Detail"), 26 /* oid */, function->oid);
   std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
   std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
   std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 3);
@@ -460,23 +449,23 @@ void FunctionScriptWork::Execute() {
     sql << _T(")")
 	<< _T(" RETURNS ");
 
-    if (ReadBool(functionDetail, 14)) sql << _T("SETOF ");
+    if (functionDetail.ReadBool(14)) sql << _T("SETOF ");
     sql << functionDetail[13];
 
-    int cost = ReadInt4(functionDetail, 7);
+    int cost = functionDetail.ReadInt4(7);
     if (cost > 0) sql << _T(" COST ") << cost;
 
-    int rows = ReadInt4(functionDetail, 8);
+    int rows = functionDetail.ReadInt4(8);
     if (rows > 0) sql << _T(" ROWS ") << rows;
 
-    if (ReadBool(functionDetail, 9)) sql << _T(" SECURITY DEFINER ");
+    if (functionDetail.ReadBool(9)) sql << _T(" SECURITY DEFINER ");
 
-    if (ReadBool(functionDetail, 10)) sql << _T(" STRICT ");
+    if (functionDetail.ReadBool(10)) sql << _T(" STRICT ");
 
-    sql << _T(" ") << ReadText(functionDetail, 11); // volatility
+    sql << _T(" ") << functionDetail.ReadText(11); // volatility
 
     sql << _T(" AS ");
-    EscapeCode(ReadText(functionDetail, 12), sql);
+    EscapeCode(functionDetail.ReadText(12), sql);
     statements.push_back(sql);
   }
     break;
@@ -492,7 +481,7 @@ void FunctionScriptWork::Execute() {
 
   case Select: {
     wxString sql;
-    Oid returnType = ReadOid(functionDetail, 0);
+    Oid returnType = functionDetail.ReadOid(0);
 
     if (returnType == 2249) {
       // "record" return type

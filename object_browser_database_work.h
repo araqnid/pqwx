@@ -13,23 +13,21 @@ public:
   virtual void Execute() = 0;
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
-  bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, unsigned long paramValue) {
+  QueryResults DoQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    return owner->DoNamedQuery(name, results, paramType, valueString.utf8_str());
+    return owner->DoNamedQuery(name, paramType, valueString.utf8_str());
   }
-  bool DoQuery(const wxString &name, std::vector<wxString> &row, Oid paramType, unsigned long paramValue) {
+  QueryResults::Row DoSingleRowQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    QueryResults results;
-    if (!owner->DoNamedQuery(name, results, paramType, valueString.utf8_str())) return false;
+    QueryResults results = owner->DoNamedQuery(name, paramType, valueString.utf8_str());
     wxASSERT(results.size() == 1);
-    row = results[0];
-    return true;
+    return results[0];
   }
-  bool DoQuery(const wxString &name, QueryResults &results, Oid paramType, const char *paramValue) {
-    return owner->DoNamedQuery(name, results, paramType, paramValue);
+  QueryResults DoQuery(const wxString &name, Oid paramType, const char *paramValue) {
+    return owner->DoNamedQuery(name, paramType, paramValue);
   }
-  bool DoQuery(const wxString &name, QueryResults &results) {
-    return owner->DoNamedQuery(name, results);
+  QueryResults DoQuery(const wxString &name) {
+    return owner->DoNamedQuery(name);
   }
   wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
   wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
@@ -103,18 +101,17 @@ private:
   }
 
   void ReadDatabases() {
-    QueryResults databaseRows;
-    DoQuery(_T("Databases"), databaseRows);
-    for (QueryResults::iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
+    QueryResults databaseRows = DoQuery(_T("Databases"));
+    for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
       database->loaded = false;
-      database->oid = ReadOid(iter, 0);
-      database->name = ReadText(iter, 1);
-      database->isTemplate = ReadBool(iter, 2);
-      database->allowConnections = ReadBool(iter, 3);
-      database->havePrivsToConnect = ReadBool(iter, 4);
-      database->description = ReadText(iter, 5);
+      database->oid = (*iter).ReadOid(0);
+      database->name = (*iter).ReadText(1);
+      database->isTemplate = (*iter).ReadBool(2);
+      database->allowConnections = (*iter).ReadBool(3);
+      database->havePrivsToConnect = (*iter).ReadBool(4);
+      database->description = (*iter).ReadText(5);
       serverModel->databases.push_back(database);
     }
     sort(serverModel->databases.begin(), serverModel->databases.end(), CollateDatabases);
@@ -125,15 +122,14 @@ private:
   }
 
   void ReadRoles() {
-    QueryResults roleRows;
-    DoQuery(_T("Roles"), roleRows);
-    for (QueryResults::iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
+    QueryResults roleRows = DoQuery(_T("Roles"));
+    for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
-      role->oid = ReadOid(iter, 0);
-      role->name = ReadText(iter, 1);
-      role->canLogin = ReadBool(iter, 2);
-      role->superuser = ReadBool(iter, 3);
-      role->description = ReadText(iter, 4);
+      role->oid = (*iter).ReadOid(0);
+      role->name = (*iter).ReadText(1);
+      role->canLogin = (*iter).ReadBool(2);
+      role->superuser = (*iter).ReadBool(3);
+      role->description = (*iter).ReadText(4);
       serverModel->roles.push_back(role);
     }
     sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
@@ -155,45 +151,43 @@ protected:
     LoadFunctions();
   }
   void LoadRelations() {
-    QueryResults relationRows;
     std::map<wxString, RelationModel::Type> typemap;
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    DoQuery(_T("Relations"), relationRows);
-    for (QueryResults::iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
+    QueryResults relationRows = DoQuery(_T("Relations"));
+    for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
-      relation->schema = ReadText(iter, 1);
+      relation->schema = (*iter).ReadText(1);
       relation->user = !IsSystemSchema(relation->schema);
       if (!(*iter)[0].IsEmpty()) {
-	relation->oid = ReadOid(iter, 0);
-	relation->name = ReadText(iter, 2);
-	wxString relkind(ReadText(iter, 3));
-	relation->extension = ReadText(iter, 4);
+	relation->oid = (*iter).ReadOid(0);
+	relation->name = (*iter).ReadText(2);
+	wxString relkind((*iter).ReadText(3));
+	relation->extension = (*iter).ReadText(4);
 	relation->type = typemap[relkind];
       }
       databaseModel->relations.push_back(relation);
     }
   }
   void LoadFunctions() {
-    QueryResults functionRows;
     std::map<wxString, FunctionModel::Type> typemap;
     typemap[_T("f")] = FunctionModel::SCALAR;
     typemap[_T("ft")] = FunctionModel::TRIGGER;
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    DoQuery(_T("Functions"), functionRows);
-    for (QueryResults::iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
+    QueryResults functionRows = DoQuery(_T("Functions"));
+    for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
-      func->oid = ReadOid(iter, 0);
-      func->schema = ReadText(iter, 1);
-      func->name = ReadText(iter, 2);
-      func->arguments = ReadText(iter, 3);
-      wxString type(ReadText(iter, 4));
-      func->extension = ReadText(iter, 5);
+      func->oid = (*iter).ReadOid(0);
+      func->schema = (*iter).ReadText(1);
+      func->name = (*iter).ReadText(2);
+      func->arguments = (*iter).ReadText(3);
+      wxString type((*iter).ReadText(4));
+      func->extension = (*iter).ReadText(5);
       wxASSERT_MSG(typemap.find(type) != typemap.end(), type);
       func->type = typemap[type];
       func->user = !IsSystemSchema(func->schema);
@@ -221,13 +215,12 @@ private:
   std::map<unsigned long, wxString> descriptions;
 protected:
   void Execute() {
-    QueryResults rs;
-    DoQuery(_T("Object Descriptions"), rs);
-    for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
+    QueryResults rs = DoQuery(_T("Object Descriptions"));
+    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
       unsigned long oid;
       wxString description;
-      oid = ReadOid(iter, 0);
-      description = ReadText(iter, 1);
+      oid = (*iter).ReadOid(0);
+      description = (*iter).ReadText(1);
       descriptions[oid] = description;
     }
   }
@@ -279,19 +272,18 @@ protected:
     typeMap[_T("T")] = CatalogueIndex::TYPE;
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
-    QueryResults rs;
-    DoQuery(_T("IndexSchema"), rs);
+    QueryResults rs = DoQuery(_T("IndexSchema"));
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
-    for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
+    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
       long entityId;
       wxString typeString;
       wxString symbol;
       wxString disambig;
-      entityId = ReadInt8(iter, 0);
-      typeString = ReadText(iter, 1);
-      symbol = ReadText(iter, 2);
-      disambig = ReadText(iter, 3);
+      entityId = (*iter).ReadInt8(0);
+      typeString = (*iter).ReadText(1);
+      symbol = (*iter).ReadText(2);
+      disambig = (*iter).ReadText(3);
       bool systemObject;
       CatalogueIndex::Type entityType;
       if (typeString.Last() == _T('S')) {
@@ -339,38 +331,35 @@ protected:
   }
 private:
   void ReadColumns() {
-    QueryResults attributeRows;
     wxString oidValue;
     oidValue.Printf(_T("%d"), relationModel->oid);
-    DoQuery(_T("Columns"), attributeRows, 26 /* oid */, oidValue.utf8_str());
-    for (QueryResults::iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
+    QueryResults attributeRows = DoQuery(_T("Columns"), 26 /* oid */, oidValue.utf8_str());
+    for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
-      column->name = ReadText(iter, 0);
-      column->type = ReadText(iter, 1);
-      column->nullable = ReadBool(iter, 2);
-      column->hasDefault = ReadBool(iter, 3);
-      column->description = ReadText(iter, 4);
+      column->name = (*iter).ReadText(0);
+      column->type = (*iter).ReadText(1);
+      column->nullable = (*iter).ReadBool(2);
+      column->hasDefault = (*iter).ReadBool(3);
+      column->description = (*iter).ReadText(4);
       columns.push_back(column);
     }
   }
   void ReadIndices() {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
-    QueryResults indexRows;
-    DoQuery(_T("Indices"), indexRows, 26 /* oid */, oidValue.utf8_str());
-    for (QueryResults::iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
+    QueryResults indexRows = DoQuery(_T("Indices"), 26 /* oid */, oidValue.utf8_str());
+    for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
-      index->name = ReadText(iter, 0);
+      index->name = (*iter).ReadText(0);
       indices.push_back(index);
     }
   }
   void ReadTriggers() {
     wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
-    QueryResults triggerRows;
-    DoQuery(_T("Triggers"), triggerRows, 26 /* oid */, oidValue.utf8_str());
-    for (QueryResults::iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
+    QueryResults triggerRows = DoQuery(_T("Triggers"), 26 /* oid */, oidValue.utf8_str());
+    for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
-      trigger->name = ReadText(iter, 0);
+      trigger->name = (*iter).ReadText(0);
       triggers.push_back(trigger);
     }
   }

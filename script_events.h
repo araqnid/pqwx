@@ -45,7 +45,6 @@ public:
   virtual void ScriptCommandCompleted(const wxString &statusTag) = 0;
   virtual void ScriptError(const PgError &error) = 0;
   virtual void ScriptResultSet(const wxString &statusTag,
-			       const std::vector<ResultField> &fields,
 			       const QueryResults &data) = 0;
   virtual void ScriptNotice(const PgError &notice) = 0;
 };

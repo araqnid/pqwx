@@ -78,29 +78,28 @@ public:
 
 protected:
   void Execute() {
-    QueryResults rs;
+    QueryResults rs = DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"));
     std::vector<DependencyModel*> objects;
-    if (DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"), rs))
-      for (QueryResults::iterator iter = rs.begin(); iter != rs.end(); iter++) {
-	DependencyModel *dep = new DependencyModel();
-	dep->deptype = ReadText(iter, 0);
-	dep->regclass = ReadOid(iter, 1);
-	dep->oid = ReadOid(iter, 2);
-	dep->symbol = ReadText(iter, 5);
-	dep->parentSubobject = ReadText(iter, 6);
-	dep->childSubobject = ReadText(iter, 7);
-	dep->hasMore = ReadBool(iter, 8);
-	objects.push_back(dep);
-      }
+    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+      DependencyModel *dep = new DependencyModel();
+      dep->deptype = (*iter).ReadText(0);
+      dep->regclass = (*iter).ReadOid(1);
+      dep->oid = (*iter).ReadOid(2);
+      dep->symbol = (*iter).ReadText(5);
+      dep->parentSubobject = (*iter).ReadText(6);
+      dep->childSubobject = (*iter).ReadText(7);
+      dep->hasMore = (*iter).ReadBool(8);
+      objects.push_back(dep);
+    }
     result = new DependencyResult(item, objects);
   }
 
-  bool DoDependenciesQuery(const wxString &name, QueryResults &rs) {
+  QueryResults DoDependenciesQuery(const wxString &name) {
     wxString classValue, objectValue, databaseValue;
     classValue << regclass;
     objectValue << oid;
     databaseValue << database;
-    return DoNamedQuery(name, rs, 26 /*oid*/, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str(), databaseValue.utf8_str());
+    return DoNamedQuery(name, 26 /*oid*/, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str(), databaseValue.utf8_str());
   }
 
   void NotifyFinished() {

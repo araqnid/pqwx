@@ -120,7 +120,14 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   wxString description(_("PostgreSQL query tool"));
 #ifdef __WXDEBUG__
   description << _(" - Debug build");
-  description << _("\nlibpq ") << _T(PG_VERSION);
+#if PG_VERSION_NUM >= 90100
+  const int pqVersion = PQlibVersion();
+  description << _T("\nlibpq ") << (pqVersion/10000) << _T('.') << ((pqVersion/100)%100) << _T('.') << (pqVersion%100);
+  if (pqVersion != PG_VERSION_NUM)
+    description << _T(" (compiled against ") << _T(PG_VERSION) << _T(")");
+#else
+  description << _T("\nlibpq ") << _T(PG_VERSION);
+#endif
   description << _T("\n") << wxVERSION_STRING << _T(" ") << _T(WX_FLAVOUR);
 #endif
   info.SetDescription(description);

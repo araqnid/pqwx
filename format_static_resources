@@ -4,7 +4,7 @@ require 5;
 use strict;
 use utf8;
 use warnings;
-use YAML qw(LoadFile);
+use YAML::Any qw(LoadFile);
 use Getopt::Std;
 use vars qw($opt_o $opt_d $opt_p $opt_f);
 

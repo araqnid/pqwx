@@ -12,7 +12,7 @@
 #include "script_events.h"
 #include "database_work.h"
 #include "script_query_work.h"
-#include "postgresql_wordlists.h"
+#include "postgresql_wordlists_yml.h"
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_SET_FOCUS(ScriptEditor::OnSetFocus)
@@ -38,13 +38,13 @@ ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
 #if wxUSE_UNICODE
   SetCodePage(wxSTC_CP_UTF8);
 #endif
-  SetKeyWords(0, postgresql_wordlist_keywords);
-  SetKeyWords(1, postgresql_wordlist_database_objects);
-  SetKeyWords(3, postgresql_wordlist_sqlplus);
-  SetKeyWords(4, postgresql_wordlist_user1);
-  SetKeyWords(5, postgresql_wordlist_user2);
-  SetKeyWords(6, postgresql_wordlist_user3);
-  SetKeyWords(7, postgresql_wordlist_user4);
+  SetKeyWords(0, postgresql_wordlists_yml_keywords);
+  SetKeyWords(1, postgresql_wordlists_yml_database_objects);
+  SetKeyWords(3, postgresql_wordlists_yml_sqlplus);
+  SetKeyWords(4, postgresql_wordlists_yml_user1);
+  SetKeyWords(5, postgresql_wordlists_yml_user2);
+  SetKeyWords(6, postgresql_wordlists_yml_user3);
+  SetKeyWords(7, postgresql_wordlists_yml_user4);
 
   StyleClearAll();
 

@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+
+require 5;
+use strict;
+use utf8;
+use warnings;
+use YAML::Any qw(LoadFile);
+use Getopt::Std;
+use vars qw($opt_o $opt_p);
+
+getopts('p:o:') && @ARGV == 1 or die "Syntax: $0 [-p symbol_prefix] [-o output-file] wordlists.yml\n";
+
+my $symbol_prefix = $opt_p || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; $n })->($ARGV[0]);
+my $output_file = $opt_o || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; "$n.h" })->($ARGV[0]);
+
+open STDOUT, ">", $output_file or die "Unable to write $output_file: $!\n";
+
+print "// -*- mode: c++ -*-\n\n// auto-generated from $ARGV[0]\n\n";
+
+my $guard_symbol;
+if ($output_file =~ m{^([^/]+)\.h$}) {
+  $guard_symbol = "__${1}_h";
+  print "#ifndef $guard_symbol\n#define $guard_symbol\n\n";
+}
+
+my $wordlists = LoadFile(shift @ARGV);
+while (my($listname, $wordlist) = each %$wordlists) {
+  print "static const wxString ${symbol_prefix}_$listname = _T(\"";
+  #use Data::Dumper; print Dumper($wordlist);
+  my %wordmap;
+  for my $word (@$wordlist) {
+    $wordmap{$word}++;
+  };
+  print join(" ", keys %wordmap);
+  print "\");\n";
+}
+
+print "\n#endif\n" if ($guard_symbol);
+

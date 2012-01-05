@@ -9,6 +9,7 @@
 #include "pqwx.h"
 #include "documents_notebook.h"
 #include "script_editor.h"
+#include "script_editor_pane.h"
 #include "script_events.h"
 
 BEGIN_EVENT_TABLE(DocumentsNotebook, wxNotebook)
@@ -20,11 +21,11 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_DocumentSelected)
 
 ScriptEditor* DocumentsNotebook::OpenNewScript()
 {
-  ScriptEditor *editor = new ScriptEditor(this, wxID_ANY);
-  editors.push_back(editor);
-  AddPage(editor, wxEmptyString, true);
+  ScriptEditorPane *pane = new ScriptEditorPane(this, wxID_ANY);
+  editors.push_back(pane->GetEditor());
+  AddPage(pane, wxEmptyString, true);
 
-  return editor;
+  return pane->GetEditor();
 }
 
 inline unsigned DocumentsNotebook::FindPage(ScriptEditor *editor) const

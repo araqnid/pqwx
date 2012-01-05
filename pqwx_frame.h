@@ -26,7 +26,7 @@ public:
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
   void OnScriptToWindow(PQWXDatabaseEvent& event);
-  void OnDocumentSelected(wxCommandEvent& event);
+  void OnDocumentSelected(PQWXDatabaseEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);
   void OnScriptNew(PQWXDatabaseEvent& event);
 
@@ -47,15 +47,14 @@ public:
 private:
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;
-  ScriptEditorPane *currentEditor;
+  ConnectableEditor *currentEditor;
+  wxEvtHandler *currentEditorTarget;
 
   bool haveCurrentServer;
   ServerConnection currentServer;
   wxString currentDatabase;
 
   wxStopWatch scriptExecutionStopwatch;
-
-  void UpdateStatusBar(const ServerConnection &server, const wxString &database);
 
   void SaveFrameGeometry() const;
   void LoadFrameGeometry();

@@ -7,6 +7,7 @@
 #include "execution_lexer.h"
 #include "database_work.h"
 #include "pg_error.h"
+#include "documents_notebook.h"
 
 class ScriptEditor;
 class ResultsNotebook;
@@ -14,7 +15,7 @@ class wxSplitterWindow;
 
 extern "C" void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs);
 
-class ScriptEditorPane : public wxPanel {
+class ScriptEditorPane : public wxPanel, public ConnectableEditor {
 public:
   ScriptEditorPane(wxWindow *parent, wxWindowID id = wxID_ANY);
   ~ScriptEditorPane() {
@@ -48,7 +49,7 @@ public:
 
   void MarkModified(bool value) { modified = value; EmitScriptSelected(); }
 
-  wxString FormatTitle();
+  wxString FormatTitle() const;
 private:
   ScriptEditor *editor;
   wxSplitterWindow *splitter;

@@ -226,23 +226,22 @@ void PqwxFrame::OnScriptToWindow(PQWXDatabaseEvent& event)
   editor->SetFocus();
 }
 
-void PqwxFrame::OnDocumentSelected(wxCommandEvent &event)
+void PqwxFrame::OnDocumentSelected(PQWXDatabaseEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
   wxObject *obj = event.GetEventObject();
-  ScriptEditorPane *editor = dynamic_cast<ScriptEditorPane*>(obj);
-  wxASSERT(editor != NULL);
-  currentEditor = editor;
-  if (editor->IsConnected()) {
-    currentServer = editor->GetServer();
-    currentDatabase = editor->GetDatabase();
+  currentEditorTarget = dynamic_cast<wxEvtHandler*>(obj);
+  wxASSERT(currentEditorTarget != NULL);
+
+  if (event.DatabaseSpecified()) {
+    currentServer = event.GetServer();
+    currentDatabase = event.GetDatabase();
     haveCurrentServer = true;
   }
   else {
     haveCurrentServer = false;
   }
-  UpdateStatusBar(editor->GetServer(), editor->GetDatabase());
 }
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
@@ -252,30 +251,24 @@ void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
   haveCurrentServer = true;
 }
 
-void PqwxFrame::UpdateStatusBar(const ServerConnection &server, const wxString &database)
-{
-  GetStatusBar()->SetStatusText(server.Identification(), StatusBar_Server);
-  GetStatusBar()->SetStatusText(database, StatusBar_Database);
-}
-
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
 {
-  wxASSERT(currentEditor != NULL);
+  wxASSERT(currentEditorTarget != NULL);
 
   wxCommandEvent cmd(PQWX_ScriptExecute);
-  currentEditor->ProcessEvent(cmd);
+  currentEditorTarget->ProcessEvent(cmd);
 }
 
 void PqwxFrame::OnDisconnectScript(wxCommandEvent &event) {
-  wxASSERT(currentEditor != NULL);
+  wxASSERT(currentEditorTarget != NULL);
 
   wxCommandEvent cmd(PQWX_ScriptDisconnect);
-  currentEditor->ProcessEvent(cmd);
+  currentEditorTarget->ProcessEvent(cmd);
 }
 
 void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
-  wxASSERT(currentEditor != NULL);
+  wxASSERT(currentEditorTarget != NULL);
 
   wxCommandEvent cmd(PQWX_ScriptReconnect);
-  currentEditor->ProcessEvent(cmd);
+  currentEditorTarget->ProcessEvent(cmd);
 }

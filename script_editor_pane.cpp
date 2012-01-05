@@ -24,7 +24,7 @@ END_EVENT_TABLE()
 int ScriptEditorPane::documentCounter = 0;
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
-: wxPanel(parent, id), resultsBook(NULL), db(NULL), lexer(NULL)
+  : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false), lexer(NULL)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
@@ -133,7 +133,7 @@ void ScriptEditorPane::OnConnectionNotice(const PGresult *rs)
   GetOrCreateResultsBook()->ScriptNotice(error);
 }
 
-wxString ScriptEditorPane::FormatTitle() {
+wxString ScriptEditorPane::FormatTitle() const {
   wxString output;
   if (db == NULL)
     output << _("<disconnected>");

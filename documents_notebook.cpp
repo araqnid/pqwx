@@ -60,7 +60,7 @@ void DocumentsNotebook::EmitDocumentChanged(unsigned page)
 {
   wxASSERT(page < editors.size());
   ScriptEditorPane *editor = editors[page];
-  wxCommandEvent event(PQWX_DocumentSelected);
+  PQWXDatabaseEvent event(editor->GetServer(), editor->GetDatabase(), PQWX_DocumentSelected);
   event.SetEventObject(editor);
   event.SetString(editor->FormatTitle());
   ProcessEvent(event);

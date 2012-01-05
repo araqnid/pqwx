@@ -28,7 +28,7 @@ BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ScriptQueryComplete, -1)
 END_DECLARE_EVENT_TYPES()
 
-#define PQWX_DOCUMENT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_DocumentSelected, fn)
+#define PQWX_DOCUMENT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_DocumentSelected, fn)
 #define PQWX_SCRIPT_NEW(id, fn) EVT_DATABASE(id, PQWX_ScriptNew, fn)
 #define PQWX_SCRIPT_TO_WINDOW(id, fn) EVT_DATABASE(id, PQWX_ScriptToWindow, fn)
 #define PQWX_SCRIPT_STATE_UPDATED(id, fn) EVT_DATABASE(id, PQWX_ScriptStateUpdated, fn)

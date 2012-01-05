@@ -8,6 +8,15 @@
 
 class ScriptEditorPane;
 class PQWXDatabaseEvent;
+class ServerConnection;
+
+class ConnectableEditor {
+public:
+  virtual wxString FormatTitle() const = 0;
+  virtual bool IsConnected() const = 0;
+  virtual const ServerConnection& GetServer() const = 0;
+  virtual wxString GetDatabase() const = 0;
+};
 
 class DocumentsNotebook : public wxNotebook {
 public:

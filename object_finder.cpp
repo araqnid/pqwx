@@ -149,6 +149,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   resultsCtrl = new wxSimpleHtmlListBox(this, Pqwx_ObjectFinderResults);
   resultsCtrl->GetFileSystem().ChangePathTo(_T("memory:ObjectFinder"), true);
   GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
+  resultsCtrl->MoveBeforeInTabOrder(dummyResultsCtrl);
   dummyResultsCtrl->Destroy();
 
   iconMap[CatalogueIndex::TABLE] = _T("icon_table.png");

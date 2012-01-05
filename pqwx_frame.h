@@ -7,8 +7,7 @@
 #include "wx/panel.h"
 #include "wx/splitter.h"
 #include "object_browser.h"
-#include "results_notebook.h"
-#include "scripts_notebook.h"
+#include "documents_notebook.h"
 #include "connect_dialogue.h"
 
 class PqwxFrame: public wxFrame {
@@ -27,10 +26,8 @@ public:
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
   void OnScriptToWindow(PQWXDatabaseEvent& event);
-  void OnScriptSelected(PQWXDatabaseEvent& event);
+  void OnDocumentSelected(wxCommandEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);
-  void OnScriptExecutionBeginning(wxCommandEvent& event);
-  void OnScriptExecutionFinishing(wxCommandEvent& event);
   void OnScriptNew(PQWXDatabaseEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
@@ -49,10 +46,8 @@ public:
 
 private:
   ObjectBrowser *objectBrowser;
-  ResultsNotebook *resultsBook;
-  ScriptsNotebook *scriptsBook;
+  DocumentsNotebook *documentsBook;
   ScriptEditor *currentEditor;
-  wxSplitterWindow *editorSplitter;
 
   bool haveCurrentServer;
   ServerConnection currentServer;
@@ -60,7 +55,7 @@ private:
 
   wxStopWatch scriptExecutionStopwatch;
 
-  void UpdateStatusBar(const PQWXDatabaseEvent &);
+  void UpdateStatusBar(const ServerConnection &server, const wxString &database);
 
   void SaveFrameGeometry() const;
   void LoadFrameGeometry();

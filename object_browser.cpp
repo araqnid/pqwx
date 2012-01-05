@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <set>
 #include "wx/imaglist.h"
+#include "pqwx.h"
 #include "object_browser.h"
 #include "object_finder.h"
 #include "pqwx_frame.h"

@@ -19,7 +19,7 @@ extern "C" void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs);
 
 class ScriptEditor : public wxStyledTextCtrl {
 public:
-  ScriptEditor(ScriptsNotebook *owner, wxWindowID id);
+  ScriptEditor(wxWindow *parent, wxWindowID id);
   ~ScriptEditor() {
     if (db != NULL) {
       wxLogDebug(_T("Disposing of editor database connection from destructor"));
@@ -38,7 +38,8 @@ public:
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(const PGresult *rs);
 
-  void LoadFile(const wxString &filename);
+  void OpenFile(const wxString &filename);
+  void Populate(const wxString &text);
   void Connect(const ServerConnection &server, const wxString &dbname);
   void SetConnection(const ServerConnection &server, DatabaseConnection *db);
   bool HasConnection() const { return db != NULL; }
@@ -46,11 +47,18 @@ public:
   wxString ConnectionIdentification() const { wxASSERT(db != NULL); return db->Identification(); }
   bool IsExecuting() const { return lexer != NULL; }
 
+  const ServerConnection& GetServer() const { return server; }
+  wxString GetDatabase() const { if (db == NULL) return wxEmptyString; else return db->DbName(); }
+
+  wxString FormatTitle();
 private:
   ScriptsNotebook *owner;
   ServerConnection server;
   DatabaseConnection *db;
   DatabaseConnectionState state;
+  wxString coreTitle;
+  wxString scriptFilename;
+  bool modified;
 
   void EmitScriptSelected();
 
@@ -61,6 +69,9 @@ private:
 
   bool ProcessExecution();
   void FinishExecution();
+  void LoadFile(const wxString &filename);
+
+  static int documentCounter;
 
 #ifdef __WXMSW__
   const char *ExtractSQL(const ExecutionLexer::Token &token) const

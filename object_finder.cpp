@@ -11,6 +11,7 @@
 #include "wx/xrc/xmlres.h"
 #include "wx/config.h"
 #include "wx/regex.h"
+#include "pqwx.h"
 #include "object_finder.h"
 #include "object_browser.h"
 

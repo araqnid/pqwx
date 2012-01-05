@@ -8,7 +8,6 @@
 
 #include <fstream>
 #include "wx/stc/stc.h"
-#include "scripts_notebook.h"
 #include "script_editor.h"
 #include "script_events.h"
 #include "database_work.h"
@@ -26,14 +25,16 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditor::OnQueryComplete)
 END_EVENT_TABLE()
 
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptSelected)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptStateUpdated)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
 
-ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
-: wxStyledTextCtrl(owner, id), owner(owner), db(NULL), lexer(NULL), resultsHandler(NULL)
+int ScriptEditor::documentCounter = 0;
+
+ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id)
+: wxStyledTextCtrl(parent, id), db(NULL), lexer(NULL), resultsHandler(NULL)
 {
   SetLexer(wxSTC_LEX_SQL);
 #if wxUSE_UNICODE
@@ -70,6 +71,8 @@ ScriptEditor::ScriptEditor(ScriptsNotebook *owner, wxWindowID id)
   StyleSetSpec(wxSTC_SQL_USER2, _T("fore:#b00040"));
   StyleSetSpec(wxSTC_SQL_USER3, _T("fore:#8b0000"));
   StyleSetSpec(wxSTC_SQL_USER4, _T("fore:#800080"));
+
+  coreTitle = wxString::Format(_("Query-%d.sql"), ++documentCounter);
 }
 
 void ScriptEditor::OnSetFocus(wxFocusEvent &event)
@@ -85,15 +88,13 @@ void ScriptEditor::OnLoseFocus(wxFocusEvent &event)
 
 void ScriptEditor::OnSavePointLeft(wxStyledTextEvent &event)
 {
-  ScriptModel& script = owner->FindScriptForEditor(this);
-  script.modified = true;
+  modified = true;
   EmitScriptSelected();
 }
 
 void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
 {
-  ScriptModel& script = owner->FindScriptForEditor(this);
-  script.modified = false;
+  modified = false;
   EmitScriptSelected();
 }
 
@@ -106,8 +107,6 @@ void ScriptEditor::Connect(const ServerConnection &server_, const wxString &dbna
   db->Connect();
   state = Idle;
   db->AddWork(new SetupNoticeProcessorWork(this));
-  ScriptModel& script = owner->FindScriptForEditor(this);
-  script.database = db->Identification();
   EmitScriptSelected();
 }
 
@@ -122,8 +121,6 @@ void ScriptEditor::SetConnection(const ServerConnection &server_, DatabaseConnec
   server = server_;
   db->Relabel(_("Query"));
   db->AddWork(new SetupNoticeProcessorWork(this));
-  ScriptModel& script = owner->FindScriptForEditor(this);
-  script.database = db->Identification();
   state = Idle;
   EmitScriptSelected();
 }
@@ -132,8 +129,8 @@ void ScriptEditor::EmitScriptSelected()
 {
   wxString dbname;
   if (db) dbname = db->DbName();
-  PQWXDatabaseEvent selectionChangedEvent(server, dbname, PQWX_ScriptSelected);
-  selectionChangedEvent.SetString(owner->FindScriptForEditor(this).FormatTitle());
+  PQWXDatabaseEvent selectionChangedEvent(server, dbname, PQWX_ScriptStateUpdated);
+  selectionChangedEvent.SetString(FormatTitle());
   selectionChangedEvent.SetEventObject(this);
   if (db) selectionChangedEvent.SetConnectionState(state);
   ProcessEvent(selectionChangedEvent);
@@ -264,9 +261,7 @@ void ScriptEditor::OnDisconnect(wxCommandEvent &event)
   db->Dispose();
   delete db;
   db = NULL;
-  ScriptModel& script = owner->FindScriptForEditor(this);
-  script.database = wxEmptyString;
-  EmitScriptSelected(); // recalculate title etc
+  EmitScriptSelected(); // refresh title etc
 }
 
 void ScriptEditor::OnReconnect(wxCommandEvent &event)
@@ -280,6 +275,31 @@ void ScriptEditor::OnReconnect(wxCommandEvent &event)
   dbox->SetFocus();
 }
 
+void ScriptEditor::OpenFile(const wxString &filename) {
+  wxString tabName;
+#ifdef __WXMSW__
+  static const wxChar PathSeparator = _T('\\');
+#else
+  static const wxChar PathSeparator = _T('/');
+#endif
+
+  size_t slash = filename.find_last_of(PathSeparator);
+  if (slash == wxString::npos)
+    coreTitle = filename;
+  else
+    coreTitle = filename.Mid(slash + 1);
+
+  LoadFile(filename);
+  SetSavePoint();
+  EmptyUndoBuffer();
+  EmitScriptSelected();
+}
+
+void ScriptEditor::Populate(const wxString &text) {
+  AddText(text);
+  EmptyUndoBuffer();
+}
+
 void ScriptEditor::LoadFile(const wxString &filename)
 {
   // assume input files are in the correct coding system for now
@@ -291,4 +311,15 @@ void ScriptEditor::LoadFile(const wxString &filename)
     buf[got] = '\0';
     AddTextRaw(buf);
   }
+}
+
+wxString ScriptEditor::FormatTitle() {
+  wxString output;
+  if (db == NULL)
+    output << _("<disconnected>");
+  else
+    output << db->Identification();
+  output << _T(" - ") << coreTitle;
+  if (modified) output << _T(" *");
+  return output;
 }

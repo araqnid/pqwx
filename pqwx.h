@@ -11,7 +11,7 @@ enum {
   Pqwx_DisconnectObjectBrowser,
   Pqwx_MainSplitter,
   Pqwx_EditorSplitter,
-  Pqwx_ScriptsNotebook,
+  Pqwx_DocumentsNotebook,
   Pqwx_ResultsNotebook,
   Pqwx_MessagesPage,
   Pqwx_MessagesDisplay,

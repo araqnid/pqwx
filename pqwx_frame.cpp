@@ -18,7 +18,6 @@
 #include "wx_flavour.h"
 #include "object_browser.h"
 #include "connect_dialogue.h"
-#include "scripts_notebook.h"
 #include "results_notebook.h"
 #include "script_events.h"
 #include "script_editor.h"
@@ -40,10 +39,8 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
   PQWX_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
-  PQWX_SCRIPT_SELECTED(wxID_ANY, PqwxFrame::OnScriptSelected)
+  PQWX_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnDocumentSelected)
   PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
-  PQWX_SCRIPT_EXECUTION_BEGINNING(wxID_ANY, PqwxFrame::OnScriptExecutionBeginning)
-  PQWX_SCRIPT_EXECUTION_FINISHING(wxID_ANY, PqwxFrame::OnScriptExecutionFinishing)
   PQWX_SCRIPT_NEW(wxID_ANY, PqwxFrame::OnScriptNew)
 END_EVENT_TABLE()
 
@@ -91,16 +88,10 @@ PqwxFrame::PqwxFrame(const wxString& title)
   wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
 
   objectBrowser = new ObjectBrowser(mainSplitter, Pqwx_ObjectBrowser);
-  editorSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY);
-  mainSplitter->SplitVertically(objectBrowser, editorSplitter);
+  documentsBook = new DocumentsNotebook(mainSplitter, Pqwx_DocumentsNotebook);
+  mainSplitter->SplitVertically(objectBrowser, documentsBook);
   mainSplitter->SetSashGravity(0.2);
   mainSplitter->SetMinimumPaneSize(100);
-
-  scriptsBook = new ScriptsNotebook(editorSplitter, Pqwx_ScriptsNotebook);
-  resultsBook = new ResultsNotebook(editorSplitter, Pqwx_ResultsNotebook);
-  editorSplitter->Initialize(scriptsBook);
-  editorSplitter->SetMinimumPaneSize(100);
-  editorSplitter->SetSashGravity(1.0);
 
   LoadFrameGeometry();
 
@@ -192,7 +183,7 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
     suggestDatabase = currentDatabase;
   }
 
-  ScriptEditor *editor = scriptsBook->OpenNewScript();
+  ScriptEditor *editor = documentsBook->OpenNewScript();
   if (suggest)
     editor->Connect(suggestServer, suggestDatabase);
   editor->SetFocus();
@@ -200,7 +191,7 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
 
 void PqwxFrame::OnScriptNew(PQWXDatabaseEvent& event)
 {
-  ScriptEditor *editor = scriptsBook->OpenNewScript();
+  ScriptEditor *editor = documentsBook->OpenNewScript();
   editor->Connect(event.GetServer(), event.GetDatabase());
   editor->SetFocus();
 }
@@ -219,7 +210,8 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 		    _("SQL files (*.sql)|*.sql"));
   dbox.CentreOnParent();
   if (dbox.ShowModal() == wxID_OK) {
-    ScriptEditor *editor = scriptsBook->OpenScriptFile(dbox.GetPath());
+    ScriptEditor *editor = documentsBook->OpenNewScript();
+    editor->OpenFile(dbox.GetPath());
     if (suggest)
       editor->Connect(suggestServer, suggestDatabase);
     editor->SetFocus();
@@ -228,12 +220,13 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 
 void PqwxFrame::OnScriptToWindow(PQWXDatabaseEvent& event)
 {
-  ScriptEditor *editor = scriptsBook->OpenScriptWithText(event.GetString());
+  ScriptEditor *editor = documentsBook->OpenNewScript();
+  editor->Populate(event.GetString());
   editor->Connect(event.GetServer(), event.GetDatabase());
   editor->SetFocus();
 }
 
-void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
+void PqwxFrame::OnDocumentSelected(wxCommandEvent &event)
 {
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
@@ -241,15 +234,15 @@ void PqwxFrame::OnScriptSelected(PQWXDatabaseEvent &event)
   ScriptEditor *editor = dynamic_cast<ScriptEditor*>(obj);
   wxASSERT(editor != NULL);
   currentEditor = editor;
-  if (event.DatabaseSpecified()) {
-    currentServer = event.GetServer();
-    currentDatabase = event.GetDatabase();
+  if (editor->IsConnected()) {
+    currentServer = editor->GetServer();
+    currentDatabase = editor->GetDatabase();
     haveCurrentServer = true;
   }
   else {
     haveCurrentServer = false;
   }
-  UpdateStatusBar(event);
+  UpdateStatusBar(editor->GetServer(), editor->GetDatabase());
 }
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
@@ -259,39 +252,10 @@ void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
   haveCurrentServer = true;
 }
 
-void PqwxFrame::UpdateStatusBar(const PQWXDatabaseEvent &event)
+void PqwxFrame::UpdateStatusBar(const ServerConnection &server, const wxString &database)
 {
-  GetStatusBar()->SetStatusText(event.GetServer().Identification(), StatusBar_Server);
-
-  if (event.DatabaseSpecified())
-    GetStatusBar()->SetStatusText(event.GetDatabase(), StatusBar_Database);
-  else
-    GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_Database);
-
-  if (!event.HasConnectionState()) {
-    GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
-  }
-  else {
-    switch (event.GetConnectionState()) {
-    case Idle:
-      GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
-      break;
-    case IdleInTransaction:
-      GetStatusBar()->SetStatusText(_("TXN"), StatusBar_State);
-      break;
-    case TransactionAborted:
-      GetStatusBar()->SetStatusText(_("ERROR"), StatusBar_State);
-      break;
-    case CopyToServer:
-    case CopyToClient:
-      GetStatusBar()->SetStatusText(_("COPY"), StatusBar_State);
-      break;
-    default:
-      GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_State);
-    }
-  }
-
-  GetStatusBar()->SetStatusText(wxEmptyString, StatusBar_Message);
+  GetStatusBar()->SetStatusText(server.Identification(), StatusBar_Server);
+  GetStatusBar()->SetStatusText(database, StatusBar_Database);
 }
 
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
@@ -314,18 +278,4 @@ void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
 
   wxCommandEvent cmd(PQWX_ScriptReconnect);
   currentEditor->ProcessEvent(cmd);
-}
-
-void PqwxFrame::OnScriptExecutionBeginning(wxCommandEvent &event)
-{
-  resultsBook->Reset();
-  editorSplitter->SplitHorizontally(scriptsBook, resultsBook);
-  scriptExecutionStopwatch.Start();
-  event.SetEventObject(resultsBook);
-}
-
-void PqwxFrame::OnScriptExecutionFinishing(wxCommandEvent &event)
-{
-  long elapsed = scriptExecutionStopwatch.Time();
-  GetStatusBar()->SetStatusText(wxString::Format(_("Finished in %.2lf seconds"), ((double) elapsed) / 1000.0), StatusBar_Message);
 }

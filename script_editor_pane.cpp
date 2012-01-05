@@ -19,12 +19,13 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   PQWX_SCRIPT_DISCONNECT(wxID_ANY, ScriptEditorPane::OnDisconnect)
   PQWX_SCRIPT_RECONNECT(wxID_ANY, ScriptEditorPane::OnReconnect)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditorPane::OnQueryComplete)
+  EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
 END_EVENT_TABLE()
 
 int ScriptEditorPane::documentCounter = 0;
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
-  : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false), lexer(NULL)
+  : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false), lexer(NULL), statusUpdateTimer(this)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
@@ -174,13 +175,13 @@ void ScriptEditorPane::ShowConnectedStatus()
 void ScriptEditorPane::ShowDisconnectedStatus()
 {
   statusbar->SetFieldsCount(1);
-  statusbar->SetStatusText(_("Diconnected."), StatusBar_Status);
+  statusbar->SetStatusText(_("Disconnected."), StatusBar_Status);
 }
 
 void ScriptEditorPane::ShowScriptInProgressStatus()
 {
   statusbar->SetStatusText(_("Executing query..."), StatusBar_Status);
-  statusbar->SetStatusText(_T("00:00"), StatusBar_TimeElapsed);
+  statusbar->SetStatusText(_T("00:00:00"), StatusBar_TimeElapsed);
   statusbar->SetStatusText(wxEmptyString, StatusBar_RowsRetrieved);
 }
 
@@ -190,8 +191,21 @@ void ScriptEditorPane::ShowScriptCompleteStatus()
     statusbar->SetStatusText(_("Query completed successfully"), StatusBar_Status);
   else
     statusbar->SetStatusText(_("Query completed with errors"), StatusBar_Status);
-  statusbar->SetStatusText(_T("??"), StatusBar_TimeElapsed);
+  long time = executionTime.Time();
+  wxString elapsed;
+  if (time > 5*1000 || (time % 1000) == 0)
+    elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
+  else
+    elapsed = wxString::Format(_T("%02d:%02d.%03d"), (time / (60*1000)) % 60, (time / 1000) % 60, time % 1000);
+  statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
   statusbar->SetStatusText(wxString::Format(_("%d rows"), rowsRetrieved), StatusBar_RowsRetrieved);
+}
+
+void ScriptEditorPane::OnTimerTick(wxTimerEvent &event)
+{
+  long time = executionTime.Time();
+  wxString elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
+  statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
 }
 
 void ScriptEditorPane::OnExecute(wxCommandEvent &event)
@@ -206,6 +220,7 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
   rowsRetrieved = 0;
   errorsEncountered = 0;
   ShowScriptInProgressStatus();
+  statusUpdateTimer.Start(1000);
 
   if (resultsBook != NULL) resultsBook->Reset();
 
@@ -250,6 +265,7 @@ void ScriptEditorPane::FinishExecution()
   lexer = NULL;
 
   ShowScriptCompleteStatus();
+  statusUpdateTimer.Stop();
 }
 
 void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)

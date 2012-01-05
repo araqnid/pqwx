@@ -31,6 +31,7 @@ public:
   void OnExecute(wxCommandEvent &event);
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(const PGresult *rs);
+  void OnTimerTick(wxTimerEvent &event);
 
   ScriptEditor *GetEditor() const { return editor; }
   ResultsNotebook *GetResults() const { return resultsBook; }
@@ -104,6 +105,7 @@ private:
   wxCharBuffer source;
   ExecutionLexer *lexer;
   wxStopWatch executionTime;
+  wxTimer statusUpdateTimer;
   unsigned rowsRetrieved, errorsEncountered;
 
 #ifdef __WXMSW__

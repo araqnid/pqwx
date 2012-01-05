@@ -28,15 +28,17 @@ ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
+  statusbar = new wxStatusBar(this, wxID_ANY, 0L);
 
   wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(splitter, 1, wxEXPAND);
+  sizer->Add(statusbar, 0, wxEXPAND);
   SetSizer(sizer);
 
   splitter->Initialize(editor);
   splitter->SetMinimumPaneSize(100);
   splitter->SetSashGravity(1.0);
-
+ 
   coreTitle = wxString::Format(_("Query-%d.sql"), ++documentCounter);
 }
 
@@ -62,7 +64,7 @@ void ScriptEditorPane::OpenFile(const wxString &filename)
     coreTitle = filename.Mid(slash + 1);
 
   editor->LoadFile(filename);
-  EmitScriptSelected();
+  UpdateStateInUI();
 }
 
 void ScriptEditorPane::Populate(const wxString &text) {
@@ -78,8 +80,9 @@ void ScriptEditorPane::Connect(const ServerConnection &server_, const wxString &
   // TODO handle connection problems, direct through connection dialogue
   db->Connect();
   state = Idle;
+  ShowConnectedStatus();
   db->AddWork(new SetupNoticeProcessorWork(this));
-  EmitScriptSelected();
+  UpdateStateInUI();
 }
 
 void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseConnection *db_)
@@ -94,7 +97,8 @@ void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseCo
   db->Relabel(_("Query"));
   db->AddWork(new SetupNoticeProcessorWork(this));
   state = Idle;
-  EmitScriptSelected();
+  ShowConnectedStatus();
+  UpdateStateInUI();
 }
 
 void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
@@ -104,7 +108,8 @@ void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
   db->Dispose();
   delete db;
   db = NULL;
-  EmitScriptSelected(); // refresh title etc
+  ShowDisconnectedStatus();
+  UpdateStateInUI(); // refresh title etc
 }
 
 void ScriptEditorPane::OnReconnect(wxCommandEvent &event)
@@ -144,15 +149,49 @@ wxString ScriptEditorPane::FormatTitle() const {
   return output;
 }
 
-void ScriptEditorPane::EmitScriptSelected()
+void ScriptEditorPane::UpdateStateInUI()
 {
   wxString dbname;
   if (db) dbname = db->DbName();
-  PQWXDatabaseEvent selectionChangedEvent(server, dbname, PQWX_ScriptStateUpdated);
-  selectionChangedEvent.SetString(FormatTitle());
-  selectionChangedEvent.SetEventObject(this);
-  if (db) selectionChangedEvent.SetConnectionState(state);
-  ProcessEvent(selectionChangedEvent);
+  PQWXDatabaseEvent event(server, dbname, PQWX_ScriptStateUpdated);
+  event.SetString(FormatTitle());
+  event.SetEventObject(this);
+  if (db) event.SetConnectionState(state);
+  ProcessEvent(event);
+}
+
+void ScriptEditorPane::ShowConnectedStatus()
+{
+  statusbar->SetFieldsCount(StatusBar_Fields);
+  static const int StatusBar_Widths[] = { -1, 120, 80, 80, 80, 40 };
+  statusbar->SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
+  statusbar->SetStatusText(_("Connected."), StatusBar_Status);
+  statusbar->SetStatusText(server.Identification(), StatusBar_Server);
+  statusbar->SetStatusText(db->DbName(), StatusBar_Database);
+  statusbar->SetStatusText(TxnStatus(), StatusBar_TransactionStatus);
+}
+
+void ScriptEditorPane::ShowDisconnectedStatus()
+{
+  statusbar->SetFieldsCount(1);
+  statusbar->SetStatusText(_("Diconnected."), StatusBar_Status);
+}
+
+void ScriptEditorPane::ShowScriptInProgressStatus()
+{
+  statusbar->SetStatusText(_("Executing query..."), StatusBar_Status);
+  statusbar->SetStatusText(_T("00:00"), StatusBar_TimeElapsed);
+  statusbar->SetStatusText(wxEmptyString, StatusBar_RowsRetrieved);
+}
+
+void ScriptEditorPane::ShowScriptCompleteStatus()
+{
+  if (errorsEncountered == 0)
+    statusbar->SetStatusText(_("Query completed successfully"), StatusBar_Status);
+  else
+    statusbar->SetStatusText(_("Query completed with errors"), StatusBar_Status);
+  statusbar->SetStatusText(_T("??"), StatusBar_TimeElapsed);
+  statusbar->SetStatusText(wxString::Format(_("%d rows"), rowsRetrieved), StatusBar_RowsRetrieved);
 }
 
 void ScriptEditorPane::OnExecute(wxCommandEvent &event)
@@ -163,6 +202,10 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
   wxCommandEvent beginEvt = wxCommandEvent(PQWX_ScriptExecutionBeginning);
   beginEvt.SetEventObject(this);
   ProcessEvent(beginEvt);
+  executionTime.Start();
+  rowsRetrieved = 0;
+  errorsEncountered = 0;
+  ShowScriptInProgressStatus();
 
   if (resultsBook != NULL) resultsBook->Reset();
 
@@ -205,6 +248,8 @@ void ScriptEditorPane::FinishExecution()
 
   delete lexer;
   lexer = NULL;
+
+  ShowScriptCompleteStatus();
 }
 
 void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
@@ -215,6 +260,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data->size());
     GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data);
+    rowsRetrieved += result->data->size();
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
@@ -223,6 +269,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   else if (result->status == PGRES_FATAL_ERROR) {
     wxLogDebug(_T("Got error: %s"), result->error.primary.c_str());
     GetOrCreateResultsBook()->ScriptError(result->error);
+    errorsEncountered++;
   }
   else {
     wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());

@@ -47,13 +47,14 @@ public:
   const ServerConnection& GetServer() const { return server; }
   wxString GetDatabase() const { if (db == NULL) return wxEmptyString; else return db->DbName(); }
 
-  void MarkModified(bool value) { modified = value; EmitScriptSelected(); }
+  void MarkModified(bool value) { modified = value; UpdateStateInUI(); }
 
   wxString FormatTitle() const;
 private:
   ScriptEditor *editor;
   wxSplitterWindow *splitter;
   ResultsNotebook *resultsBook;
+  wxStatusBar *statusbar;
 
   ServerConnection server;
   DatabaseConnection *db;
@@ -62,7 +63,7 @@ private:
   wxString scriptFilename;
   bool modified;
 
-  void EmitScriptSelected();
+  void UpdateStateInUI();
 
   static int documentCounter;
 
@@ -94,7 +95,7 @@ private:
 
   void UpdateConnectionState(DatabaseConnectionState newState) {
     state = newState;
-    EmitScriptSelected();
+    UpdateStateInUI();
   }
 
   friend class ChangeScriptConnection;
@@ -102,6 +103,8 @@ private:
   // execution
   wxCharBuffer source;
   ExecutionLexer *lexer;
+  wxStopWatch executionTime;
+  unsigned rowsRetrieved, errorsEncountered;
 
 #ifdef __WXMSW__
   const char *ExtractSQL(const ExecutionLexer::Token &token) const
@@ -123,6 +126,35 @@ private:
 
   friend class ScriptQueryWork;
   friend class ScriptEditor;
+
+  static const int StatusBar_Status = 0;
+  static const int StatusBar_Server = 1;
+  static const int StatusBar_Database = 2;
+  static const int StatusBar_TimeElapsed = 3;
+  static const int StatusBar_RowsRetrieved = 4;
+  static const int StatusBar_TransactionStatus = 5;
+  static const int StatusBar_Fields = 6;
+
+  void ShowConnectedStatus();
+  void ShowDisconnectedStatus();
+  void ShowScriptInProgressStatus();
+  void ShowScriptCompleteStatus();
+
+  wxString TxnStatus() const {
+    wxASSERT(db != NULL);
+    switch (state) {
+    case Idle:
+    default:
+      return wxEmptyString;
+    case IdleInTransaction:
+      return _("TXN");
+    case TransactionAborted:
+      return _("ERR");
+    case CopyToClient:
+    case CopyToServer:
+      return _("COPY");
+    }
+  }
 
   DECLARE_EVENT_TABLE()
 };

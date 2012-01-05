@@ -21,7 +21,7 @@ public:
 
   wxCharBuffer GetRegion(int *lengthp);
 private:
-  void EmitScriptSelected();
+  void UpdateStateInUI();
 
   ScriptEditorPane *owner;
 

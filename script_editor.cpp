@@ -66,15 +66,15 @@ ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id, ScriptEditorPane *ow
   StyleSetSpec(wxSTC_SQL_USER4, _T("fore:#800080"));
 }
 
-inline void ScriptEditor::EmitScriptSelected()
+inline void ScriptEditor::UpdateStateInUI()
 {
-  owner->EmitScriptSelected();
+  owner->UpdateStateInUI();
 }
 
 void ScriptEditor::OnSetFocus(wxFocusEvent &event)
 {
   event.Skip();
-  EmitScriptSelected();
+  UpdateStateInUI();
 }
 
 void ScriptEditor::OnLoseFocus(wxFocusEvent &event)

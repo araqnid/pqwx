@@ -62,10 +62,7 @@ private:
   friend class AddConnectionToObjectBrowser;
 
   static const int StatusBar_Message = 0;
-  static const int StatusBar_Server = 1;
-  static const int StatusBar_Database = 2;
-  static const int StatusBar_State = 3;
-  static const int StatusBar_Fields = 4;
+  static const int StatusBar_Fields = 1;
 
   DECLARE_EVENT_TABLE();
 };

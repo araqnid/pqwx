@@ -6,20 +6,20 @@
 #include <vector>
 #include "wx/notebook.h"
 
-class ScriptEditor;
+class ScriptEditorPane;
 class PQWXDatabaseEvent;
 
 class DocumentsNotebook : public wxNotebook {
 public:
   DocumentsNotebook(wxWindow *parent, wxWindowID id) : wxNotebook(parent, id) { }
-  ScriptEditor* OpenNewScript();
+  ScriptEditorPane* OpenNewScript();
 
   void OnScriptStateUpdated(PQWXDatabaseEvent&);
   void OnPageChanged(wxNotebookEvent&);
 
 private:
-  std::vector<ScriptEditor*> editors;
-  unsigned FindPage(ScriptEditor*) const;
+  std::vector<ScriptEditorPane*> editors;
+  unsigned FindPage(ScriptEditorPane*) const;
   void EmitDocumentChanged(unsigned page);
 
   DECLARE_EVENT_TABLE();

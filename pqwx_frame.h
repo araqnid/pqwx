@@ -47,7 +47,7 @@ public:
 private:
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;
-  ScriptEditor *currentEditor;
+  ScriptEditorPane *currentEditor;
 
   bool haveCurrentServer;
   ServerConnection currentServer;

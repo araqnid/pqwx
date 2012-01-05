@@ -23,14 +23,13 @@ public:
     Oid oidValue;
     bool tuplesProcessedCountValid;
     DatabaseConnectionState newConnectionState;
-    friend class ScriptEditor; // so, effectively all public...
+    friend class ScriptEditorPane; // so, effectively all public...
     friend class ScriptQueryWork;
   };
 
-  ScriptQueryWork(ScriptEditor *editor, const ExecutionLexer::Token &token) : editor(editor), token(token) {}
+  ScriptQueryWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *sql) : dest(dest), token(token), sql(sql) {}
 
   void Execute() {
-    const char *sql = editor->ExtractSQL(token);
     output = new Result(token);
     db->LogSql(sql);
     stopwatch.Start();
@@ -71,12 +70,13 @@ public:
   void NotifyFinished() {
     wxCommandEvent event(PQWX_ScriptQueryComplete);
     event.SetClientData(output);
-    editor->AddPendingEvent(event);
+    dest->AddPendingEvent(event);
   }
 
 private:
-  ScriptEditor *const editor;
+  wxEvtHandler *dest;
   const ExecutionLexer::Token token;
+  const char *sql;
   wxStopWatch stopwatch;
   Result *output;
 

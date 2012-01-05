@@ -20,7 +20,7 @@
 #include "connect_dialogue.h"
 #include "results_notebook.h"
 #include "script_events.h"
-#include "script_editor.h"
+#include "script_editor_pane.h"
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptDisconnect)
@@ -183,7 +183,7 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
     suggestDatabase = currentDatabase;
   }
 
-  ScriptEditor *editor = documentsBook->OpenNewScript();
+  ScriptEditorPane *editor = documentsBook->OpenNewScript();
   if (suggest)
     editor->Connect(suggestServer, suggestDatabase);
   editor->SetFocus();
@@ -191,7 +191,7 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
 
 void PqwxFrame::OnScriptNew(PQWXDatabaseEvent& event)
 {
-  ScriptEditor *editor = documentsBook->OpenNewScript();
+  ScriptEditorPane *editor = documentsBook->OpenNewScript();
   editor->Connect(event.GetServer(), event.GetDatabase());
   editor->SetFocus();
 }
@@ -210,7 +210,7 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 		    _("SQL files (*.sql)|*.sql"));
   dbox.CentreOnParent();
   if (dbox.ShowModal() == wxID_OK) {
-    ScriptEditor *editor = documentsBook->OpenNewScript();
+    ScriptEditorPane *editor = documentsBook->OpenNewScript();
     editor->OpenFile(dbox.GetPath());
     if (suggest)
       editor->Connect(suggestServer, suggestDatabase);
@@ -220,7 +220,7 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
 
 void PqwxFrame::OnScriptToWindow(PQWXDatabaseEvent& event)
 {
-  ScriptEditor *editor = documentsBook->OpenNewScript();
+  ScriptEditorPane *editor = documentsBook->OpenNewScript();
   editor->Populate(event.GetString());
   editor->Connect(event.GetServer(), event.GetDatabase());
   editor->SetFocus();
@@ -231,7 +231,7 @@ void PqwxFrame::OnDocumentSelected(wxCommandEvent &event)
   SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
   wxObject *obj = event.GetEventObject();
-  ScriptEditor *editor = dynamic_cast<ScriptEditor*>(obj);
+  ScriptEditorPane *editor = dynamic_cast<ScriptEditorPane*>(obj);
   wxASSERT(editor != NULL);
   currentEditor = editor;
   if (editor->IsConnected()) {

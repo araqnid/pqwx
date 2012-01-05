@@ -14,9 +14,8 @@
 BEGIN_EVENT_TABLE(ResultsNotebook, wxNotebook)
 END_EVENT_TABLE()
 
-void ResultsNotebook::Reset()
+void ResultsNotebook::Setup()
 {
-  DeleteAllPages();
   addedResultSet = false;
   addedError = false;
 

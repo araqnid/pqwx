@@ -29,7 +29,7 @@ private:
   wxString severity, sqlstate, primary, detail, hint, position,
     internalPosition, internalQuery, sourceFile, sourceLine, sourceFunction;
 
-  friend class ScriptEditor;
+  friend class ScriptEditorPane;
   friend class DatabaseConnection;
   friend class ResultsNotebook;
 };

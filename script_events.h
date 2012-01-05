@@ -40,16 +40,4 @@ END_DECLARE_EVENT_TYPES()
 #define PQWX_SCRIPT_EXECUTION_FINISHING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionFinishing, fn)
 #define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)
 
-class PgError;
-
-// The handler of PQWX_ScriptExecutionBeginning sets the event object to one of these to route the results to
-class ExecutionResultsHandler {
-public:
-  virtual void ScriptCommandCompleted(const wxString &statusTag) = 0;
-  virtual void ScriptError(const PgError &error) = 0;
-  virtual void ScriptResultSet(const wxString &statusTag,
-			       const QueryResults &data) = 0;
-  virtual void ScriptNotice(const PgError &notice) = 0;
-};
-
 #endif

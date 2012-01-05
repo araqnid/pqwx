@@ -9,11 +9,11 @@
 #include "script_events.h"
 #include "query_results.h"
 
-class ResultsNotebook : public wxNotebook, public ExecutionResultsHandler {
+class ResultsNotebook : public wxNotebook {
 public:
-  ResultsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size), messagesPanel(NULL), messagesDisplay(NULL) { }
+  ResultsNotebook(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize) : wxNotebook(parent, id, pos, size) { Setup(); }
 
-  void Reset();
+  void Reset() { DeleteAllPages(); Setup(); }
 
   void ScriptCommandCompleted(const wxString& statusTag);
   void ScriptResultSet(const wxString &statusTag,
@@ -28,6 +28,8 @@ private:
   void AddResultSet(wxPanel *parent, const QueryResults &data);
   bool addedResultSet;
   bool addedError;
+
+  void Setup();
 
   DECLARE_EVENT_TABLE()
 };

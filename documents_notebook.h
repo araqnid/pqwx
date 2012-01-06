@@ -24,7 +24,7 @@ public:
   ScriptEditorPane* OpenNewScript();
 
   void OnScriptStateUpdated(PQWXDatabaseEvent&);
-  void OnPageChanged(wxNotebookEvent&);
+  void OnNotebookPageChanged(wxNotebookEvent&);
 
 private:
   std::vector<ScriptEditorPane*> editors;

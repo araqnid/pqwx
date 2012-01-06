@@ -14,7 +14,7 @@
 
 BEGIN_EVENT_TABLE(DocumentsNotebook, wxNotebook)
   PQWX_SCRIPT_STATE_UPDATED(wxID_ANY, DocumentsNotebook::OnScriptStateUpdated)
-  EVT_NOTEBOOK_PAGE_CHANGED(Pqwx_DocumentsNotebook, DocumentsNotebook::OnPageChanged)
+  EVT_NOTEBOOK_PAGE_CHANGED(Pqwx_DocumentsNotebook, DocumentsNotebook::OnNotebookPageChanged)
 END_EVENT_TABLE()
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_DocumentSelected)
@@ -51,7 +51,7 @@ void DocumentsNotebook::OnScriptStateUpdated(PQWXDatabaseEvent &event)
   }
 }
 
-void DocumentsNotebook::OnPageChanged(wxNotebookEvent &event)
+void DocumentsNotebook::OnNotebookPageChanged(wxNotebookEvent &event)
 {
   EmitDocumentChanged(event.GetSelection());
 }

@@ -54,6 +54,7 @@ void DocumentsNotebook::OnScriptStateUpdated(PQWXDatabaseEvent &event)
 void DocumentsNotebook::OnNotebookPageChanged(wxNotebookEvent &event)
 {
   EmitDocumentChanged(event.GetSelection());
+  event.Skip();
 }
 
 void DocumentsNotebook::EmitDocumentChanged(unsigned page)

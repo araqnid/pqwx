@@ -3,6 +3,7 @@ keywords:
 - 'false'
 - 'true'
 - 'null'
+- abort
 - aggregate
 - all
 - alter
@@ -16,12 +17,14 @@ keywords:
 - class
 - collation
 - column
+- comment
 - commit
 - committed
 - configuration
 - connection
 - constraint
 - conversion
+- copy
 - cost
 - create
 - database
@@ -52,6 +55,7 @@ keywords:
 - inner
 - insert
 - intersect
+- into
 - invoker
 - is
 - isolation
@@ -76,6 +80,7 @@ keywords:
 - partition
 - primary
 - read
+- references
 - repeatable
 - return
 - returns
@@ -96,6 +101,7 @@ keywords:
 - set
 - setof
 - stable
+- stdin
 - strict
 - table
 - temp
@@ -109,6 +115,7 @@ keywords:
 - unique
 - update
 - using
+- values
 - view
 - volatile
 - when

@@ -12,10 +12,10 @@ test_catalogue
 pqwx.pot
 build_settings
 wx_flavour.h
-*_resources_yml.cpp
+static_resources.cpp
 dependencies_view_sql.cpp
 dump_catalogue
 dump_catalogue.exe
 pqwx.exe
 pqwx-appicon-*-8.png
-postgresql_wordlists_yml.h
+script_editor_wordlists.cpp

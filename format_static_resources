@@ -4,7 +4,6 @@ require 5;
 use strict;
 use utf8;
 use warnings;
-use YAML::Any qw(LoadFile);
 use Getopt::Std;
 use vars qw($opt_o $opt_d $opt_p $opt_f);
 
@@ -18,6 +17,26 @@ if ($opt_o && $opt_d) {
   $dependencies_generated .= "$opt_o:";
 }
 
+sub guess_mime_type {
+  my $filename = shift;
+  return "image/png" if ($filename =~ /.png$/i);
+  return "image/jpeg" if ($filename =~ /.jpg$/i);
+  die "Unable to guess MIME type for $filename";
+}
+
+sub load_file {
+  my $filename = shift;
+  open my $input, "<", $filename or die "Unable to read $filename: $!\n";
+  my @resources;
+  while (<$input>) {
+    next if (/^\s*#/);
+    my($filename, $path, $mime_type) = split(/\s+/);
+    $mime_type ||= guess_mime_type($filename);
+    push @resources, { filename => $filename, path => $path, mime_type => $mime_type };
+  }
+  return @resources
+}
+
 sub slurp {
   my $filename = shift;
   open my $io, "<", $filename or die "Unable to read $filename: $!\n";
@@ -29,7 +48,7 @@ sub slurp {
 my $symbol_index = 0;
 for (@ARGV) {
   $dependencies_generated .= " $_" if ($dependencies_generated);
-  for (LoadFile($_)) {
+  for (load_file($_)) {
     my $local_filename = $opt_p ? "$opt_p/$_->{filename}" : $_->{filename};
     $dependencies_generated .= " $local_filename" if ($dependencies_generated);
     my $data = slurp($local_filename);
@@ -40,7 +59,7 @@ for (@ARGV) {
 static unsigned char $data_symbol\[\] = { $data_initialiser };
 EOF
     $initialisation_generated .= <<EOF;
-wxMemoryFSHandler::AddFileWithMimeType(_T("$_->{class}/$_->{filename}"), $data_symbol, $data_length, _T("$_->{mime_type}"));
+wxMemoryFSHandler::AddFileWithMimeType(_T("$_->{path}/$_->{filename}"), $data_symbol, $data_length, _T("$_->{mime_type}"));
 EOF
     ++$symbol_index;
   }

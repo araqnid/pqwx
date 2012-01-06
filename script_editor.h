@@ -25,6 +25,14 @@ private:
 
   ScriptEditorPane *owner;
 
+  static wxString WordList_keywords;
+  static wxString WordList_database_objects;
+  static wxString WordList_sqlplus;
+  static wxString WordList_user1;
+  static wxString WordList_user2;
+  static wxString WordList_user3;
+  static wxString WordList_user4;
+
   DECLARE_EVENT_TABLE()
 };
 

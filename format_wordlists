@@ -4,14 +4,13 @@ require 5;
 use strict;
 use utf8;
 use warnings;
-use YAML::Any qw(LoadFile);
 use Getopt::Std;
 use vars qw($opt_o $opt_p);
 
-getopts('p:o:') && @ARGV == 1 or die "Syntax: $0 [-p symbol_prefix] [-o output-file] wordlists.yml\n";
+getopts('p:o:') && @ARGV >= 1 or die "Syntax: $0 [-p symbol_prefix] [-o output-file] wordlist=wordlist.txt...\n";
 
-my $symbol_prefix = $opt_p || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; $n })->($ARGV[0]);
-my $output_file = $opt_o || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ tr/./_/; "$n.h" })->($ARGV[0]);
+my $symbol_prefix = $opt_p || (sub { my $n = shift; $n =~ s{^.*[/\\]}{}; $n =~ s/(.|::)/_/g; $n })->($ARGV[0]);
+my $output_file = $opt_o || "$symbol_prefix.cpp";
 
 sub escape {
   my $str = shift;
@@ -19,27 +18,29 @@ sub escape {
   return $str;
 }
 
+sub load_file {
+  my $filename = shift;
+  open my $input, "<", $filename or die "Unable to read $filename: $!\n";
+  local $/;
+  undef $/;
+  return split(/(\r?\n)+/, scalar <$input>);
+}
+
 open STDOUT, ">", $output_file or die "Unable to write $output_file: $!\n";
 
 print "// -*- mode: c++ -*-\n\n// auto-generated from $ARGV[0]\n\n";
 
-my $guard_symbol;
-if ($output_file =~ m{^([^/]+)\.h$}) {
-  $guard_symbol = "__${1}_h";
-  print "#ifndef $guard_symbol\n#define $guard_symbol\n\n";
-}
+print "#include \"script_editor.h\"\n";
 
-my $wordlists = LoadFile(shift @ARGV);
-while (my($listname, $wordlist) = each %$wordlists) {
-  print "static const wxString ${symbol_prefix}_$listname = _T(\"";
-  #use Data::Dumper; print Dumper($wordlist);
+for (@ARGV) {
+  my($listname, $filename) = split(/=/, $_, 2);
+  my @wordlist = load_file($filename);
+  print "wxString ${symbol_prefix}_$listname = _T(\"";
   my %wordmap;
-  for my $word (@$wordlist) {
+  for my $word (grep { /\S/ } @wordlist) {
     $wordmap{$word}++;
   };
   print join(" ", map { escape($_) } keys %wordmap);
   print "\");\n";
 }
-
-print "\n#endif\n" if ($guard_symbol);
 

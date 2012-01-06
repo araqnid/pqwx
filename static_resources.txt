@@ -1,0 +1,15 @@
+#filename			path
+icon_folder.png			ObjectBrowser
+icon_server.png			ObjectBrowser
+icon_database.png		ObjectBrowser
+icon_table.png			ObjectFinder
+icon_view.png			ObjectFinder
+icon_function.png		ObjectFinder
+icon_function_aggregate.png	ObjectFinder
+icon_function_trigger.png	ObjectFinder
+icon_function_window.png	ObjectFinder
+icon_sequence.png		ObjectFinder
+pqwx-appicon-32.png		PqwxFrame
+pqwx-appicon-48.png		PqwxFrame
+pqwx-appicon-64.png		PqwxFrame
+pqwx-appicon-16.png		PqwxFrame

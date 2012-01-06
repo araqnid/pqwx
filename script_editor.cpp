@@ -10,7 +10,6 @@
 #include "wx/stc/stc.h"
 #include "script_editor.h"
 #include "script_events.h"
-#include "postgresql_wordlists_yml.h"
 #include "script_editor_pane.h"
 
 BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
@@ -33,13 +32,13 @@ ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id, ScriptEditorPane *ow
 #if wxUSE_UNICODE
   SetCodePage(wxSTC_CP_UTF8);
 #endif
-  SetKeyWords(0, postgresql_wordlists_yml_keywords);
-  SetKeyWords(1, postgresql_wordlists_yml_database_objects);
-  SetKeyWords(3, postgresql_wordlists_yml_sqlplus);
-  SetKeyWords(4, postgresql_wordlists_yml_user1);
-  SetKeyWords(5, postgresql_wordlists_yml_user2);
-  SetKeyWords(6, postgresql_wordlists_yml_user3);
-  SetKeyWords(7, postgresql_wordlists_yml_user4);
+  SetKeyWords(0, WordList_keywords);
+  SetKeyWords(1, WordList_database_objects);
+  SetKeyWords(3, WordList_sqlplus);
+  SetKeyWords(4, WordList_user1);
+  SetKeyWords(5, WordList_user2);
+  SetKeyWords(6, WordList_user3);
+  SetKeyWords(7, WordList_user4);
 
   StyleClearAll();
 

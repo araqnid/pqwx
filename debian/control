@@ -2,7 +2,7 @@ Source: pqwx
 Section: database
 Priority: optional
 Maintainer: Steve Haslam <araqnid@googlemail.com>
-Build-Depends: debhelper (>= 8.0.0), docbook-to-man, libyaml-perl
+Build-Depends: debhelper (>= 8.0.0), docbook-to-man, perl
 Standards-Version: 3.9.2
 Homepage: https://github.com/araqnid/pqwx
 Vcs-Git: git://github.com/araqnid/pqwx.git

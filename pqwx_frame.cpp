@@ -37,6 +37,9 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(XRCID("ReconnectScript"), PqwxFrame::OnReconnectScript)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
+  EVT_MENU(wxID_CLOSE, PqwxFrame::OnCloseScript)
+  EVT_MENU(wxID_SAVE, PqwxFrame::OnSaveScript)
+  EVT_MENU(wxID_SAVEAS, PqwxFrame::OnSaveScriptAs)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
   PQWX_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
   PQWX_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnDocumentSelected)
@@ -187,6 +190,21 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
   if (suggest)
     editor->Connect(suggestServer, suggestDatabase);
   editor->SetFocus();
+}
+
+void PqwxFrame::OnCloseScript(wxCommandEvent &event)
+{
+  documentsBook->DoClose();
+}
+
+void PqwxFrame::OnSaveScript(wxCommandEvent &event)
+{
+  documentsBook->DoSave();
+}
+
+void PqwxFrame::OnSaveScriptAs(wxCommandEvent &event)
+{
+  documentsBook->DoSaveAs();
 }
 
 void PqwxFrame::OnScriptNew(PQWXDatabaseEvent& event)

@@ -107,6 +107,18 @@ void ScriptEditor::LoadFile(const wxString &filename)
   EmptyUndoBuffer();
 }
 
+void ScriptEditor::WriteFile(const wxString &filename)
+{
+  wxLogDebug(_T("Write file %s"), filename.c_str());
+  // TODO make backup file?
+  // write out file in the scintilla coding system (utf-8)
+  std::ofstream output(filename.utf8_str(), std::ofstream::out);
+  const wxCharBuffer buf = GetTextRaw();
+  size_t len = GetLength();
+  output.write(buf, len);
+  SetSavePoint();
+}
+
 wxCharBuffer ScriptEditor::GetRegion(int *lengthp)
 {
   int start, end;

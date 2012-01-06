@@ -64,7 +64,28 @@ void ScriptEditorPane::OpenFile(const wxString &filename)
   else
     coreTitle = filename.Mid(slash + 1);
 
+  scriptFilename = filename;
   editor->LoadFile(filename);
+  UpdateStateInUI();
+}
+
+void ScriptEditorPane::SaveFile(const wxString &filename)
+{
+  wxString tabName;
+#ifdef __WXMSW__
+  static const wxChar PathSeparator = _T('\\');
+#else
+  static const wxChar PathSeparator = _T('/');
+#endif
+
+  size_t slash = filename.find_last_of(PathSeparator);
+  if (slash == wxString::npos)
+    coreTitle = filename;
+  else
+    coreTitle = filename.Mid(slash + 1);
+
+  scriptFilename = filename;
+  editor->WriteFile(filename);
   UpdateStateInUI();
 }
 
@@ -303,4 +324,3 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
     }
   }
 }
-

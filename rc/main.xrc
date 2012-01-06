@@ -12,6 +12,9 @@
         <label>&amp;New Script</label>
         <accel>Ctrl-N</accel>
       </object>
+      <object class="wxMenuItem" name="wxID_SAVE"/>
+      <object class="wxMenuItem" name="wxID_SAVEAS"/>
+      <object class="wxMenuItem" name="wxID_CLOSE"/>
       <object class="wxMenuItem" name="wxID_OPEN">
         <label>&amp;Open Script...</label>
         <accel>Ctrl-O</accel>

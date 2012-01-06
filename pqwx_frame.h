@@ -25,6 +25,9 @@ public:
   void OnReconnectScript(wxCommandEvent& event);
   void OnNewScript(wxCommandEvent& event);
   void OnOpenScript(wxCommandEvent& event);
+  void OnCloseScript(wxCommandEvent& event);
+  void OnSaveScript(wxCommandEvent& event);
+  void OnSaveScriptAs(wxCommandEvent& event);
   void OnScriptToWindow(PQWXDatabaseEvent& event);
   void OnDocumentSelected(PQWXDatabaseEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);

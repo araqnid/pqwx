@@ -18,6 +18,7 @@ public:
   void OnSavePointReached(wxStyledTextEvent &event);
 
   void LoadFile(const wxString &filename);
+  void WriteFile(const wxString &filename);
 
   wxCharBuffer GetRegion(int *lengthp);
 private:

@@ -37,6 +37,8 @@ public:
   ResultsNotebook *GetResults() const { return resultsBook; }
 
   void OpenFile(const wxString &filename);
+  void SaveFile() { wxASSERT(!scriptFilename.empty()); SaveFile(scriptFilename); }
+  void SaveFile(const wxString &filename);
   void Populate(const wxString &text);
   void Connect(const ServerConnection &server, const wxString &dbname);
   void SetConnection(const ServerConnection &server, DatabaseConnection *db);
@@ -48,7 +50,10 @@ public:
   const ServerConnection& GetServer() const { return server; }
   wxString GetDatabase() const { if (db == NULL) return wxEmptyString; else return db->DbName(); }
 
+  bool IsModified() const { return modified; }
   void MarkModified(bool value) { modified = value; UpdateStateInUI(); }
+  bool HasFilename() const { return !scriptFilename.empty(); }
+  wxString GetCoreTitle() const { return coreTitle; }
 
   wxString FormatTitle() const;
 private:

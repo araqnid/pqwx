@@ -10,7 +10,11 @@
 #include "wx/xrc/xmlres.h"
 #include "object_browser.h"
 
-class ConnectionWork;
+BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_ConnectionAttemptCompleted, -1)
+END_DECLARE_EVENT_TYPES()
+
+#define PQWX_CONNECTION_ATTEMPT_COMPLETED(id, fn) EVT_COMMAND(id, PQWX_ConnectionAttemptCompleted, fn)
 
 /**
  * Dialogue box to initiate a database connection.
@@ -49,20 +53,13 @@ public:
   /**
    * Create connection dialogue.
    */
-  ConnectDialogue(wxWindow *parent, CompletionCallback *callback)
+  ConnectDialogue(wxWindow *parent, CompletionCallback *callback = NULL)
     : wxDialog(), callback(callback), recentServersConfigPath(_T("RecentServers")) {
     InitXRC(parent);
     LoadRecentServers();
     connection = NULL;
     cancelling = false;
   }
-
-  void OnConnect(wxCommandEvent& event) {
-    StartConnection();
-  }
-  void OnCancel(wxCommandEvent& event);
-  void OnRecentServerChosen(wxCommandEvent& event);
-  void OnConnectionFinished(wxCommandEvent& event);
 
   /**
    * Suggest initial server connection properties.
@@ -76,7 +73,52 @@ public:
    */
   void DoInitialConnection(const ServerConnection &conninfo);
 
-protected:
+  /**
+   * Gets the server parameters used to make a connection.
+   *
+   * This can be called when using the connection dialogue modally.
+   */
+  const ServerConnection& GetServerParameters() const { return server; }
+
+  /**
+   * Gets the database connection.
+   *
+   * This can be called when using the connection dialogue modally.
+   */
+  DatabaseConnection* GetConnection() const { return db; }
+private:
+  class ConnectionWork : public ConnectionCallback {
+  public:
+    ConnectionWork(ConnectDialogue *owner, const ServerConnection &server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
+    void OnConnection(bool usedPassword_) {
+      state = CONNECTED;
+      usedPassword = usedPassword_;
+      notifyFinished();
+    }
+    void OnConnectionFailed(const wxString &errorMessage_) {
+      state = FAILED;
+      errorMessage = errorMessage_;
+      notifyFinished();
+    }
+    void OnConnectionNeedsPassword() {
+      state = NEEDS_PASSWORD;
+      notifyFinished();
+    }
+    enum { CONNECTED, FAILED, NEEDS_PASSWORD } state;
+    wxString errorMessage;
+  private:
+    void notifyFinished() {
+      wxCommandEvent event(PQWX_ConnectionAttemptCompleted);
+      event.SetClientData(this);
+      owner->AddPendingEvent(event);
+    }
+    ConnectDialogue *owner;
+    ServerConnection server;
+    DatabaseConnection *db;
+    bool usedPassword;
+    friend class ConnectDialogue;
+  };
+
   wxComboBox *hostnameInput;
   wxComboBox *usernameInput;
   wxTextCtrl *passwordInput;
@@ -84,7 +126,13 @@ protected:
   wxButton *okButton;
   wxButton *cancelButton;
 
-private:
+  void OnConnect(wxCommandEvent& event) {
+    StartConnection();
+  }
+  void OnCancel(wxCommandEvent& event);
+  void OnRecentServerChosen(wxCommandEvent& event);
+  void OnConnectionFinished(wxCommandEvent& event);
+
   static const unsigned maxRecentServers = 10;
   CompletionCallback *callback;
   void InitXRC(wxWindow *parent) {
@@ -101,6 +149,8 @@ private:
   void UnmarkBusy();
   ConnectionWork *connection;
   bool cancelling;
+  ServerConnection server;
+  DatabaseConnection *db;
 
   class RecentServerParameters {
     wxString server;

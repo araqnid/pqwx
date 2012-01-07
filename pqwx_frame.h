@@ -59,6 +59,11 @@ public:
     PqwxFrame *const owner;
   };
 
+  /**
+   * @return object browser in this frame
+   */
+  ObjectBrowser *GetObjectBrowser() const { return objectBrowser; }
+
 private:
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;

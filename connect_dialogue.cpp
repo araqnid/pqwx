@@ -13,46 +13,14 @@
 #include "connect_dialogue.h"
 #include "server_connection.h"
 
-const int EVENT_CONNECTION_FINISHED = 10000;
-
 BEGIN_EVENT_TABLE(ConnectDialogue, wxDialog)
   EVT_BUTTON(wxID_OK, ConnectDialogue::OnConnect)
   EVT_BUTTON(wxID_CANCEL, ConnectDialogue::OnCancel)
-  EVT_COMMAND(EVENT_CONNECTION_FINISHED, wxEVT_COMMAND_TEXT_UPDATED, ConnectDialogue::OnConnectionFinished)
+  PQWX_CONNECTION_ATTEMPT_COMPLETED(wxID_ANY, ConnectDialogue::OnConnectionFinished)
   EVT_COMBOBOX(XRCID("hostname_value"), ConnectDialogue::OnRecentServerChosen)
 END_EVENT_TABLE()
 
-class ConnectionWork : public ConnectionCallback {
-public:
-  ConnectionWork(ConnectDialogue *owner, const ServerConnection &server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
-  void OnConnection(bool usedPassword_) {
-    state = CONNECTED;
-    usedPassword = usedPassword_;
-    notifyFinished();
-  }
-  void OnConnectionFailed(const wxString &errorMessage_) {
-    state = FAILED;
-    errorMessage = errorMessage_;
-    notifyFinished();
-  }
-  void OnConnectionNeedsPassword() {
-    state = NEEDS_PASSWORD;
-    notifyFinished();
-  }
-  enum { CONNECTED, FAILED, NEEDS_PASSWORD } state;
-  wxString errorMessage;
-private:
-  void notifyFinished() {
-    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_CONNECTION_FINISHED);
-    event.SetClientData(this);
-    owner->AddPendingEvent(event);
-  }
-  ConnectDialogue *owner;
-  ServerConnection server;
-  DatabaseConnection *db;
-  bool usedPassword;
-  friend class ConnectDialogue;
-};
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ConnectionAttemptCompleted)
 
 #ifdef USE_DEBIAN_PGCLUSTER
 
@@ -314,9 +282,14 @@ void ConnectDialogue::OnCancel(wxCommandEvent &event) {
     delete connection;
     connection = NULL;
   }
-  callback->Cancelled();
-  delete callback;
-  Destroy();
+  if (callback) {
+    callback->Cancelled();
+    delete callback;
+    Destroy();
+  }
+  else {
+    EndModal(wxID_CANCEL);
+  }
 }
 
 void ConnectDialogue::Suggest(const ServerConnection &conninfo)
@@ -352,13 +325,19 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
 	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
     }
     SaveRecentServers();
-    ServerConnection &server = work->server;
+    server = work->server;
+    db = work->db;
     if (!savePasswordInput->IsChecked()) {
       server.password = wxEmptyString;
     }
-    callback->Connected(server, work->db);
-    delete callback;
-    Destroy();
+    if (callback) {
+      callback->Connected(server, work->db);
+      delete callback;
+      Destroy();
+    }
+    else {
+      EndModal(wxID_OK);
+    }
   }
   else if (work->state == ConnectionWork::NEEDS_PASSWORD) {
     wxLogError(_("You must enter a password to connect to this server."), work->errorMessage.c_str());

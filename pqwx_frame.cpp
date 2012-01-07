@@ -131,8 +131,10 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 {
-  wxDialog *connect = new ConnectDialogue(NULL, new AddConnectionToObjectBrowser(this));
-  connect->Show();
+  ConnectDialogue connect(this);
+  if (connect.ShowModal() == wxID_OK) {
+    objectBrowser->AddServerConnection(connect.GetServerParameters(), connect.GetConnection());
+  }
 }
 
 void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)

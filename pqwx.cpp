@@ -32,14 +32,16 @@ bool PQWXApp::OnInit()
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
-  ConnectDialogue *connect = new ConnectDialogue(NULL, new PqwxFrame::AddConnectionToObjectBrowser(frame));
-  connect->Show();
+  ConnectDialogue connect(frame);
   if (haveInitial) {
     ServerConnection server;
     server.identifiedAs = initialServer;
     server.username = initialUser;
     server.password = initialPassword;
-    connect->DoInitialConnection(server);
+    connect.DoInitialConnection(server);
+  }
+  if (connect.ShowModal() == wxID_OK) {
+    frame->GetObjectBrowser()->AddServerConnection(connect.GetServerParameters(), connect.GetConnection());
   }
 
   return true;

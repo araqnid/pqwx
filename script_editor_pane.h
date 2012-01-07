@@ -254,6 +254,7 @@ private:
 
   bool PsqlChangeDatabase(const wxString &args);
   bool PsqlExecuteBuffer(const wxString &args);
+  bool PsqlPrintMessage(const wxString &args);
 
   void ReportInternalError(const wxString &error, const wxString &command);
 

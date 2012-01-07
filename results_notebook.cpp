@@ -79,6 +79,14 @@ void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString 
   SetSelection(0);
 }
 
+void ResultsNotebook::ScriptEcho(const wxString& message)
+{
+  messagesDisplay->SetReadOnly(false);
+  messagesDisplay->AddText(message);
+  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->SetReadOnly(true);
+}
+
 void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query)
 {
   messagesDisplay->SetReadOnly(false);

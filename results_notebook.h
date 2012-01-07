@@ -45,6 +45,10 @@ public:
    */
   void ScriptInternalError(const wxString &error, const wxString &query);
   /**
+   * Add a message output by a script using the echo command.
+   */
+  void ScriptEcho(const wxString &message);
+  /**
    * Add a notice message that occurred while executing a query.
    */
   void ScriptQueryNotice(const PgError &notice, const wxString &query);

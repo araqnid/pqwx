@@ -30,6 +30,7 @@ std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::InitP
   std::map<wxString, PsqlCommandHandler> handlers;
   handlers[_T("c")] = &ScriptEditorPane::PsqlChangeDatabase;
   handlers[_T("g")] = &ScriptEditorPane::PsqlExecuteBuffer;
+  handlers[_T("echo")] = &ScriptEditorPane::PsqlPrintMessage;
   return handlers;
 }
 
@@ -307,10 +308,11 @@ bool ScriptEditorPane::ProcessExecution()
 
     wxASSERT(tkz.HasMoreTokens());
     command = tkz.GetNextToken().Mid(1).Lower();
-    if (tkz.CountTokens() > 1)
-      parameters = fullCommandString.Mid(tkz.GetPosition());
+    if (tkz.HasMoreTokens()) {
+      parameters = fullCommandString.Mid(tkz.GetPosition()).Trim();
+    }
 
-    wxLogDebug(_T("psql | %s"), fullCommandString.c_str());
+    wxLogDebug(_T("psql | %s | %s"), command.c_str(), parameters.c_str());
     std::map<wxString, PsqlCommandHandler>::const_iterator handler = psqlCommandHandlers.find(command);
     if (handler == psqlCommandHandlers.end()) {
       ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString);
@@ -427,4 +429,10 @@ bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters)
   BeginQuery(execution->GetLastSqlToken());
   execution->MarkSqlExecuted();
   return false;
+}
+
+bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters)
+{
+  GetOrCreateResultsBook()->ScriptEcho(parameters);
+  return true;
 }

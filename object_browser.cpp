@@ -636,6 +636,13 @@ void ObjectBrowser::OnGetTooltip(wxTreeEvent &event) {
   event.SetToolTip(object->description);
 }
 
+bool ObjectBrowser::IsServerSelected() const {
+  ServerModel *server;
+  DatabaseModel *database;
+  FindItemContext(GetSelection(), &server, &database);
+  return server != NULL;
+}
+
 void ObjectBrowser::DisconnectSelected() {
   wxTreeItemId selected = GetSelection();
   if (!selected.IsOk()) {

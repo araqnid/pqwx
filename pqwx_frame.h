@@ -23,6 +23,32 @@ public:
    */
   PqwxFrame(const wxString& title);
 
+  /**
+   * @return object browser in this frame
+   */
+  ObjectBrowser *GetObjectBrowser() const { return objectBrowser; }
+
+private:
+  /**
+   * Connection callback to add a connection to the object browser once it is established.
+   */
+  class AddConnectionToObjectBrowser : public ConnectDialogue::CompletionCallback {
+  public:
+    AddConnectionToObjectBrowser(PqwxFrame *owner) : owner(owner) {}
+    void Connected(const ServerConnection &server, DatabaseConnection *db) {
+      owner->objectBrowser->AddServerConnection(server, db);
+    }
+    void Cancelled() {
+    }
+  private:
+    PqwxFrame *const owner;
+  };
+
+  wxString titlePrefix;
+
+  ObjectBrowser *objectBrowser;
+  DocumentsNotebook *documentsBook;
+
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
 
@@ -39,37 +65,20 @@ public:
   void OnSaveScriptAs(wxCommandEvent& event);
   void OnScriptToWindow(PQWXDatabaseEvent& event);
   void OnDocumentSelected(PQWXDatabaseEvent& event);
+  void OnNoDocumentSelected(wxCommandEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);
   void OnScriptNew(PQWXDatabaseEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 
-  /**
-   * Connection callback to add a connection to the object browser once it is established.
-   */
-  class AddConnectionToObjectBrowser : public ConnectDialogue::CompletionCallback {
-  public:
-    AddConnectionToObjectBrowser(PqwxFrame *owner) : owner(owner) {}
-    void Connected(const ServerConnection &server, DatabaseConnection *db) {
-      owner->objectBrowser->AddServerConnection(server, db);
-    }
-    void Cancelled() {
-    }
-  private:
-    PqwxFrame *const owner;
-  };
+  void EnableIffObjectSelected(wxUpdateUIEvent& event);
+  void EnableIffScriptOpen(wxUpdateUIEvent& event);
+  void EnableIffScriptIdle(wxUpdateUIEvent& event);
+  void EnableIffScriptModified(wxUpdateUIEvent& event);
 
-  /**
-   * @return object browser in this frame
-   */
-  ObjectBrowser *GetObjectBrowser() const { return objectBrowser; }
-
-private:
-  ObjectBrowser *objectBrowser;
-  DocumentsNotebook *documentsBook;
   ConnectableEditor *currentEditor;
   wxEvtHandler *currentEditorTarget;
-
+  
   bool haveCurrentServer;
   ServerConnection currentServer;
   wxString currentDatabase;

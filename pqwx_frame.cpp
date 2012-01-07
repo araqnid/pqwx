@@ -31,18 +31,26 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_ABOUT, PqwxFrame::OnAbout)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
+  EVT_UPDATE_UI(XRCID("DisconnectObjectBrowser"), PqwxFrame::EnableIffObjectSelected)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
   EVT_MENU(XRCID("ExecuteScript"), PqwxFrame::OnExecuteScript)
+  EVT_UPDATE_UI(XRCID("ExecuteScript"), PqwxFrame::EnableIffScriptIdle)
   EVT_MENU(XRCID("DisconnectScript"), PqwxFrame::OnDisconnectScript)
+  EVT_UPDATE_UI(XRCID("DisconnectScript"), PqwxFrame::EnableIffScriptOpen)
   EVT_MENU(XRCID("ReconnectScript"), PqwxFrame::OnReconnectScript)
+  EVT_UPDATE_UI(XRCID("ReconnectScript"), PqwxFrame::EnableIffScriptOpen)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_MENU(wxID_CLOSE, PqwxFrame::OnCloseScript)
+  EVT_UPDATE_UI(wxID_CLOSE, PqwxFrame::EnableIffScriptOpen)
   EVT_MENU(wxID_SAVE, PqwxFrame::OnSaveScript)
+  EVT_UPDATE_UI(wxID_SAVE, PqwxFrame::EnableIffScriptModified)
   EVT_MENU(wxID_SAVEAS, PqwxFrame::OnSaveScriptAs)
+  EVT_UPDATE_UI(wxID_SAVEAS, PqwxFrame::EnableIffScriptOpen)
   EVT_CLOSE(PqwxFrame::OnCloseFrame)
   PQWX_SCRIPT_TO_WINDOW(wxID_ANY, PqwxFrame::OnScriptToWindow)
   PQWX_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnDocumentSelected)
+  PQWX_NO_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnNoDocumentSelected)
   PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
   PQWX_SCRIPT_NEW(wxID_ANY, PqwxFrame::OnScriptNew)
 END_EVENT_TABLE()
@@ -69,7 +77,7 @@ static wxIcon LoadVFSIcon(const wxString &vfilename) {
 #endif
 
 PqwxFrame::PqwxFrame(const wxString& title)
-  : wxFrame(NULL, wxID_ANY, title), currentEditor(NULL), haveCurrentServer(false)
+  : wxFrame(NULL, wxID_ANY, title), titlePrefix(title), currentEditor(NULL), haveCurrentServer(false)
 {
 #ifdef __WXMSW__
   SetIcon(wxIcon(_T("Pqwx_appicon")));
@@ -131,10 +139,15 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void PqwxFrame::OnConnectObjectBrowser(wxCommandEvent& event)
 {
+#if MODAL_CONNECT
   ConnectDialogue connect(this);
   if (connect.ShowModal() == wxID_OK) {
     objectBrowser->AddServerConnection(connect.GetServerParameters(), connect.GetConnection());
   }
+#else
+  ConnectDialogue *connect = new ConnectDialogue(this, new AddConnectionToObjectBrowser(this));
+  connect->Show();
+#endif
 }
 
 void PqwxFrame::OnDisconnectObjectBrowser(wxCommandEvent& event)
@@ -248,11 +261,13 @@ void PqwxFrame::OnScriptToWindow(PQWXDatabaseEvent& event)
 
 void PqwxFrame::OnDocumentSelected(PQWXDatabaseEvent &event)
 {
-  SetTitle(wxString::Format(_T("PQWX - %s"), event.GetString().c_str()));
+  SetTitle(wxString::Format(_T("%s - %s"), titlePrefix.c_str(), event.GetString().c_str()));
   objectBrowser->UnmarkSelected();
   wxObject *obj = event.GetEventObject();
   currentEditorTarget = dynamic_cast<wxEvtHandler*>(obj);
   wxASSERT(currentEditorTarget != NULL);
+  currentEditor = dynamic_cast<ConnectableEditor*>(obj);
+  wxASSERT(currentEditor != NULL);
 
   if (event.DatabaseSpecified()) {
     currentServer = event.GetServer();
@@ -262,6 +277,13 @@ void PqwxFrame::OnDocumentSelected(PQWXDatabaseEvent &event)
   else {
     haveCurrentServer = false;
   }
+}
+
+void PqwxFrame::OnNoDocumentSelected(wxCommandEvent &event)
+{
+  currentEditor = NULL;
+  currentEditorTarget = NULL;
+  SetTitle(titlePrefix);
 }
 
 void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
@@ -291,4 +313,24 @@ void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
 
   wxCommandEvent cmd(PQWX_ScriptReconnect);
   currentEditorTarget->ProcessEvent(cmd);
+}
+
+void PqwxFrame::EnableIffObjectSelected(wxUpdateUIEvent &event)
+{
+  event.Enable(objectBrowser->IsServerSelected());
+}
+
+void PqwxFrame::EnableIffScriptOpen(wxUpdateUIEvent &event)
+{
+  event.Enable(currentEditorTarget != NULL);
+}
+
+void PqwxFrame::EnableIffScriptIdle(wxUpdateUIEvent &event)
+{
+  event.Enable(currentEditor != NULL && !currentEditor->IsExecuting());
+}
+
+void PqwxFrame::EnableIffScriptModified(wxUpdateUIEvent &event)
+{
+  event.Enable(currentEditor != NULL && currentEditor->IsModified());
 }

@@ -22,6 +22,8 @@ public:
   virtual bool IsConnected() const = 0;
   virtual const ServerConnection& GetServer() const = 0;
   virtual wxString GetDatabase() const = 0;
+  virtual bool IsExecuting() const = 0;
+  virtual bool IsModified() const = 0;
 };
 
 /**

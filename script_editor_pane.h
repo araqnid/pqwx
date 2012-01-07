@@ -107,6 +107,10 @@ public:
    * @return database name
    */
   wxString GetDatabase() const { if (db == NULL) return wxEmptyString; else return db->DbName(); }
+  /**
+   * @return current state of database connection
+   */
+  DatabaseConnectionState GetConnectionState() const { return state; }
 
   /**
    * @return true if editor content modified

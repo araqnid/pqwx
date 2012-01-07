@@ -73,6 +73,10 @@ public:
    */
   void LoadRelation(wxTreeItemId parent, RelationModel *rel);
   /**
+   * Test if some server is selected, so disconnecting is valid.
+   */
+  bool IsServerSelected() const;
+  /**
    * Disconnect from the currently-selected object.
    */
   void DisconnectSelected();

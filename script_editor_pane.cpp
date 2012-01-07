@@ -313,6 +313,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   }
 
   UpdateConnectionState(result->newConnectionState);
+  statusbar->SetStatusText(TxnStatus(), StatusBar_TransactionStatus);
 
   delete result;
 

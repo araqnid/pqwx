@@ -18,6 +18,7 @@ BEGIN_EVENT_TABLE(DocumentsNotebook, wxNotebook)
 END_EVENT_TABLE()
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_DocumentSelected)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_NoDocumentSelected)
 
 ScriptEditorPane* DocumentsNotebook::OpenNewScript()
 {
@@ -53,6 +54,7 @@ void DocumentsNotebook::DoClose()
   unsigned page = GetSelection();
   DeletePage(page);
   editors.erase(editors.begin() + page);
+  EmitDocumentChanged(GetSelection());
 }
 
 void DocumentsNotebook::DoSave()
@@ -115,6 +117,12 @@ void DocumentsNotebook::OnNotebookPageChanged(wxNotebookEvent &event)
 
 void DocumentsNotebook::EmitDocumentChanged(unsigned page)
 {
+  if (GetPageCount() == 0) {
+    wxCommandEvent event(PQWX_NoDocumentSelected);
+    ProcessEvent(event);
+    return;
+  }
+
   wxASSERT(page < editors.size());
   ScriptEditorPane *editor = editors[page];
   PQWXDatabaseEvent event(editor->GetServer(), editor->GetDatabase(), PQWX_DocumentSelected);

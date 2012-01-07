@@ -37,7 +37,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(XRCID("ExecuteScript"), PqwxFrame::OnExecuteScript)
   EVT_UPDATE_UI(XRCID("ExecuteScript"), PqwxFrame::EnableIffScriptIdle)
   EVT_MENU(XRCID("DisconnectScript"), PqwxFrame::OnDisconnectScript)
-  EVT_UPDATE_UI(XRCID("DisconnectScript"), PqwxFrame::EnableIffScriptOpen)
+  EVT_UPDATE_UI(XRCID("DisconnectScript"), PqwxFrame::EnableIffScriptConnected)
   EVT_MENU(XRCID("ReconnectScript"), PqwxFrame::OnReconnectScript)
   EVT_UPDATE_UI(XRCID("ReconnectScript"), PqwxFrame::EnableIffScriptOpen)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
@@ -303,6 +303,11 @@ void PqwxFrame::EnableIffObjectSelected(wxUpdateUIEvent &event)
 void PqwxFrame::EnableIffScriptOpen(wxUpdateUIEvent &event)
 {
   event.Enable(currentEditorTarget != NULL);
+}
+
+void PqwxFrame::EnableIffScriptConnected(wxUpdateUIEvent &event)
+{
+  event.Enable(currentEditor != NULL && currentEditor->IsConnected());
 }
 
 void PqwxFrame::EnableIffScriptIdle(wxUpdateUIEvent &event)

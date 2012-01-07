@@ -73,6 +73,7 @@ private:
 
   void EnableIffObjectSelected(wxUpdateUIEvent& event);
   void EnableIffScriptOpen(wxUpdateUIEvent& event);
+  void EnableIffScriptConnected(wxUpdateUIEvent& event);
   void EnableIffScriptIdle(wxUpdateUIEvent& event);
   void EnableIffScriptModified(wxUpdateUIEvent& event);
 

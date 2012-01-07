@@ -27,7 +27,9 @@ public:
   /**
    * Create a lexer from a string buffer.
    */
-  ExecutionLexer(const char *buffer, unsigned length) : buffer(buffer), length(length), pos(0) {}
+  ExecutionLexer(const char *buffer, unsigned length) : buffer(buffer), length(length), pos(0) {
+    wxASSERT(buffer != NULL);
+  }
 
   /**
    * A unit returned by the lexer.
@@ -37,7 +39,7 @@ public:
     /**
      * Lexer token type.
      */
-    const enum Type {
+    enum Type {
       /**
        * A SQL statement.
        */
@@ -54,7 +56,7 @@ public:
     /**
      * Offset and length of the token within the lexer's input buffer.
      */
-    const unsigned offset, length;
+    unsigned offset, length;
     /**
      * Create token with given type and extent.
      */
@@ -78,6 +80,7 @@ public:
    * Convert a token into a wxString.
    */
   wxString GetWXString(const Token& t) const { return GetWXString(t.offset, t.length); }
+
 private:
   std::vector<std::string> quoteStack;
   const char *buffer;
@@ -98,3 +101,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

@@ -34,7 +34,14 @@ public:
    * Create editor pane.
    */
   ScriptEditorPane(wxWindow *parent, wxWindowID id = wxID_ANY);
-  ~ScriptEditorPane() {
+  ~ScriptEditorPane()
+  {
+    if (execution != NULL) {
+#ifdef __WXDEBUG__
+      wxLogError(_T("Disposing of script execution from destructor"));
+#endif
+      delete execution;
+    }
     if (db != NULL) {
       wxLogDebug(_T("Disposing of editor database connection from destructor"));
       db->Dispose();
@@ -97,7 +104,7 @@ public:
   /**
    * @return true if the script is currently being executed
    */
-  bool IsExecuting() const { return lexer != NULL; }
+  bool IsExecuting() const { return execution != NULL; }
 
   /**
    * @return server connection properties
@@ -154,10 +161,12 @@ private:
   class SetupNoticeProcessorWork : public DatabaseWork {
   public:
     SetupNoticeProcessorWork(ScriptEditorPane *owner) : owner(owner) {}
-    void Execute() {
+    void Execute()
+    {
       PQsetNoticeReceiver(conn, ScriptEditorNoticeReceiver, owner);
     }
-    void NotifyFinished() {
+    void NotifyFinished()
+    {
     }
   private:
     ScriptEditorPane * const owner;
@@ -184,24 +193,48 @@ private:
 
   friend class ChangeScriptConnection;
 
-  // execution
-  wxCharBuffer source;
-  ExecutionLexer *lexer;
-  wxStopWatch executionTime;
-  wxTimer statusUpdateTimer;
-  unsigned rowsRetrieved, errorsEncountered;
+  class Execution {
+  public:
+    Execution(wxCharBuffer buffer, unsigned length) :
+      buffer(buffer),
+      lexer(this->buffer.data(), length),
+      lastSqlToken(ExecutionLexer::Token::END),
+      rowsRetrieved(0), errorsEncountered(0)
+    {
+      stopwatch.Start();
+    }
 
 #ifdef __WXMSW__
-  const char *ExtractSQL(const ExecutionLexer::Token &token) const
-  {
-    char *str = (char*) malloc(token.length + 1);
-    memcpy(str, source.data() + token.offset, token.length);
-    str[token.length] = '\0';
-    return str;
-  }
+    const char *ExtractSQL(const ExecutionLexer::Token &token) const
+    {
+      char *str = (char*) malloc(token.length + 1);
+      memcpy(str, buffer.data() + token.offset, token.length);
+      str[token.length] = '\0';
+      return str;
+    }
 #else
-  const char *ExtractSQL(const ExecutionLexer::Token &token) const { return strndup(source.data() + token.offset, token.length); }
+    const char *ExtractSQL(const ExecutionLexer::Token &token) const { return strndup(buffer.data() + token.offset, token.length); }
 #endif
+
+    bool EncounteredErrors() const { return errorsEncountered > 0; }
+    unsigned TotalRows() const { return rowsRetrieved; }
+    long ElapsedTime() const { return stopwatch.Time(); }
+    void AddRows(unsigned rows) { rowsRetrieved += rows; }
+    void BumpErrors() { ++errorsEncountered; }
+
+    ExecutionLexer::Token NextToken() { return lexer.Pull(); }
+
+    wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
+  private:
+    wxCharBuffer buffer;
+    ExecutionLexer lexer;
+    ExecutionLexer::Token lastSqlToken;
+    unsigned rowsRetrieved, errorsEncountered;
+    wxStopWatch stopwatch;
+  };
+
+  Execution *execution;
+  wxTimer statusUpdateTimer;
 
   bool ProcessExecution();
   void FinishExecution();
@@ -225,7 +258,8 @@ private:
   void ShowScriptInProgressStatus();
   void ShowScriptCompleteStatus();
 
-  wxString TxnStatus() const {
+  wxString TxnStatus() const
+  {
     wxASSERT(db != NULL);
     switch (state) {
     case Idle:

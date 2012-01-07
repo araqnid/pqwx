@@ -25,7 +25,8 @@ END_EVENT_TABLE()
 int ScriptEditorPane::documentCounter = 0;
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
-  : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false), lexer(NULL), statusUpdateTimer(this)
+  : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false),
+    execution(NULL), statusUpdateTimer(this)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
@@ -125,7 +126,7 @@ void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseCo
 
 void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
 {
-  wxASSERT(lexer == NULL); // must not be executing
+  wxASSERT(execution == NULL); // must not be executing
   wxASSERT(db != NULL);
   db->Dispose();
   delete db;
@@ -136,7 +137,7 @@ void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
 
 void ScriptEditorPane::OnReconnect(wxCommandEvent &event)
 {
-  wxASSERT(lexer == NULL); // must not be executing
+  wxASSERT(execution == NULL); // must not be executing
 
   ConnectDialogue *dbox = new ConnectDialogue(NULL, new ChangeScriptConnection(this));
   if (db != NULL)
@@ -208,23 +209,23 @@ void ScriptEditorPane::ShowScriptInProgressStatus()
 
 void ScriptEditorPane::ShowScriptCompleteStatus()
 {
-  if (errorsEncountered == 0)
+  if (execution->EncounteredErrors() == 0)
     statusbar->SetStatusText(_("Query completed successfully"), StatusBar_Status);
   else
     statusbar->SetStatusText(_("Query completed with errors"), StatusBar_Status);
-  long time = executionTime.Time();
+  long time = execution->ElapsedTime();
   wxString elapsed;
   if (time > 5*1000 || (time % 1000) == 0)
     elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
   else
     elapsed = wxString::Format(_T("%02d:%02d.%03d"), (time / (60*1000)) % 60, (time / 1000) % 60, time % 1000);
   statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
-  statusbar->SetStatusText(wxString::Format(_("%d rows"), rowsRetrieved), StatusBar_RowsRetrieved);
+  statusbar->SetStatusText(wxString::Format(_("%d rows"), execution->TotalRows()), StatusBar_RowsRetrieved);
 }
 
 void ScriptEditorPane::OnTimerTick(wxTimerEvent &event)
 {
-  long time = executionTime.Time();
+  long time = execution->ElapsedTime();
   wxString elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
   statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
 }
@@ -232,23 +233,19 @@ void ScriptEditorPane::OnTimerTick(wxTimerEvent &event)
 void ScriptEditorPane::OnExecute(wxCommandEvent &event)
 {
   wxASSERT(db != NULL);
-  wxASSERT(lexer == NULL);
+  wxASSERT(execution == NULL);
 
   wxCommandEvent beginEvt = wxCommandEvent(PQWX_ScriptExecutionBeginning);
   beginEvt.SetEventObject(this);
   ProcessEvent(beginEvt);
-  executionTime.Start();
-  rowsRetrieved = 0;
-  errorsEncountered = 0;
   ShowScriptInProgressStatus();
   statusUpdateTimer.Start(1000);
 
   if (resultsBook != NULL) resultsBook->Reset();
 
-  // wxCharBuffer works like auto_ptr, so can't copy it.
   int length;
-  source = editor->GetRegion(&length);
-  lexer = new ExecutionLexer(source.data(), length);
+  wxCharBuffer source = editor->GetRegion(&length);
+  execution = new Execution(source, length);
 
   while (true) {
     if (!ProcessExecution()) {
@@ -259,19 +256,19 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
 
 bool ScriptEditorPane::ProcessExecution()
 {
-  ExecutionLexer::Token t = lexer->Pull();
+  ExecutionLexer::Token t = execution->NextToken();
   if (t.type == ExecutionLexer::Token::END) {
     FinishExecution();
     return false;
   }
 
   if (t.type == ExecutionLexer::Token::SQL) {
-    bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t, ExtractSQL(t)));
+    bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t, execution->ExtractSQL(t)));
     wxASSERT(added);
     return false;
   }
   else {
-    wxLogDebug(_T("psql | %s"), lexer->GetWXString(t).c_str());
+    wxLogDebug(_T("psql | %s"), execution->GetWXString(t).c_str());
     return true;
   }
 }
@@ -282,11 +279,11 @@ void ScriptEditorPane::FinishExecution()
   finishEvt.SetEventObject(this);
   ProcessEvent(finishEvt);
 
-  delete lexer;
-  lexer = NULL;
-
   ShowScriptCompleteStatus();
   statusUpdateTimer.Stop();
+
+  delete execution;
+  execution = NULL;
 }
 
 void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
@@ -297,7 +294,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data->size());
     GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data);
-    rowsRetrieved += result->data->size();
+    execution->AddRows(result->data->size());
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
@@ -306,7 +303,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   else if (result->status == PGRES_FATAL_ERROR) {
     wxLogDebug(_T("Got error: %s"), result->error.primary.c_str());
     GetOrCreateResultsBook()->ScriptError(result->error);
-    errorsEncountered++;
+    execution->BumpErrors();
   }
   else {
     wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
@@ -317,7 +314,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
 
   delete result;
 
-  wxASSERT(lexer != NULL);
+  wxASSERT(execution != NULL);
 
   while (true) {
     if (!ProcessExecution()) {

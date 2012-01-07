@@ -46,15 +46,21 @@ public:
   /**
    * Save the content of the current editor, if it is modified.
    */
-  void DoSave();
+  bool DoSave();
   /**
    * Save the content of the current editor to some new filename.
    */
-  void DoSaveAs();
+  bool DoSaveAs();
+
+  /**
+   * Check for unmodified scripts and confirm closing with the user.
+   *
+   * @return true if closing is ok
+   */
+  bool ConfirmCloseAll();
 
   void OnScriptStateUpdated(PQWXDatabaseEvent&);
   void OnNotebookPageChanged(wxNotebookEvent&);
-
 private:
   std::vector<ScriptEditorPane*> editors;
   unsigned FindPage(ScriptEditorPane*) const;
@@ -65,6 +71,9 @@ private:
     wxASSERT(n <= editors.size());
     return editors[n];
   }
+
+  bool DoSave(ScriptEditorPane *editor);
+  bool DoSaveAs(ScriptEditorPane *editor);
 
   DECLARE_EVENT_TABLE();
 };

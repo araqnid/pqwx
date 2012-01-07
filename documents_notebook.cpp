@@ -35,7 +35,7 @@ void DocumentsNotebook::DoClose()
   if (!editor) return; // e.g. there are no editors and accelerator key activated
   if (editor->IsModified()) {
     wxMessageDialog dbox(this,
-			 _("Script is modified, do you want to save before closing?"),
+			 _("Script is modified, do you want to save it before closing?"),
 			 _("Save before closing?"),
 			 wxCANCEL | wxYES_NO);
     switch (dbox.ShowModal()) {
@@ -57,23 +57,72 @@ void DocumentsNotebook::DoClose()
   EmitDocumentChanged(GetSelection());
 }
 
-void DocumentsNotebook::DoSave()
+bool DocumentsNotebook::ConfirmCloseAll()
 {
-  ScriptEditorPane *editor = CurrentEditor();
-  if (!editor) return; // e.g. there are no editors and accelerator key activated
-  if (!editor->IsModified()) return;
+  std::vector<ScriptEditorPane*> modifiedEditors;
+  wxString modifiedScriptNames;
+  for (std::vector<ScriptEditorPane*>::const_iterator iter = editors.begin(); iter != editors.end(); iter++) {
+    if ((*iter)->IsModified()) {
+      modifiedEditors.push_back(*iter);
+      modifiedScriptNames << (*iter)->GetCoreTitle() << _T('\n');
+    }
+  }
+
+  if (modifiedEditors.empty()) return true;
+
+  wxString messageText;
+  if (modifiedEditors.size() == 1) {
+    messageText = wxString::Format(_("%s is modified, do you want to save it before closing?"), modifiedEditors[0]->GetCoreTitle().c_str());
+  }
+  else {
+    messageText = wxString::Format(_("Some scripts have been modified, do you want to save them before closing?\n\n%s"), modifiedScriptNames.c_str());
+  }
+
+  wxMessageDialog dbox(this,
+		       messageText,
+		       _("Save before closing?"),
+		       wxCANCEL | wxYES_NO);
+  switch (dbox.ShowModal()) {
+  case wxID_CANCEL:
+    return false;
+
+  case wxID_YES:
+    for (std::vector<ScriptEditorPane*>::const_iterator iter = modifiedEditors.begin(); iter != modifiedEditors.end(); iter++) {
+      if (!DoSave(*iter)) {
+	return false; // save cancelled
+      }
+    }
+    break;
+
+  case wxID_NO:
+    // do nothing
+    break;
+  }
+
+  return true;
+}
+
+bool DocumentsNotebook::DoSave(ScriptEditorPane *editor)
+{
+  if (!editor->IsModified()) return true;
   if (!editor->HasFilename()) {
-    DoSaveAs();
+    return DoSaveAs(editor);
   }
   else {
     editor->SaveFile();
+    return true;
   }
 }
 
-void DocumentsNotebook::DoSaveAs()
+bool DocumentsNotebook::DoSave()
 {
   ScriptEditorPane *editor = CurrentEditor();
-  if (!editor) return; // e.g. there are no editors and accelerator key activated
+  wxASSERT(editor != NULL);
+  return DoSave(editor);
+}
+
+bool DocumentsNotebook::DoSaveAs(ScriptEditorPane *editor)
+{
   wxString filename = wxFileSelector(_("Choose file to save as"),
 				     wxEmptyString, // default path
 				     editor->GetCoreTitle(),
@@ -82,8 +131,16 @@ void DocumentsNotebook::DoSaveAs()
 				     wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
 				     this
 				     );
-  if (filename.empty()) return; // cancelled
+  if (filename.empty()) return false; // cancelled
   editor->SaveFile(filename);
+  return true;
+}
+
+bool DocumentsNotebook::DoSaveAs()
+{
+  ScriptEditorPane *editor = CurrentEditor();
+  wxASSERT(editor != NULL);
+  return DoSaveAs(editor);
 }
 
 inline unsigned DocumentsNotebook::FindPage(ScriptEditorPane *editor) const

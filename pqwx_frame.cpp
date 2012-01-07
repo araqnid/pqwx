@@ -143,6 +143,12 @@ void PqwxFrame::OnFindObject(wxCommandEvent& event) {
 }
 
 void PqwxFrame::OnCloseFrame(wxCloseEvent& event) {
+  if (event.CanVeto()) {
+    if (!documentsBook->ConfirmCloseAll()) {
+      event.Veto();
+      return;
+    }
+  }
   if (!IsFullScreen())
     SaveFrameGeometry();
   Destroy();

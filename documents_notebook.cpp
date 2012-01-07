@@ -34,8 +34,9 @@ void DocumentsNotebook::DoClose()
   ScriptEditorPane *editor = CurrentEditor();
   if (!editor) return; // e.g. there are no editors and accelerator key activated
   if (editor->IsModified()) {
+    wxString messageText = wxString::Format(_("%s is modified, do you want to save it before closing?"), editor->GetCoreTitle().c_str());
     wxMessageDialog dbox(this,
-			 _("Script is modified, do you want to save it before closing?"),
+			 messageText,
 			 _("Save before closing?"),
 			 wxCANCEL | wxYES_NO);
     switch (dbox.ShowModal()) {

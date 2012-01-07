@@ -312,7 +312,7 @@ void PqwxFrame::EnableIffScriptConnected(wxUpdateUIEvent &event)
 
 void PqwxFrame::EnableIffScriptIdle(wxUpdateUIEvent &event)
 {
-  event.Enable(currentEditor != NULL && !currentEditor->IsExecuting());
+  event.Enable(currentEditor != NULL && currentEditor->IsConnected() && !currentEditor->IsExecuting());
 }
 
 void PqwxFrame::EnableIffScriptModified(wxUpdateUIEvent &event)

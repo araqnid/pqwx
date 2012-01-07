@@ -7,6 +7,7 @@
 #endif
 
 #include "wx/splitter.h"
+#include "wx/tokenzr.h"
 #include "script_editor.h"
 #include "script_editor_pane.h"
 #include "script_events.h"
@@ -23,6 +24,18 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
 END_EVENT_TABLE()
 
 int ScriptEditorPane::documentCounter = 0;
+
+std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::InitPsqlCommandHandlers()
+{
+  std::map<wxString, PsqlCommandHandler> handlers;
+  handlers[_T("c")] = &ScriptEditorPane::PsqlChangeDatabase;
+  handlers[_T("g")] = &ScriptEditorPane::PsqlExecuteBuffer;
+  return handlers;
+}
+
+const std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::psqlCommandHandlers = InitPsqlCommandHandlers();
+
+#define CALL_PSQL_HANDLER(editor, handler) ((editor).*(handler))
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
   : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false),
@@ -158,7 +171,10 @@ void ScriptEditorPane::OnConnectionNotice(const PGresult *rs)
   wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
   PgError error(rs);
 
-  GetOrCreateResultsBook()->ScriptNotice(error);
+  if (execution == NULL || !execution->LastSqlTokenValid())
+    GetOrCreateResultsBook()->ScriptAsynchronousNotice(error);
+  else
+    GetOrCreateResultsBook()->ScriptQueryNotice(error, execution->GetWXString(execution->GetLastSqlToken()));
 }
 
 wxString ScriptEditorPane::FormatTitle() const {
@@ -254,11 +270,16 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
   }
 }
 
+inline void ScriptEditorPane::ReportInternalError(const wxString &error, const wxString &command)
+{
+  GetOrCreateResultsBook()->ScriptInternalError(error, command);
+}
+
 bool ScriptEditorPane::ProcessExecution()
 {
   ExecutionLexer::Token t = execution->NextToken();
   if (t.type == ExecutionLexer::Token::END) {
-    if (execution->LastSqlTokenValid()) {
+    if (execution->SqlPending()) {
       BeginQuery(execution->PopLastSqlToken());
     }
     else {
@@ -268,7 +289,7 @@ bool ScriptEditorPane::ProcessExecution()
   }
 
   if (t.type == ExecutionLexer::Token::SQL) {
-    if (execution->LastSqlTokenValid()) {
+    if (execution->SqlPending()) {
       BeginQuery(execution->GetLastSqlToken());
       execution->SetLastSqlToken(t);
       return false;
@@ -279,8 +300,26 @@ bool ScriptEditorPane::ProcessExecution()
     }
   }
   else {
-    wxLogDebug(_T("psql | %s"), execution->GetWXString(t).c_str());
-    return true;
+    wxString fullCommandString = execution->GetWXString(t);
+    wxString command;
+    wxString parameters;
+    wxStringTokenizer tkz(fullCommandString, _T(" \r\n\t"));
+
+    wxASSERT(tkz.HasMoreTokens());
+    command = tkz.GetNextToken().Mid(1).Lower();
+    if (tkz.CountTokens() > 1)
+      parameters = fullCommandString.Mid(tkz.GetPosition());
+
+    wxLogDebug(_T("psql | %s"), fullCommandString.c_str());
+    std::map<wxString, PsqlCommandHandler>::const_iterator handler = psqlCommandHandlers.find(command);
+    if (handler == psqlCommandHandlers.end()) {
+      ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString);
+      execution->BumpErrors();
+      return true;
+    }
+    else {
+      return CALL_PSQL_HANDLER(*this, handler->second)(parameters);
+    }
   }
 }
 
@@ -319,7 +358,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   }
   else if (result->status == PGRES_FATAL_ERROR) {
     wxLogDebug(_T("Got error: %s"), result->error.primary.c_str());
-    GetOrCreateResultsBook()->ScriptError(result->error);
+    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token));
     execution->BumpErrors();
   }
   else {
@@ -338,4 +377,54 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
       break;
     }
   }
+}
+
+bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters)
+{
+  // TODO handle connection problems...
+  wxString newDbName = db->DbName();
+  db->Dispose();
+  delete db;
+  db = NULL;
+  ShowDisconnectedStatus();
+  UpdateStateInUI(); // refresh title etc
+  wxStringTokenizer tkz(parameters, _T(" "));
+  if (tkz.HasMoreTokens()) {
+    wxString t = tkz.GetNextToken();
+    if (t != _T("-")) newDbName = t;
+  }
+  if (tkz.HasMoreTokens()) {
+    wxString t = tkz.GetNextToken();
+    if (t != _T("-")) server.username = t;
+  }
+  if (tkz.HasMoreTokens()) {
+    wxString t = tkz.GetNextToken();
+    if (t != _T("-")) server.hostname = t;
+  }
+  if (tkz.HasMoreTokens()) {
+    wxString t = tkz.GetNextToken();
+    if (t != _T("-")) {
+      long port;
+      if (t.ToLong(&port))
+	server.port = port;
+      else {
+	// syntax error...
+	wxASSERT_MSG(false, wxString::Format(_T("port syntax error: %s"), t.c_str()));
+      }
+    }
+  }
+  if (tkz.HasMoreTokens()) {
+    // syntax error...
+    wxASSERT_MSG(false, wxString::Format(_T("too many parameters: %s"), parameters.c_str()));
+  }
+  Connect(server, newDbName);
+  return true;
+}
+
+bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters)
+{
+  if (!execution->LastSqlTokenValid()) return true; // \g at beginning of script?
+  BeginQuery(execution->GetLastSqlToken());
+  execution->MarkSqlExecuted();
+  return false;
 }

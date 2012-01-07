@@ -35,16 +35,23 @@ public:
   /**
    * Add a result set.
    */
-  void ScriptResultSet(const wxString &statusTag,
-		       const QueryResults &data);
+  void ScriptResultSet(const wxString &statusTag, const QueryResults &data);
   /**
-   * Add an error.
+   * Add a server error.
    */
-  void ScriptError(const PgError &error);
+  void ScriptError(const PgError &error, const wxString &query);
   /**
-   * Add a notice message.
+   * Add an internal error.
    */
-  void ScriptNotice(const PgError &notice);
+  void ScriptInternalError(const wxString &error, const wxString &query);
+  /**
+   * Add a notice message that occurred while executing a query.
+   */
+  void ScriptQueryNotice(const PgError &notice, const wxString &query);
+  /**
+   * Add a notice message that occurred asynchronously.
+   */
+  void ScriptAsynchronousNotice(const PgError &notice);
 
 private:
   wxPanel *messagesPanel;

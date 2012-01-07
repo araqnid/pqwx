@@ -59,7 +59,7 @@ void ResultsNotebook::ScriptResultSet(const wxString& statusTag,
   messagesDisplay->SetReadOnly(true);
 }
 
-void ResultsNotebook::ScriptError(const PgError& error)
+void ResultsNotebook::ScriptError(const PgError& error, const wxString &query)
 {
   messagesDisplay->SetReadOnly(false);
   messagesDisplay->AddText(error.primary);
@@ -69,7 +69,25 @@ void ResultsNotebook::ScriptError(const PgError& error)
   SetSelection(0);
 }
 
-void ResultsNotebook::ScriptNotice(const PgError& notice)
+void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString &query)
+{
+  messagesDisplay->SetReadOnly(false);
+  messagesDisplay->AddText(error);
+  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->SetReadOnly(true);
+  addedError = true;
+  SetSelection(0);
+}
+
+void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query)
+{
+  messagesDisplay->SetReadOnly(false);
+  messagesDisplay->AddText(notice.primary);
+  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->SetReadOnly(true);
+}
+
+void ResultsNotebook::ScriptAsynchronousNotice(const PgError& notice)
 {
   messagesDisplay->SetReadOnly(false);
   messagesDisplay->AddText(notice.primary);

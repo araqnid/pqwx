@@ -198,7 +198,7 @@ private:
     Execution(wxCharBuffer buffer, unsigned length) :
       buffer(buffer),
       lexer(this->buffer.data(), length),
-      lastSqlToken(ExecutionLexer::Token::END),
+      lastSqlToken(ExecutionLexer::Token::END), lastSqlExecuted(false),
       rowsRetrieved(0), errorsEncountered(0)
     {
       stopwatch.Start();
@@ -223,17 +223,20 @@ private:
     void BumpErrors() { ++errorsEncountered; }
 
     ExecutionLexer::Token NextToken() { return lexer.Pull(); }
-    void SetLastSqlToken(ExecutionLexer::Token t) { lastSqlToken = t; }
+    void SetLastSqlToken(ExecutionLexer::Token t) { lastSqlToken = t; lastSqlExecuted = false; }
     const ExecutionLexer::Token& GetLastSqlToken() const { return lastSqlToken; }
     ExecutionLexer::Token PopLastSqlToken() { ExecutionLexer::Token t = lastSqlToken; ClearLastSqlToken(); return t; }
     void ClearLastSqlToken() { lastSqlToken = ExecutionLexer::Token(ExecutionLexer::Token::END); }
     bool LastSqlTokenValid() const { return lastSqlToken.type == ExecutionLexer::Token::SQL; }
+    bool SqlPending() const { return LastSqlTokenValid() && !lastSqlExecuted; }
+    void MarkSqlExecuted() { lastSqlExecuted = true; }
 
     wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
   private:
     wxCharBuffer buffer;
     ExecutionLexer lexer;
     ExecutionLexer::Token lastSqlToken;
+    bool lastSqlExecuted;
     unsigned rowsRetrieved, errorsEncountered;
     wxStopWatch stopwatch;
   };
@@ -244,6 +247,15 @@ private:
   bool ProcessExecution();
   void BeginQuery(ExecutionLexer::Token t);
   void FinishExecution();
+
+  typedef bool (ScriptEditorPane::*PsqlCommandHandler)(const wxString&);
+  static const std::map<wxString, PsqlCommandHandler> psqlCommandHandlers;
+  static std::map<wxString, PsqlCommandHandler> InitPsqlCommandHandlers();
+
+  bool PsqlChangeDatabase(const wxString &args);
+  bool PsqlExecuteBuffer(const wxString &args);
+
+  void ReportInternalError(const wxString &error, const wxString &command);
 
   ResultsNotebook *GetOrCreateResultsBook() { if (resultsBook == NULL) CreateResultsBook(); return resultsBook; };
   void CreateResultsBook();

@@ -67,11 +67,13 @@ private:
   void OnDocumentSelected(PQWXDatabaseEvent& event);
   void OnNoDocumentSelected(wxCommandEvent& event);
   void OnObjectSelected(PQWXDatabaseEvent& event);
+  void OnNoObjectSelected(wxCommandEvent& event);
   void OnScriptNew(PQWXDatabaseEvent& event);
 
   void OnCloseFrame(wxCloseEvent& event);
 
-  void EnableIffObjectSelected(wxUpdateUIEvent& event);
+  void EnableIffHaveObjectBrowserDatabase(wxUpdateUIEvent& event);
+  void EnableIffHaveObjectBrowserServer(wxUpdateUIEvent& event);
   void EnableIffScriptOpen(wxUpdateUIEvent& event);
   void EnableIffScriptConnected(wxUpdateUIEvent& event);
   void EnableIffScriptIdle(wxUpdateUIEvent& event);

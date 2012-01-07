@@ -109,6 +109,7 @@ IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -647,6 +648,7 @@ void ObjectBrowser::DisconnectSelected() {
     servers.remove(server);
     server->Dispose(); // still does nasty synchronous disconnect for now
     Delete(FindServerItem(server));
+    UpdateSelectedDatabase();
   }
 }
 
@@ -835,7 +837,11 @@ void ObjectBrowser::UpdateSelectedDatabase() {
   DatabaseModel *database = NULL;
   ServerModel *server = NULL;
 
-  if (!selected.IsOk()) return;
+  if (!selected.IsOk()) {
+    wxCommandEvent event(PQWX_NoObjectSelected);
+    ProcessEvent(event);
+    return;
+  }
 
   FindItemContext(selected, &server, &database);
 

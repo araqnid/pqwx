@@ -32,8 +32,9 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_MENU(wxID_ABOUT, PqwxFrame::OnAbout)
   EVT_MENU(XRCID("ConnectObjectBrowser"), PqwxFrame::OnConnectObjectBrowser)
   EVT_MENU(XRCID("DisconnectObjectBrowser"), PqwxFrame::OnDisconnectObjectBrowser)
-  EVT_UPDATE_UI(XRCID("DisconnectObjectBrowser"), PqwxFrame::EnableIffObjectSelected)
+  EVT_UPDATE_UI(XRCID("DisconnectObjectBrowser"), PqwxFrame::EnableIffHaveObjectBrowserServer)
   EVT_MENU(XRCID("FindObject"), PqwxFrame::OnFindObject)
+  EVT_UPDATE_UI(XRCID("FindObject"), PqwxFrame::EnableIffHaveObjectBrowserDatabase)
   EVT_MENU(XRCID("ExecuteScript"), PqwxFrame::OnExecuteScript)
   EVT_UPDATE_UI(XRCID("ExecuteScript"), PqwxFrame::EnableIffScriptIdle)
   EVT_MENU(XRCID("DisconnectScript"), PqwxFrame::OnDisconnectScript)
@@ -53,6 +54,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   PQWX_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnDocumentSelected)
   PQWX_NO_DOCUMENT_SELECTED(wxID_ANY, PqwxFrame::OnNoDocumentSelected)
   PQWX_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnObjectSelected)
+  PQWX_NO_OBJECT_SELECTED(wxID_ANY, PqwxFrame::OnNoObjectSelected)
   PQWX_SCRIPT_NEW(wxID_ANY, PqwxFrame::OnScriptNew)
 END_EVENT_TABLE()
 
@@ -271,6 +273,13 @@ void PqwxFrame::OnObjectSelected(PQWXDatabaseEvent &event)
   currentServer = event.GetServer();
   currentDatabase = event.GetDatabase();
   haveCurrentServer = true;
+  wxLogDebug(_T("Selected server=%s database=%s"), currentServer.Identification().c_str(), currentDatabase.c_str());
+}
+
+void PqwxFrame::OnNoObjectSelected(wxCommandEvent &event)
+{
+  haveCurrentServer = false;
+  wxLogDebug(_T("No server"));
 }
 
 void PqwxFrame::OnExecuteScript(wxCommandEvent& event)
@@ -295,9 +304,14 @@ void PqwxFrame::OnReconnectScript(wxCommandEvent &event) {
   currentEditorTarget->ProcessEvent(cmd);
 }
 
-void PqwxFrame::EnableIffObjectSelected(wxUpdateUIEvent &event)
+void PqwxFrame::EnableIffHaveObjectBrowserServer(wxUpdateUIEvent &event)
 {
-  event.Enable(objectBrowser->IsServerSelected());
+  event.Enable(haveCurrentServer);
+}
+
+void PqwxFrame::EnableIffHaveObjectBrowserDatabase(wxUpdateUIEvent &event)
+{
+  event.Enable(haveCurrentServer && !currentDatabase.empty());
 }
 
 void PqwxFrame::EnableIffScriptOpen(wxUpdateUIEvent &event)

@@ -29,12 +29,18 @@ class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
+  DECLARE_EVENT_TYPE(PQWX_NoObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
 
 /**
  * Event issued when an object is selected in the object browser.
  */
 #define PQWX_OBJECT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_ObjectSelected, fn)
+
+/**
+ * Event issued when no object is selected in the object browser.
+ */
+#define PQWX_NO_OBJECT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_NoObjectSelected, fn)
 
 /**
  * Declare handler methods for context menu scripting items.

@@ -29,12 +29,14 @@ public:
     return im;
   }
 
+#ifndef __WXMSW__
   static wxIcon LoadVFSIcon(const wxString &vfilename)
   {
     wxIcon icon;
     icon.CopyFromBitmap(LoadVFSImage(vfilename));
     return icon;
   }
+#endif
 
 private:
   static void RegisterMemoryResources();

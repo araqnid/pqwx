@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __dependencies_view_h
 #define __dependencies_view_h
@@ -10,8 +13,14 @@
 #include "wx/treectrl.h"
 #include "wx/radiobox.h"
 
+/**
+ * Dialogue box to show dependencies/dependents of database objects.
+ */
 class DependenciesView : public wxDialog {
 public:
+  /**
+   * Create dependencies dialogue, starting with some specified object.
+   */
   DependenciesView(wxWindow *parent, DatabaseConnection *db, const wxString &label, Oid regclass, Oid oid, Oid database) : wxDialog(), db(db), rootClass(regclass), rootObject(oid), database(database) {
     InitXRC(parent);
     mode = DEPENDENTS;
@@ -48,3 +57,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

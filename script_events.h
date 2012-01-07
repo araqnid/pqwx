@@ -1,4 +1,8 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * Defines event types used for managing scripting and editors.
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __script_events_h
 #define __script_events_h
@@ -41,3 +45,7 @@ END_DECLARE_EVENT_TYPES()
 #define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

@@ -1,12 +1,19 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __pg_error_h
 #define __pg_error_h
 
+/**
+ * Represents an error from the database server.
+ */
 class PgError {
 public:
   PgError() {}
-  PgError(const PGresult *rs) {
+  PgError(const PGresult *rs)
+  {
     severity = GetErrorField(rs, PG_DIAG_SEVERITY);
     sqlstate = GetErrorField(rs, PG_DIAG_SQLSTATE);
     primary = GetErrorField(rs, PG_DIAG_MESSAGE_PRIMARY);
@@ -35,3 +42,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

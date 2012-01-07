@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __script_editor_pane_h
 #define __script_editor_pane_h
@@ -13,10 +16,23 @@ class ScriptEditor;
 class ResultsNotebook;
 class wxSplitterWindow;
 
+/**
+ * Function to accept asynchronous notices from libpq and pass them to the editor pane.
+ */
 extern "C" void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs);
 
+/**
+ * Script editor, with results notebook and status bar.
+ *
+ * This also functions as the model of the script editor. It contains
+ * the database connection and methods to execute the script in the
+ * editor buffer.
+ */
 class ScriptEditorPane : public wxPanel, public ConnectableEditor {
 public:
+  /**
+   * Create editor pane.
+   */
   ScriptEditorPane(wxWindow *parent, wxWindowID id = wxID_ANY);
   ~ScriptEditorPane() {
     if (db != NULL) {
@@ -33,28 +49,86 @@ public:
   void OnConnectionNotice(const PGresult *rs);
   void OnTimerTick(wxTimerEvent &event);
 
+  /**
+   * Gets the script editor.
+   */
   ScriptEditor *GetEditor() const { return editor; }
+  /**
+   * Gets the results notebook.
+   */
   ResultsNotebook *GetResults() const { return resultsBook; }
 
+  /**
+   * Open a file in the editor.
+   */
   void OpenFile(const wxString &filename);
+  /**
+   * Save the to the current file.
+   */
   void SaveFile() { wxASSERT(!scriptFilename.empty()); SaveFile(scriptFilename); }
+  /**
+   * Save to a specified file.
+   */
   void SaveFile(const wxString &filename);
+  /**
+   * Populate the editor with the given text.
+   */
   void Populate(const wxString &text);
+  /**
+   * Connect to the specified database.
+   */
   void Connect(const ServerConnection &server, const wxString &dbname);
+  /**
+   * Register an existing database connection.
+   */
   void SetConnection(const ServerConnection &server, DatabaseConnection *db);
+  /**
+   * @return true if this editor has a connection
+   */
   bool HasConnection() const { return db != NULL; }
+  /**
+   * @return true if this editor has a connection and is currently connected
+   */
   bool IsConnected() const { return db != NULL && db->IsConnected(); }
+  /**
+   * @return string identifying the database connection
+   */
   wxString ConnectionIdentification() const { wxASSERT(db != NULL); return db->Identification(); }
+  /**
+   * @return true if the script is currently being executed
+   */
   bool IsExecuting() const { return lexer != NULL; }
 
+  /**
+   * @return server connection properties
+   */
   const ServerConnection& GetServer() const { return server; }
+  /**
+   * @return database name
+   */
   wxString GetDatabase() const { if (db == NULL) return wxEmptyString; else return db->DbName(); }
 
+  /**
+   * @return true if editor content modified
+   */
   bool IsModified() const { return modified; }
+  /**
+   * Mark editor content as modified
+   * @param value true to mark as modfied, false to mark as unmodified.
+   */
   void MarkModified(bool value) { modified = value; UpdateStateInUI(); }
+  /**
+   * @return true if editor has a full filename associated with it
+   */
   bool HasFilename() const { return !scriptFilename.empty(); }
+  /**
+   * @return leafname of file if one is set, otherwise a dummy filename ("Query-1.sql" etc)
+   */
   wxString GetCoreTitle() const { return coreTitle; }
 
+  /**
+   * @return formatted editor title, with database identification and is-modified flag
+   */
   wxString FormatTitle() const;
 private:
   ScriptEditor *editor;
@@ -167,3 +241,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

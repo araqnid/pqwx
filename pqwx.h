@@ -1,9 +1,15 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * Global IDs and declare the application class itself
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __pqwx_h
 #define __pqwx_h
 
-// controls and menu commands
+/*
+ * controls and menu commands
+ */
 enum {
   // local
   Pqwx_ObjectBrowser = 16384,
@@ -18,6 +24,11 @@ enum {
   Pqwx_ObjectFinderResults,
 };
 
+/**
+ * The wxApp implementation for PQWX.
+ *
+ * This deals with creating the initial frame, and executing actions based on the command line.
+ */
 class PQWXApp : public wxApp {
 public:
   virtual bool OnInit();
@@ -31,3 +42,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

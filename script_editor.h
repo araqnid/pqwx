@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __script_editor_h
 #define __script_editor_h
@@ -8,8 +11,14 @@
 
 class ScriptEditorPane;
 
+/**
+ * Script editor widget.
+ */
 class ScriptEditor : public wxStyledTextCtrl {
 public:
+  /**
+   * Create script editor.
+   */
   ScriptEditor(wxWindow *parent, wxWindowID id, ScriptEditorPane *owner);
 
   void OnSetFocus(wxFocusEvent &event);
@@ -17,9 +26,19 @@ public:
   void OnSavePointLeft(wxStyledTextEvent &event);
   void OnSavePointReached(wxStyledTextEvent &event);
 
+  /**
+   * Load a file into the buffer.
+   */
   void LoadFile(const wxString &filename);
+  /**
+   * Write the buffer to a file.
+   */
   void WriteFile(const wxString &filename);
 
+  /**
+   * Get the currently-selected region, or the entire buffer.
+   * @param lengthp Populated with the length of the region returned
+   */
   wxCharBuffer GetRegion(int *lengthp);
 private:
   void UpdateStateInUI();
@@ -38,3 +57,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

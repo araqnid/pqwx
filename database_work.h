@@ -1,4 +1,7 @@
-// -*- c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __database_work_h
 #define __database_work_h
@@ -11,6 +14,9 @@
 #include "versioned_sql.h"
 #include "database_connection.h"
 
+/**
+ * Encapsulates a unit of work to be performed on a database connection.
+ */
 class DatabaseWork {
 public:
   DatabaseWork(const VersionedSql *sqlDictionary = NULL) : sqlDictionary(sqlDictionary) {}
@@ -82,3 +88,7 @@ protected:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

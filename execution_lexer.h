@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __execution_lexer_h
 #define __execution_lexer_h
@@ -7,25 +10,73 @@
 #include <vector>
 #include "wx/string.h"
 
-// Lex through SQL text, breaking it into SQL commands and backslash commands.
-// This should basically do what psql's lexer does, although I haven't simply coped that wholesale.
-// This is based on UTF-8 rather than wxChar, which matches how the
-// data is stored in Scintilla, hence the use of std::string.
+/**
+ * Lex through SQL text, breaking it into SQL commands and backslash commands.
+ *
+ * This should basically do what psql's lexer does, although I haven't
+ * simply coped that wholesale.  This is based on UTF-8 rather than
+ * wxChar, which matches how the data is stored in Scintilla, hence
+ * the use of std::string.
+ *
+ * A lexer is created on a character buffer, and then Pull() called
+ * repeatedly, until it returns a token with type
+ * ExecutionLexer::Token::END.
+ */
 class ExecutionLexer {
 public:
+  /**
+   * Create a lexer from a string buffer.
+   */
   ExecutionLexer(const char *buffer, unsigned length) : buffer(buffer), length(length), pos(0) {}
 
+  /**
+   * A unit returned by the lexer.
+   */
   class Token {
   public:
-    const enum Type { SQL, PSQL, END } type;
+    /**
+     * Lexer token type.
+     */
+    const enum Type {
+      /**
+       * A SQL statement.
+       */
+      SQL,
+      /**
+       * A psql directive.
+       */
+      PSQL,
+      /**
+       * End of input.
+       */
+      END
+    } type;
+    /**
+     * Offset and length of the token within the lexer's input buffer.
+     */
     const unsigned offset, length;
+    /**
+     * Create token with given type and extent.
+     */
     Token(Type type, unsigned offset, unsigned length) : type(type), offset(offset), length(length) {}
-    Token(Type type) : type(type), offset((unsigned)-1), length((unsigned)-1) {}
+    /**
+     * Create token with given type and invalid extent (for END).
+     */
+    Token(Type type) : type(type), offset((unsigned)-1), length((unsigned)-1) { wxASSERT(type == END); }
   };
 
+  /**
+   * Pull the next token from the buffer.
+   */
   Token Pull() { if (pos >= length) return Token(Token::END); return Pull0(); }
 
+  /**
+   * Convert an offset/length combination to a wxString.
+   */
   wxString GetWXString(unsigned offset, unsigned length) const { return wxString(buffer + offset, wxConvUTF8, length); }
+  /**
+   * Convert a token into a wxString.
+   */
   wxString GetWXString(const Token& t) const { return GetWXString(t.offset, t.length); }
 private:
   std::vector<std::string> quoteStack;

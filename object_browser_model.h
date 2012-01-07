@@ -1,10 +1,15 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * Model classes for the object browser
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
-#include "database_work.h"
-
+/**
+ * Base class for models of all database objects.
+ */
 class ObjectModel : public wxTreeItemData {
 public:
   wxString name;
@@ -12,6 +17,9 @@ public:
   virtual wxString FormatName() const { return name; }
 };
 
+/**
+ * A relation column.
+ */
 class ColumnModel : public ObjectModel {
 public:
   RelationModel *relation;
@@ -20,6 +28,9 @@ public:
   bool hasDefault;
 };
 
+/**
+ * An index associated with a table.
+ */
 class IndexModel : public ObjectModel {
 public:
   RelationModel *relation;
@@ -27,11 +38,17 @@ public:
   wxString type;
 };
 
+/**
+ * A trigger associated with a table.
+ */
 class TriggerModel : public ObjectModel {
 public:
   RelationModel *relation;
 };
 
+/**
+ * A schema member - function or relation.
+ */
 class SchemaMemberModel : public ObjectModel {
 public:
   DatabaseModel *database;
@@ -42,11 +59,17 @@ public:
   wxString FormatName() const { return schema + _T('.') + name; }
 };
 
+/**
+ * A relation - table, view or sequence.
+ */
 class RelationModel : public SchemaMemberModel {
 public:
   enum Type { TABLE, VIEW, SEQUENCE } type;
 };
 
+/**
+ * A function.
+ */
 class FunctionModel : public SchemaMemberModel {
 public:
   wxString arguments;
@@ -54,6 +77,11 @@ public:
   wxString FormatName() const { return schema + _T('.') + name + _T('(') + arguments + _T(')'); }
 };
 
+/**
+ * A database.
+ *
+ * This also contains a OID-to-tree-item lookup table and a CatalogueIndex.
+ */
 class DatabaseModel : public ObjectModel {
 public:
   DatabaseModel() : catalogueIndex(NULL){}
@@ -68,19 +96,30 @@ public:
   bool loaded;
   ServerModel *server;
   const CatalogueIndex *catalogueIndex;
-  bool IsUsable() {
+  bool IsUsable() const {
     return allowConnections && havePrivsToConnect;
   }
-  bool IsSystem() {
+  bool IsSystem() const {
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
   std::map<Oid, wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
 
+  /**
+   * @return A string identifying this database, such as "[local] postgres"
+   */
   wxString Identification() const;
+  /**
+   * Get a connection to this database.
+   *
+   * The connection returned may be still unconnected.
+   */
   DatabaseConnection *GetDatabaseConnection();
 
+  /**
+   * The "divisions" of a database schema.
+   */
   class Divisions {
   public:
     std::vector<SchemaMemberModel*> userDivision;
@@ -88,6 +127,9 @@ public:
     std::map<wxString, std::vector<SchemaMemberModel*> > extensionDivisions;
   };
 
+  /**
+   * Divide the schema members up into user, system and extension members.
+   */
   Divisions DivideSchemaMembers() const {
     std::vector<SchemaMemberModel*> members;
     for (std::vector<RelationModel*>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
@@ -125,6 +167,9 @@ private:
 
 };
 
+/**
+ * A server role.
+ */
 class RoleModel : public ObjectModel {
 public:
   Oid oid;
@@ -132,29 +177,91 @@ public:
   bool canLogin;
 };
 
+/**
+ * A server.
+ *
+ * This class is also a factory for database connections. Currently at
+ * most one connection for each database can be stored, and when a
+ * connection to a new database is produced, any previous connection
+ * is closed, so we maintain only one connection to a server at a
+ * time.
+ */
 class ServerModel : public wxTreeItemData {
 public:
+  /**
+   * Create server model.
+   */
   ServerModel(const ServerConnection &conninfo) : conninfo(conninfo) {}
+  /**
+   * Create server model with an initial connection.
+   */
   ServerModel(const ServerConnection &conninfo, DatabaseConnection *db) : conninfo(conninfo) {
     connections[db->DbName()] = db;
     db->Relabel(_("Object Browser"));
   }
+  /**
+   * Initialise some server parameters.
+   *
+   * @param serverVersionRaw Server version as string such as "9.1.1"
+   * @param serverVersion_ Server version as an integer such as 90101
+   * @param ssl SSL object (NULL if not SSL)
+   */
   void ReadServerParameters(const char *serverVersionRaw, int serverVersion_, void *ssl) {
     serverVersion = serverVersion_;
     serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
     usingSSL = (ssl != NULL);
   }
+  /**
+   * Close all connections associated with this server.
+   */
   void Dispose();
+  /**
+   * Ask all connections associated with this server to disconnect.
+   */
   void BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting);
+  /**
+   * @return A string identifying this server, such as "dbhost:5433" or "steve@[local]"
+   */
   const wxString& Identification() const { return conninfo.Identification(); }
+  /**
+   * @return The name of the "administrative" database
+   */
   const wxString& GlobalDbName() const { return conninfo.globalDbName; }
+  /**
+   * @return The server version number as a string
+   */
   const wxString& VersionString() const { return serverVersionString; }
+  /**
+   * @return True if server is using SSL (based on the initial connection)
+   */
   bool IsUsingSSL() const { return usingSSL; }
+  /**
+   * Gets a connection to some database.
+   *
+   * The connection object returned may not be connected yet.
+   */
   DatabaseConnection *GetDatabaseConnection(const wxString &dbname);
+  /**
+   * Gets a connection to the administrative database.
+   *
+   * The connection object returned may not be connected yet.
+   */
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
+  /**
+   * Find a named database model on this server.
+   */
   DatabaseModel *FindDatabase(const wxString &dbname) const;
+  /**
+   * Server connection details.
+   */
   const ServerConnection conninfo;
+  /**
+   * @return The databases on this server
+   */
   const std::vector<DatabaseModel*>& GetDatabases() const { return databases; }
+  /**
+   * @return The roles on this server
+   */
   const std::vector<RoleModel*>& GetRoles() const { return roles; }
 private:
   std::vector<DatabaseModel*> databases;
@@ -179,3 +286,7 @@ inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
 }
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

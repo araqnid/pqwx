@@ -1,4 +1,7 @@
-// -*- c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __object_browser_h
 #define __object_browser_h
@@ -28,8 +31,14 @@ BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
 
+/**
+ * Event issued when an object is selected in the object browser.
+ */
 #define PQWX_OBJECT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_ObjectSelected, fn)
 
+/**
+ * Declare handler methods for context menu scripting items.
+ */
 #define DECLARE_SCRIPT_HANDLERS(menu, mode) \
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
   void On##menu##MenuScript##mode##File(wxCommandEvent&); \
@@ -37,50 +46,143 @@ END_DECLARE_EVENT_TYPES()
 
 class IndexSchemaCompletionCallback;
 
+/**
+ * The object browser tree control.
+ */
 class ObjectBrowser : public wxTreeCtrl {
 public:
+  /**
+   * Create object browser.
+   */
   ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
 
   ~ObjectBrowser() {
     Dispose();
   }
 
+  /**
+   * Register a new server connection with the object browser.
+   */
   void AddServerConnection(const ServerConnection& server, DatabaseConnection *db);
+  /**
+   * Load the schema for a specified database.
+   */
   void LoadDatabase(wxTreeItemId parent, DatabaseModel *db, IndexSchemaCompletionCallback *indexCompletion = NULL);
+  /**
+   * Load the detail for a specified relation.
+   */
   void LoadRelation(wxTreeItemId parent, RelationModel *rel);
+  /**
+   * Disconnect from the currently-selected object.
+   */
   void DisconnectSelected();
+  /**
+   * Open the object finder using the given server/database details.
+   */
   void FindObject(const ServerConnection &server, const wxString &dbname);
+  /**
+   * Open the object finder for the specified database.
+   */
   void FindObject(const DatabaseModel*);
+  /**
+   * Zoom to a particular object as a result of the object finder.
+   */
   void ZoomToFoundObject(const DatabaseModel *database, const CatalogueIndex::Document *document) { ZoomToFoundObject(database, document->entityId); }
+  /**
+   * Zoom to a particular database object.
+   */
   void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
 
+  /**
+   * Close all server connections and delete all model data.
+   */
   void Dispose();
 
+  /**
+   * Submit some work to the administrative database for a server.
+   */
   void SubmitServerWork(ServerModel *server, ObjectBrowserWork *work);
+  /**
+   * Submit some work to a particular database.
+   */
   void SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work);
+  /**
+   * Add work to some database connection.
+   *
+   * If the connection is still unconnected, initiate the connection.
+   */
   void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 
+  /**
+   * Fill in server details after loading from the database.
+   */
   void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem);
+  /**
+   * Fill in database schema after loading from the database.
+   */
   void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem);
-
+  /**
+   * Fill in relation details after loading from the database.
+   */
   void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers);
 
+  /**
+   * Append database items under the given parent.
+   * The parent is typically the server itself, or "System Databases".
+   */
   void AppendDatabaseItems(wxTreeItemId parent, std::vector<DatabaseModel*> &database);
+  /**
+   * Append a division of schema members under the given parent.
+   * The parent is typically the database itself, or "System schemas".
+   */
   void AppendDivision(std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  /**
+   * Divide up schema members into user, extension and system "divisions".
+   */
   void DivideSchemaMembers(std::vector<SchemaMemberModel*> &members, std::vector<SchemaMemberModel*> &userDivision, std::vector<SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<SchemaMemberModel*> > &extensionDivisions);
+  /**
+   * Append a set of schema members (all in the same schema) under the given parent.
+   */
   void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
+  /**
+   * Find an existing server matching some connection parameters.
+   */
   ServerModel *FindServer(const ServerConnection &server) const;
+  /**
+   * Find an existing database matching some connection parameters and database name.
+   */
   DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
 
+  /**
+   * Find the tree item for a server.
+   */
   wxTreeItemId FindServerItem(const ServerModel *server) const;
+  /**
+   * Find the tree item for a database.
+   */
   wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
+  /**
+   * Find the tree item for the "system schemas" label in a database.
+   */
   wxTreeItemId FindSystemSchemasItem(const DatabaseModel *db) const;
+  /**
+   * Get the lazy loader under a tree item, if any.
+   */
   LazyLoader* GetLazyLoader(wxTreeItemId item) const;
+  /**
+   * Delete the lazy loader under a tree item, if any.
+   */
   void DeleteLazyLoader(wxTreeItemId item);
 
+  /**
+   * Consider no object to be "currently selected".
+   */
   void UnmarkSelected() { currentlySelected = false; }
 
+  /**
+   * Gets the SQL dictionary for the object browser.
+   */
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
@@ -162,6 +264,15 @@ private:
   static const int img_function_window = img_function_trigger + 1;
 };
 
+/**
+ * Event ID for database work finishing.
+ *
+ * Should refactor this to make a proper event type.
+ */
 const int EVENT_WORK_FINISHED = 10000;
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

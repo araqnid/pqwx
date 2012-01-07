@@ -1,4 +1,7 @@
-// -*- c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __pqwx_frame_h
 #define __pqwx_frame_h
@@ -10,8 +13,14 @@
 #include "documents_notebook.h"
 #include "connect_dialogue.h"
 
+/**
+ * PQWX application frame.
+ */
 class PqwxFrame: public wxFrame {
 public:
+  /**
+   * Create frame, specifying initial title.
+   */
   PqwxFrame(const wxString& title);
 
   void OnQuit(wxCommandEvent& event);
@@ -35,6 +44,9 @@ public:
 
   void OnCloseFrame(wxCloseEvent& event);
 
+  /**
+   * Connection callback to add a connection to the object browser once it is established.
+   */
   class AddConnectionToObjectBrowser : public ConnectDialogue::CompletionCallback {
   public:
     AddConnectionToObjectBrowser(PqwxFrame *owner) : owner(owner) {}
@@ -71,3 +83,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

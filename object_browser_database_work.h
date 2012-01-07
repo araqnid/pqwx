@@ -1,4 +1,8 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * Database interaction performed by the object browser
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __object_browser_database_work_h
 #define __object_browser_database_work_h
@@ -8,37 +12,91 @@
 #include "database_work.h"
 #include "script_events.h"
 
+/**
+ * Unit of work to be performed on a database connection for the
+ * object browser.
+ *
+ * An instance of this class is wrapped by a DatabaseWork in order to
+ * be executed. However, the DatabaseWork is deleted as soon as it has
+ * completed, but the wrapper will pass this class back to object
+ * browser as part of a "work finished" event so that is is available
+ * in the GUI thread.
+ */
 class ObjectBrowserWork {
 public:
+  /**
+   * Execute work.
+   *
+   * Similar to the same-named method in DatabaseWork. This method is
+   * executed on the database worker thread.
+   */
   virtual void Execute() = 0;
+  /**
+   * Merge data obtained by work object into object browser.
+   *
+   * This method is executed on the GUI thread.
+   */
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
+  /**
+   * Perform a query with a single numeric parameter and return a result set.
+   */
   QueryResults DoQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     return owner->DoNamedQuery(name, paramType, valueString.utf8_str());
   }
+  /**
+   * Perform a query with a single numerc parameter and return a single row.
+   */
   QueryResults::Row DoSingleRowQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
     wxString valueString = wxString::Format(_T("%lu"), paramValue);
     QueryResults results = owner->DoNamedQuery(name, paramType, valueString.utf8_str());
     wxASSERT(results.size() == 1);
     return results[0];
   }
+  /**
+   * Perform a query with a single string parameter and return a result set.
+   */
   QueryResults DoQuery(const wxString &name, Oid paramType, const char *paramValue) {
     return owner->DoNamedQuery(name, paramType, paramValue);
   }
+  /**
+   * Perform a query with a no parameters and return a result set.
+   */
   QueryResults DoQuery(const wxString &name) {
     return owner->DoNamedQuery(name);
   }
+  /**
+   * Quote an identified for use in a generated SQL statement.
+   */
   wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
+  /**
+   * Quote an literal string for use in a generated SQL statement.
+   */
   wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
+  /**
+   * The actual database work object wrapping this.
+   */
   DatabaseWork *owner;
+  /**
+   * The actual libpq connection object.
+   */
   PGconn *conn;
   friend class ObjectBrowserDatabaseWork;
 };
 
+/**
+ * Implementation of DatabaseWork that deals with passing results back to the GUI thread.
+ */
 class ObjectBrowserDatabaseWork : public DatabaseWork {
 public:
+  /**
+   * State of this work object.
+   */
   enum State { PENDING, EXECUTED, NOTIFIED };
+  /**
+   * Create work object.
+   */
   ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work), state(PENDING) {}
   void Execute() {
     ChangeState(PENDING, EXECUTED);
@@ -53,6 +111,9 @@ public:
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }
+  /**
+   * Get the current state of this work object.
+   */
   State GetState() const {
     wxCriticalSectionLocker locker(crit);
     return state;
@@ -69,8 +130,16 @@ private:
   }
 };
 
+/**
+ * Load server information, database list and role list from server.
+ */
 class RefreshDatabaseListWork : public ObjectBrowserWork {
 public:
+  /**
+   * Create work object
+   * @param serverModel Server model to populate
+   * @param serverItem Server tree item to populate
+   */
   RefreshDatabaseListWork(ServerModel *serverModel, wxTreeItemId serverItem) : serverModel(serverModel), serverItem(serverItem) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
@@ -136,8 +205,17 @@ private:
   }
 };
 
+/**
+ * Load schema members (relations and functions) for a database.
+ */
 class LoadDatabaseSchemaWork : public ObjectBrowserWork {
 public:
+  /**
+   * Create work object.
+   * @param databaseModel Database model to populate
+   * @param databaseItem Database tree item to populate
+   * @param expandAfter Expand tree item after populating
+   */
   LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem, bool expandAfter) : databaseModel(databaseModel), databaseItem(databaseItem), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
@@ -205,8 +283,14 @@ private:
   }
 };
 
+/**
+ * Load descriptions of objects from database.
+ */
 class LoadDatabaseDescriptionsWork : public ObjectBrowserWork {
 public:
+  /**
+   * @param databaseModel Database model to populate
+   */
   LoadDatabaseDescriptionsWork(DatabaseModel *databaseModel) : databaseModel(databaseModel) {
     wxLogDebug(_T("%p: work to load schema object descriptions"), this);
   }
@@ -244,13 +328,26 @@ protected:
   }
 };
 
+/**
+ * Callback interface to notify some client that the schema index has been built.
+ */
 class IndexSchemaCompletionCallback {
 public:
+  /**
+   * Called when schema index completed.
+   */
   virtual void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *index) = 0;
 };
 
+/**
+ * Build index of database schema for object finder.
+ */
 class IndexDatabaseSchemaWork : public ObjectBrowserWork {
 public:
+  /**
+   * @param database Database being indexed
+   * @param completion Additional callback to notify when indexing completed
+   */
   IndexDatabaseSchemaWork(DatabaseModel *database, IndexSchemaCompletionCallback *completion = NULL) : database(database), completion(completion) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
@@ -310,8 +407,15 @@ protected:
   }
 };
 
+/**
+ * Load relation details from database
+ */
 class LoadRelationWork : public ObjectBrowserWork {
 public:
+  /**
+   * @param relationModel Relation model to populate
+   * @param relationItem Relation tree item to populate
+   */
   LoadRelationWork(RelationModel *relationModel, wxTreeItemId relationItem) : relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
@@ -377,9 +481,24 @@ protected:
   }
 };
 
+/**
+ * Generate SQL script for some database item.
+ *
+ * The SQL script is generated in some mode (create, alter, etc) and
+ * with a designated output. This class deals with dispatching
+ * generated SQL to the output: subclasses must supply implementations
+ * to produce the script by populating the statements member in an
+ * Execute() implementation.
+ */
 class ScriptWork : public ObjectBrowserWork {
 public:
+  /**
+   * Type of script to produce.
+   */
   enum Mode { Create, Alter, Drop, Select, Insert, Update, Delete };
+  /**
+   * Output channel.
+   */
   enum Output { Window, File, Clipboard };
   ScriptWork(DatabaseModel *database, Mode mode, Output output) : database(database), mode(mode), output(output) {}
 protected:
@@ -419,6 +538,9 @@ private:
   const Output output;
 };
 
+/**
+ * Produce database scripts.
+ */
 class DatabaseScriptWork : public ScriptWork {
 public:
   DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(database, mode, output) {
@@ -428,6 +550,9 @@ protected:
   void Execute();
 };
 
+/**
+ * Produce table scripts.
+ */
 class TableScriptWork : public ScriptWork {
 public:
   TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(table->database, mode, output), table(table) {
@@ -439,6 +564,9 @@ protected:
   void Execute();
 };
 
+/**
+ * Produce view scripts.
+ */
 class ViewScriptWork : public ScriptWork {
 public:
   ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view->database, mode, output), view(view) {
@@ -450,6 +578,9 @@ protected:
   void Execute();
 };
 
+/**
+ * Produce sequence scripts.
+ */
 class SequenceScriptWork : public ScriptWork {
 public:
   SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequence->database, mode, output), sequence(sequence) {
@@ -461,6 +592,9 @@ protected:
   void Execute();
 };
 
+/**
+ * Produce function scripts.
+ */
 class FunctionScriptWork : public ScriptWork {
 public:
   FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(function->database, mode, output), function(function) {
@@ -490,3 +624,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

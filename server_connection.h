@@ -1,4 +1,7 @@
-// -*- c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __db__connection_manager_h
 #define __db__connection_manager_h
@@ -10,6 +13,16 @@
 #include "wx/intl.h"
 #include "pg_config.h"
 
+/**
+ * Defines connection parameters for a server.
+ *
+ * This now-horribly-misnamed class contains the requisite information
+ * to make an initial connection to a server, including a suggested
+ * "administrative" database name. It may also be updated with some
+ * discovered attributes after connecting, for example to note if a
+ * password is required to connect, server version or server-level
+ * capabilities.
+ */
 class ServerConnection {
 public:
   ServerConnection() : globalDbName(_T("postgres")) {
@@ -78,3 +91,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

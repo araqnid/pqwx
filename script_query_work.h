@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __script_query_work_h
 #define __script_query_work_h
@@ -6,10 +9,19 @@
 #include <memory>
 #include "pg_error.h"
 
+/**
+ * Execute a query from a script on the database.
+ */
 class ScriptQueryWork : public DatabaseWork {
 public:
+  /**
+   * Execution result.
+   */
   class Result {
   public:
+    /**
+     * Create result referring back to SQL used for the query.
+     */
     Result(const ExecutionLexer::Token& token) : token(token) {}
   private:
     const ExecutionLexer::Token token;
@@ -27,6 +39,9 @@ public:
     friend class ScriptQueryWork;
   };
 
+  /**
+   * Create work object
+   */
   ScriptQueryWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *sql) : dest(dest), token(token), sql(sql) {}
 
   void Execute() {
@@ -106,3 +121,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

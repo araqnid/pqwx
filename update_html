@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Sync the "gh-pages" branch to mirror the "html" directory (with prefix removed)
+branch_name="gh-pages"
+subdir="html"
+
+trap "rm -f .git/index.tmp.$$.*" EXIT
+
+find $subdir -type f | GIT_INDEX_FILE=.git/index.tmp.$$.0 git update-index --add --stdin
+GIT_INDEX_FILE=.git/index.tmp.$$.0 git ls-files -s | sed -e "s/\\t$subdir\\//\\t/" | GIT_INDEX_FILE=.git/index.tmp.$$.1 git update-index --index-info
+tree_id=$(GIT_INDEX_FILE=.git/index.tmp.$$.1 git write-tree)
+
+if git rev-parse --verify refs/heads/$branch_name >/dev/null 2>&1; then
+    old_commit_id="$(git rev-parse --verify refs/heads/$branch_name)"
+    old_tree_id="$(git rev-parse --verify refs/heads/$branch_name^{tree})"
+    if [ "$old_tree_id" = "$tree_id" ]; then
+	echo "No changes."
+	exit 0
+    fi
+    parentarg="-p $old_commit_id"
+else
+    parentarg=""
+    old_commit_id=""
+fi
+
+commit_id=$(echo "Doxygen HTML auto-update" | git commit-tree $tree_id $parentarg)
+
+git update-ref -m "update_html: Doxygen HTML auto-update" --no-deref refs/heads/$branch_name $commit_id $old_commit_id

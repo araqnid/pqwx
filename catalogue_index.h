@@ -1,4 +1,7 @@
-// -*- mode: c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __catalogue_index_h
 #define __catalogue_index_h
@@ -10,12 +13,47 @@
 #include "wx/log.h"
 #include "wx/stopwatch.h"
 
+/**
+ * Database catalogue search index.
+ *
+ * Stores a set of "documents", each representing a named database
+ * object. The names are analysed by splitting up words separated by
+ * underscores, or described by StudlyCaps. Searches can then be made
+ * using a phrase query analysed in the same way, and optionally
+ * filtered by what database object type each document has, and
+ * whether it is considered a "system object" or not.
+ *
+ * The usage scheme is:
+ * <pre>
+ *     CatalogueIndex index;
+ *     index.Begin();
+ *     index.AddDocument(Document(oid, type, system, symbol));
+ *     // etc...
+ *     index.Commit();
+ *     // to search:
+ *     CatalogueIndex::Filter filter = index.CreateNonSystemFiltber();
+ *     std::vector<CatalogueIndex::Result> = index.Search("MyTab", filter);
+ * </pre>
+ */
 class CatalogueIndex {
 public:
+  /**
+   * Types of database object.
+   *
+   * Somewhat, but not exactly, equivalent to pg_class. For example,
+   * there are multiple types here for functions (pg_proc) so that
+   * callers can individually filter out trigger functions, for
+   * example.
+   */
   enum Type { TABLE, VIEW, SEQUENCE,
 	      FUNCTION_SCALAR, FUNCTION_ROWSET, FUNCTION_TRIGGER, FUNCTION_AGGREGATE, FUNCTION_WINDOW,
 	      TYPE, EXTENSION, COLLATION };
 
+  /**
+   * Datum stored in the search index.
+   *
+   * These are the potential results searched by the query.
+   */
   class Document {
   public:
     Document(long entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system) {}
@@ -26,20 +64,46 @@ public:
     bool system;
   };
 
+  /**
+   * Begin indexing.
+   *
+   * Currently does nothing except setup the timer for logging how long indexing takes.
+   */
   void Begin() {
 #ifdef __WXDEBUG__
     stopwatch.Start();
 #endif
   }
+  /**
+   * Adds a document to the search index.
+   */
   void AddDocument(const Document& document);
+  /**
+   * Finish indexing.
+   *
+   * Currently does nothing except log how long indexing took, in debug mode.
+   */
   void Commit() {
 #ifdef __WXDEBUG__
     wxLogDebug(_T("** Indexed %lu terms over %lu documents in %.3lf seconds"), terms.size(), documents.size(), stopwatch.Time() / 1000.0);
 #endif
   }
 
+  /**
+   * Catalogue search result.
+   *
+   * A search result consists of:
+   * <ul>
+   *  <li> A document that was matched. </li>
+   *  <li> A vector of extents, indicating which parts of the input query were used to make the match. </li>
+   *  <li> A score that indicates how well this document matched the query- a higher score is a "better" match. </li>
+   * </ul>
+   */
   class Result {
   public:
+    /**
+     * Describes a part of the input query string was matched
+     */
     class Extent {
     public:
       Extent(size_t offset, size_t length) : offset(offset), length(length) {}
@@ -56,6 +120,22 @@ public:
     }
   };
 
+  /**
+   * Catalogue search filter.
+   *
+   * A filter is a mask that can accept or reject potential search
+   * matches. So after a match candidate is found, the filter is
+   * called to test if it should be returned to the caller.
+   *
+   * Filters are implemented as multi-word bitmasks, and implement
+   * most of the bitmask-manipulation operators.
+   *
+   * A filter is created with a fixed capacity, usually based on a
+   * particular index using the CatalogueIndex factory methods. Trying
+   * to operate on filters with different capacities is an error. In
+   * general, only filters that were based on the same index are
+   * useful to combine together.
+   */
   class Filter {
   public:
     Filter(int capacity) : capacity(capacity) {
@@ -153,6 +233,9 @@ public:
     friend class CatalogueIndex;
   };
 
+  /**
+   * Creates a filter that matches every document in the index.
+   */
   Filter CreateMatchEverythingFilter() const {
     Filter filter(documents.size());
     for (int i = filter.NumWords() - 1; i >= 0; i--) {
@@ -160,10 +243,24 @@ public:
     }
     return filter;
   };
+  /**
+   * Creates a filter that only matches documents that are not flagged as representing "system" objects.
+   */
   Filter CreateNonSystemFilter() const;
+  /**
+   * Creates a filter that only matches documents representing the specified type.
+   */
   Filter CreateTypeFilter(Type type) const;
+  /**
+   * Creates a filter that only matches documents representing objects in the specified schema.
+   */
   Filter CreateSchemaFilter(const wxString &schema) const;
 
+  /**
+   * Search the catalogue index, specifying a query, filter and maximum number of results.
+   *
+   * Results are returned in descending score order.
+   */
   std::vector<Result> Search(const wxString &input, const Filter &filter, unsigned maxResults = 100) const;
 
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
@@ -232,3 +329,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

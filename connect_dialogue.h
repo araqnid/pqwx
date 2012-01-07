@@ -1,4 +1,7 @@
-// -*- c++ -*-
+/**
+ * @file
+ * @author Steve Haslam <araqnid@googlemail.com>
+ */
 
 #ifndef __connect_dialogue_h
 #define __connect_dialogue_h
@@ -9,14 +12,43 @@
 
 class ConnectionWork;
 
+/**
+ * Dialogue box to initiate a database connection.
+ *
+ * Basically, this is a box to edit a ServerConnection, with
+ * functionality to actually make that into a real DatabaseConnection.
+ */
 class ConnectDialogue : public wxDialog {
 public:
+  /**
+   * Callback interface for non-modal operation of the connection
+   * dialogue.
+   *
+   * When used non-modally, an callback implementing this interface is
+   * supplied to be notified when the connection is established, or if
+   * the user gives up and cancels.
+   *
+   * Implementations <b>must</b> be allocated on the heap, as they
+   * will be deleted just after one of the callback methods is called.
+   */
   class CompletionCallback {
   public:
+    /**
+     * Connection established.
+     *
+     * @param server Server connection properties
+     * @param db Connection to administrative database
+     */
     virtual void Connected(const ServerConnection &server, DatabaseConnection *db) = 0;
+    /**
+     * Connection cancelled.
+     */
     virtual void Cancelled() = 0;
   };
 
+  /**
+   * Create connection dialogue.
+   */
   ConnectDialogue(wxWindow *parent, CompletionCallback *callback)
     : wxDialog(), callback(callback), recentServersConfigPath(_T("RecentServers")) {
     InitXRC(parent);
@@ -32,7 +64,16 @@ public:
   void OnRecentServerChosen(wxCommandEvent& event);
   void OnConnectionFinished(wxCommandEvent& event);
 
+  /**
+   * Suggest initial server connection properties.
+   *
+   * Maybe this should be a constructor parameter instead.
+   */
   void Suggest(const ServerConnection &conninfo);
+
+  /**
+   * Immediately try a connection with the given server properties.
+   */
   void DoInitialConnection(const ServerConnection &conninfo);
 
 protected:
@@ -89,3 +130,7 @@ private:
 };
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

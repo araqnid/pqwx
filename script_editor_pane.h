@@ -223,6 +223,11 @@ private:
     void BumpErrors() { ++errorsEncountered; }
 
     ExecutionLexer::Token NextToken() { return lexer.Pull(); }
+    void SetLastSqlToken(ExecutionLexer::Token t) { lastSqlToken = t; }
+    const ExecutionLexer::Token& GetLastSqlToken() const { return lastSqlToken; }
+    ExecutionLexer::Token PopLastSqlToken() { ExecutionLexer::Token t = lastSqlToken; ClearLastSqlToken(); return t; }
+    void ClearLastSqlToken() { lastSqlToken = ExecutionLexer::Token(ExecutionLexer::Token::END); }
+    bool LastSqlTokenValid() const { return lastSqlToken.type == ExecutionLexer::Token::SQL; }
 
     wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
   private:
@@ -237,6 +242,7 @@ private:
   wxTimer statusUpdateTimer;
 
   bool ProcessExecution();
+  void BeginQuery(ExecutionLexer::Token t);
   void FinishExecution();
 
   ResultsNotebook *GetOrCreateResultsBook() { if (resultsBook == NULL) CreateResultsBook(); return resultsBook; };

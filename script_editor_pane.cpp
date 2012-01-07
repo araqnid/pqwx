@@ -258,19 +258,36 @@ bool ScriptEditorPane::ProcessExecution()
 {
   ExecutionLexer::Token t = execution->NextToken();
   if (t.type == ExecutionLexer::Token::END) {
-    FinishExecution();
+    if (execution->LastSqlTokenValid()) {
+      BeginQuery(execution->PopLastSqlToken());
+    }
+    else {
+      FinishExecution();
+    }
     return false;
   }
 
   if (t.type == ExecutionLexer::Token::SQL) {
-    bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t, execution->ExtractSQL(t)));
-    wxASSERT(added);
-    return false;
+    if (execution->LastSqlTokenValid()) {
+      BeginQuery(execution->GetLastSqlToken());
+      execution->SetLastSqlToken(t);
+      return false;
+    }
+    else {
+      execution->SetLastSqlToken(t);
+      return true;
+    }
   }
   else {
     wxLogDebug(_T("psql | %s"), execution->GetWXString(t).c_str());
     return true;
   }
+}
+
+void ScriptEditorPane::BeginQuery(ExecutionLexer::Token t)
+{
+  bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t, execution->ExtractSQL(t)));
+  wxASSERT(added);
 }
 
 void ScriptEditorPane::FinishExecution()

@@ -7,6 +7,7 @@
 #endif
 
 #include "wx/grid.h"
+#include "wx/tokenzr.h"
 #include "pqwx.h"
 #include "results_notebook.h"
 #include "pg_error.h"
@@ -28,6 +29,10 @@ void ResultsNotebook::Setup()
   messagesDisplay->SetCodePage(wxSTC_CP_UTF8);
 #endif
   messagesDisplay->StyleClearAll();
+  messagesDisplay->StyleSetSpec(Style_Default, _T("fore:#808080"));
+  messagesDisplay->StyleSetSpec(Style_Error, _T("fore:#cc0000,bold"));
+  messagesDisplay->StyleSetSpec(Style_Notice, _T("fore:#000088"));
+  messagesDisplay->StyleSetSpec(Style_EchoMessage, _T("fore:#000088"));
 
   wxSizer *displaySizer = new wxBoxSizer(wxVERTICAL);
   displaySizer->Add(messagesDisplay, 1, wxEXPAND);
@@ -61,46 +66,83 @@ void ResultsNotebook::ScriptResultSet(const wxString& statusTag,
 
 void ResultsNotebook::ScriptError(const PgError& error, const wxString &query)
 {
+  int pos = messagesDisplay->GetLength();
   messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(error.primary);
-  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), error.severity.c_str(), error.primary.c_str()));
+  if (!error.detail.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), error.detail.c_str()));
+  }
+  if (!error.hint.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), error.hint.c_str()));
+  }
+  if (!error.context.empty()) {
+    wxStringTokenizer tkz(error.context, _T("\n"));
+    messagesDisplay->AddText(_("CONTEXT:\n"));
+    while (tkz.HasMoreTokens()) {
+      messagesDisplay->AddText(wxString::Format(_T("\t%s\n"), tkz.GetNextToken().c_str()));
+    }
+  }
   messagesDisplay->SetReadOnly(true);
   addedError = true;
   SetSelection(0);
+  messagesDisplay->StartStyling(pos, 31);
+  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Error);
 }
 
 void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString &query)
 {
+  int pos = messagesDisplay->GetLength();
   messagesDisplay->SetReadOnly(false);
   messagesDisplay->AddText(error);
   messagesDisplay->AddText(_T("\n"));
   messagesDisplay->SetReadOnly(true);
   addedError = true;
   SetSelection(0);
+  messagesDisplay->StartStyling(pos, 31);
+  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Error);
 }
 
 void ResultsNotebook::ScriptEcho(const wxString& message)
 {
+  int pos = messagesDisplay->GetLength();
   messagesDisplay->SetReadOnly(false);
   messagesDisplay->AddText(message);
   messagesDisplay->AddText(_T("\n"));
   messagesDisplay->SetReadOnly(true);
+  messagesDisplay->StartStyling(pos, 31);
+  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_EchoMessage);
 }
 
 void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query)
 {
+  int pos = messagesDisplay->GetLength();
   messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(notice.primary);
-  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), notice.severity.c_str(), notice.primary.c_str()));
+  if (!notice.detail.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), notice.detail.c_str()));
+  }
+  if (!notice.hint.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), notice.hint.c_str()));
+  }
   messagesDisplay->SetReadOnly(true);
+  messagesDisplay->StartStyling(pos, 31);
+  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Notice);
 }
 
 void ResultsNotebook::ScriptAsynchronousNotice(const PgError& notice)
 {
+  int pos = messagesDisplay->GetLength();
   messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(notice.primary);
-  messagesDisplay->AddText(_T("\n"));
+  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), notice.severity.c_str(), notice.primary.c_str()));
+  if (!notice.detail.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), notice.detail.c_str()));
+  }
+  if (!notice.hint.empty()) {
+    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), notice.hint.c_str()));
+  }
   messagesDisplay->SetReadOnly(true);
+  messagesDisplay->StartStyling(pos, 31);
+  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Notice);
 }
 
 void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)

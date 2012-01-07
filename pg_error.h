@@ -25,6 +25,7 @@ public:
     sourceFile = GetErrorField(rs, PG_DIAG_SOURCE_FILE);
     sourceLine = GetErrorField(rs, PG_DIAG_SOURCE_LINE);
     sourceFunction = GetErrorField(rs, PG_DIAG_SOURCE_FUNCTION);
+    context = GetErrorField(rs, PG_DIAG_CONTEXT);
   }
 
 private:
@@ -34,7 +35,8 @@ private:
   }
 
   wxString severity, sqlstate, primary, detail, hint, position,
-    internalPosition, internalQuery, sourceFile, sourceLine, sourceFunction;
+    internalPosition, internalQuery, sourceFile, sourceLine, sourceFunction,
+    context;
 
   friend class ScriptEditorPane;
   friend class DatabaseConnection;

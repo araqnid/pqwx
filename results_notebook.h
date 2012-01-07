@@ -67,6 +67,11 @@ private:
 
   void Setup();
 
+  static const int Style_Default = 0;
+  static const int Style_Error = 1;
+  static const int Style_Notice = 2;
+  static const int Style_EchoMessage = 3;
+
   DECLARE_EVENT_TABLE()
 };
 

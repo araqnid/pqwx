@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <iterator>
+#include "libpq-fe.h"
 #include "wx/string.h"
 #include "wx/log.h"
 #include "wx/stopwatch.h"
@@ -56,8 +57,8 @@ public:
    */
   class Document {
   public:
-    Document(long entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system) {}
-    long entityId;
+    Document(Oid entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system) {}
+    Oid entityId;
     Type entityType;
     wxString symbol;
     wxString disambig;

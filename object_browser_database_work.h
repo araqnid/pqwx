@@ -373,11 +373,11 @@ protected:
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-      long entityId;
+      Oid entityId;
       wxString typeString;
       wxString symbol;
       wxString disambig;
-      entityId = (*iter).ReadInt8(0);
+      entityId = (*iter).ReadOid(0);
       typeString = (*iter).ReadText(1);
       symbol = (*iter).ReadText(2);
       disambig = (*iter).ReadText(3);

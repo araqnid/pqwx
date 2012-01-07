@@ -12,6 +12,7 @@
 #include "pqwx_frame.h"
 #include "connect_dialogue.h"
 #include "object_finder.h"
+#include "static_resources.h"
 
 extern void InitXmlResource(void);
 extern void InitStaticResources(void);
@@ -26,8 +27,7 @@ bool PQWXApp::OnInit()
   InitXmlResource();
   wxXmlResource::Get()->InitAllHandlers();
 
-  InitStaticResources();
-  wxImage::AddHandler(new wxPNGHandler());
+  StaticResources::Init();
 
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);

@@ -18,6 +18,7 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 #include "dependencies_view.h"
+#include "static_resources.h"
 
 inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work) {
   ConnectAndAddWork(server->GetServerAdminConnection(), work);
@@ -155,17 +156,6 @@ private:
   std::vector<SchemaMemberModel*> division;
 };
 
-static wxImage LoadVFSImage(const wxString &vfilename) {
-  wxFileSystem fs;
-  wxFSFile *fsfile = fs.OpenFile(vfilename);
-  wxASSERT_MSG(fsfile != NULL, vfilename);
-  wxImage im;
-  wxInputStream *stream = fsfile->GetStream();
-  im.LoadFile(*stream, fsfile->GetMimeType());
-  delete fsfile;
-  return im;
-}
-
 ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
@@ -175,16 +165,16 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
-  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_aggregate.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
-  images->Add(LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_aggregate.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
   AssignImageList(images);
   currentlySelected = false;
 }

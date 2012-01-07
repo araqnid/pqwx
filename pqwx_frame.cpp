@@ -21,6 +21,7 @@
 #include "results_notebook.h"
 #include "script_events.h"
 #include "script_editor_pane.h"
+#include "static_resources.h"
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptDisconnect)
@@ -55,27 +56,6 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   PQWX_SCRIPT_NEW(wxID_ANY, PqwxFrame::OnScriptNew)
 END_EVENT_TABLE()
 
-const int TOOLBAR_MAIN = 500;
-
-#ifndef __WXMSW__
-static wxImage LoadVFSImage(const wxString &vfilename) {
-  wxFileSystem fs;
-  wxFSFile *fsfile = fs.OpenFile(vfilename);
-  wxASSERT_MSG(fsfile != NULL, vfilename);
-  wxImage im;
-  wxInputStream *stream = fsfile->GetStream();
-  im.LoadFile(*stream, fsfile->GetMimeType());
-  delete fsfile;
-  return im;
-}
-
-static wxIcon LoadVFSIcon(const wxString &vfilename) {
-  wxIcon icon;
-  icon.CopyFromBitmap(LoadVFSImage(vfilename));
-  return icon;
-}
-#endif
-
 PqwxFrame::PqwxFrame(const wxString& title)
   : wxFrame(NULL, wxID_ANY, title), titlePrefix(title), currentEditor(NULL), haveCurrentServer(false)
 {
@@ -83,10 +63,10 @@ PqwxFrame::PqwxFrame(const wxString& title)
   SetIcon(wxIcon(_T("Pqwx_appicon")));
 #else
   wxIconBundle icons;
-  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-64.png")));
-  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-48.png")));
-  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-32.png")));
-  icons.AddIcon(LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-16.png")));
+  icons.AddIcon(StaticResources::LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-64.png")));
+  icons.AddIcon(StaticResources::LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-48.png")));
+  icons.AddIcon(StaticResources::LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-32.png")));
+  icons.AddIcon(StaticResources::LoadVFSIcon(_T("memory:PqwxFrame/pqwx-appicon-16.png")));
   SetIcons(icons);
 #endif
 

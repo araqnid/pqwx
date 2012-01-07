@@ -5,9 +5,9 @@ use strict;
 use utf8;
 use warnings;
 use Getopt::Std;
-use vars qw($opt_o $opt_d $opt_p $opt_f);
+use vars qw($opt_o $opt_d $opt_p $opt_f $opt_h);
 
-getopts('d:o:p:f:') && @ARGV > 0 or die "Syntax: $0 [-p image-path] [-o output-file [-d deps-file]] resources.yml...\n";
+getopts('d:o:p:f:h:') && @ARGV > 0 or die "Syntax: $0 [-p image-path] [-o output-file [-d deps-file]] [-h header-file] resources.yml...\n";
 
 my $data_generated = '';
 my $initialisation_generated = '';
@@ -71,8 +71,16 @@ if ($opt_o) {
   open STDOUT, ">", $opt_o or die "Unable to write $opt_o: $!\n";
 }
 
+my $header_generated = '';
+if ($opt_h) {
+  $header_generated .= <<EOF;
+#include "$opt_h"
+EOF
+}
+
 while (<DATA>) {
   s{_FUNCTION}{$function_name};
+  s{/\*\*header\*\*/}{$header_generated};
   s{/\*\*data\*\*/}{$data_generated};
   s{/\*\*initialisation\*\*/}{$initialisation_generated};
   print;
@@ -86,6 +94,8 @@ if ($opt_o && $opt_d) {
 __DATA__
 #include <wx/filesys.h>
 #include <wx/fs_mem.h>
+
+/**header**/
 
 /**data**/
 

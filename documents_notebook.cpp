@@ -103,6 +103,26 @@ bool DocumentsNotebook::ConfirmCloseAll()
   return true;
 }
 
+void DocumentsNotebook::Dispose()
+{
+  wxLogDebug(_T("Disposing of documents notebook- sending disconnection requests"));
+
+  for (std::vector<ScriptEditorPane*>::iterator iter = editors.begin(); iter != editors.end(); iter++) {
+    (*iter)->BeginDisconnect();
+  }
+
+  wxLogDebug(_T("Disposing of documents notebook- waiting for database connections to terminate"));
+
+  for (std::vector<ScriptEditorPane*>::iterator iter = editors.begin(); iter != editors.end(); iter++) {
+    (*iter)->Dispose();
+  }
+
+  wxLogDebug(_T("Disposing of documents notebook- removing pages"));
+
+  DeleteAllPages();
+  editors.clear();
+}
+
 bool DocumentsNotebook::DoSave(ScriptEditorPane *editor)
 {
   if (!editor->IsModified()) return true;

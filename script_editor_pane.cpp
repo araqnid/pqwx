@@ -144,6 +144,13 @@ void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseCo
   UpdateStateInUI();
 }
 
+void ScriptEditorPane::BeginDisconnect()
+{
+  if (db == NULL) return;
+  wxASSERT(execution == NULL); // must not be executing
+  db->BeginDisconnection();
+}
+
 void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
 {
   wxASSERT(execution == NULL); // must not be executing
@@ -153,6 +160,20 @@ void ScriptEditorPane::OnDisconnect(wxCommandEvent &event)
   db = NULL;
   ShowDisconnectedStatus();
   UpdateStateInUI(); // refresh title etc
+}
+
+void ScriptEditorPane::Dispose()
+{
+  if (execution != NULL) {
+    // well, this isn't handled...
+    delete execution;
+    execution = NULL;
+  }
+  if (db != NULL) {
+    db->Dispose();
+    delete db;
+    db = NULL;
+  }
 }
 
 void ScriptEditorPane::OnReconnect(wxCommandEvent &event)

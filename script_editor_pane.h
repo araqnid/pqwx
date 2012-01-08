@@ -49,6 +49,11 @@ public:
     }
   }
 
+  /**
+   * Disconnect and dispose of resources.
+   */
+  void Dispose();
+
   void OnDisconnect(wxCommandEvent &event);
   void OnReconnect(wxCommandEvent &event);
   void OnExecute(wxCommandEvent &event);
@@ -89,6 +94,10 @@ public:
    * Register an existing database connection.
    */
   void SetConnection(const ServerConnection &server, DatabaseConnection *db);
+  /**
+   * Initiate disconnection.
+   */
+  void BeginDisconnect();
   /**
    * @return true if this editor has a connection
    */

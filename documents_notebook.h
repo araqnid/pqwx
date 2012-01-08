@@ -35,6 +35,14 @@ public:
    * Create notebook
    */
   DocumentsNotebook(wxWindow *parent, wxWindowID id) : wxNotebook(parent, id) { }
+
+  ~DocumentsNotebook() { Dispose(); }
+
+  /**
+   * Close all scripts and dispose of their resources.
+   */
+  void Dispose();
+
   /**
    * Open a new editor.
    */
@@ -59,8 +67,6 @@ public:
    */
   bool ConfirmCloseAll();
 
-  void OnScriptStateUpdated(PQWXDatabaseEvent&);
-  void OnNotebookPageChanged(wxNotebookEvent&);
 private:
   std::vector<ScriptEditorPane*> editors;
   unsigned FindPage(ScriptEditorPane*) const;
@@ -71,6 +77,9 @@ private:
     wxASSERT(n <= editors.size());
     return editors[n];
   }
+
+  void OnScriptStateUpdated(PQWXDatabaseEvent&);
+  void OnNotebookPageChanged(wxNotebookEvent&);
 
   bool DoSave(ScriptEditorPane *editor);
   bool DoSaveAs(ScriptEditorPane *editor);

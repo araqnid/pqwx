@@ -74,10 +74,6 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
   SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("mainmenu")));
 
-  CreateStatusBar(StatusBar_Fields);
-  const int StatusBar_Widths[] = { -1 };
-  SetStatusWidths(sizeof(StatusBar_Widths)/sizeof(int), StatusBar_Widths);
-
   wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
 
   objectBrowser = new ObjectBrowser(mainSplitter, Pqwx_ObjectBrowser);

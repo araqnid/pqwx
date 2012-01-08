@@ -98,9 +98,6 @@ private:
 
   friend class AddConnectionToObjectBrowser;
 
-  static const int StatusBar_Message = 0;
-  static const int StatusBar_Fields = 1;
-
   DECLARE_EVENT_TABLE();
 };
 

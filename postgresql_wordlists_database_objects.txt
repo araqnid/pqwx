@@ -4,6 +4,7 @@ bit
 boolean
 bpchar
 bytea
+char
 character
 double
 gin

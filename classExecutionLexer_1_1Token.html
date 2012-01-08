@@ -119,13 +119,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 Public Types</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">Type</a> { <a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281a02b6ea5756ed94c9ec6bd81e21dc4462">SQL</a>, 
 <a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281a8431e6bdf09816487b526dbf0335797b">PSQL</a>, 
+<a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281a791d1c0d76c3fcd805a1987583a12fce">COPY_DATA</a>, 
 <a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281ad3cdcce096b5bcfcf8a220cb81a07200">END</a>
  }</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Lexer token type.  <a href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab582d7506cf81cb7e1bf1c6ac4284207"></a><!-- doxytag: member="ExecutionLexer::Token::Token" ref="ab582d7506cf81cb7e1bf1c6ac4284207" args="(Type type, unsigned offset, unsigned length)" -->
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#ab582d7506cf81cb7e1bf1c6ac4284207">Token</a> (<a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">Type</a> type, unsigned <a class="el" href="classExecutionLexer_1_1Token.html#afb5949e1f9981cec2b60cdf638678b45">offset</a>, unsigned length)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#ab582d7506cf81cb7e1bf1c6ac4284207">Token</a> (<a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">Type</a> type, unsigned <a class="el" href="classExecutionLexer_1_1Token.html#ab153bcaf55c5433853514a0c71e6d6ef">offset</a>, unsigned length)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create token with given type and extent. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afabc9eaa5a6c0c0d1fafbcd4f09c519f"></a><!-- doxytag: member="ExecutionLexer::Token::Token" ref="afabc9eaa5a6c0c0d1fafbcd4f09c519f" args="(Type type)" -->
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#afabc9eaa5a6c0c0d1fafbcd4f09c519f">Token</a> (<a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">Type</a> type)</td></tr>
@@ -134,11 +135,11 @@ Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94118d00d44cae8c1b97f2c8542f9be0"></a><!-- doxytag: member="ExecutionLexer::Token::type" ref="a94118d00d44cae8c1b97f2c8542f9be0" args="" -->
 enum <a class="el" href="classExecutionLexer_1_1Token.html#a3b57d3b6ccba06e6a17c9afc85cab281">ExecutionLexer::Token::Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb5949e1f9981cec2b60cdf638678b45"></a><!-- doxytag: member="ExecutionLexer::Token::offset" ref="afb5949e1f9981cec2b60cdf638678b45" args="" -->
-const unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#afb5949e1f9981cec2b60cdf638678b45">offset</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab153bcaf55c5433853514a0c71e6d6ef"></a><!-- doxytag: member="ExecutionLexer::Token::offset" ref="ab153bcaf55c5433853514a0c71e6d6ef" args="" -->
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classExecutionLexer_1_1Token.html#ab153bcaf55c5433853514a0c71e6d6ef">offset</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Offset and length of the token within the lexer's input buffer. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24f91279546cd6d962d5ec0a54d7dedf"></a><!-- doxytag: member="ExecutionLexer::Token::length" ref="a24f91279546cd6d962d5ec0a54d7dedf" args="" -->
-const unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a181ae8ad4c1fd2405f498575c280185b"></a><!-- doxytag: member="ExecutionLexer::Token::length" ref="a181ae8ad4c1fd2405f498575c280185b" args="" -->
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>A unit returned by the lexer. </p>
@@ -161,6 +162,9 @@ const unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>length</b><
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="a3b57d3b6ccba06e6a17c9afc85cab281a8431e6bdf09816487b526dbf0335797b"></a><!-- doxytag: member="PSQL" ref="a3b57d3b6ccba06e6a17c9afc85cab281a8431e6bdf09816487b526dbf0335797b" args="" -->PSQL</em>&nbsp;</td><td>
 <p>A psql directive. </p>
+</td></tr>
+<tr><td valign="top"><em><a class="anchor" id="a3b57d3b6ccba06e6a17c9afc85cab281a791d1c0d76c3fcd805a1987583a12fce"></a><!-- doxytag: member="COPY_DATA" ref="a3b57d3b6ccba06e6a17c9afc85cab281a791d1c0d76c3fcd805a1987583a12fce" args="" -->COPY_DATA</em>&nbsp;</td><td>
+<p>Data for COPY command. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="a3b57d3b6ccba06e6a17c9afc85cab281ad3cdcce096b5bcfcf8a220cb81a07200"></a><!-- doxytag: member="END" ref="a3b57d3b6ccba06e6a17c9afc85cab281ad3cdcce096b5bcfcf8a220cb81a07200" args="" -->END</em>&nbsp;</td><td>
 <p>End of input. </p>
@@ -192,7 +196,7 @@ const unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>length</b><
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:40 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:12 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

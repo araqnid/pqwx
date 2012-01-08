@@ -107,6 +107,7 @@ Inheritance diagram for ScriptEditorPane:</div>
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>ChangeScriptConnection</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>Execution</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>SetupNoticeProcessorWork</b></td></tr>
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -155,6 +156,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#a88ba009685af4b6034f660e5b0cc6a8e">IsExecuting</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classServerConnection.html">ServerConnection</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#a0abb5ee5f0070e83a47e1333f1006b8a">GetServer</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">wxString&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#a3c9b0bdc64ceef544d51688c8b875e5c">GetDatabase</a> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="database__event__type_8h.html#a84a3a4e3bb8a5107385627186dcd69cf">DatabaseConnectionState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#ac895adad95f827dc79351ec7082e713f">GetConnectionState</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#aec1b3966487a759098e8fc44058340ab">IsModified</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#a5f4630348742714e1e1d03c8e4b42e0e">MarkModified</a> (bool value)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark editor content as modified.  <a href="#a5f4630348742714e1e1d03c8e4b42e0e"></a><br/></td></tr>
@@ -207,6 +209,23 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td
 <dl class="return"><dt><b>Returns:</b></dt><dd>formatted editor title, with database identification and is-modified flag </dd></dl>
 
 <p>Implements <a class="el" href="classConnectableEditor.html">ConnectableEditor</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ac895adad95f827dc79351ec7082e713f"></a><!-- doxytag: member="ScriptEditorPane::GetConnectionState" ref="ac895adad95f827dc79351ec7082e713f" args="() const " -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="database__event__type_8h.html#a84a3a4e3bb8a5107385627186dcd69cf">DatabaseConnectionState</a> <a class="el" href="classScriptEditorPane.html#ac895adad95f827dc79351ec7082e713f">ScriptEditorPane::GetConnectionState</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const<code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<dl class="return"><dt><b>Returns:</b></dt><dd>current state of database connection </dd></dl>
 
 </div>
 </div>
@@ -326,12 +345,14 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td
           <td class="memname">bool <a class="el" href="classScriptEditorPane.html#a88ba009685af4b6034f660e5b0cc6a8e">ScriptEditorPane::IsExecuting</a> </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const<code> [inline]</code></td>
+          <td> const<code> [inline, virtual]</code></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 <dl class="return"><dt><b>Returns:</b></dt><dd>true if the script is currently being executed </dd></dl>
+
+<p>Implements <a class="el" href="classConnectableEditor.html">ConnectableEditor</a>.</p>
 
 </div>
 </div>
@@ -343,12 +364,14 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td
           <td class="memname">bool <a class="el" href="classScriptEditorPane.html#aec1b3966487a759098e8fc44058340ab">ScriptEditorPane::IsModified</a> </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const<code> [inline]</code></td>
+          <td> const<code> [inline, virtual]</code></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 <dl class="return"><dt><b>Returns:</b></dt><dd>true if editor content modified </dd></dl>
+
+<p>Implements <a class="el" href="classConnectableEditor.html">ConnectableEditor</a>.</p>
 
 </div>
 </div>
@@ -399,7 +422,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:45 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:18 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

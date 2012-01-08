@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['addconnectiontoobjectbrowser',['AddConnectionToObjectBrowser',['../classPqwxFrame_1_1AddConnectionToObjectBrowser.html',1,'PqwxFrame']]],
   ['adddocument',['AddDocument',['../classCatalogueIndex.html#add1114ab82883c774da62570aa45f057',1,'CatalogueIndex']]],
   ['addserverconnection',['AddServerConnection',['../classObjectBrowser.html#a1be3ad5334dfbabede008cc9c4ec57a9',1,'ObjectBrowser']]],
   ['addsql',['AddSql',['../classVersionedSql.html#a4eac569df895044610c51fa7841da5d5',1,'VersionedSql::AddSql(const wxString &amp;name, const char *sql, int majorVersion, int minorVersion)'],['../classVersionedSql.html#adcd290bd70b01e7f5bbcfc3b8fd7d900',1,'VersionedSql::AddSql(const wxString &amp;name, const char *sql)']]],

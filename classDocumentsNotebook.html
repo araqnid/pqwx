@@ -104,12 +104,14 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a64207654744ba1b219eb4ebcf368b81a"></a><!-- doxytag: member="DocumentsNotebook::DoClose" ref="a64207654744ba1b219eb4ebcf368b81a" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#a64207654744ba1b219eb4ebcf368b81a">DoClose</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the current editor. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac8c45aaf055b3d6f05215aa4a29dac00"></a><!-- doxytag: member="DocumentsNotebook::DoSave" ref="ac8c45aaf055b3d6f05215aa4a29dac00" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#ac8c45aaf055b3d6f05215aa4a29dac00">DoSave</a> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a230b8add7d8df16c6da03b4be3a45cd5"></a><!-- doxytag: member="DocumentsNotebook::DoSave" ref="a230b8add7d8df16c6da03b4be3a45cd5" args="()" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#a230b8add7d8df16c6da03b4be3a45cd5">DoSave</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Save the content of the current editor, if it is modified. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a527bfbbd3dd614683962bc5a3023d1b4"></a><!-- doxytag: member="DocumentsNotebook::DoSaveAs" ref="a527bfbbd3dd614683962bc5a3023d1b4" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#a527bfbbd3dd614683962bc5a3023d1b4">DoSaveAs</a> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa53862a00c231ecf99891229e2d62a95"></a><!-- doxytag: member="DocumentsNotebook::DoSaveAs" ref="aa53862a00c231ecf99891229e2d62a95" args="()" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#aa53862a00c231ecf99891229e2d62a95">DoSaveAs</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Save the content of the current editor to some new filename. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDocumentsNotebook.html#acf2cc4060fccdca25bb30a186145a8f1">ConfirmCloseAll</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for unmodified scripts and confirm closing with the user.  <a href="#acf2cc4060fccdca25bb30a186145a8f1"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af19c8d3400e394d2b697c3ddde5fcc6a"></a><!-- doxytag: member="DocumentsNotebook::OnScriptStateUpdated" ref="af19c8d3400e394d2b697c3ddde5fcc6a" args="(PQWXDatabaseEvent &amp;)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>OnScriptStateUpdated</b> (<a class="el" href="classPQWXDatabaseEvent.html">PQWXDatabaseEvent</a> &amp;)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89d98e0fad8ac9c95ce9c76b34520905"></a><!-- doxytag: member="DocumentsNotebook::OnNotebookPageChanged" ref="a89d98e0fad8ac9c95ce9c76b34520905" args="(wxNotebookEvent &amp;)" -->
@@ -117,7 +119,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>OnNotebookPageChanged
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>A notebook containing an editor in each tab. </p>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="acf2cc4060fccdca25bb30a186145a8f1"></a><!-- doxytag: member="DocumentsNotebook::ConfirmCloseAll" ref="acf2cc4060fccdca25bb30a186145a8f1" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classDocumentsNotebook.html#acf2cc4060fccdca25bb30a186145a8f1">DocumentsNotebook::ConfirmCloseAll</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Check for unmodified scripts and confirm closing with the user. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>true if closing is ok </dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="documents__notebook_8h_source.html">documents_notebook.h</a></li>
 <li>documents_notebook.cpp</li>
 </ul>
@@ -139,7 +161,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>OnNotebookPageChanged
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:40 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:12 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

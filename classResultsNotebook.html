@@ -106,12 +106,21 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae76565df62ad07b138df1e4e5aa6a055"></a><!-- doxytag: member="ResultsNotebook::ScriptResultSet" ref="ae76565df62ad07b138df1e4e5aa6a055" args="(const wxString &amp;statusTag, const QueryResults &amp;data)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#ae76565df62ad07b138df1e4e5aa6a055">ScriptResultSet</a> (const wxString &amp;statusTag, const <a class="el" href="classQueryResults.html">QueryResults</a> &amp;data)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a result set. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a978e70235e212092839bac365a8db22c"></a><!-- doxytag: member="ResultsNotebook::ScriptError" ref="a978e70235e212092839bac365a8db22c" args="(const PgError &amp;error)" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a978e70235e212092839bac365a8db22c">ScriptError</a> (const <a class="el" href="classPgError.html">PgError</a> &amp;error)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an error. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a068d47f5200f2abbb4950428634e2df1"></a><!-- doxytag: member="ResultsNotebook::ScriptNotice" ref="a068d47f5200f2abbb4950428634e2df1" args="(const PgError &amp;notice)" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a068d47f5200f2abbb4950428634e2df1">ScriptNotice</a> (const <a class="el" href="classPgError.html">PgError</a> &amp;notice)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a notice message. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e04210b51b3958450a4fe49a379c901"></a><!-- doxytag: member="ResultsNotebook::ScriptError" ref="a1e04210b51b3958450a4fe49a379c901" args="(const PgError &amp;error, const wxString &amp;query)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a1e04210b51b3958450a4fe49a379c901">ScriptError</a> (const <a class="el" href="classPgError.html">PgError</a> &amp;error, const wxString &amp;query)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a server error. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae782b5c4dd7e0082c6ceb2d2557f52cd"></a><!-- doxytag: member="ResultsNotebook::ScriptInternalError" ref="ae782b5c4dd7e0082c6ceb2d2557f52cd" args="(const wxString &amp;error, const wxString &amp;query)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#ae782b5c4dd7e0082c6ceb2d2557f52cd">ScriptInternalError</a> (const wxString &amp;error, const wxString &amp;query)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an internal error. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f01591552ea86d7f1239974a586342b"></a><!-- doxytag: member="ResultsNotebook::ScriptEcho" ref="a5f01591552ea86d7f1239974a586342b" args="(const wxString &amp;message)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a5f01591552ea86d7f1239974a586342b">ScriptEcho</a> (const wxString &amp;message)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a message output by a script using the echo command. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8475c9d47a0ac06c2e40a62efd11d29e"></a><!-- doxytag: member="ResultsNotebook::ScriptQueryNotice" ref="a8475c9d47a0ac06c2e40a62efd11d29e" args="(const PgError &amp;notice, const wxString &amp;query)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a8475c9d47a0ac06c2e40a62efd11d29e">ScriptQueryNotice</a> (const <a class="el" href="classPgError.html">PgError</a> &amp;notice, const wxString &amp;query)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a notice message that occurred while executing a query. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e3973c70f1190c7bbf3eaf1f4e98829"></a><!-- doxytag: member="ResultsNotebook::ScriptAsynchronousNotice" ref="a0e3973c70f1190c7bbf3eaf1f4e98829" args="(const PgError &amp;notice)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classResultsNotebook.html#a0e3973c70f1190c7bbf3eaf1f4e98829">ScriptAsynchronousNotice</a> (const <a class="el" href="classPgError.html">PgError</a> &amp;notice)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a notice message that occurred asynchronously. <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Notebook widget containing messages and result grids from a script execution. </p>
@@ -157,7 +166,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:45 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:17 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

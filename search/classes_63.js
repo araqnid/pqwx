@@ -6,6 +6,5 @@ var searchData=
   ['completioncallback',['CompletionCallback',['../classConnectDialogue_1_1CompletionCallback.html',1,'ConnectDialogue']]],
   ['connectableeditor',['ConnectableEditor',['../classConnectableEditor.html',1,'']]],
   ['connectdialogue',['ConnectDialogue',['../classConnectDialogue.html',1,'']]],
-  ['connectioncallback',['ConnectionCallback',['../classConnectionCallback.html',1,'']]],
-  ['connectionwork',['ConnectionWork',['../classConnectionWork.html',1,'']]]
+  ['connectioncallback',['ConnectionCallback',['../classConnectionCallback.html',1,'']]]
 ];

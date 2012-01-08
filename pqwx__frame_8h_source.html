@@ -96,67 +96,80 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00020"></a>00020 <span class="keyword">public</span>:
 <a name="l00024"></a>00024   <a class="code" href="classPqwxFrame.html#a97af8257ca0d2e15dfc0674a08ea435a" title="Create frame, specifying initial title.">PqwxFrame</a>(<span class="keyword">const</span> wxString&amp; title);
 <a name="l00025"></a>00025 
-<a name="l00026"></a>00026   <span class="keywordtype">void</span> OnQuit(wxCommandEvent&amp; event);
-<a name="l00027"></a>00027   <span class="keywordtype">void</span> OnAbout(wxCommandEvent&amp; event);
-<a name="l00028"></a>00028 
-<a name="l00029"></a>00029   <span class="keywordtype">void</span> OnConnectObjectBrowser(wxCommandEvent&amp; event);
-<a name="l00030"></a>00030   <span class="keywordtype">void</span> OnDisconnectObjectBrowser(wxCommandEvent&amp; event);
-<a name="l00031"></a>00031   <span class="keywordtype">void</span> OnFindObject(wxCommandEvent&amp; event);
-<a name="l00032"></a>00032   <span class="keywordtype">void</span> OnExecuteScript(wxCommandEvent&amp; event);
-<a name="l00033"></a>00033   <span class="keywordtype">void</span> OnDisconnectScript(wxCommandEvent&amp; event);
-<a name="l00034"></a>00034   <span class="keywordtype">void</span> OnReconnectScript(wxCommandEvent&amp; event);
-<a name="l00035"></a>00035   <span class="keywordtype">void</span> OnNewScript(wxCommandEvent&amp; event);
-<a name="l00036"></a>00036   <span class="keywordtype">void</span> OnOpenScript(wxCommandEvent&amp; event);
-<a name="l00037"></a>00037   <span class="keywordtype">void</span> OnCloseScript(wxCommandEvent&amp; event);
-<a name="l00038"></a>00038   <span class="keywordtype">void</span> OnSaveScript(wxCommandEvent&amp; event);
-<a name="l00039"></a>00039   <span class="keywordtype">void</span> OnSaveScriptAs(wxCommandEvent&amp; event);
-<a name="l00040"></a>00040   <span class="keywordtype">void</span> OnScriptToWindow(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
-<a name="l00041"></a>00041   <span class="keywordtype">void</span> OnDocumentSelected(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
-<a name="l00042"></a>00042   <span class="keywordtype">void</span> OnObjectSelected(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
-<a name="l00043"></a>00043   <span class="keywordtype">void</span> OnScriptNew(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
-<a name="l00044"></a>00044 
-<a name="l00045"></a>00045   <span class="keywordtype">void</span> OnCloseFrame(wxCloseEvent&amp; event);
-<a name="l00046"></a>00046 
-<a name="l00050"></a><a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html">00050</a>   <span class="keyword">class </span><a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html" title="Connection callback to add a connection to the object browser once it is established.">AddConnectionToObjectBrowser</a> : <span class="keyword">public</span> <a class="code" href="classConnectDialogue.html" title="Dialogue box to initiate a database connection.">ConnectDialogue</a>::CompletionCallback {
-<a name="l00051"></a>00051   <span class="keyword">public</span>:
-<a name="l00052"></a>00052     <a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html" title="Connection callback to add a connection to the object browser once it is established.">AddConnectionToObjectBrowser</a>(<a class="code" href="classPqwxFrame.html" title="PQWX application frame.">PqwxFrame</a> *owner) : owner(owner) {}
-<a name="l00053"></a><a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html#afa3928fa9e12a1da8132d4522fc51378">00053</a>     <span class="keywordtype">void</span> <a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html#afa3928fa9e12a1da8132d4522fc51378" title="Connection established.">Connected</a>(<span class="keyword">const</span> <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> &amp;server, <a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db) {
-<a name="l00054"></a>00054       owner-&gt;objectBrowser-&gt;<a class="code" href="classObjectBrowser.html#a1be3ad5334dfbabede008cc9c4ec57a9" title="Register a new server connection with the object browser.">AddServerConnection</a>(server, db);
-<a name="l00055"></a>00055     }
-<a name="l00056"></a><a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html#a7cdd4c4a31fe8e35764f57a5e2132199">00056</a>     <span class="keywordtype">void</span> <a class="code" href="classPqwxFrame_1_1AddConnectionToObjectBrowser.html#a7cdd4c4a31fe8e35764f57a5e2132199" title="Connection cancelled.">Cancelled</a>() {
-<a name="l00057"></a>00057     }
-<a name="l00058"></a>00058   <span class="keyword">private</span>:
-<a name="l00059"></a>00059     <a class="code" href="classPqwxFrame.html" title="PQWX application frame.">PqwxFrame</a> *<span class="keyword">const</span> owner;
-<a name="l00060"></a>00060   };
-<a name="l00061"></a>00061 
-<a name="l00062"></a>00062 <span class="keyword">private</span>:
-<a name="l00063"></a>00063   <a class="code" href="classObjectBrowser.html" title="The object browser tree control.">ObjectBrowser</a> *objectBrowser;
-<a name="l00064"></a>00064   <a class="code" href="classDocumentsNotebook.html" title="A notebook containing an editor in each tab.">DocumentsNotebook</a> *documentsBook;
-<a name="l00065"></a>00065   <a class="code" href="classConnectableEditor.html" title="Interface implemented by editors within the notebook.">ConnectableEditor</a> *currentEditor;
-<a name="l00066"></a>00066   wxEvtHandler *currentEditorTarget;
-<a name="l00067"></a>00067 
-<a name="l00068"></a>00068   <span class="keywordtype">bool</span> haveCurrentServer;
-<a name="l00069"></a>00069   <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> currentServer;
-<a name="l00070"></a>00070   wxString currentDatabase;
-<a name="l00071"></a>00071 
-<a name="l00072"></a>00072   wxStopWatch scriptExecutionStopwatch;
-<a name="l00073"></a>00073 
-<a name="l00074"></a>00074   <span class="keywordtype">void</span> SaveFrameGeometry() <span class="keyword">const</span>;
-<a name="l00075"></a>00075   <span class="keywordtype">void</span> LoadFrameGeometry();
-<a name="l00076"></a>00076 
-<a name="l00077"></a>00077   <span class="keyword">friend</span> <span class="keyword">class </span>AddConnectionToObjectBrowser;
-<a name="l00078"></a>00078 
-<a name="l00079"></a>00079   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> StatusBar_Message = 0;
-<a name="l00080"></a>00080   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> StatusBar_Fields = 1;
-<a name="l00081"></a>00081 
-<a name="l00082"></a>00082   DECLARE_EVENT_TABLE();
-<a name="l00083"></a>00083 };
-<a name="l00084"></a>00084 
-<a name="l00085"></a>00085 <span class="preprocessor">#endif</span>
-<a name="l00086"></a>00086 <span class="preprocessor"></span>
-<a name="l00087"></a>00087 <span class="comment">// Local Variables:</span>
-<a name="l00088"></a>00088 <span class="comment">// mode: c++</span>
-<a name="l00089"></a>00089 <span class="comment">// End:</span>
+<a name="l00029"></a><a class="code" href="classPqwxFrame.html#aa5f1dd5b7fb79f8f85f03f86f97ec296">00029</a>   <a class="code" href="classObjectBrowser.html" title="The object browser tree control.">ObjectBrowser</a> *<a class="code" href="classPqwxFrame.html#aa5f1dd5b7fb79f8f85f03f86f97ec296">GetObjectBrowser</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> objectBrowser; }
+<a name="l00030"></a>00030 
+<a name="l00034"></a>00034   <span class="keywordtype">void</span> <a class="code" href="classPqwxFrame.html#aba3c7a09defbb5906bfcc2cf05d64342" title="Open script and connect it to the given database.">OpenScript</a>(<span class="keyword">const</span> wxString &amp;filename, <span class="keyword">const</span> <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> &amp;server, <span class="keyword">const</span> wxString &amp;database);
+<a name="l00035"></a>00035 
+<a name="l00036"></a>00036 <span class="keyword">private</span>:
+<a name="l00040"></a>00040   <span class="keyword">class </span>AddConnectionToObjectBrowser : <span class="keyword">public</span> <a class="code" href="classConnectDialogue.html" title="Dialogue box to initiate a database connection.">ConnectDialogue</a>::CompletionCallback {
+<a name="l00041"></a>00041   <span class="keyword">public</span>:
+<a name="l00042"></a>00042     AddConnectionToObjectBrowser(<a class="code" href="classPqwxFrame.html" title="PQWX application frame.">PqwxFrame</a> *owner) : owner(owner) {}
+<a name="l00043"></a>00043     <span class="keywordtype">void</span> Connected(<span class="keyword">const</span> <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> &amp;server, <a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db) {
+<a name="l00044"></a>00044       owner-&gt;objectBrowser-&gt;<a class="code" href="classObjectBrowser.html#a1be3ad5334dfbabede008cc9c4ec57a9" title="Register a new server connection with the object browser.">AddServerConnection</a>(server, db);
+<a name="l00045"></a>00045     }
+<a name="l00046"></a>00046     <span class="keywordtype">void</span> Cancelled() {
+<a name="l00047"></a>00047     }
+<a name="l00048"></a>00048   <span class="keyword">private</span>:
+<a name="l00049"></a>00049     <a class="code" href="classPqwxFrame.html" title="PQWX application frame.">PqwxFrame</a> *<span class="keyword">const</span> owner;
+<a name="l00050"></a>00050   };
+<a name="l00051"></a>00051 
+<a name="l00052"></a>00052   wxString titlePrefix;
+<a name="l00053"></a>00053 
+<a name="l00054"></a>00054   <a class="code" href="classObjectBrowser.html" title="The object browser tree control.">ObjectBrowser</a> *objectBrowser;
+<a name="l00055"></a>00055   <a class="code" href="classDocumentsNotebook.html" title="A notebook containing an editor in each tab.">DocumentsNotebook</a> *documentsBook;
+<a name="l00056"></a>00056 
+<a name="l00057"></a>00057   <span class="keywordtype">void</span> OnQuit(wxCommandEvent&amp; event);
+<a name="l00058"></a>00058   <span class="keywordtype">void</span> OnAbout(wxCommandEvent&amp; event);
+<a name="l00059"></a>00059 
+<a name="l00060"></a>00060   <span class="keywordtype">void</span> OnConnectObjectBrowser(wxCommandEvent&amp; event);
+<a name="l00061"></a>00061   <span class="keywordtype">void</span> OnDisconnectObjectBrowser(wxCommandEvent&amp; event);
+<a name="l00062"></a>00062   <span class="keywordtype">void</span> OnFindObject(wxCommandEvent&amp; event);
+<a name="l00063"></a>00063   <span class="keywordtype">void</span> OnExecuteScript(wxCommandEvent&amp; event);
+<a name="l00064"></a>00064   <span class="keywordtype">void</span> OnDisconnectScript(wxCommandEvent&amp; event);
+<a name="l00065"></a>00065   <span class="keywordtype">void</span> OnReconnectScript(wxCommandEvent&amp; event);
+<a name="l00066"></a>00066   <span class="keywordtype">void</span> OnNewScript(wxCommandEvent&amp; event);
+<a name="l00067"></a>00067   <span class="keywordtype">void</span> OnOpenScript(wxCommandEvent&amp; event);
+<a name="l00068"></a>00068   <span class="keywordtype">void</span> OnCloseScript(wxCommandEvent&amp; event);
+<a name="l00069"></a>00069   <span class="keywordtype">void</span> OnSaveScript(wxCommandEvent&amp; event);
+<a name="l00070"></a>00070   <span class="keywordtype">void</span> OnSaveScriptAs(wxCommandEvent&amp; event);
+<a name="l00071"></a>00071   <span class="keywordtype">void</span> OnScriptToWindow(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
+<a name="l00072"></a>00072   <span class="keywordtype">void</span> OnDocumentSelected(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
+<a name="l00073"></a>00073   <span class="keywordtype">void</span> OnNoDocumentSelected(wxCommandEvent&amp; event);
+<a name="l00074"></a>00074   <span class="keywordtype">void</span> OnObjectSelected(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
+<a name="l00075"></a>00075   <span class="keywordtype">void</span> OnNoObjectSelected(wxCommandEvent&amp; event);
+<a name="l00076"></a>00076   <span class="keywordtype">void</span> OnScriptNew(<a class="code" href="classPQWXDatabaseEvent.html" title="A &quot;database event&quot; is a notification event with the context of a database connection and state...">PQWXDatabaseEvent</a>&amp; event);
+<a name="l00077"></a>00077 
+<a name="l00078"></a>00078   <span class="keywordtype">void</span> OnCloseFrame(wxCloseEvent&amp; event);
+<a name="l00079"></a>00079 
+<a name="l00080"></a>00080   <span class="keywordtype">void</span> EnableIffHaveObjectBrowserDatabase(wxUpdateUIEvent&amp; event);
+<a name="l00081"></a>00081   <span class="keywordtype">void</span> EnableIffHaveObjectBrowserServer(wxUpdateUIEvent&amp; event);
+<a name="l00082"></a>00082   <span class="keywordtype">void</span> EnableIffScriptOpen(wxUpdateUIEvent&amp; event);
+<a name="l00083"></a>00083   <span class="keywordtype">void</span> EnableIffScriptConnected(wxUpdateUIEvent&amp; event);
+<a name="l00084"></a>00084   <span class="keywordtype">void</span> EnableIffScriptIdle(wxUpdateUIEvent&amp; event);
+<a name="l00085"></a>00085   <span class="keywordtype">void</span> EnableIffScriptModified(wxUpdateUIEvent&amp; event);
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087   <a class="code" href="classConnectableEditor.html" title="Interface implemented by editors within the notebook.">ConnectableEditor</a> *currentEditor;
+<a name="l00088"></a>00088   wxEvtHandler *currentEditorTarget;
+<a name="l00089"></a>00089   
+<a name="l00090"></a>00090   <span class="keywordtype">bool</span> haveCurrentServer;
+<a name="l00091"></a>00091   <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> currentServer;
+<a name="l00092"></a>00092   wxString currentDatabase;
+<a name="l00093"></a>00093 
+<a name="l00094"></a>00094   wxStopWatch scriptExecutionStopwatch;
+<a name="l00095"></a>00095 
+<a name="l00096"></a>00096   <span class="keywordtype">void</span> SaveFrameGeometry() <span class="keyword">const</span>;
+<a name="l00097"></a>00097   <span class="keywordtype">void</span> LoadFrameGeometry();
+<a name="l00098"></a>00098 
+<a name="l00099"></a>00099   <span class="keyword">friend</span> <span class="keyword">class </span>AddConnectionToObjectBrowser;
+<a name="l00100"></a>00100 
+<a name="l00101"></a>00101   DECLARE_EVENT_TABLE();
+<a name="l00102"></a>00102 };
+<a name="l00103"></a>00103 
+<a name="l00104"></a>00104 <span class="preprocessor">#endif</span>
+<a name="l00105"></a>00105 <span class="preprocessor"></span>
+<a name="l00106"></a>00106 <span class="comment">// Local Variables:</span>
+<a name="l00107"></a>00107 <span class="comment">// mode: c++</span>
+<a name="l00108"></a>00108 <span class="comment">// End:</span>
 </pre></div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -175,7 +188,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:38 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

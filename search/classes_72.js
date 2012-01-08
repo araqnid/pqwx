@@ -4,7 +4,7 @@ var searchData=
   ['relabelwork',['RelabelWork',['../classRelabelWork.html',1,'']]],
   ['relationloader',['RelationLoader',['../classRelationLoader.html',1,'']]],
   ['relationmodel',['RelationModel',['../classRelationModel.html',1,'']]],
-  ['result',['Result',['../classScriptQueryWork_1_1Result.html',1,'ScriptQueryWork']]],
+  ['result',['Result',['../classScriptExecutionWork_1_1Result.html',1,'ScriptExecutionWork']]],
   ['result',['Result',['../classCatalogueIndex_1_1Result.html',1,'CatalogueIndex']]],
   ['resultsnotebook',['ResultsNotebook',['../classResultsNotebook.html',1,'']]],
   ['rolemodel',['RoleModel',['../classRoleModel.html',1,'']]],

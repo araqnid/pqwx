@@ -1,5 +1,7 @@
 var searchData=
 [
+  ['getconnection',['GetConnection',['../classConnectDialogue.html#ab8a9467f39d3b6db3a6b9f79a86f9551',1,'ConnectDialogue']]],
+  ['getconnectionstate',['GetConnectionState',['../classScriptEditorPane.html#ac895adad95f827dc79351ec7082e713f',1,'ScriptEditorPane']]],
   ['getcoretitle',['GetCoreTitle',['../classScriptEditorPane.html#a1d81b47bd9ddac3ffece82d9b8d9ceb7',1,'ScriptEditorPane']]],
   ['getdatabase',['GetDatabase',['../classScriptEditorPane.html#a3c9b0bdc64ceef544d51688c8b875e5c',1,'ScriptEditorPane']]],
   ['getdatabaseconnection',['GetDatabaseConnection',['../classDatabaseModel.html#a4dc6dbf8202e2ea35fed7944fb3cc88c',1,'DatabaseModel::GetDatabaseConnection()'],['../classServerModel.html#a83b103ccf1e56c647d52bec45524aedd',1,'ServerModel::GetDatabaseConnection()']]],
@@ -9,11 +11,13 @@ var searchData=
   ['getfieldnumber',['GetFieldNumber',['../classQueryResults.html#a1e66fe8474ade63bca184a1b3d060699',1,'QueryResults']]],
   ['getlazyloader',['GetLazyLoader',['../classObjectBrowser.html#a1a5d5d387b542b162cb8a01a24d3b280',1,'ObjectBrowser']]],
   ['getname',['GetName',['../classQueryResults_1_1Field.html#a21140d3a933b747c8caecd050b31be42',1,'QueryResults::Field']]],
+  ['getobjectbrowser',['GetObjectBrowser',['../classPqwxFrame.html#aa5f1dd5b7fb79f8f85f03f86f97ec296',1,'PqwxFrame']]],
   ['getregion',['GetRegion',['../classScriptEditor.html#aba307b190767573868c60637f37634d9',1,'ScriptEditor']]],
   ['getresults',['GetResults',['../classScriptEditorPane.html#abf09a8701b43acd21722bacfde75dfe3',1,'ScriptEditorPane']]],
   ['getroles',['GetRoles',['../classServerModel.html#afc38d2e5a99827842f24af986e5a15dc',1,'ServerModel']]],
   ['getserver',['GetServer',['../classScriptEditorPane.html#a0abb5ee5f0070e83a47e1333f1006b8a',1,'ScriptEditorPane']]],
   ['getserveradminconnection',['GetServerAdminConnection',['../classServerModel.html#a0457bacdc3c2d9bb59bcebdd6b42a3eb',1,'ServerModel']]],
+  ['getserverparameters',['GetServerParameters',['../classConnectDialogue.html#a17b6c8d9ec08e20f2ca57992ce7bc8d0',1,'ConnectDialogue']]],
   ['getsql',['GetSql',['../classVersionedSql.html#a58c335ddce7d5c3d8620c28f30eea188',1,'VersionedSql']]],
   ['getsqldictionary',['GetSqlDictionary',['../classObjectBrowser.html#a4e7cb6952a5d0efaafd6e8f9ffb58060',1,'ObjectBrowser']]],
   ['getstate',['GetState',['../classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7',1,'DatabaseConnection::GetState()'],['../classObjectBrowserDatabaseWork.html#a8463d678f1095604bdf0b83ed48bb716',1,'ObjectBrowserDatabaseWork::GetState()']]],

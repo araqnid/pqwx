@@ -80,13 +80,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
 <div class="title">ScriptQueryWork Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<!-- doxytag: class="ScriptQueryWork" --><!-- doxytag: inherits="DatabaseWork" -->
+<!-- doxytag: class="ScriptQueryWork" --><!-- doxytag: inherits="ScriptExecutionWork" -->
 <p>Execute a query from a script on the database.  
  <a href="classScriptQueryWork.html#details">More...</a></p>
 
@@ -97,30 +96,26 @@ Inheritance diagram for ScriptQueryWork:</div>
  <div class="center">
   <img src="classScriptQueryWork.png" usemap="#ScriptQueryWork_map" alt=""/>
   <map id="ScriptQueryWork_map" name="ScriptQueryWork_map">
-<area href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection." alt="DatabaseWork" shape="rect" coords="0,0,110,24"/>
+<area href="classScriptExecutionWork.html" alt="ScriptExecutionWork" shape="rect" coords="0,56,129,80"/>
+<area href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection." alt="DatabaseWork" shape="rect" coords="0,0,129,24"/>
 </map>
  </div></div>
 
 <p><a href="classScriptQueryWork-members.html">List of all members.</a></p>
 <table class="memberdecls">
-<tr><td colspan="2"><h2><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptQueryWork_1_1Result.html">Result</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execution result.  <a href="classScriptQueryWork_1_1Result.html#details">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8666281e216a47a51c9024e0954c392a"></a><!-- doxytag: member="ScriptQueryWork::ScriptQueryWork" ref="a8666281e216a47a51c9024e0954c392a" args="(wxEvtHandler *dest, const ExecutionLexer::Token &amp;token, const char *sql)" -->
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptQueryWork.html#a8666281e216a47a51c9024e0954c392a">ScriptQueryWork</a> (wxEvtHandler *dest, const <a class="el" href="classExecutionLexer_1_1Token.html">ExecutionLexer::Token</a> &amp;token, const char *sql)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2d00910dd8deb6a589f533ebb9526c6"></a><!-- doxytag: member="ScriptQueryWork::ScriptQueryWork" ref="af2d00910dd8deb6a589f533ebb9526c6" args="(wxEvtHandler *dest, const ExecutionLexer::Token &amp;token, const wxString &amp;sql)" -->
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptQueryWork.html#af2d00910dd8deb6a589f533ebb9526c6">ScriptQueryWork</a> (wxEvtHandler *dest, const <a class="el" href="classExecutionLexer_1_1Token.html">ExecutionLexer::Token</a> &amp;token, const wxString &amp;sql)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create work object. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad44805a3dbd40bc47c9738b7eef81089"></a><!-- doxytag: member="ScriptQueryWork::Execute" ref="ad44805a3dbd40bc47c9738b7eef81089" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Execute</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bd300165ef0c6d9fbbc236a22b37e31"></a><!-- doxytag: member="ScriptQueryWork::NotifyFinished" ref="a4bd300165ef0c6d9fbbc236a22b37e31" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>NotifyFinished</b> ()</td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Execute a query from a script on the database. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="script__query__work_8h_source.html">script_query_work.h</a></li>
+<li>script_query_work.cpp</li>
 </ul>
 </div><!-- contents -->
 <!-- window showing the filter options -->
@@ -140,7 +135,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>NotifyFinished</b> ()
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:46 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:18 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

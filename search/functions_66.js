@@ -5,6 +5,7 @@ var searchData=
   ['fillindatabaseschema',['FillInDatabaseSchema',['../classObjectBrowser.html#a640d4b6bf7645fe14253f0fa964b075b',1,'ObjectBrowser']]],
   ['fillinrelation',['FillInRelation',['../classObjectBrowser.html#a453fa5d6c14339557bd2f04293d15647',1,'ObjectBrowser']]],
   ['fillinserver',['FillInServer',['../classObjectBrowser.html#a206011bc05879ba732cca38772d29b74',1,'ObjectBrowser']]],
+  ['finalise',['Finalise',['../classScriptExecutionWork_1_1Result.html#a7986d3049b2e05ac2e31f92c382af0a8',1,'ScriptExecutionWork::Result']]],
   ['finddatabase',['FindDatabase',['../classObjectBrowser.html#a3aecc8a61aaffde04343e705b35e4ce4',1,'ObjectBrowser::FindDatabase()'],['../classServerModel.html#a7c2360edf821a54231e350185956e22d',1,'ServerModel::FindDatabase()']]],
   ['finddatabaseitem',['FindDatabaseItem',['../classObjectBrowser.html#a6ecc06233ebf5fd247b00d3cc4eba253',1,'ObjectBrowser']]],
   ['findobject',['FindObject',['../classObjectBrowser.html#a75780359d73edc90a942ad9ba13c4379',1,'ObjectBrowser::FindObject(const ServerConnection &amp;server, const wxString &amp;dbname)'],['../classObjectBrowser.html#ae9654b5129305f064efa50a4e06a1d60',1,'ObjectBrowser::FindObject(const DatabaseModel *)']]],

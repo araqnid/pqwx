@@ -88,6 +88,7 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aa04621c0d124419b02f1c6fa899404ec">Connect</a>(const ServerConnection &amp;server, const wxString &amp;dbname)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#acb8a95f8c2498236e475898537c298ab">ConnectionIdentification</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a714ddd4e2e04017a12e29b4112707b21">FormatTitle</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [virtual]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#ac895adad95f827dc79351ec7082e713f">GetConnectionState</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a1d81b47bd9ddac3ffece82d9b8d9ceb7">GetCoreTitle</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a3c9b0bdc64ceef544d51688c8b875e5c">GetDatabase</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#ab8b32eba97468f0485a6d97fd3510fef">GetEditor</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
@@ -96,8 +97,8 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#afe5c34bd690d5afc37cd0c9d98d586f8">HasConnection</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a8a5c7f9179038aabce7b116bb7dbdf26">HasFilename</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aec39d7206a71672d5f7c6c112bd02241">IsConnected</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
-  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a88ba009685af4b6034f660e5b0cc6a8e">IsExecuting</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
-  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aec1b3966487a759098e8fc44058340ab">IsModified</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a88ba009685af4b6034f660e5b0cc6a8e">IsExecuting</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aec1b3966487a759098e8fc44058340ab">IsModified</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a5f4630348742714e1e1d03c8e4b42e0e">MarkModified</a>(bool value)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnConnectionNotice</b>(const PGresult *rs) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnDisconnect</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
@@ -132,7 +133,7 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jan 7 2012 06:37:45 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 8 2012 03:37:18 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

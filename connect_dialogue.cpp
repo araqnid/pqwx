@@ -313,25 +313,30 @@ void ConnectDialogue::DoInitialConnection(const ServerConnection &conninfo)
 }
 
 void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
-  ConnectionWork *work = static_cast<ConnectionWork*>(event.GetClientData());
-  UnmarkBusy();
-  if (cancelling)
-    return;
+  wxASSERT(connection != NULL);
 
-  if (work->state == ConnectionWork::CONNECTED) {
-    work->server.passwordNeededToConnect = work->usedPassword;
+  UnmarkBusy();
+  if (cancelling) {
+    if (connection->db)
+      delete connection->db;
+    delete connection;
+    return;
+  }
+
+  if (connection->state == ConnectionWork::CONNECTED) {
+    connection->server.passwordNeededToConnect = connection->usedPassword;
     if (!passwordInput->GetValue().empty()) {
-      if (!work->usedPassword)
+      if (!connection->usedPassword)
 	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
     }
     SaveRecentServers();
-    server = work->server;
-    db = work->db;
+    server = connection->server;
+    db = connection->db;
     if (!savePasswordInput->IsChecked()) {
       server.password = wxEmptyString;
     }
     if (callback) {
-      callback->Connected(server, work->db);
+      callback->Connected(server, connection->db);
       delete callback;
       Destroy();
     }
@@ -339,14 +344,18 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
       EndModal(wxID_OK);
     }
   }
-  else if (work->state == ConnectionWork::NEEDS_PASSWORD) {
-    wxLogError(_("You must enter a password to connect to this server."), work->errorMessage.c_str());
+  else if (connection->state == ConnectionWork::NEEDS_PASSWORD) {
+    wxLogError(_("You must enter a password to connect to this server."), connection->errorMessage.c_str());
+    connection->db->Dispose();
+    delete connection->db;
   }
-  else if (work->state == ConnectionWork::FAILED) {
-    wxLogError(_("Connection to server failed.\n\n%s"), work->errorMessage.c_str());
+  else if (connection->state == ConnectionWork::FAILED) {
+    wxLogError(_("Connection to server failed.\n\n%s"), connection->errorMessage.c_str());
+    connection->db->Dispose();
+    delete connection->db;
   }
 
-  delete work;
+  delete connection;
   connection = NULL;
 }
 

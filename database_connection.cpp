@@ -102,6 +102,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
   SetState(DatabaseConnection::CONNECTING);
 
   if (!Connect()) {
+    SetState(DatabaseConnection::DISCONNECTED);
     return 0;
   }
 

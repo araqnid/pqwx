@@ -89,7 +89,7 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
-  Close(true);
+  Close(false);
 }
 
 void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))

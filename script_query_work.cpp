@@ -29,6 +29,9 @@ void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *con
   else if (status == PGRES_COPY_IN) {
     newConnectionState = CopyToServer;
   }
+  else if (status == PGRES_EMPTY_QUERY) {
+    newConnectionState = Idle;
+  }
   statusTag = wxString(PQcmdStatus(rs), wxConvUTF8);
 
   wxString tuplesCount = wxString(PQcmdTuples(rs), wxConvUTF8);

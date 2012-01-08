@@ -393,12 +393,6 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
     GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token));
     execution->BumpErrors();
   }
-  else if (result->status == PGRES_COPY_IN) {
-    wxLogDebug(_T("Server now waiting for COPY data"));
-  }
-  else {
-    wxLogError(_T("Unexpected result status: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
-  }
 
   UpdateConnectionState(result->newConnectionState);
   statusbar->SetStatusText(TxnStatus(), StatusBar_TransactionStatus);

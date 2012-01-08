@@ -7,6 +7,8 @@
 #ifndef __pqwx_h
 #define __pqwx_h
 
+#include <vector>
+
 /*
  * controls and menu commands
  */
@@ -39,6 +41,8 @@ private:
   wxString initialServer;
   wxString initialUser;
   wxString initialPassword;
+  wxString initialDatabase;
+  std::vector<wxString> initialFiles;
 };
 
 #endif

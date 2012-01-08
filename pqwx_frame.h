@@ -28,6 +28,11 @@ public:
    */
   ObjectBrowser *GetObjectBrowser() const { return objectBrowser; }
 
+  /**
+   * Open script and connect it to the given database.
+   */
+  void OpenScript(const wxString &filename, const ServerConnection &server, const wxString &database);
+
 private:
   /**
    * Connection callback to add a connection to the object browser once it is established.

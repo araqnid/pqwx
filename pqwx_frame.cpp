@@ -195,6 +195,14 @@ void PqwxFrame::OnNewScript(wxCommandEvent& event)
   editor->SetFocus();
 }
 
+void PqwxFrame::OpenScript(const wxString &filename, const ServerConnection &server, const wxString &dbname)
+{
+  ScriptEditorPane *editor = documentsBook->OpenNewScript();
+  editor->OpenFile(filename);
+  editor->Connect(server, dbname);
+  editor->SetFocus();
+}
+
 void PqwxFrame::OnCloseScript(wxCommandEvent &event)
 {
   documentsBook->DoClose();

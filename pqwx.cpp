@@ -42,6 +42,10 @@ bool PQWXApp::OnInit()
   }
   if (connect.ShowModal() == wxID_OK) {
     frame->GetObjectBrowser()->AddServerConnection(connect.GetServerParameters(), connect.GetConnection());
+    wxString dbname = initialDatabase.empty() ? connect.GetServerParameters().globalDbName : initialDatabase;
+    for (std::vector<wxString>::const_iterator iter = initialFiles.begin(); iter != initialFiles.end(); iter++) {
+      frame->OpenScript(*iter, connect.GetServerParameters(), dbname);
+    }
   }
 
   return true;
@@ -51,6 +55,8 @@ void PQWXApp::OnInitCmdLine(wxCmdLineParser &parser) {
   parser.AddOption(_T("S"), _T("server"), _("server host (or host:port)"));
   parser.AddOption(_T("U"), _T("user"), _("login username"));
   parser.AddOption(_T("P"), _T("password"), _("login password"));
+  parser.AddOption(_T("d"), _T("database"), _("database to connect to"));
+  parser.AddParam(_T("file.sql"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_MULTIPLE | wxCMD_LINE_PARAM_OPTIONAL);
   wxApp::OnInitCmdLine(parser);
 }
 
@@ -65,6 +71,13 @@ bool PQWXApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   }
   if (parser.Found(_T("P"), &initialPassword)) {
     haveInitial = true;
+  }
+  
+  parser.Found(_T("d"), &initialDatabase);
+
+  int params = parser.GetParamCount();
+  for (int i = 0; i < params; i++) {
+    initialFiles.push_back(parser.GetParam(i));
   }
 
   return true;

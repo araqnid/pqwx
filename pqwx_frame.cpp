@@ -111,7 +111,7 @@ void PqwxFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   description << _T("\n") << wxVERSION_STRING << _T(" ") << _T(WX_FLAVOUR);
 #endif
   info.SetDescription(description);
-  info.SetCopyright(_T("(c) 2011 Steve Haslam"));
+  info.SetCopyright(_T("(c) 2011, 2012 Steve Haslam"));
   wxAboutBox(info);
 }
 

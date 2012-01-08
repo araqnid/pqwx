@@ -8,12 +8,17 @@
 
 #include <memory>
 #include "pg_error.h"
+#include "database_work.h"
+#include "execution_lexer.h"
+#include "script_events.h"
 
-/**
- * Execute a query from a script on the database.
- */
-class ScriptQueryWork : public DatabaseWork {
+class ScriptExecutionWork : public DatabaseWork {
 public:
+  /**
+   * Create work object
+   */
+  ScriptExecutionWork(wxEvtHandler *dest, const ExecutionLexer::Token &token) : dest(dest), token(token) {}
+
   /**
    * Execution result.
    */
@@ -23,6 +28,22 @@ public:
      * Create result referring back to SQL used for the query.
      */
     Result(const ExecutionLexer::Token& token) : token(token) {}
+
+    /**
+     * Read result status.
+     */
+    void ReadStatus(DatabaseConnection *db, PGconn *conn, PGresult *rs);
+
+    /**
+     * Get next state from connection.
+     */
+    void Finalise(long elapsed_, PGconn *conn) {
+      elapsed = elapsed_;
+      complete = true;
+      if (newConnectionState == Idle) {
+	newConnectionState = Decode(PQtransactionStatus(conn));
+      }
+    }
   private:
     const ExecutionLexer::Token token;
     ExecStatusType status;
@@ -36,53 +57,13 @@ public:
     bool tuplesProcessedCountValid;
     DatabaseConnectionState newConnectionState;
     friend class ScriptEditorPane; // so, effectively all public...
+    friend class ScriptExecutionWork;
     friend class ScriptQueryWork;
+    friend class ScriptPutCopyDataWork;
   };
 
-  /**
-   * Create work object
-   */
-  ScriptQueryWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *sql) : dest(dest), token(token), sql(sql) {}
-
-  void Execute() {
-    output = new Result(token);
-    db->LogSql(sql);
-    stopwatch.Start();
-
-    PGresult *rs = PQexecParams(conn, sql, 0, NULL, NULL, NULL, NULL, 0);
-    free((void*) sql);
-    wxASSERT(rs != NULL);
-
-    output->status = PQresultStatus(rs);
-    if (output->status == PGRES_TUPLES_OK) {
-      output->data = std::auto_ptr<QueryResults>(new QueryResults(rs));
-      output->newConnectionState = Decode(PQtransactionStatus(conn));
-    }
-    else if (output->status == PGRES_FATAL_ERROR) {
-      db->LogSqlQueryFailed(PgError(rs));
-      output->error = PgError(rs);
-      output->newConnectionState = Decode(PQtransactionStatus(conn));
-    }
-    else if (output->status == PGRES_COMMAND_OK) {
-      output->newConnectionState = Decode(PQtransactionStatus(conn));
-    }
-    else if (output->status == PGRES_COPY_OUT) {
-      output->newConnectionState = CopyToClient;
-    }
-    else if (output->status == PGRES_COPY_IN) {
-      output->newConnectionState = CopyToServer;
-    }
-
-    ReadStatus(rs);
-
-    PQclear(rs);
-
-    output->complete = true;
-
-    output->elapsed = stopwatch.Time();
-  }
-
-  void NotifyFinished() {
+  void NotifyFinished()
+  {
     wxCommandEvent event(PQWX_ScriptQueryComplete);
     event.SetClientData(output);
     dest->AddPendingEvent(event);
@@ -90,22 +71,10 @@ public:
 
 private:
   wxEvtHandler *dest;
-  const ExecutionLexer::Token token;
-  const char *sql;
-  wxStopWatch stopwatch;
-  Result *output;
 
-  void ReadStatus(PGresult *rs)
-  {
-    output->statusTag = wxString(PQcmdStatus(rs), wxConvUTF8);
-    wxString tuplesCount = wxString(PQcmdTuples(rs), wxConvUTF8);
-    if (tuplesCount.empty())
-      output->tuplesProcessedCountValid = false;
-    else {
-      output->tuplesProcessedCountValid = tuplesCount.ToULong(&output->tuplesProcessedCount);
-    }
-    output->oidValue = PQoidValue(rs);
-  }
+protected:
+  const ExecutionLexer::Token token;
+  Result *output;
 
   static DatabaseConnectionState Decode(PGTransactionStatusType txStatus) {
     if (txStatus == PQTRANS_IDLE)
@@ -114,10 +83,34 @@ private:
       return IdleInTransaction;
     else if (txStatus == PQTRANS_INERROR)
       return TransactionAborted;
-    wxString msg = _T("Invalid txStatus: ") + txStatus;
+    wxString msg = wxString::Format(_T("Invalid txStatus: %d"), txStatus);
     wxFAIL_MSG(msg);
     abort();
   }
+};
+
+/**
+ * Execute a query from a script on the database.
+ */
+class ScriptQueryWork : public ScriptExecutionWork {
+public:
+  /**
+   * Create work object
+   */
+  ScriptQueryWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *sql) : ScriptExecutionWork(dest, token), sql(sql) {}
+
+  void Execute();
+private:
+  const char *sql;
+};
+
+class ScriptPutCopyDataWork : public ScriptExecutionWork {
+public:
+  ScriptPutCopyDataWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *buffer) : ScriptExecutionWork(dest, token), buffer(buffer) {}
+
+  void Execute();
+private:
+  const char *buffer;
 };
 
 #endif

@@ -23,6 +23,12 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
 END_EVENT_TABLE()
 
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptStateUpdated)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
+
 int ScriptEditorPane::documentCounter = 0;
 
 std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::InitPsqlCommandHandlers()
@@ -278,6 +284,11 @@ inline void ScriptEditorPane::ReportInternalError(const wxString &error, const w
 
 bool ScriptEditorPane::ProcessExecution()
 {
+  if (state == CopyToServer) {
+    BeginPutCopyData();
+    return false;
+  }
+
   ExecutionLexer::Token t = execution->NextToken();
   if (t.type == ExecutionLexer::Token::END) {
     if (execution->SqlPending()) {
@@ -297,7 +308,7 @@ bool ScriptEditorPane::ProcessExecution()
     }
 
     execution->SetLastSqlToken(t);
-    for (unsigned ofs = t.length; ofs > 0; ofs--) {
+    for (unsigned ofs = t.length - 1; ofs > 0; ofs--) {
       char c = execution->CharAt(t.offset + ofs);
       if (c == ';') {
 	// execute immediately
@@ -344,6 +355,12 @@ void ScriptEditorPane::BeginQuery(ExecutionLexer::Token t)
   wxASSERT(added);
 }
 
+void ScriptEditorPane::BeginPutCopyData()
+{
+  bool added = db->AddWorkOnlyIfConnected(new ScriptPutCopyDataWork(this, execution->CopyDataToken(), execution->GetBuffer()));
+  wxASSERT(added);
+}
+
 void ScriptEditorPane::FinishExecution()
 {
   wxCommandEvent finishEvt = wxCommandEvent(PQWX_ScriptExecutionFinishing);
@@ -376,8 +393,11 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
     GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token));
     execution->BumpErrors();
   }
+  else if (result->status == PGRES_COPY_IN) {
+    wxLogDebug(_T("Server now waiting for COPY data"));
+  }
   else {
-    wxLogDebug(_T("Got something else: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
+    wxLogError(_T("Unexpected result status: %s"), wxString(PQresStatus(result->status), wxConvUTF8).c_str());
   }
 
   UpdateConnectionState(result->newConnectionState);

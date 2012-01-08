@@ -6,6 +6,8 @@
 #ifndef __pg_error_h
 #define __pg_error_h
 
+#include "libpq-fe.h"
+
 /**
  * Represents an error from the database server.
  */
@@ -26,6 +28,11 @@ public:
     sourceLine = GetErrorField(rs, PG_DIAG_SOURCE_LINE);
     sourceFunction = GetErrorField(rs, PG_DIAG_SOURCE_FUNCTION);
     context = GetErrorField(rs, PG_DIAG_CONTEXT);
+  }
+  PgError(const PGconn *conn)
+  {
+    severity = _T("ERROR");
+    primary = wxString(PQerrorMessage(conn), wxConvUTF8);
   }
 
 private:

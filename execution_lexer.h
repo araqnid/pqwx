@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include "wx/string.h"
+#include "wx/log.h"
 
 /**
  * Lex through SQL text, breaking it into SQL commands and backslash commands.
@@ -49,6 +50,10 @@ public:
        */
       PSQL,
       /**
+       * Data for COPY command.
+       */
+      COPY_DATA,
+      /**
        * End of input.
        */
       END
@@ -70,7 +75,19 @@ public:
   /**
    * Pull the next token from the buffer.
    */
-  Token Pull() { if (pos >= length) return Token(Token::END); return Pull0(); }
+  Token Pull()
+  {
+    if (pos >= length) return Token(Token::END);
+    return Pull0();
+  }
+  /**
+   * Read copy data from the buffer.
+   */
+  Token ReadCopyData()
+  {
+    if (pos >= length) return Token(Token::END);
+    return ReadCopyData0();
+  }
 
   /**
    * Convert an offset/length combination to a wxString.
@@ -98,6 +115,7 @@ private:
   Token Pull0();
   Token PullPsql();
   Token PullSql();
+  Token ReadCopyData0();
 };
 
 #endif

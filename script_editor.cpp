@@ -19,12 +19,6 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
 END_EVENT_TABLE()
 
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptStateUpdated)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
-
 ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id, ScriptEditorPane *owner)
   : wxStyledTextCtrl(parent, id), owner(owner)
 {

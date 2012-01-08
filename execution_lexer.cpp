@@ -54,7 +54,9 @@ ExecutionLexer::Token ExecutionLexer::PullSql()
       PassDoubleQuotedString();
       else if (c == ';') {
 	// inclusive end character
-	return Token(Token::SQL, start, pos - start + 1);
+	int end = ++pos;
+	SkipWhitespace();
+	return Token(Token::SQL, start, end - start);
       }
       else if (c == '\\') {
 	// exclusive end character
@@ -118,6 +120,33 @@ void ExecutionLexer::SkipWhitespace()
     if (!isspace((char) c)) {
       BackUp();
       return;
+    }
+  } while (true);
+}
+
+ExecutionLexer::Token ExecutionLexer::ReadCopyData0()
+{
+  int start = pos;
+  bool backslashed = false;
+
+  do {
+    int c = Take();
+
+    if (c < 0) {
+      // well, this is really an error
+      return Token(Token::COPY_DATA, start, pos - start);
+    }
+
+    if (backslashed) {
+      if (c == '.') {
+	// remove the "\." from the returned token
+	return Token(Token::COPY_DATA, start, pos - 2 - start);
+      }
+      backslashed = false;
+    }
+    else {
+      if (c == '\\')
+	backslashed = true;
     }
   } while (true);
 }

@@ -224,6 +224,7 @@ private:
     void BumpErrors() { ++errorsEncountered; }
 
     ExecutionLexer::Token NextToken() { return lexer.Pull(); }
+    ExecutionLexer::Token CopyDataToken() { return lexer.ReadCopyData(); }
     void SetLastSqlToken(ExecutionLexer::Token t) { lastSqlToken = t; lastSqlExecuted = false; }
     const ExecutionLexer::Token& GetLastSqlToken() const { return lastSqlToken; }
     ExecutionLexer::Token PopLastSqlToken() { ExecutionLexer::Token t = lastSqlToken; ClearLastSqlToken(); return t; }
@@ -233,6 +234,7 @@ private:
     void MarkSqlExecuted() { lastSqlExecuted = true; }
 
     wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
+    const char* GetBuffer() const { return buffer.data(); }
   private:
     wxCharBuffer buffer;
     ExecutionLexer lexer;
@@ -247,6 +249,7 @@ private:
 
   bool ProcessExecution();
   void BeginQuery(ExecutionLexer::Token t);
+  void BeginPutCopyData();
   void FinishExecution();
 
   typedef bool (ScriptEditorPane::*PsqlCommandHandler)(const wxString&);

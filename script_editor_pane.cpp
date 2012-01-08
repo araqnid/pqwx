@@ -295,10 +295,23 @@ bool ScriptEditorPane::ProcessExecution()
       execution->SetLastSqlToken(t);
       return false;
     }
-    else {
-      execution->SetLastSqlToken(t);
-      return true;
+
+    execution->SetLastSqlToken(t);
+    for (unsigned ofs = t.length; ofs > 0; ofs--) {
+      char c = execution->CharAt(t.offset + ofs);
+      if (c == ';') {
+	// execute immediately
+	BeginQuery(t);
+	execution->MarkSqlExecuted();
+	return false;
+      }
+      else if (!isspace(c)) {
+	break;
+      }
     }
+
+    // look for following psql command or end of input
+    return true;
   }
   else {
     wxString fullCommandString = execution->GetWXString(t);

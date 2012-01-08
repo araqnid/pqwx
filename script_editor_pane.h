@@ -216,6 +216,7 @@ private:
     const char *ExtractSQL(const ExecutionLexer::Token &token) const { return strndup(buffer.data() + token.offset, token.length); }
 #endif
 
+    char CharAt(unsigned offset) const { return buffer.data()[offset]; }
     bool EncounteredErrors() const { return errorsEncountered > 0; }
     unsigned TotalRows() const { return rowsRetrieved; }
     long ElapsedTime() const { return stopwatch.Time(); }

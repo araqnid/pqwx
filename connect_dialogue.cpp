@@ -235,7 +235,7 @@ static wxString DefaultCluster(const std::vector<PgCluster> &clusters) {
 
 #endif
 
-void ConnectDialogue::StartConnection() {
+void ConnectDialogue::StartConnection(const wxString &dbname) {
   ServerConnection server;
   wxString username = usernameInput->GetValue();
   wxString password = passwordInput->GetValue();
@@ -267,7 +267,7 @@ void ConnectDialogue::StartConnection() {
 
   wxASSERT(connection == NULL);
 
-  DatabaseConnection *db = new DatabaseConnection(server, server.globalDbName);
+  DatabaseConnection *db = new DatabaseConnection(server, dbname);
   connection = new ConnectionWork(this, server, db);
   db->Connect(connection);
   MarkBusy();
@@ -279,8 +279,8 @@ void ConnectDialogue::OnCancel(wxCommandEvent &event) {
   if (connection != NULL) {
     // TODO this merely waits (synchronously!) for the connection attempt to end, instead of actively cancelling it
     connection->db->CloseSync();
-    delete connection;
-    connection = NULL;
+    // the callback will then exit
+    return;
   }
   if (callback) {
     callback->Cancelled();
@@ -304,12 +304,12 @@ void ConnectDialogue::Suggest(const ServerConnection &conninfo)
   passwordInput->SetValue(conninfo.password);
 }
 
-void ConnectDialogue::DoInitialConnection(const ServerConnection &conninfo)
+void ConnectDialogue::DoInitialConnection(const ServerConnection &conninfo, const wxString &dbname)
 {
   hostnameInput->SetValue(conninfo.identifiedAs);
   usernameInput->SetValue(conninfo.username);
   passwordInput->SetValue(conninfo.password);
-  StartConnection();
+  StartConnection(dbname);
 }
 
 void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
@@ -320,6 +320,14 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
     if (connection->db)
       delete connection->db;
     delete connection;
+    if (callback) {
+      callback->Cancelled();
+      delete callback;
+      Destroy();
+    }
+    else {
+      EndModal(wxID_CANCEL);
+    }
     return;
   }
 

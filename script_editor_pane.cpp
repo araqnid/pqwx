@@ -121,9 +121,12 @@ void ScriptEditorPane::Connect(const ServerConnection &server_, const wxString &
 {
   wxASSERT(db == NULL);
   server = server_;
-  db = new DatabaseConnection(server, dbname.empty() ? server.globalDbName : dbname, _("Query"));
-  // TODO handle connection problems, direct through connection dialogue
-  db->Connect();
+  ConnectDialogue dbox(this);
+  dbox.DoInitialConnection(server, dbname.empty() ? server.globalDbName : dbname);
+  if (dbox.ShowModal() == wxID_CANCEL)
+    return;
+  db = dbox.GetConnection();
+  db->Relabel(_T("Query"));
   state = Idle;
   ShowConnectedStatus();
   db->AddWork(new SetupNoticeProcessorWork(this));
@@ -182,11 +185,11 @@ void ScriptEditorPane::OnReconnect(wxCommandEvent &event)
 {
   wxASSERT(execution == NULL); // must not be executing
 
-  ConnectDialogue *dbox = new ConnectDialogue(NULL, new ChangeScriptConnection(this));
+  ConnectDialogue dbox(this);
   if (db != NULL)
-    dbox->Suggest(server);
-  dbox->Show();
-  dbox->SetFocus();
+    dbox.Suggest(server);
+  if (dbox.ShowModal() == wxID_CANCEL) return;
+  SetConnection(server, dbox.GetConnection());
 }
 
 void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs)
@@ -251,6 +254,7 @@ void ScriptEditorPane::ShowDisconnectedStatus()
 void ScriptEditorPane::ShowScriptInProgressStatus()
 {
   statusbar->SetStatusText(_("Executing query..."), StatusBar_Status);
+  if (!db) return;
   statusbar->SetStatusText(_T("00:00:00"), StatusBar_TimeElapsed);
   statusbar->SetStatusText(wxEmptyString, StatusBar_RowsRetrieved);
 }
@@ -261,6 +265,7 @@ void ScriptEditorPane::ShowScriptCompleteStatus()
     statusbar->SetStatusText(_("Query completed successfully"), StatusBar_Status);
   else
     statusbar->SetStatusText(_("Query completed with errors"), StatusBar_Status);
+  if (!db) return;
   long time = execution->ElapsedTime();
   wxString elapsed;
   if (time > 5*1000 || (time % 1000) == 0)

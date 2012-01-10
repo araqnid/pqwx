@@ -181,20 +181,6 @@ private:
     ScriptEditorPane * const owner;
   };
 
-  class ChangeScriptConnection : public ConnectDialogue::CompletionCallback {
-  public:
-    ChangeScriptConnection(ScriptEditorPane *owner) : owner(owner) {}
-    void Connected(const ServerConnection &server, DatabaseConnection *db)
-    {
-      owner->SetConnection(server, db);
-    }
-    void Cancelled()
-    {
-    }
-  private:
-    ScriptEditorPane *const owner;
-  };
-
   void UpdateConnectionState(DatabaseConnectionState newState) {
     state = newState;
     UpdateStateInUI();

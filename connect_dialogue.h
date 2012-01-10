@@ -71,7 +71,12 @@ public:
   /**
    * Immediately try a connection with the given server properties.
    */
-  void DoInitialConnection(const ServerConnection &conninfo);
+  void DoInitialConnection(const ServerConnection &conninfo) { DoInitialConnection(conninfo, conninfo.globalDbName); }
+
+  /**
+   * Immediately try a connection to the specified database.
+   */
+  void DoInitialConnection(const ServerConnection &conninfo, const wxString &dbname);
 
   /**
    * Gets the server parameters used to make a connection.
@@ -127,7 +132,7 @@ private:
   wxButton *cancelButton;
 
   void OnConnect(wxCommandEvent& event) {
-    StartConnection();
+    StartConnection(server.globalDbName);
   }
   void OnCancel(wxCommandEvent& event);
   void OnRecentServerChosen(wxCommandEvent& event);
@@ -144,7 +149,7 @@ private:
     okButton = XRCCTRL(*this, "wxID_OK", wxButton);
     cancelButton = XRCCTRL(*this, "wxID_CANCEL", wxButton);
   }
-  void StartConnection();
+  void StartConnection(const wxString &dbname);
   void MarkBusy();
   void UnmarkBusy();
   ConnectionWork *connection;

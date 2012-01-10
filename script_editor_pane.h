@@ -58,7 +58,7 @@ public:
   void OnReconnect(wxCommandEvent &event);
   void OnExecute(wxCommandEvent &event);
   void OnQueryComplete(wxCommandEvent &event);
-  void OnConnectionNotice(const PGresult *rs);
+  void OnConnectionNotice(wxCommandEvent &event);
   void OnTimerTick(wxTimerEvent &event);
 
   /**

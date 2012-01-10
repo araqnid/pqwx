@@ -20,6 +20,7 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   PQWX_SCRIPT_DISCONNECT(wxID_ANY, ScriptEditorPane::OnDisconnect)
   PQWX_SCRIPT_RECONNECT(wxID_ANY, ScriptEditorPane::OnReconnect)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditorPane::OnQueryComplete)
+  PQWX_SCRIPT_SERVER_NOTICE(wxID_ANY, ScriptEditorPane::OnConnectionNotice)
   EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
 END_EVENT_TABLE()
 
@@ -28,6 +29,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionBeginning)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptServerNotice)
 
 int ScriptEditorPane::documentCounter = 0;
 
@@ -189,20 +191,22 @@ void ScriptEditorPane::OnReconnect(wxCommandEvent &event)
 
 void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs)
 {
-  // FIXME needs to be an event
+  wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
   ScriptEditorPane *editor = (ScriptEditorPane*) arg;
-  editor->OnConnectionNotice(rs);
+  wxCommandEvent event(PQWX_ScriptServerNotice);
+  event.SetClientData(new PgError(rs));
+  editor->AddPendingEvent(event);
 }
 
-void ScriptEditorPane::OnConnectionNotice(const PGresult *rs)
+void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
 {
-  wxASSERT(PQresultStatus(rs) == PGRES_NONFATAL_ERROR);
-  PgError error(rs);
-
+  PgError *error = (PgError*) event.GetClientData();
+  wxASSERT(error != NULL);
   if (execution == NULL || !execution->LastSqlTokenValid())
-    GetOrCreateResultsBook()->ScriptAsynchronousNotice(error);
+    GetOrCreateResultsBook()->ScriptAsynchronousNotice(*error);
   else
-    GetOrCreateResultsBook()->ScriptQueryNotice(error, execution->GetWXString(execution->GetLastSqlToken()));
+    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetWXString(execution->GetLastSqlToken()));
+  delete error;
 }
 
 wxString ScriptEditorPane::FormatTitle() const {

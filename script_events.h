@@ -32,6 +32,8 @@ BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ScriptConnectionStatus, -1)
 // sent asynchronously by execution work when it completes
   DECLARE_EVENT_TYPE(PQWX_ScriptQueryComplete, -1)
+// sent by notice processor when a notice is received
+  DECLARE_EVENT_TYPE(PQWX_ScriptServerNotice, -1)
 END_DECLARE_EVENT_TYPES()
 
 #define PQWX_DOCUMENT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_DocumentSelected, fn)
@@ -46,6 +48,7 @@ END_DECLARE_EVENT_TYPES()
 #define PQWX_SCRIPT_EXECUTION_BEGINNING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionBeginning, fn)
 #define PQWX_SCRIPT_EXECUTION_FINISHING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionFinishing, fn)
 #define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)
+#define PQWX_SCRIPT_SERVER_NOTICE(id, fn) EVT_COMMAND(id, PQWX_ScriptServerNotice, fn)
 
 #endif
 

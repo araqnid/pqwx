@@ -19,7 +19,7 @@
  */
 class DatabaseWork {
 public:
-  DatabaseWork(const VersionedSql *sqlDictionary = NULL) : sqlDictionary(sqlDictionary) {}
+  DatabaseWork() {}
   virtual ~DatabaseWork() {}
 
   virtual void operator()() = 0;
@@ -28,63 +28,169 @@ public:
   wxString QuoteIdent(const wxString &str) const;
   wxString QuoteLiteral(const wxString &str) const;
 
-  bool DoCommand(const wxString &sql) { return DoCommand((const char*) sql.utf8_str()); }
-  bool DoCommand(const char *sql);
-  QueryResults DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]);
-  QueryResults DoQuery(const char *sql) { return DoQuery(sql, 0, NULL, NULL); }
-  QueryResults DoQuery(const char *sql, Oid paramType, const char *paramValue) { return DoQuery(sql, 1, &paramType, &paramValue); }
-  QueryResults DoQuery(const char *sql, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
-    Oid paramTypes[2];
-    paramTypes[0] = param1Type;
-    paramTypes[1] = param2Type;
-    const char *paramValues[2];
-    paramValues[0] = param1Value;
-    paramValues[1] = param2Value;
-    return DoQuery(sql, 2, paramTypes, paramValues);
-  }
-  QueryResults DoQuery(const char *sql, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
-    Oid paramTypes[3];
-    paramTypes[0] = param1Type;
-    paramTypes[1] = param2Type;
-    paramTypes[2] = param3Type;
-    const char *paramValues[3];
-    paramValues[0] = param1Value;
-    paramValues[1] = param2Value;
-    paramValues[2] = param3Value;
-    return DoQuery(sql, 3, paramTypes, paramValues);
-  }
+  bool DoCommand(const wxString &sql) const { return DoCommand((const char*) sql.utf8_str()); }
+  bool DoCommand(const char *sql) const;
 
-  bool DoNamedCommand(const wxString &name) { return DoCommand(sqlDictionary->GetSql(name, PQserverVersion(conn))); }
-  QueryResults DoNamedQuery(const wxString &name, int paramCount, Oid paramTypes[], const char *paramValues[]);
-  QueryResults DoNamedQuery(const wxString &name) { return DoNamedQuery(name, 0, NULL, NULL); }
-  QueryResults DoNamedQuery(const wxString &name, Oid paramType, const char *paramValue) { return DoNamedQuery(name, 1, &paramType, &paramValue); }
-  QueryResults DoNamedQuery(const wxString &name, Oid param1Type, Oid param2Type, const char *param1Value, const char *param2Value) {
-    Oid paramTypes[2];
-    paramTypes[0] = param1Type;
-    paramTypes[1] = param2Type;
-    const char *paramValues[2];
-    paramValues[0] = param1Value;
-    paramValues[1] = param2Value;
-    return DoNamedQuery(name, 2, paramTypes, paramValues);
-  }
-  QueryResults DoNamedQuery(const wxString &name, Oid param1Type, Oid param2Type, Oid param3Type, const char *param1Value, const char *param2Value, const char *param3Value) {
-    Oid paramTypes[3];
-    paramTypes[0] = param1Type;
-    paramTypes[1] = param2Type;
-    paramTypes[2] = param3Type;
-    const char *paramValues[3];
-    paramValues[0] = param1Value;
-    paramValues[1] = param2Value;
-    paramValues[2] = param3Value;
-    return DoNamedQuery(name, 3, paramTypes, paramValues);
+  QueryResults DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const;
+  QueryResults DoQuery(const char *sql, std::vector<Oid> const& paramTypes, std::vector<wxString> const& paramValues) const;
+
+  QueryResults DoNamedQuery(const wxString &name, const char *sql, int paramCount, Oid *paramTypes, const char **paramValues) const;
+  QueryResults DoNamedQuery(const wxString &name, const char *sql, std::vector<Oid> const& paramTypes, std::vector<wxString> const& paramValues) const;
+
+  /**
+   * Fluent-style query executor class.
+   */
+  class QueryExecutor {
+  public:
+    QueryExecutor(const DatabaseWork *owner, const char *sql) : owner(owner), sql(sql) {}
+
+    /**
+     * Add parameter with string value.
+     */
+    QueryExecutor& Param(Oid type, const wxString& value) {
+      paramTypes.push_back(type);
+      paramValues.push_back(value);
+      return *this;
+    }
+
+    /**
+     * Add OID parameter.
+     */
+    QueryExecutor& OidParam(Oid value) {
+      return Param(26 /*oid*/, wxString::Format(_T("%lu"), value));
+    }
+
+    /**
+     * Execute for result set.
+     */
+    QueryResults List() {
+      return owner->DoQuery(sql, paramTypes, paramValues);
+    }
+
+    /**
+     * Execute for single row.
+     */
+    QueryResults::Row UniqueResult() {
+      QueryResults rs = List();
+      wxASSERT(rs.size() == 1);
+      return rs[0];
+    }
+ private:
+    const DatabaseWork *owner;
+    const char *sql;
+    std::vector<Oid> paramTypes;
+    std::vector<wxString> paramValues;
+  };
+
+  /**
+   * Execute query.
+   *
+   * Call as:
+   * <code>Query("SELECT * FROM pg_database WHERE oid = $1").Param(26, oid).UniqueResult()</code>
+   */
+  QueryExecutor Query(const char *sql) const {
+    return QueryExecutor(this, sql);
   }
 
 protected:
   DatabaseConnection *db;
   PGconn *conn;
-  const VersionedSql *sqlDictionary;
 
   friend class DatabaseConnection::WorkerThread;
+};
+
+/**
+ * Some database work with a SQL dictionary.
+ */
+class DatabaseWorkWithDictionary : public DatabaseWork {
+public:
+  DatabaseWorkWithDictionary(const VersionedSql &sqlDictionary) : sqlDictionary(sqlDictionary) {}
+
+  /**
+   * Execute named command.
+   */
+  bool DoCommand(const wxString &name) const { return DatabaseWork::DoCommand(GetSql(name)); }
+  /**
+   * Execute named query with array parameters.
+   */
+  QueryResults DoQuery(const wxString &name, int paramCount, Oid paramTypes[], const char *paramValues[]) const
+  {
+    return DatabaseWork::DoNamedQuery(name, GetSql(name), paramCount, paramTypes, paramValues);
+  }
+  /**
+   * Execute named query with vector parameters.
+   */
+  QueryResults DoQuery(const wxString &name, const std::vector<Oid>& paramTypes, const std::vector<wxString>& paramValues) const
+  {
+    if (paramTypes.empty()) return DatabaseWork::DoNamedQuery(name, GetSql(name), 0, NULL, NULL);
+    return DatabaseWork::DoNamedQuery(name, GetSql(name), paramTypes, paramValues);
+  }
+  /**
+   * Get SQL from dictionary.
+   */
+  const char *GetSql(const wxString &name) const
+  {
+    return sqlDictionary.GetSql(name, PQserverVersion(conn));
+  }
+
+  /**
+   * Fluent-style named query executor class.
+   */
+  class NamedQueryExecutor {
+  public:
+    NamedQueryExecutor(const DatabaseWorkWithDictionary *owner, const wxString& name) : owner(owner), name(name) {}
+
+    /**
+     * Add a parameter with a string value.
+     */
+    NamedQueryExecutor& Param(Oid type, const wxString& value) {
+      paramTypes.push_back(type);
+      paramValues.push_back(value);
+      return *this;
+    }
+
+    /**
+     * Add an OID parameter.
+     */
+    NamedQueryExecutor& OidParam(Oid value) {
+      return Param(26 /*oid*/, wxString::Format(_T("%lu"), value));
+    }
+
+    /**
+     * Execute query and return result set.
+     */
+    QueryResults List() {
+      return owner->DoQuery(name, paramTypes, paramValues);
+    }
+
+    /**
+     * Execute query and return exactly one row.
+     */
+    QueryResults::Row UniqueResult() {
+      QueryResults rs = List();
+      wxASSERT(rs.size() == 1);
+      return rs[0];
+    }
+
+ private:
+    const DatabaseWorkWithDictionary *owner;
+    wxString name;
+    std::vector<Oid> paramTypes;
+    std::vector<wxString> paramValues;
+  };
+
+  /**
+   * Execute a query.
+   *
+   * Call as:
+   * <code>Query(_T("QueryName")).Param(26, 31337).List()</code>
+   */
+  NamedQueryExecutor Query(const wxString &name) const {
+    return NamedQueryExecutor(this, name);
+  }
+
+private:
+  const VersionedSql& sqlDictionary;
 };
 
 #endif

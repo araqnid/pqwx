@@ -24,9 +24,9 @@ public:
   wxString type;
 };
 
-class LoadInitialObjectWork : public DatabaseWork {
+class LoadInitialObjectWork : public DatabaseWorkWithDictionary {
 public:
-  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), regclass(regclass), oid(oid) {
+  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWorkWithDictionary(DependenciesView::GetSqlDictionary()), dest(dest), regclass(regclass), oid(oid) {
     wxLogDebug(_T("Work to load dependency tree root: %p"), (void*) this);
   }
 
@@ -70,9 +70,9 @@ public:
   std::vector<DependencyModel*> objects;
 };
 
-class LoadMoreDependenciesWork : public DatabaseWork {
+class LoadMoreDependenciesWork : public DatabaseWorkWithDictionary {
 public:
-  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid, Oid database) : DatabaseWork(&(DependenciesView::GetSqlDictionary())), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid), database(database) {
+  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid, Oid database) : DatabaseWorkWithDictionary(DependenciesView::GetSqlDictionary()), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid), database(database) {
     wxLogDebug(_T("Work to load dependencies: %p"), this);
   }
 
@@ -95,11 +95,7 @@ protected:
   }
 
   QueryResults DoDependenciesQuery(const wxString &name) {
-    wxString classValue, objectValue, databaseValue;
-    classValue << regclass;
-    objectValue << oid;
-    databaseValue << database;
-    return DoNamedQuery(name, 26 /*oid*/, 26 /*oid*/, 26 /*oid*/, classValue.utf8_str(), objectValue.utf8_str(), databaseValue.utf8_str());
+    return Query(name).OidParam(regclass).OidParam(oid).OidParam(database).List();
   }
 
   void NotifyFinished() {

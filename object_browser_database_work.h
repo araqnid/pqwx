@@ -24,6 +24,8 @@
  */
 class ObjectBrowserWork {
 public:
+  ObjectBrowserWork() : sqlDictionary(ObjectBrowser::GetSqlDictionary()) {}
+
   /**
    * Execute work.
    *
@@ -38,34 +40,11 @@ public:
    */
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
 protected:
-  /**
-   * Perform a query with a single numeric parameter and return a result set.
-   */
-  QueryResults DoQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
-    wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    return owner->DoNamedQuery(name, paramType, valueString.utf8_str());
+  DatabaseWorkWithDictionary::NamedQueryExecutor Query(const wxString &name)
+  {
+    return owner->Query(name);
   }
-  /**
-   * Perform a query with a single numerc parameter and return a single row.
-   */
-  QueryResults::Row DoSingleRowQuery(const wxString &name, Oid paramType, unsigned long paramValue) {
-    wxString valueString = wxString::Format(_T("%lu"), paramValue);
-    QueryResults results = owner->DoNamedQuery(name, paramType, valueString.utf8_str());
-    wxASSERT(results.size() == 1);
-    return results[0];
-  }
-  /**
-   * Perform a query with a single string parameter and return a result set.
-   */
-  QueryResults DoQuery(const wxString &name, Oid paramType, const char *paramValue) {
-    return owner->DoNamedQuery(name, paramType, paramValue);
-  }
-  /**
-   * Perform a query with a no parameters and return a result set.
-   */
-  QueryResults DoQuery(const wxString &name) {
-    return owner->DoNamedQuery(name);
-  }
+
   /**
    * Quote an identified for use in a generated SQL statement.
    */
@@ -77,18 +56,22 @@ protected:
   /**
    * The actual database work object wrapping this.
    */
-  DatabaseWork *owner;
+  DatabaseWorkWithDictionary *owner;
   /**
    * The actual libpq connection object.
    */
   PGconn *conn;
+
+private:
+  const VersionedSql& sqlDictionary;
+
   friend class ObjectBrowserDatabaseWork;
 };
 
 /**
  * Implementation of DatabaseWork that deals with passing results back to the GUI thread.
  */
-class ObjectBrowserDatabaseWork : public DatabaseWork {
+class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
 public:
   /**
    * State of this work object.
@@ -97,7 +80,7 @@ public:
   /**
    * Create work object.
    */
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work), state(PENDING) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work), state(PENDING) {}
   void operator()() {
     ChangeState(PENDING, EXECUTED);
     work->owner = this;
@@ -118,6 +101,7 @@ public:
     wxCriticalSectionLocker locker(crit);
     return state;
   }
+
 private:
   wxEvtHandler *dest;
   ObjectBrowserWork *work;
@@ -170,7 +154,7 @@ private:
   }
 
   void ReadDatabases() {
-    QueryResults databaseRows = DoQuery(_T("Databases"));
+    QueryResults databaseRows = Query(_T("Databases")).List();
     for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
       DatabaseModel *database = new DatabaseModel();
       database->server = serverModel;
@@ -191,7 +175,7 @@ private:
   }
 
   void ReadRoles() {
-    QueryResults roleRows = DoQuery(_T("Roles"));
+    QueryResults roleRows = Query(_T("Roles")).List();
     for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
       RoleModel *role = new RoleModel();
       role->oid = (*iter).ReadOid(0);
@@ -233,7 +217,7 @@ protected:
     typemap[_T("r")] = RelationModel::TABLE;
     typemap[_T("v")] = RelationModel::VIEW;
     typemap[_T("S")] = RelationModel::SEQUENCE;
-    QueryResults relationRows = DoQuery(_T("Relations"));
+    QueryResults relationRows = Query(_T("Relations")).List();
     for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
       relation->database = databaseModel;
@@ -256,7 +240,7 @@ protected:
     typemap[_T("fs")] = FunctionModel::RECORDSET;
     typemap[_T("fa")] = FunctionModel::AGGREGATE;
     typemap[_T("fw")] = FunctionModel::WINDOW;
-    QueryResults functionRows = DoQuery(_T("Functions"));
+    QueryResults functionRows = Query(_T("Functions")).List();
     for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
       func->database = databaseModel;
@@ -299,7 +283,7 @@ private:
   std::map<unsigned long, wxString> descriptions;
 protected:
   void operator()() {
-    QueryResults rs = DoQuery(_T("Object Descriptions"));
+    QueryResults rs = Query(_T("Object Descriptions")).List();
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
       unsigned long oid;
       wxString description;
@@ -369,7 +353,7 @@ protected:
     typeMap[_T("T")] = CatalogueIndex::TYPE;
     typeMap[_T("x")] = CatalogueIndex::EXTENSION;
     typeMap[_T("O")] = CatalogueIndex::COLLATION;
-    QueryResults rs = DoQuery(_T("IndexSchema"));
+    QueryResults rs = Query(_T("IndexSchema")).List();
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -435,9 +419,7 @@ protected:
   }
 private:
   void ReadColumns() {
-    wxString oidValue;
-    oidValue.Printf(_T("%d"), relationModel->oid);
-    QueryResults attributeRows = DoQuery(_T("Columns"), 26 /* oid */, oidValue.utf8_str());
+    QueryResults attributeRows = Query(_T("Columns")).OidParam(relationModel->oid).List();
     for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
       column->relation = relationModel;
@@ -450,8 +432,7 @@ private:
     }
   }
   void ReadIndices() {
-    wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
-    QueryResults indexRows = DoQuery(_T("Indices"), 26 /* oid */, oidValue.utf8_str());
+    QueryResults indexRows = Query(_T("Indices")).OidParam(relationModel->oid).List();
     for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
       IndexModel *index = new IndexModel();
       index->name = (*iter).ReadText(0);
@@ -459,8 +440,7 @@ private:
     }
   }
   void ReadTriggers() {
-    wxString oidValue = wxString::Format(_T("%d"), relationModel->oid);
-    QueryResults triggerRows = DoQuery(_T("Triggers"), 26 /* oid */, oidValue.utf8_str());
+    QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationModel->oid).List();
     for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       trigger->name = (*iter).ReadText(0);

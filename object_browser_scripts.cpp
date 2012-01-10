@@ -3,7 +3,7 @@
 #include "object_browser_database_work.h"
 
 void DatabaseScriptWork::operator()() {
-  QueryResults rs = DoQuery(_T("Database Detail"), 26 /* oid */, database->oid);
+  QueryResults rs = Query(_T("Database Detail")).OidParam(database->oid).List();
   wxASSERT(rs.size() == 1);
   wxASSERT(rs[0].size() >= 5);
   wxString ownerName = rs[0][0];
@@ -42,8 +42,8 @@ void DatabaseScriptWork::operator()() {
 }
 
 void TableScriptWork::operator()() {
-  QueryResults::Row tableDetail = DoSingleRowQuery(_T("Table Detail"), 26 /* oid */, table->oid);
-  QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, table->oid);
+  QueryResults::Row tableDetail = Query(_T("Table Detail")).OidParam(table->oid).UniqueResult();
+  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(table->oid).List();
 
   switch (mode) {
   case Create: {
@@ -190,8 +190,8 @@ void TableScriptWork::operator()() {
 }
 
 void ViewScriptWork::operator()() {
-  QueryResults::Row viewDetail = DoSingleRowQuery(_T("View Detail"), 26 /* oid */, view->oid);
-  QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, view->oid);
+  QueryResults::Row viewDetail = Query(_T("View Detail")).OidParam(view->oid).UniqueResult();
+  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(view->oid).List();
 
   switch (mode) {
   case Create:
@@ -242,7 +242,7 @@ void ViewScriptWork::operator()() {
 }
 
 void SequenceScriptWork::operator()() {
-  QueryResults::Row sequenceDetail = DoSingleRowQuery(_T("Sequence Detail"), 26 /* oid */, sequence->oid);
+  QueryResults::Row sequenceDetail = Query(_T("Sequence Detail")).OidParam(sequence->oid).UniqueResult();
 }
 
 static void EscapeCode(const wxString &src, wxString &buf) {
@@ -367,7 +367,7 @@ static inline std::vector<bool> ReadIOModeArray(const QueryResults::Row &row, un
 std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const std::set<Oid> &types) {
   std::map<Oid, Typeinfo> typeMap;
   for (std::set<Oid>::const_iterator iter = types.begin(); iter != types.end(); iter++) {
-    QueryResults::Row typeInfo = DoSingleRowQuery(_T("Type Info"), 26 /* oid */, *iter);
+    QueryResults::Row typeInfo = Query(_T("Type Info")).OidParam(*iter).UniqueResult();
     Typeinfo typeinfo;
     typeinfo.schema = typeInfo.ReadText(0);
     typeinfo.name = typeInfo.ReadText(1);
@@ -390,7 +390,7 @@ static void DumpCollection(const wxString &tag, T collection) {
 }
 
 void FunctionScriptWork::operator()() {
-  QueryResults::Row functionDetail = DoSingleRowQuery(_T("Function Detail"), 26 /* oid */, function->oid);
+  QueryResults::Row functionDetail = Query(_T("Function Detail")).OidParam(function->oid).UniqueResult();
   std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
   std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
   std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 3);

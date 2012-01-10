@@ -72,7 +72,7 @@ wxString DatabaseWork::QuoteLiteral(const wxString &str) const {
   return result;
 }
 
-bool DatabaseWork::DoCommand(const char *sql) {
+bool DatabaseWork::DoCommand(const char *sql) const {
   db->LogSql(sql);
 
   PGresult *rs = PQexec(conn, sql);
@@ -92,7 +92,8 @@ bool DatabaseWork::DoCommand(const char *sql) {
   return true;
 }
 
-QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) {
+QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const
+{
   db->LogSql(sql);
 
 #ifdef __WXDEBUG__
@@ -124,10 +125,9 @@ QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTyp
   return results;
 }
 
-QueryResults DatabaseWork::DoNamedQuery(const wxString &name, int paramCount, Oid paramTypes[], const char *paramValues[]) {
+QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const
+{
   if (!db->IsStatementPrepared(name)) {
-    const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
-
     db->LogSql((wxString(_T("/* prepare */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
 
     PGresult *prepareResult = PQprepare(conn, name.utf8_str(), sql, paramCount, paramTypes);
@@ -146,8 +146,6 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, int paramCount, Oi
   }
 #ifdef __WXDEBUG__
   else {
-    const char *sql = sqlDictionary->GetSql(name, PQserverVersion(conn));
-
     db->LogSql((wxString(_T("/* execute */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
   }
 #endif
@@ -178,4 +176,21 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, int paramCount, Oi
   PQclear(rs);
 
   return results;
+}
+
+QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, const std::vector<Oid>& paramTypes, const std::vector<wxString>& paramValues) const
+{
+  unsigned paramCount = paramTypes.size();
+  Oid *paramTypesArray = new Oid[paramCount];
+  std::vector<wxCharBuffer> buffers;
+  const char **paramValuesArray = new const char *[paramCount];
+  for (unsigned i = 0; i < paramCount; i++) {
+    paramTypesArray[i] = paramTypes[i];
+    buffers.push_back(paramValues[i].utf8_str());
+    paramValuesArray[i] = buffers.back().data();
+  }
+  QueryResults rs = DoNamedQuery(name, sql, paramCount, paramTypesArray, paramValuesArray);
+  delete[] paramTypesArray;
+  delete[] paramValuesArray;
+  return rs;
 }

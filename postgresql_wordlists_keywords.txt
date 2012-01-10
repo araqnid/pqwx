@@ -23,6 +23,7 @@ copy
 cost
 create
 database
+deallocate
 default
 definer
 delete
@@ -35,6 +36,7 @@ else
 encoding
 end
 exclusion
+execute
 exists
 explain
 false
@@ -75,6 +77,7 @@ over
 owner
 parser
 partition
+prepare
 primary
 read
 references

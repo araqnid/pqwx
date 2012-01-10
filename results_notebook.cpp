@@ -8,12 +8,17 @@
 
 #include "wx/grid.h"
 #include "wx/tokenzr.h"
+#include "wx/wupdlock.h"
+#include "wx/html/htmlwin.h"
 #include "pqwx.h"
 #include "results_notebook.h"
 #include "pg_error.h"
 
 BEGIN_EVENT_TABLE(ResultsNotebook, wxNotebook)
+  EVT_HTML_CELL_CLICKED(Pqwx_MessagesDisplay, ResultsNotebook::OnMessageClicked)
 END_EVENT_TABLE()
+
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptShowPosition)
 
 void ResultsNotebook::Setup()
 {
@@ -23,33 +28,22 @@ void ResultsNotebook::Setup()
   messagesPanel = new wxPanel(this, Pqwx_MessagesPage);
   AddPage(messagesPanel, _("&Messages"), true);
 
-  messagesDisplay = new wxStyledTextCtrl(messagesPanel, Pqwx_MessagesDisplay);
-  messagesDisplay->SetReadOnly(true);
-#if wxUSE_UNICODE
-  messagesDisplay->SetCodePage(wxSTC_CP_UTF8);
-#endif
-  messagesDisplay->StyleClearAll();
-  messagesDisplay->StyleSetSpec(Style_Default, _T("fore:#808080"));
-  messagesDisplay->StyleSetSpec(Style_Error, _T("fore:#cc0000,bold"));
-  messagesDisplay->StyleSetSpec(Style_Notice, _T("fore:#000088"));
-  messagesDisplay->StyleSetSpec(Style_EchoMessage, _T("fore:#000088"));
+  messagesDisplay = new wxHtmlWindow(messagesPanel, Pqwx_MessagesDisplay);
 
   wxSizer *displaySizer = new wxBoxSizer(wxVERTICAL);
   displaySizer->Add(messagesDisplay, 1, wxEXPAND);
   messagesPanel->SetSizer(displaySizer);
 }
 
-void ResultsNotebook::ScriptCommandCompleted(const wxString& statusTag)
+void ResultsNotebook::ScriptCommandCompleted(const wxString& statusTag, const wxString &query, unsigned scriptPosition)
 {
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(statusTag);
-  messagesDisplay->AddText(_T("\n"));
-  messagesDisplay->SetReadOnly(true);
+  messagesDisplay->AppendToPage(_T("<font color='#000000'>") + statusTag + _T("</font><br>"));
 }
 
-void ResultsNotebook::ScriptResultSet(const wxString& statusTag,
-				      const QueryResults& data)
+void ResultsNotebook::ScriptResultSet(const wxString& statusTag, const QueryResults& data, const wxString& query, unsigned scriptPosition)
 {
+  wxWindowUpdateLocker noUpdates(this);
+
   wxPanel *resultsPanel = new wxPanel(this, wxID_ANY);
   AddPage(resultsPanel, _("&Results"), !addedResultSet && !addedError);
   wxSizer *resultsSizer = new wxBoxSizer(wxVERTICAL);
@@ -58,91 +52,83 @@ void ResultsNotebook::ScriptResultSet(const wxString& statusTag,
 
   addedResultSet = true;
 
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(statusTag);
-  messagesDisplay->AddText(_T("\n"));
-  messagesDisplay->SetReadOnly(true);
+  ScriptCommandCompleted(statusTag, query, scriptPosition);
 }
 
-void ResultsNotebook::ScriptError(const PgError& error, const wxString &query)
+void ResultsNotebook::ScriptError(const PgError& error, const wxString &query, unsigned scriptPosition)
 {
-  int pos = messagesDisplay->GetLength();
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), error.severity.c_str(), error.primary.c_str()));
-  if (!error.detail.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), error.detail.c_str()));
-  }
-  if (!error.hint.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), error.hint.c_str()));
-  }
-  if (!error.context.empty()) {
-    wxStringTokenizer tkz(error.context, _T("\n"));
-    messagesDisplay->AddText(_("CONTEXT:\n"));
-    while (tkz.HasMoreTokens()) {
-      messagesDisplay->AddText(wxString::Format(_T("\t%s\n"), tkz.GetNextToken().c_str()));
-    }
-  }
-  messagesDisplay->SetReadOnly(true);
+  wxWindowUpdateLocker noUpdates(this);
+
+  unsigned linkTarget = scriptPosition;
+  if (error.HasPosition()) linkTarget += error.GetPosition();
+  messagesDisplay->AppendToPage(wxString::Format(_T("<a href='#%u'>"), linkTarget));
+  AppendServerMessage(error, _T("#ff0000"), true);
+  messagesDisplay->AppendToPage(_T("</a>"));
   addedError = true;
   SetSelection(0);
-  messagesDisplay->StartStyling(pos, 31);
-  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Error);
 }
 
-void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString &query)
+void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString &query, unsigned scriptPosition)
 {
-  int pos = messagesDisplay->GetLength();
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(error);
-  messagesDisplay->AddText(_T("\n"));
-  messagesDisplay->SetReadOnly(true);
+  messagesDisplay->AppendToPage(_T("<font color='#ff0000'><b>") + error + _T("</b></font><br>"));
   addedError = true;
   SetSelection(0);
-  messagesDisplay->StartStyling(pos, 31);
-  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Error);
 }
 
-void ResultsNotebook::ScriptEcho(const wxString& message)
+void ResultsNotebook::ScriptEcho(const wxString& message, unsigned scriptPosition)
 {
-  int pos = messagesDisplay->GetLength();
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(message);
-  messagesDisplay->AddText(_T("\n"));
-  messagesDisplay->SetReadOnly(true);
-  messagesDisplay->StartStyling(pos, 31);
-  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_EchoMessage);
+  messagesDisplay->AppendToPage(_T("<font color='#000088'>") + message + _T("</font><br>"));
 }
 
-void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query)
+void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query, unsigned scriptPosition)
 {
-  int pos = messagesDisplay->GetLength();
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), notice.severity.c_str(), notice.primary.c_str()));
-  if (!notice.detail.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), notice.detail.c_str()));
-  }
-  if (!notice.hint.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), notice.hint.c_str()));
-  }
-  messagesDisplay->SetReadOnly(true);
-  messagesDisplay->StartStyling(pos, 31);
-  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Notice);
+  wxWindowUpdateLocker noUpdates(this);
+  AppendServerMessage(notice, _T("#0000ff"));
 }
 
 void ResultsNotebook::ScriptAsynchronousNotice(const PgError& notice)
 {
-  int pos = messagesDisplay->GetLength();
-  messagesDisplay->SetReadOnly(false);
-  messagesDisplay->AddText(wxString::Format(_("%s: %s\n"), notice.severity.c_str(), notice.primary.c_str()));
-  if (!notice.detail.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("DETAIL: %s\n"), notice.detail.c_str()));
+  wxWindowUpdateLocker noUpdates(this);
+  AppendServerMessage(notice, _T("#0000ff"));
+}
+
+void ResultsNotebook::AppendServerMessage(const PgError& message, const wxString &colour, bool bold)
+{
+  messagesDisplay->AppendToPage(_T("<font color='") + colour + _T("'>"));
+  if (bold) messagesDisplay->AppendToPage(_T("<b>"));
+  messagesDisplay->AppendToPage(wxString::Format(_T("%s: %s<br>"), message.GetSeverity().c_str(), message.GetPrimary().c_str()));
+  if (message.HasDetail()) {
+    messagesDisplay->AppendToPage(wxString::Format(_T("%s: %s<br>"), _("DETAIL"), message.GetDetail().c_str()));
   }
-  if (!notice.hint.empty()) {
-    messagesDisplay->AddText(wxString::Format(_("HINT: %s\n"), notice.hint.c_str()));
+  if (message.HasHint()) {
+    messagesDisplay->AppendToPage(wxString::Format(_T("%s: %s<br>"), _("HINT"), message.GetHint().c_str()));
   }
-  messagesDisplay->SetReadOnly(true);
-  messagesDisplay->StartStyling(pos, 31);
-  messagesDisplay->SetStyling(messagesDisplay->GetLength() - pos, Style_Notice);
+  if (message.HasContext()) {
+    messagesDisplay->AppendToPage(wxString::Format(_T("%s:<br>"), _("CONTEXT")));
+    messagesDisplay->AppendToPage(_T("<ul>"));
+    for (std::vector<wxString>::const_iterator iter = message.GetContext().begin(); iter != message.GetContext().end(); iter++) {
+      messagesDisplay->AppendToPage(wxString::Format(_T("<li>%s</li>"), (*iter).c_str()));
+    }
+    messagesDisplay->AppendToPage(_T("</ul>"));
+  }
+  if (bold) messagesDisplay->AppendToPage(_T("</b>"));
+  messagesDisplay->AppendToPage(_T("</font>"));
+}
+
+void ResultsNotebook::OnMessageClicked(wxHtmlCellEvent &event)
+{
+  wxHtmlLinkInfo *info = event.GetCell()->GetLink();
+
+  if (info == NULL) return;
+
+  long position;
+  wxCHECK2_MSG(info->GetHref().Mid(1).ToLong(&position), , info->GetHref());
+
+  event.SetLinkClicked(true);
+
+  wxCommandEvent cmd(PQWX_ScriptShowPosition);
+  cmd.SetInt((int) position);
+  ProcessEvent(cmd);
 }
 
 void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)

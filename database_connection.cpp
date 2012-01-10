@@ -257,7 +257,7 @@ void DatabaseConnection::LogSqlQueryInvalidStatus(const char *msg, ExecStatusTyp
 }
 
 void DatabaseConnection::LogSqlQueryFailed(const PgError &error) {
-  wxLogDebug(_T("thr#%lx [%s] query failed: %s | %s"), wxThread::GetCurrentId(), identification.c_str(), error.severity.c_str(), error.primary.c_str());
+  wxLogDebug(_T("thr#%lx [%s] query failed: %s | %s"), wxThread::GetCurrentId(), identification.c_str(), error.GetSeverity().c_str(), error.GetPrimary().c_str());
 }
 
 void DatabaseConnection::AddWork(DatabaseWork *work) {

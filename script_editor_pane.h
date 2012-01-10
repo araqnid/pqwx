@@ -60,6 +60,7 @@ public:
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(wxCommandEvent &event);
   void OnTimerTick(wxTimerEvent &event);
+  void OnShowPosition(wxCommandEvent &event);
 
   /**
    * Gets the script editor.
@@ -247,15 +248,15 @@ private:
   void BeginPutCopyData();
   void FinishExecution();
 
-  typedef bool (ScriptEditorPane::*PsqlCommandHandler)(const wxString&);
+  typedef bool (ScriptEditorPane::*PsqlCommandHandler)(const wxString&, const ExecutionLexer::Token&);
   static const std::map<wxString, PsqlCommandHandler> psqlCommandHandlers;
   static std::map<wxString, PsqlCommandHandler> InitPsqlCommandHandlers();
 
-  bool PsqlChangeDatabase(const wxString &args);
-  bool PsqlExecuteBuffer(const wxString &args);
-  bool PsqlPrintMessage(const wxString &args);
+  bool PsqlChangeDatabase(const wxString &args, const ExecutionLexer::Token &t);
+  bool PsqlExecuteBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  bool PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
 
-  void ReportInternalError(const wxString &error, const wxString &command);
+  void ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition);
 
   ResultsNotebook *GetOrCreateResultsBook() { if (resultsBook == NULL) CreateResultsBook(); return resultsBook; };
   void CreateResultsBook();

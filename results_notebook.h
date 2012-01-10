@@ -7,10 +7,12 @@
 #define __results_book_h
 
 #include "wx/notebook.h"
-#include "wx/stc/stc.h"
 #include "pqwx.h"
 #include "script_events.h"
 #include "query_results.h"
+
+class wxHtmlWindow;
+class wxHtmlCellEvent;
 
 /**
  * Notebook widget containing messages and result grids from a script execution.
@@ -31,27 +33,27 @@ public:
   /**
    * Add command completion to messages.
    */
-  void ScriptCommandCompleted(const wxString& statusTag);
+  void ScriptCommandCompleted(const wxString& statusTag, const wxString &query, unsigned scriptPosition);
   /**
    * Add a result set.
    */
-  void ScriptResultSet(const wxString &statusTag, const QueryResults &data);
+  void ScriptResultSet(const wxString &statusTag, const QueryResults &data, const wxString &query, unsigned scriptPosition);
   /**
    * Add a server error.
    */
-  void ScriptError(const PgError &error, const wxString &query);
+  void ScriptError(const PgError &error, const wxString &query, unsigned scriptPosition);
   /**
    * Add an internal error.
    */
-  void ScriptInternalError(const wxString &error, const wxString &query);
+  void ScriptInternalError(const wxString &error, const wxString &query, unsigned scriptPosition);
   /**
    * Add a message output by a script using the echo command.
    */
-  void ScriptEcho(const wxString &message);
+  void ScriptEcho(const wxString &message, unsigned scriptPosition);
   /**
    * Add a notice message that occurred while executing a query.
    */
-  void ScriptQueryNotice(const PgError &notice, const wxString &query);
+  void ScriptQueryNotice(const PgError &notice, const wxString &query, unsigned scriptPosition);
   /**
    * Add a notice message that occurred asynchronously.
    */
@@ -59,7 +61,7 @@ public:
 
 private:
   wxPanel *messagesPanel;
-  wxStyledTextCtrl *messagesDisplay;
+  wxHtmlWindow *messagesDisplay;
 
   void AddResultSet(wxPanel *parent, const QueryResults &data);
   bool addedResultSet;
@@ -67,10 +69,9 @@ private:
 
   void Setup();
 
-  static const int Style_Default = 0;
-  static const int Style_Error = 1;
-  static const int Style_Notice = 2;
-  static const int Style_EchoMessage = 3;
+  void AppendServerMessage(const PgError &message, const wxString &color = _T("000000"), bool bold = false);
+
+  void OnMessageClicked(wxHtmlCellEvent&);
 
   DECLARE_EVENT_TABLE()
 };

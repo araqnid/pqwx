@@ -22,6 +22,7 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditorPane::OnQueryComplete)
   PQWX_SCRIPT_SERVER_NOTICE(wxID_ANY, ScriptEditorPane::OnConnectionNotice)
   EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
+  PQWX_SCRIPT_SHOW_POSITION(wxID_ANY, ScriptEditorPane::OnShowPosition)
 END_EVENT_TABLE()
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptStateUpdated)
@@ -208,7 +209,7 @@ void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
   if (execution == NULL || !execution->LastSqlTokenValid())
     GetOrCreateResultsBook()->ScriptAsynchronousNotice(*error);
   else
-    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetWXString(execution->GetLastSqlToken()));
+    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetWXString(execution->GetLastSqlToken()), execution->GetLastSqlToken().offset);
   delete error;
 }
 
@@ -307,9 +308,9 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
   }
 }
 
-inline void ScriptEditorPane::ReportInternalError(const wxString &error, const wxString &command)
+inline void ScriptEditorPane::ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition)
 {
-  GetOrCreateResultsBook()->ScriptInternalError(error, command);
+  GetOrCreateResultsBook()->ScriptInternalError(error, command, scriptPosition);
 }
 
 bool ScriptEditorPane::ProcessExecution()
@@ -369,12 +370,12 @@ bool ScriptEditorPane::ProcessExecution()
     wxLogDebug(_T("psql | %s | %s"), command.c_str(), parameters.c_str());
     std::map<wxString, PsqlCommandHandler>::const_iterator handler = psqlCommandHandlers.find(command);
     if (handler == psqlCommandHandlers.end()) {
-      ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString);
+      ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString, t.offset);
       execution->BumpErrors();
       return true;
     }
     else {
-      return CALL_PSQL_HANDLER(*this, handler->second)(parameters);
+      return CALL_PSQL_HANDLER(*this, handler->second)(parameters, t);
     }
   }
 }
@@ -411,16 +412,16 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
 
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data->size());
-    GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data);
+    GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, execution->GetWXString(result->token), result->GetScriptPosition());
     execution->AddRows(result->data->size());
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
-    GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag);
+    GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, execution->GetWXString(result->token), result->GetScriptPosition());
   }
   else if (result->status == PGRES_FATAL_ERROR) {
-    wxLogDebug(_T("Got error: %s"), result->error.primary.c_str());
-    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token));
+    wxLogDebug(_T("Got error: %s"), result->error.GetPrimary().c_str());
+    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token), result->GetScriptPosition());
     execution->BumpErrors();
   }
 
@@ -438,7 +439,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   }
 }
 
-bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters)
+bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   // TODO handle connection problems...
   wxString newDbName = db->DbName();
@@ -480,7 +481,7 @@ bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters)
   return true;
 }
 
-bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters)
+bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   if (!execution->LastSqlTokenValid()) return true; // \g at beginning of script?
   BeginQuery(execution->GetLastSqlToken());
@@ -488,8 +489,14 @@ bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters)
   return false;
 }
 
-bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters)
+bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)
 {
-  GetOrCreateResultsBook()->ScriptEcho(parameters);
+  GetOrCreateResultsBook()->ScriptEcho(parameters, t.offset);
   return true;
+}
+
+void ScriptEditorPane::OnShowPosition(wxCommandEvent &event)
+{
+  editor->GotoPos(event.GetInt());
+  editor->SetFocus();
 }

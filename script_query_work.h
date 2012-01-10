@@ -44,6 +44,11 @@ public:
 	newConnectionState = Decode(PQtransactionStatus(conn));
       }
     }
+
+    /**
+     * The offset within the script that caused this execution unit.
+     */
+    unsigned GetScriptPosition() const { return token.offset; }
   private:
     const ExecutionLexer::Token token;
     ExecStatusType status;

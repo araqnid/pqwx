@@ -203,15 +203,8 @@ void ViewScriptWork::operator()() {
       sql << _T("CREATE VIEW ");
     else
       sql << _T("CREATE OR REPLACE VIEW ");
-    sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name) << _T("(\n");
-    unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
-      wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
-      sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
-      if (n != (columns.size()-1))
-	sql << _T(",\n");
-    }
-    sql << _T(") AS\n")
+    sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name)
+	<< _T(" AS\n")
 	<< definition;
     statements.push_back(sql);
   }

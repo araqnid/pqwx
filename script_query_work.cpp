@@ -43,7 +43,7 @@ void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *con
   oidValue = PQoidValue(rs);
 }
 
-void ScriptQueryWork::Execute()
+void ScriptQueryWork::operator()()
 {
   wxStopWatch stopwatch;
 
@@ -62,7 +62,7 @@ void ScriptQueryWork::Execute()
   output->Finalise(stopwatch.Time(), conn);
 }
 
-void ScriptPutCopyDataWork::Execute()
+void ScriptPutCopyDataWork::operator()()
 {
   wxStopWatch stopwatch;
 

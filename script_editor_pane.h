@@ -170,7 +170,7 @@ private:
   class SetupNoticeProcessorWork : public DatabaseWork {
   public:
     SetupNoticeProcessorWork(ScriptEditorPane *owner) : owner(owner) {}
-    void Execute()
+    void operator()()
     {
       PQsetNoticeReceiver(conn, ScriptEditorNoticeReceiver, owner);
     }

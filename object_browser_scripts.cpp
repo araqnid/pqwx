@@ -2,7 +2,7 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 
-void DatabaseScriptWork::Execute() {
+void DatabaseScriptWork::operator()() {
   QueryResults rs = DoQuery(_T("Database Detail"), 26 /* oid */, database->oid);
   wxASSERT(rs.size() == 1);
   wxASSERT(rs[0].size() >= 5);
@@ -41,7 +41,7 @@ void DatabaseScriptWork::Execute() {
   statements.push_back(sql);
 }
 
-void TableScriptWork::Execute() {
+void TableScriptWork::operator()() {
   QueryResults::Row tableDetail = DoSingleRowQuery(_T("Table Detail"), 26 /* oid */, table->oid);
   QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, table->oid);
 
@@ -189,7 +189,7 @@ void TableScriptWork::Execute() {
   }
 }
 
-void ViewScriptWork::Execute() {
+void ViewScriptWork::operator()() {
   QueryResults::Row viewDetail = DoSingleRowQuery(_T("View Detail"), 26 /* oid */, view->oid);
   QueryResults columns = DoQuery(_T("Relation Column Detail"), 26 /* oid */, view->oid);
 
@@ -248,7 +248,7 @@ void ViewScriptWork::Execute() {
   }
 }
 
-void SequenceScriptWork::Execute() {
+void SequenceScriptWork::operator()() {
   QueryResults::Row sequenceDetail = DoSingleRowQuery(_T("Sequence Detail"), 26 /* oid */, sequence->oid);
 }
 
@@ -396,7 +396,7 @@ static void DumpCollection(const wxString &tag, T collection) {
   }
 }
 
-void FunctionScriptWork::Execute() {
+void FunctionScriptWork::operator()() {
   QueryResults::Row functionDetail = DoSingleRowQuery(_T("Function Detail"), 26 /* oid */, function->oid);
   std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
   std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);

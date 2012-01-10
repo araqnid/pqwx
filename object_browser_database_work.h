@@ -30,7 +30,7 @@ public:
    * Similar to the same-named method in DatabaseWork. This method is
    * executed on the database worker thread.
    */
-  virtual void Execute() = 0;
+  virtual void operator()() = 0;
   /**
    * Merge data obtained by work object into object browser.
    *
@@ -98,11 +98,11 @@ public:
    * Create work object.
    */
   ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWork(&(ObjectBrowser::GetSqlDictionary())), dest(dest), work(work), state(PENDING) {}
-  void Execute() {
+  void operator()() {
     ChangeState(PENDING, EXECUTED);
     work->owner = this;
     work->conn = conn;
-    work->Execute();
+    (*work)();
     state = EXECUTED;
   }
   void NotifyFinished() {
@@ -144,7 +144,7 @@ public:
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void Execute() {
+  void operator()() {
     ReadServer();
     ReadDatabases();
     ReadRoles();
@@ -224,7 +224,7 @@ private:
   wxTreeItemId databaseItem;
   bool expandAfter;
 protected:
-  void Execute() {
+  void operator()() {
     LoadRelations();
     LoadFunctions();
   }
@@ -298,7 +298,7 @@ private:
   DatabaseModel *databaseModel;
   std::map<unsigned long, wxString> descriptions;
 protected:
-  void Execute() {
+  void operator()() {
     QueryResults rs = DoQuery(_T("Object Descriptions"));
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
       unsigned long oid;
@@ -356,7 +356,7 @@ private:
   IndexSchemaCompletionCallback *completion;
   CatalogueIndex *catalogueIndex;
 protected:
-  void Execute() {
+  void operator()() {
     std::map<wxString, CatalogueIndex::Type> typeMap;
     typeMap[_T("t")] = CatalogueIndex::TABLE;
     typeMap[_T("v")] = CatalogueIndex::VIEW;
@@ -426,7 +426,7 @@ private:
   std::vector<IndexModel*> indices;
   std::vector<TriggerModel*> triggers;
 protected:
-  void Execute() {
+  void operator()() {
     ReadColumns();
     if (relationModel->type == RelationModel::TABLE) {
       ReadIndices();
@@ -547,7 +547,7 @@ public:
     wxLogDebug(_T("%p: work to generate database script"), this);
   }
 protected:
-  void Execute();
+  void operator()();
 };
 
 /**
@@ -561,7 +561,7 @@ public:
 private:
   RelationModel *table;
 protected:
-  void Execute();
+  void operator()();
 };
 
 /**
@@ -575,7 +575,7 @@ public:
 private:
   RelationModel *view;
 protected:
-  void Execute();
+  void operator()();
 };
 
 /**
@@ -589,7 +589,7 @@ public:
 private:
   RelationModel *sequence;
 protected:
-  void Execute();
+  void operator()();
 };
 
 /**
@@ -603,7 +603,7 @@ public:
 private:
   FunctionModel *function;
 protected:
-  void Execute();
+  void operator()();
 private:
   struct Typeinfo {
     wxString schema;

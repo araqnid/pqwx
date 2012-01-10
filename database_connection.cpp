@@ -6,7 +6,7 @@
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void Execute() {
+  void operator()() {
     int clientEncoding = PQclientEncoding(conn);
     const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
     if (strcmp(clientEncodingName, "UTF8") != 0) {
@@ -21,7 +21,7 @@ public:
 class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
-  void Execute() {
+  void operator()() {
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
@@ -36,7 +36,7 @@ private:
 class DisconnectWork : public DatabaseWork {
 public:
   DisconnectWork() {}
-  void Execute() {
+  void operator()() {
     PQfinish(conn);
     db->LogDisconnect();
   }
@@ -116,7 +116,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       SetState(DatabaseConnection::EXECUTING);
       work->db = db;
       work->conn = conn;
-      work->Execute();
+      (*work)();
       work->NotifyFinished();
       delete work;
       SetState(DatabaseConnection::IDLE);

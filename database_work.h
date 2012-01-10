@@ -22,7 +22,7 @@ public:
   DatabaseWork(const VersionedSql *sqlDictionary = NULL) : sqlDictionary(sqlDictionary) {}
   virtual ~DatabaseWork() {}
 
-  virtual void Execute() = 0;
+  virtual void operator()() = 0;
   virtual void NotifyFinished() = 0;
 
   wxString QuoteIdent(const wxString &str) const;

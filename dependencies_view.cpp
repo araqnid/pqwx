@@ -31,7 +31,7 @@ public:
   }
 
 protected:
-  void Execute() {
+  void operator()() {
     info = new InitialObjectInfo();
     info->name = _T("ROOT NAME");
     info->type = _T("ROOT TYPE");
@@ -77,7 +77,7 @@ public:
   }
 
 protected:
-  void Execute() {
+  void operator()() {
     QueryResults rs = DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"));
     std::vector<DependencyModel*> objects;
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {

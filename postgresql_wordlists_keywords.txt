@@ -2,10 +2,12 @@ abort
 aggregate
 all
 alter
+analyze
 and
 as
 begin
 by
+cascade
 case
 cast
 check
@@ -65,7 +67,9 @@ lc_ctype
 left
 level
 limit
+listen
 not
+notify
 null
 on
 operator
@@ -80,6 +84,7 @@ partition
 prepare
 primary
 read
+recursive
 references
 repeatable
 return

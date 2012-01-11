@@ -58,7 +58,7 @@ ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
-  statusbar = new wxStatusBar(this, wxID_ANY, 0L);
+  statusbar = new wxStatusBar(this, wxID_ANY);
 
   wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(splitter, 1, wxEXPAND);

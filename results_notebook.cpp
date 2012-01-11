@@ -29,6 +29,7 @@ void ResultsNotebook::Setup()
   AddPage(messagesPanel, _("&Messages"), true);
 
   messagesDisplay = new wxHtmlWindow(messagesPanel, Pqwx_MessagesDisplay);
+  messagesDisplay->SetFonts(wxNORMAL_FONT->GetFaceName(), wxNORMAL_FONT->GetFaceName());
 
   wxSizer *displaySizer = new wxBoxSizer(wxVERTICAL);
   displaySizer->Add(messagesDisplay, 1, wxEXPAND);

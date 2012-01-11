@@ -34,6 +34,8 @@ BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ScriptQueryComplete, -1)
 // sent by notice processor when a notice is received
   DECLARE_EVENT_TYPE(PQWX_ScriptServerNotice, -1)
+// sent by notification receiver when a notification is received
+  DECLARE_EVENT_TYPE(PQWX_ScriptAsyncNotification, -1)
 // sent by results notebook to move to a position in the source script when clicking on an error etc
   DECLARE_EVENT_TYPE(PQWX_ScriptShowPosition, -1)
 END_DECLARE_EVENT_TYPES()
@@ -51,6 +53,7 @@ END_DECLARE_EVENT_TYPES()
 #define PQWX_SCRIPT_EXECUTION_FINISHING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionFinishing, fn)
 #define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)
 #define PQWX_SCRIPT_SERVER_NOTICE(id, fn) EVT_COMMAND(id, PQWX_ScriptServerNotice, fn)
+#define PQWX_SCRIPT_ASYNC_NOTIFICATION(id, fn) EVT_COMMAND(id, PQWX_ScriptAsyncNotification, fn)
 #define PQWX_SCRIPT_SHOW_POSITION(id, fn) EVT_COMMAND(id, PQWX_ScriptShowPosition, fn)
 
 #endif

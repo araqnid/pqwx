@@ -15,6 +15,7 @@
 #include "wx/log.h"
 #include "server_connection.h"
 #include "pg_error.h"
+#include "database_notification_monitor.h"
 
 class DatabaseWork;
 class DisconnectWork;
@@ -211,6 +212,21 @@ public:
    */
   const wxString& Identification() const { return identification; }
 
+#ifdef PQWX_NOTIFICATION_MONITOR
+  /**
+   * Interface for receiving an asynchronous notification from the monitor.
+   */
+  class NotificationReceiver {
+  public:
+    virtual void operator()(PGnotify*) = 0;
+  };
+
+  /**
+   * Associate this connection with a notification monitor.
+   */
+  void SetNotificationMonitor(DatabaseNotificationMonitor *monitor, NotificationReceiver *receiver);
+#endif
+
   /**
    * @return true if a statement with the given name has been prepared on this connection
    */
@@ -222,7 +238,11 @@ public:
 private:
   class WorkerThread : public wxThread {
   public:
-    WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED) { }
+    WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED)
+#ifdef PQWX_NOTIFICATION_MONITOR
+	,monitor(NULL), monitorProcessor(this)
+#endif
+  { }
   protected:
     virtual ExitCode Entry();
   private:
@@ -231,8 +251,27 @@ private:
     bool disconnect;
     mutable wxCriticalSection stateCriticalSection;
     State state;
+#ifdef PQWX_NOTIFICATION_MONITOR
+    DatabaseNotificationMonitor *monitor;
+    NotificationReceiver *notificationReceiver;
+    class MonitorInputProcessor : public DatabaseNotificationMonitor::InputProcessor {
+    public:
+      MonitorInputProcessor(WorkerThread *worker) : worker(worker) {}
+      void operator()()
+      {
+	PQconsumeInput(worker->conn);
+	PGnotify *notification;
+	while ((notification = PQnotifies(worker->conn)) != NULL) {
+	  (*worker->notificationReceiver)(notification);
+	}
+      }
+    private:
+      WorkerThread *worker;
+    } monitorProcessor;
+#endif
 
     bool Connect();
+    void HandleNotification();
 
     State GetState() const {
       wxCriticalSectionLocker locker(stateCriticalSection);
@@ -245,6 +284,9 @@ private:
     }
 
     friend class DatabaseConnection;
+    friend class MonitorInputProcessor;
+    friend class RegisterWithMonitor;
+    friend class UnregisterWithMonitor;
   };
 
   void FinishDisconnection();
@@ -265,6 +307,8 @@ private:
   friend class WorkerThread;
   friend class DisconnectWork;
   friend class DatabaseWork;
+  friend class RegisterWithMonitor;
+  friend class UnregisterWithMonitor;
 };
 
 #endif

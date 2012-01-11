@@ -3,6 +3,7 @@
 #include "server_connection.h"
 #include "database_connection.h"
 #include "database_work.h"
+#include "database_notification_monitor.h"
 
 class InitialiseWork : public DatabaseWork {
 public:
@@ -136,7 +137,23 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       return 0;
     }
 
+#ifdef PQWX_NOTIFICATION_MONITOR
+    if (monitor != NULL) {
+      PGnotify *notification;
+      while ((notification = PQnotifies(conn)) != NULL) {
+	(*notificationReceiver)(notification);
+      }
+      monitor->AddConnection(DatabaseNotificationMonitor::Client(PQsocket(conn), &monitorProcessor));
+    }
+#endif
+
     db->workCondition.Wait();
+
+#ifdef PQWX_NOTIFICATION_MONITOR
+    if (monitor != NULL) {
+      monitor->RemoveConnection(PQsocket(conn));
+    }
+#endif
   } while (true);
 
   return 0;
@@ -319,3 +336,50 @@ void DatabaseConnection::Dispose() {
   wxLogDebug(_T("%s: Dispose: currently connected, doing synchronous close"), identification.c_str());
   CloseSync();
 }
+
+#ifdef PQWX_NOTIFICATION_MONITOR
+
+class RegisterWithMonitor : public DatabaseWork {
+public:
+  RegisterWithMonitor(DatabaseConnection *db, DatabaseNotificationMonitor *monitor, DatabaseConnection::NotificationReceiver *receiver) : db(db), monitor(monitor), receiver(receiver) {}
+private:
+  DatabaseConnection *db;
+  DatabaseNotificationMonitor *monitor;
+  DatabaseConnection::NotificationReceiver *receiver;
+  void operator()()
+  {
+    db->workerThread.monitor = monitor;
+    db->workerThread.notificationReceiver = receiver;
+  }
+  void NotifyFinished()
+  {
+  }
+};
+
+class UnregisterWithMonitor : public DatabaseWork {
+public:
+  UnregisterWithMonitor(DatabaseConnection *db) : db(db) {}
+private:
+  DatabaseConnection *db;
+  void operator()()
+  {
+    db->workerThread.monitor = NULL;
+    db->workerThread.notificationReceiver = NULL;
+  }
+  void NotifyFinished()
+  {
+  }
+};
+
+void DatabaseConnection::SetNotificationMonitor(DatabaseNotificationMonitor *monitor, NotificationReceiver *receiver)
+{
+  wxASSERT((monitor != NULL && receiver != NULL) || (monitor == NULL && receiver == NULL));
+  if (monitor) {
+    AddWorkOnlyIfConnected(new RegisterWithMonitor(this, monitor, receiver));
+  }
+  else {
+    AddWorkOnlyIfConnected(new UnregisterWithMonitor(this));
+  }
+}
+
+#endif

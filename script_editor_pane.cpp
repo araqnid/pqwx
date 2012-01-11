@@ -21,6 +21,7 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   PQWX_SCRIPT_RECONNECT(wxID_ANY, ScriptEditorPane::OnReconnect)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditorPane::OnQueryComplete)
   PQWX_SCRIPT_SERVER_NOTICE(wxID_ANY, ScriptEditorPane::OnConnectionNotice)
+  PQWX_SCRIPT_ASYNC_NOTIFICATION(wxID_ANY, ScriptEditorPane::OnConnectionNotification)
   EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
   PQWX_SCRIPT_SHOW_POSITION(wxID_ANY, ScriptEditorPane::OnShowPosition)
 END_EVENT_TABLE()
@@ -31,6 +32,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecutionFinishing)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptQueryComplete)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptConnectionStatus)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptServerNotice)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptAsyncNotification)
 
 int ScriptEditorPane::documentCounter = 0;
 
@@ -50,6 +52,9 @@ const std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane:
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
   : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false),
     execution(NULL), statusUpdateTimer(this)
+#ifdef PQWX_NOTIFICATION_MONITOR
+, notificationReceiver(this)
+#endif
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
@@ -131,6 +136,9 @@ void ScriptEditorPane::Connect(const ServerConnection &server_, const wxString &
   state = Idle;
   ShowConnectedStatus();
   db->AddWork(new SetupNoticeProcessorWork(this));
+#ifdef PQWX_NOTIFICATION_MONITOR
+  db->SetNotificationMonitor(PQWXApp::GetNotificationMonitor(), &notificationReceiver);
+#endif
   UpdateStateInUI();
 }
 
@@ -145,6 +153,9 @@ void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseCo
   server = server_;
   db->Relabel(_("Query"));
   db->AddWork(new SetupNoticeProcessorWork(this));
+#ifdef PQWX_NOTIFICATION_MONITOR
+  db->SetNotificationMonitor(PQWXApp::GetNotificationMonitor(), &notificationReceiver);
+#endif
   state = Idle;
   ShowConnectedStatus();
   UpdateStateInUI();
@@ -211,6 +222,25 @@ void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
   else
     GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetWXString(execution->GetLastSqlToken()), execution->GetLastSqlToken().offset);
   delete error;
+}
+
+#ifdef PQWX_NOTIFICATION_MONITOR
+void ScriptEditorPane::MonitorInputProcessor::operator()(PGnotify *notification)
+{
+  wxString channel(wxString(notification->relname, wxConvUTF8));
+  wxString payload(wxString(notification->extra, wxConvUTF8));
+  wxCommandEvent event(PQWX_ScriptAsyncNotification);
+  if (payload)
+    event.SetString(channel + _T(" ") + payload);
+  else
+    event.SetString(channel);
+  owner->AddPendingEvent(event);
+}
+#endif
+
+void ScriptEditorPane::OnConnectionNotification(wxCommandEvent &event)
+{
+  GetOrCreateResultsBook()->ScriptAsynchronousNotification(event.GetString());
 }
 
 wxString ScriptEditorPane::FormatTitle() const {

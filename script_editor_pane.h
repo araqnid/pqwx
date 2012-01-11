@@ -59,6 +59,7 @@ public:
   void OnExecute(wxCommandEvent &event);
   void OnQueryComplete(wxCommandEvent &event);
   void OnConnectionNotice(wxCommandEvent &event);
+  void OnConnectionNotification(wxCommandEvent &event);
   void OnTimerTick(wxTimerEvent &event);
   void OnShowPosition(wxCommandEvent &event);
 
@@ -293,6 +294,16 @@ private:
       return _("COPY");
     }
   }
+
+#ifdef PQWX_NOTIFICATION_MONITOR
+  class MonitorInputProcessor : public DatabaseConnection::NotificationReceiver {
+  public:
+    MonitorInputProcessor(ScriptEditorPane *owner) : owner(owner) {}
+    void operator()(PGnotify*);
+  private:
+    ScriptEditorPane *owner;
+  } notificationReceiver;
+#endif
 
   DECLARE_EVENT_TABLE()
 };

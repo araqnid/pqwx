@@ -58,6 +58,10 @@ public:
    * Add a notice message that occurred asynchronously.
    */
   void ScriptAsynchronousNotice(const PgError &notice);
+  /**
+   * Add an asynchronous notification.
+   */
+  void ScriptAsynchronousNotification(const wxString &notification);
 
 private:
   wxPanel *messagesPanel;

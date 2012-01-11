@@ -7,6 +7,7 @@
 #ifndef __pqwx_h
 #define __pqwx_h
 
+#include "pqwx_config.h"
 #include <vector>
 
 /*
@@ -26,6 +27,8 @@ enum {
   Pqwx_ObjectFinderResults,
 };
 
+class DatabaseNotificationMonitor;
+
 /**
  * The wxApp implementation for PQWX.
  *
@@ -36,6 +39,10 @@ public:
   virtual bool OnInit();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
+  int OnExit();
+#ifdef PQWX_NOTIFICATION_MONITOR
+  static DatabaseNotificationMonitor* GetNotificationMonitor();
+#endif
 private:
   bool haveInitial;
   wxString initialServer;
@@ -43,6 +50,9 @@ private:
   wxString initialPassword;
   wxString initialDatabase;
   std::vector<wxString> initialFiles;
+#ifdef PQWX_NOTIFICATION_MONITOR
+  static DatabaseNotificationMonitor *monitor;
+#endif
 };
 
 #endif

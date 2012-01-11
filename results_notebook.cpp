@@ -92,6 +92,12 @@ void ResultsNotebook::ScriptAsynchronousNotice(const PgError& notice)
   AppendServerMessage(notice, _T("#0000ff"));
 }
 
+void ResultsNotebook::ScriptAsynchronousNotification(const wxString& notification)
+{
+  messagesDisplay->AppendToPage(_T("<font color='#0000ff'><b>") + notification + _T("</b></font><br>"));
+  SetSelection(0);
+}
+
 void ResultsNotebook::AppendServerMessage(const PgError& message, const wxString &colour, bool bold)
 {
   messagesDisplay->AppendToPage(_T("<font color='") + colour + _T("'>"));

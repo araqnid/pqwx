@@ -300,9 +300,9 @@ void ScriptEditorPane::ShowScriptCompleteStatus()
   long time = execution->ElapsedTime();
   wxString elapsed;
   if (time > 5*1000 || (time % 1000) == 0)
-    elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
+    elapsed = wxString::Format(_T("%02ld:%02ld:%02ld"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
   else
-    elapsed = wxString::Format(_T("%02d:%02d.%03d"), (time / (60*1000)) % 60, (time / 1000) % 60, time % 1000);
+    elapsed = wxString::Format(_T("%02ld:%02ld.%03ld"), (time / (60*1000)) % 60, (time / 1000) % 60, time % 1000);
   statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
   statusbar->SetStatusText(wxString::Format(_("%d rows"), execution->TotalRows()), StatusBar_RowsRetrieved);
 }
@@ -310,7 +310,7 @@ void ScriptEditorPane::ShowScriptCompleteStatus()
 void ScriptEditorPane::OnTimerTick(wxTimerEvent &event)
 {
   long time = execution->ElapsedTime();
-  wxString elapsed = wxString::Format(_T("%02d:%02d:%02d"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
+  wxString elapsed = wxString::Format(_T("%02ld:%02ld:%02ld"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
   statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
 }
 
@@ -441,7 +441,7 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   wxASSERT(result != NULL);
 
   if (result->status == PGRES_TUPLES_OK) {
-    wxLogDebug(_T("%s (%lu tuples)"), result->statusTag.c_str(), result->data->size());
+    wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->size());
     GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, execution->GetWXString(result->token), result->GetScriptPosition());
     execution->AddRows(result->data->size());
   }

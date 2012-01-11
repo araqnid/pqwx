@@ -57,7 +57,7 @@ public:
      * Add OID parameter.
      */
     QueryExecutor& OidParam(Oid value) {
-      return Param(26 /*oid*/, wxString::Format(_T("%lu"), value));
+      return Param(26 /*oid*/, wxString::Format(_T("%u"), value));
     }
 
     /**
@@ -153,7 +153,7 @@ public:
      * Add an OID parameter.
      */
     NamedQueryExecutor& OidParam(Oid value) {
-      return Param(26 /*oid*/, wxString::Format(_T("%lu"), value));
+      return Param(26 /*oid*/, wxString::Format(_T("%u"), value));
     }
 
     /**

@@ -10,14 +10,14 @@
 #export DH_VERBOSE=1
 
 %:
-	dh $@
+	dh $@ --parallel
 
 override_dh_auto_clean:
 	make RELEASE=1 clean
 	-rm -f debian/pqwx.1
 
 override_dh_auto_build:
-	make RELEASE=1 pqwx
+	dh_auto_build -- RELEASE=1 LOCAL_CXXFLAGS="-g -DUSE_DEBIAN_PGCLUSTER" pqwx
 	docbook-to-man debian/pqwx.sgml > debian/pqwx.1
 
 override_dh_auto_install:

@@ -306,9 +306,7 @@ void ConnectDialogue::Suggest(const ServerConnection &conninfo)
 
 void ConnectDialogue::DoInitialConnection(const ServerConnection &conninfo, const wxString &dbname)
 {
-  hostnameInput->SetValue(conninfo.identifiedAs);
-  usernameInput->SetValue(conninfo.username);
-  passwordInput->SetValue(conninfo.password);
+  Suggest(conninfo);
   StartConnection(dbname);
 }
 

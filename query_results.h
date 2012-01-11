@@ -217,11 +217,13 @@ class PgResourceFailure : public std::exception {
  */
 class PgQueryFailure : public std::exception {
 public:
-  PgQueryFailure(const PgError &error) : error(error) {}
+  PgQueryFailure(const PgError &error) : error(error), messageBuf(error.GetPrimary().utf8_str()) {}
   virtual ~PgQueryFailure() throw () {}
   const PgError& GetDetails() const { return error; }
+  const char *what() const throw () { return messageBuf.data(); }
 private:
   PgError error;
+  wxCharBuffer messageBuf;
 };
 
 /**
@@ -231,11 +233,13 @@ private:
  */
 class PgInvalidQuery : public std::exception {
 public:
-  PgInvalidQuery(const wxString &message) : message(message) {}
+  PgInvalidQuery(const wxString &message) : message(message), messageBuf(message.utf8_str()) {}
   virtual ~PgInvalidQuery() throw () {}
-  const wxString& GetMessage() const { return message; }
+  const wxString& GetMessage() const throw () { return message; }
+  const char *what() const throw () { return messageBuf.data(); }
 private:
   wxString message;
+  wxCharBuffer messageBuf;
 };
 
 #endif

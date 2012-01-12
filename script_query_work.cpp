@@ -7,6 +7,7 @@
 #endif
 
 #include "script_query_work.h"
+#include "results_display.h"
 
 void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *conn, PGresult *rs)
 {

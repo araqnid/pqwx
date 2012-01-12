@@ -17,18 +17,13 @@ public:
   /**
    * Create work object
    */
-  ScriptExecutionWork(wxEvtHandler *dest, const ExecutionLexer::Token &token) : dest(dest), token(token) {}
+  ScriptExecutionWork(wxEvtHandler *dest) : dest(dest) {}
 
   /**
    * Execution result.
    */
   class Result {
   public:
-    /**
-     * Create result referring back to SQL used for the query.
-     */
-    Result(const ExecutionLexer::Token& token) : token(token) {}
-
     /**
      * Read result status.
      */
@@ -44,13 +39,7 @@ public:
 	newConnectionState = Decode(PQtransactionStatus(conn));
       }
     }
-
-    /**
-     * The offset within the script that caused this execution unit.
-     */
-    unsigned GetScriptPosition() const { return token.offset; }
   private:
-    const ExecutionLexer::Token token;
     ExecStatusType status;
     bool complete;
     std::auto_ptr<QueryResults> data;
@@ -78,7 +67,6 @@ private:
   wxEvtHandler *dest;
 
 protected:
-  const ExecutionLexer::Token token;
   Result *output;
 
   static DatabaseConnectionState Decode(PGTransactionStatusType txStatus) {
@@ -102,20 +90,21 @@ public:
   /**
    * Create work object
    */
-  ScriptQueryWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *sql) : ScriptExecutionWork(dest, token), sql(sql) {}
+  ScriptQueryWork(wxEvtHandler *dest, const wxString &sql) : ScriptExecutionWork(dest), sql(sql) {}
 
   void operator()();
 private:
-  const char *sql;
+  wxString sql;
 };
 
 class ScriptPutCopyDataWork : public ScriptExecutionWork {
 public:
-  ScriptPutCopyDataWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *buffer) : ScriptExecutionWork(dest, token), buffer(buffer) {}
+  ScriptPutCopyDataWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *buffer) : ScriptExecutionWork(dest), buffer(buffer), token(token) {}
 
   void operator()();
 private:
   const char *buffer;
+  ExecutionLexer::Token token;
 };
 
 #endif

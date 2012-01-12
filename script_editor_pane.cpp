@@ -217,10 +217,10 @@ void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
 {
   PgError *error = (PgError*) event.GetClientData();
   wxASSERT(error != NULL);
-  if (execution == NULL || !execution->LastSqlTokenValid())
+  if (execution == NULL)
     GetOrCreateResultsBook()->ScriptAsynchronousNotice(*error);
   else
-    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetWXString(execution->GetLastSqlToken()), execution->GetLastSqlToken().offset);
+    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
   delete error;
 }
 
@@ -352,29 +352,18 @@ bool ScriptEditorPane::ProcessExecution()
 
   ExecutionLexer::Token t = execution->NextToken();
   if (t.type == ExecutionLexer::Token::END) {
-    if (execution->SqlPending()) {
-      BeginQuery(execution->PopLastSqlToken());
-    }
-    else {
-      FinishExecution();
-    }
+    FinishExecution();
     return false;
   }
 
   if (t.type == ExecutionLexer::Token::SQL) {
-    if (execution->SqlPending()) {
-      BeginQuery(execution->GetLastSqlToken());
-      execution->SetLastSqlToken(t);
-      return false;
-    }
+    execution->AppendSql(t);
 
-    execution->SetLastSqlToken(t);
-    for (unsigned ofs = t.length - 1; ofs > 0; ofs--) {
+    for (unsigned ofs = t.length - 1; ofs >= 0; ofs--) {
       char c = execution->CharAt(t.offset + ofs);
       if (c == ';') {
 	// execute immediately
-	BeginQuery(t);
-	execution->MarkSqlExecuted();
+	BeginQuery();
 	return false;
       }
       else if (!isspace(c)) {
@@ -410,16 +399,17 @@ bool ScriptEditorPane::ProcessExecution()
   }
 }
 
-void ScriptEditorPane::BeginQuery(ExecutionLexer::Token t)
+void ScriptEditorPane::BeginQuery()
 {
-  bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, t, execution->ExtractSQL(t)));
-  wxASSERT(added);
+  execution->MarkSqlExecuted();
+  bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, execution->GetQueryBuffer()));
+  wxCHECK2(added, );
 }
 
 void ScriptEditorPane::BeginPutCopyData()
 {
   bool added = db->AddWorkOnlyIfConnected(new ScriptPutCopyDataWork(this, execution->CopyDataToken(), execution->GetBuffer()));
-  wxASSERT(added);
+  wxCHECK2(added, );
 }
 
 void ScriptEditorPane::FinishExecution()
@@ -442,16 +432,16 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
 
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->size());
-    GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, execution->GetWXString(result->token), result->GetScriptPosition());
+    GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
     execution->AddRows(result->data->size());
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
-    GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, execution->GetWXString(result->token), result->GetScriptPosition());
+    GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
   }
   else if (result->status == PGRES_FATAL_ERROR) {
     wxLogDebug(_T("Got error: %s"), result->error.GetPrimary().c_str());
-    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetWXString(result->token), result->GetScriptPosition());
+    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
     execution->BumpErrors();
   }
 
@@ -513,9 +503,7 @@ bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const Exec
 
 bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
-  if (!execution->LastSqlTokenValid()) return true; // \g at beginning of script?
-  BeginQuery(execution->GetLastSqlToken());
-  execution->MarkSqlExecuted();
+  BeginQuery();
   return false;
 }
 

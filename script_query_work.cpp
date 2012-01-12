@@ -46,13 +46,13 @@ void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *con
 void ScriptQueryWork::operator()()
 {
   wxStopWatch stopwatch;
+  wxCharBuffer sqlBuffer = sql.utf8_str();
 
-  output = new Result(token);
-  db->LogSql(sql);
+  output = new Result();
+  db->LogSql(sqlBuffer.data());
   stopwatch.Start();
 
-  PGresult *rs = PQexecParams(conn, sql, 0, NULL, NULL, NULL, NULL, 0);
-  free((void*) sql);
+  PGresult *rs = PQexecParams(conn, sqlBuffer.data(), 0, NULL, NULL, NULL, NULL, 0);
   wxASSERT(rs != NULL);
 
   output->ReadStatus(db, conn, rs);
@@ -66,7 +66,7 @@ void ScriptPutCopyDataWork::operator()()
 {
   wxStopWatch stopwatch;
 
-  output = new Result(token);
+  output = new Result();
 
   wxLogDebug(_T("Putting %u bytes of COPY data"), token.length);
 

@@ -195,23 +195,11 @@ private:
     Execution(wxCharBuffer buffer, unsigned length) :
       buffer(buffer),
       lexer(this->buffer.data(), length),
-      lastSqlToken(ExecutionLexer::Token::END), lastSqlExecuted(false),
+      lastSqlPosition(0), queryBufferExecuted(false),
       rowsRetrieved(0), errorsEncountered(0)
     {
       stopwatch.Start();
     }
-
-#ifdef __WXMSW__
-    const char *ExtractSQL(const ExecutionLexer::Token &token) const
-    {
-      char *str = (char*) malloc(token.length + 1);
-      memcpy(str, buffer.data() + token.offset, token.length);
-      str[token.length] = '\0';
-      return str;
-    }
-#else
-    const char *ExtractSQL(const ExecutionLexer::Token &token) const { return strndup(buffer.data() + token.offset, token.length); }
-#endif
 
     char CharAt(unsigned offset) const { return buffer.data()[offset]; }
     bool EncounteredErrors() const { return errorsEncountered > 0; }
@@ -222,21 +210,31 @@ private:
 
     ExecutionLexer::Token NextToken() { return lexer.Pull(); }
     ExecutionLexer::Token CopyDataToken() { return lexer.ReadCopyData(); }
-    void SetLastSqlToken(ExecutionLexer::Token t) { lastSqlToken = t; lastSqlExecuted = false; }
-    const ExecutionLexer::Token& GetLastSqlToken() const { return lastSqlToken; }
-    ExecutionLexer::Token PopLastSqlToken() { ExecutionLexer::Token t = lastSqlToken; ClearLastSqlToken(); return t; }
-    void ClearLastSqlToken() { lastSqlToken = ExecutionLexer::Token(ExecutionLexer::Token::END); }
-    bool LastSqlTokenValid() const { return lastSqlToken.type == ExecutionLexer::Token::SQL; }
-    bool SqlPending() const { return LastSqlTokenValid() && !lastSqlExecuted; }
-    void MarkSqlExecuted() { lastSqlExecuted = true; }
 
     wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
     const char* GetBuffer() const { return buffer.data(); }
+    wxString GetQueryBuffer() const { return queryBuffer; }
+    unsigned GetLastSqlPosition() const { return lastSqlPosition; }
+    void MarkSqlExecuted() { queryBufferExecuted = true; }
+    void AppendSql(const ExecutionLexer::Token& token)
+    {
+      wxString str = GetWXString(token);
+      if (queryBuffer.empty() || queryBufferExecuted) {
+	queryBufferExecuted = false;
+	queryBuffer = str;
+	lastSqlPosition = token.offset;
+      }
+      else {
+	queryBuffer += GetWXString(token);
+      }
+    }
+
   private:
     wxCharBuffer buffer;
+    wxString queryBuffer;
     ExecutionLexer lexer;
-    ExecutionLexer::Token lastSqlToken;
-    bool lastSqlExecuted;
+    unsigned lastSqlPosition;
+    bool queryBufferExecuted;
     unsigned rowsRetrieved, errorsEncountered;
     wxStopWatch stopwatch;
   };
@@ -245,7 +243,7 @@ private:
   wxTimer statusUpdateTimer;
 
   bool ProcessExecution();
-  void BeginQuery(ExecutionLexer::Token t);
+  void BeginQuery();
   void BeginPutCopyData();
   void FinishExecution();
 

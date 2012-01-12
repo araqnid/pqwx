@@ -20,6 +20,7 @@ BEGIN_EVENT_TABLE(ScriptEditorPane, wxPanel)
   PQWX_SCRIPT_DISCONNECT(wxID_ANY, ScriptEditorPane::OnDisconnect)
   PQWX_SCRIPT_RECONNECT(wxID_ANY, ScriptEditorPane::OnReconnect)
   PQWX_SCRIPT_QUERY_COMPLETE(wxID_ANY, ScriptEditorPane::OnQueryComplete)
+  PQWX_SCRIPT_EXECUTION_FINISHING(wxID_ANY, ScriptEditorPane::OnExecutionFinished)
   PQWX_SCRIPT_SERVER_NOTICE(wxID_ANY, ScriptEditorPane::OnConnectionNotice)
   PQWX_SCRIPT_ASYNC_NOTIFICATION(wxID_ANY, ScriptEditorPane::OnConnectionNotification)
   EVT_TIMER(wxID_ANY, ScriptEditorPane::OnTimerTick)
@@ -35,22 +36,6 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptServerNotice)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptAsyncNotification)
 
 int ScriptEditorPane::documentCounter = 0;
-
-std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::InitPsqlCommandHandlers()
-{
-  std::map<wxString, PsqlCommandHandler> handlers;
-  handlers[_T("c")] = &ScriptEditorPane::PsqlChangeDatabase;
-  handlers[_T("connect")] = &ScriptEditorPane::PsqlChangeDatabase;
-  handlers[_T("g")] = &ScriptEditorPane::PsqlExecuteQueryBuffer;
-  handlers[_T("echo")] = &ScriptEditorPane::PsqlPrintMessage;
-  handlers[_T("p")] = &ScriptEditorPane::PsqlPrintQueryBuffer;
-  handlers[_T("r")] = &ScriptEditorPane::PsqlResetQueryBuffer;
-  return handlers;
-}
-
-const std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::psqlCommandHandlers = InitPsqlCommandHandlers();
-
-#define CALL_PSQL_HANDLER(editor, handler) ((editor).*(handler))
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
   : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false),
@@ -223,7 +208,7 @@ void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
   if (execution == NULL)
     GetOrCreateResultsBook()->ScriptAsynchronousNotice(*error);
   else
-    GetOrCreateResultsBook()->ScriptQueryNotice(*error, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
+    execution->ProcessConnectionNotice(*error);
   delete error;
 }
 
@@ -295,7 +280,7 @@ void ScriptEditorPane::ShowScriptInProgressStatus()
 
 void ScriptEditorPane::ShowScriptCompleteStatus()
 {
-  if (execution->EncounteredErrors() == 0)
+  if (!execution->EncounteredErrors())
     statusbar->SetStatusText(_("Query completed successfully"), StatusBar_Status);
   else
     statusbar->SetStatusText(_("Query completed with errors"), StatusBar_Status);
@@ -332,95 +317,12 @@ void ScriptEditorPane::OnExecute(wxCommandEvent &event)
 
   int length;
   wxCharBuffer source = editor->GetRegion(&length);
-  execution = new Execution(source, length);
-
-  while (true) {
-    if (!ProcessExecution()) {
-      break;
-    }
-  }
+  execution = new ScriptExecution(this, source, length);
+  execution->Proceed();
 }
 
-inline void ScriptEditorPane::ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition)
+void ScriptEditorPane::OnExecutionFinished(wxCommandEvent &event)
 {
-  GetOrCreateResultsBook()->ScriptInternalError(error, command, scriptPosition);
-}
-
-bool ScriptEditorPane::ProcessExecution()
-{
-  if (state == CopyToServer) {
-    BeginPutCopyData();
-    return false;
-  }
-
-  ExecutionLexer::Token t = execution->NextToken();
-  if (t.type == ExecutionLexer::Token::END) {
-    FinishExecution();
-    return false;
-  }
-
-  if (t.type == ExecutionLexer::Token::SQL) {
-    execution->AppendSql(t);
-
-    for (unsigned ofs = t.length - 1; ofs >= 0; ofs--) {
-      char c = execution->CharAt(t.offset + ofs);
-      if (c == ';') {
-	// execute immediately
-	BeginQuery();
-	return false;
-      }
-      else if (!isspace(c)) {
-	break;
-      }
-    }
-
-    // look for following psql command or end of input
-    return true;
-  }
-  else {
-    wxString fullCommandString = execution->GetWXString(t);
-    wxString command;
-    wxString parameters;
-    wxStringTokenizer tkz(fullCommandString, _T(" \r\n\t"));
-
-    wxASSERT(tkz.HasMoreTokens());
-    command = tkz.GetNextToken().Mid(1).Lower();
-    if (tkz.HasMoreTokens()) {
-      parameters = fullCommandString.Mid(tkz.GetPosition()).Trim();
-    }
-
-    wxLogDebug(_T("psql | %s | %s"), command.c_str(), parameters.c_str());
-    std::map<wxString, PsqlCommandHandler>::const_iterator handler = psqlCommandHandlers.find(command);
-    if (handler == psqlCommandHandlers.end()) {
-      ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString, t.offset);
-      execution->BumpErrors();
-      return true;
-    }
-    else {
-      return CALL_PSQL_HANDLER(*this, handler->second)(parameters, t);
-    }
-  }
-}
-
-void ScriptEditorPane::BeginQuery()
-{
-  execution->MarkSqlExecuted();
-  bool added = db->AddWorkOnlyIfConnected(new ScriptQueryWork(this, execution->GetQueryBuffer()));
-  wxCHECK2(added, );
-}
-
-void ScriptEditorPane::BeginPutCopyData()
-{
-  bool added = db->AddWorkOnlyIfConnected(new ScriptPutCopyDataWork(this, execution->CopyDataToken(), execution->GetBuffer()));
-  wxCHECK2(added, );
-}
-
-void ScriptEditorPane::FinishExecution()
-{
-  wxCommandEvent finishEvt = wxCommandEvent(PQWX_ScriptExecutionFinishing);
-  finishEvt.SetEventObject(this);
-  ProcessEvent(finishEvt);
-
   ShowScriptCompleteStatus();
   statusUpdateTimer.Stop();
 
@@ -432,189 +334,10 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
 {
   ScriptQueryWork::Result *result = (ScriptQueryWork::Result*) event.GetClientData();
   wxASSERT(result != NULL);
-
-  if (result->status == PGRES_TUPLES_OK) {
-    wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->size());
-    GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
-    execution->AddRows(result->data->size());
-  }
-  else if (result->status == PGRES_COMMAND_OK) {
-    wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
-    GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
-  }
-  else if (result->status == PGRES_FATAL_ERROR) {
-    wxLogDebug(_T("Got error: %s"), result->error.GetPrimary().c_str());
-    GetOrCreateResultsBook()->ScriptError(result->error, execution->GetQueryBuffer(), execution->GetLastSqlPosition());
-    execution->BumpErrors();
-  }
-
-  UpdateConnectionState(result->newConnectionState);
-  statusbar->SetStatusText(TxnStatus(), StatusBar_TransactionStatus);
-
-  delete result;
-
   wxASSERT(execution != NULL);
 
-  while (true) {
-    if (!ProcessExecution()) {
-      break;
-    }
-  }
-}
-
-class PsqlArgumentsParser {
-public:
-  PsqlArgumentsParser(const wxString &str) : str(str), ptr(0), len(str.length()) {}
-  bool HasMoreArguments()
-  {
-    SkipWhitespace();
-    return HaveMore();
-  }
-  wxString GetNextArgument()
-  {
-    SkipWhitespace();
-    if (Peek() == _T('\''))
-      return GetQuotedString();
-    else
-      return GetPlainString();
-  }
-private:
-  void SkipWhitespace()
-  {
-    while (HaveMore() && iswspace(str[ptr]))
-      ++ptr;
-  }
-  wxString GetQuotedString()
-  {
-    wxString out;
-    ++ptr;
-    while (HaveMore()) {
-      wxChar c = Take();
-      if (c == _T('\'')) {
-	if (!HaveMore()) break;
-	if (Peek() == _T('\'')) {
-	  // escaped quote mark
-	  out += _T('\'');
-	  Take();
-	}
-	else {
-	  break;
-	}
-      }
-      else if (c == _T('\\')) {
-	if (!HaveMore()) break; // illegal, really
-	char c = Take();
-	if (c == _T('\\'))
-	  out += c;
-	else if (c == _T('n'))
-	  out += _T('\n');
-	else if (c == _T('r'))
-	  out += _T('\r');
-	else
-	  out += c;
-      }
-      else {
-	out += c;
-      }
-    }
-    return out;
-  }
-  wxString GetPlainString()
-  {
-    unsigned pos = ptr;
-    while (HaveMore()) {
-      wxChar c = Take();
-      if (iswspace(c))
-	break;
-    }
-    return str.Mid(pos, ptr - pos);
-  }
-  bool HaveMore() const
-  {
-    return ptr < len;
-  }
-  wxChar Peek() const
-  {
-    return HaveMore() ? str[ptr] : ((wxChar) -1);
-  }
-  wxChar Take()
-  {
-    return HaveMore() ? str[ptr++] : ((wxChar) -1);
-  }
-  const wxString &str;
-  unsigned ptr;
-  unsigned len;
-};
-
-bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const ExecutionLexer::Token &t)
-{
-  // TODO handle connection problems...
-  wxString newDbName = db->DbName();
-  db->Dispose();
-  delete db;
-  db = NULL;
-  ShowDisconnectedStatus();
-  UpdateStateInUI(); // refresh title etc
-  PsqlArgumentsParser tkz(parameters);
-  if (tkz.HasMoreArguments()) {
-    wxString t = tkz.GetNextArgument();
-    if (t != _T("-")) newDbName = t;
-  }
-  if (tkz.HasMoreArguments()) {
-    wxString t = tkz.GetNextArgument();
-    if (t != _T("-")) server.username = t;
-  }
-  if (tkz.HasMoreArguments()) {
-    wxString t = tkz.GetNextArgument();
-    if (t != _T("-")) server.hostname = t;
-  }
-  if (tkz.HasMoreArguments()) {
-    wxString t = tkz.GetNextArgument();
-    if (t != _T("-")) {
-      long port;
-      if (t.ToLong(&port))
-	server.port = port;
-      else {
-	// syntax error...
-	wxASSERT_MSG(false, wxString::Format(_T("port syntax error: %s"), t.c_str()));
-      }
-    }
-  }
-  if (tkz.HasMoreArguments()) {
-    // syntax error...
-    wxASSERT_MSG(false, wxString::Format(_T("too many parameters: %s"), parameters.c_str()));
-  }
-  Connect(server, newDbName);
-  return true;
-}
-
-bool ScriptEditorPane::PsqlExecuteQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
-{
-  BeginQuery();
-  return false;
-}
-
-bool ScriptEditorPane::PsqlPrintQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
-{
-  return true;
-}
-
-bool ScriptEditorPane::PsqlResetQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
-{
-  execution->ResetQueryBuffer();
-  return true;
-}
-
-bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)
-{
-  PsqlArgumentsParser tkz(parameters);
-  wxString output;
-  while (tkz.HasMoreArguments()) {
-    if (!output.empty()) output += _T(' ');
-    output += tkz.GetNextArgument();
-  }
-  GetOrCreateResultsBook()->ScriptEcho(output, t.offset);
-  return true;
+  execution->ProcessQueryResult(result);
+  execution->Proceed();
 }
 
 void ScriptEditorPane::OnShowPosition(wxCommandEvent &event)

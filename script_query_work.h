@@ -50,7 +50,7 @@ public:
     Oid oidValue;
     bool tuplesProcessedCountValid;
     DatabaseConnectionState newConnectionState;
-    friend class ScriptEditorPane; // so, effectively all public...
+    friend class ScriptExecution;
     friend class ScriptExecutionWork;
     friend class ScriptQueryWork;
     friend class ScriptPutCopyDataWork;

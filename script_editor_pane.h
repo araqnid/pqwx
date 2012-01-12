@@ -11,6 +11,8 @@
 #include "database_work.h"
 #include "pg_error.h"
 #include "documents_notebook.h"
+#include "script_execution.h"
+#include "database_event_type.h"
 
 class ScriptEditor;
 class ResultsNotebook;
@@ -62,6 +64,7 @@ public:
   void OnConnectionNotification(wxCommandEvent &event);
   void OnTimerTick(wxTimerEvent &event);
   void OnShowPosition(wxCommandEvent &event);
+  void OnExecutionFinished(wxCommandEvent &event);
 
   /**
    * Gets the script editor.
@@ -190,73 +193,8 @@ private:
 
   friend class ChangeScriptConnection;
 
-  class Execution {
-  public:
-    Execution(wxCharBuffer buffer, unsigned length) :
-      buffer(buffer),
-      lexer(this->buffer.data(), length),
-      lastSqlPosition(0), queryBufferExecuted(false),
-      rowsRetrieved(0), errorsEncountered(0)
-    {
-      stopwatch.Start();
-    }
-
-    char CharAt(unsigned offset) const { return buffer.data()[offset]; }
-    bool EncounteredErrors() const { return errorsEncountered > 0; }
-    unsigned TotalRows() const { return rowsRetrieved; }
-    long ElapsedTime() const { return stopwatch.Time(); }
-    void AddRows(unsigned rows) { rowsRetrieved += rows; }
-    void BumpErrors() { ++errorsEncountered; }
-
-    ExecutionLexer::Token NextToken() { return lexer.Pull(); }
-    ExecutionLexer::Token CopyDataToken() { return lexer.ReadCopyData(); }
-
-    wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
-    const char* GetBuffer() const { return buffer.data(); }
-    wxString GetQueryBuffer() const { return queryBuffer; }
-    void ResetQueryBuffer() { queryBuffer = wxEmptyString; }
-    unsigned GetLastSqlPosition() const { return lastSqlPosition; }
-    void MarkSqlExecuted() { queryBufferExecuted = true; }
-    void AppendSql(const ExecutionLexer::Token& token)
-    {
-      wxString str = GetWXString(token);
-      if (queryBuffer.empty() || queryBufferExecuted) {
-	queryBufferExecuted = false;
-	queryBuffer = str;
-	lastSqlPosition = token.offset;
-      }
-      else {
-	queryBuffer += GetWXString(token);
-      }
-    }
-
-  private:
-    wxCharBuffer buffer;
-    wxString queryBuffer;
-    ExecutionLexer lexer;
-    unsigned lastSqlPosition;
-    bool queryBufferExecuted;
-    unsigned rowsRetrieved, errorsEncountered;
-    wxStopWatch stopwatch;
-  };
-
-  Execution *execution;
+  ScriptExecution *execution;
   wxTimer statusUpdateTimer;
-
-  bool ProcessExecution();
-  void BeginQuery();
-  void BeginPutCopyData();
-  void FinishExecution();
-
-  typedef bool (ScriptEditorPane::*PsqlCommandHandler)(const wxString&, const ExecutionLexer::Token&);
-  static const std::map<wxString, PsqlCommandHandler> psqlCommandHandlers;
-  static std::map<wxString, PsqlCommandHandler> InitPsqlCommandHandlers();
-
-  bool PsqlChangeDatabase(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlExecuteQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlPrintQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlResetQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
 
   void ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition);
 
@@ -278,6 +216,10 @@ private:
   void ShowDisconnectedStatus();
   void ShowScriptInProgressStatus();
   void ShowScriptCompleteStatus();
+  void ShowTransactionStatus()
+  {
+    statusbar->SetStatusText(TxnStatus(), StatusBar_TransactionStatus);
+  }
 
   wxString TxnStatus() const
   {
@@ -305,6 +247,8 @@ private:
     ScriptEditorPane *owner;
   } notificationReceiver;
 #endif
+
+  friend class ScriptExecution;
 
   DECLARE_EVENT_TABLE()
 };

@@ -84,9 +84,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 This is the complete list of members for <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>, including all inherited members.<table>
+  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#ae51e27c6c17d5974e8f8721d7b2996c0">BeginDisconnect</a>()</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>ChangeScriptConnection</b> (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [friend]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aa04621c0d124419b02f1c6fa899404ec">Connect</a>(const ServerConnection &amp;server, const wxString &amp;dbname)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#acb8a95f8c2498236e475898537c298ab">ConnectionIdentification</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a04d8fbb880f1c10f2f42a22d6919f332">Dispose</a>()</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a714ddd4e2e04017a12e29b4112707b21">FormatTitle</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#ac895adad95f827dc79351ec7082e713f">GetConnectionState</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a1d81b47bd9ddac3ffece82d9b8d9ceb7">GetCoreTitle</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
@@ -100,11 +102,14 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a88ba009685af4b6034f660e5b0cc6a8e">IsExecuting</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aec1b3966487a759098e8fc44058340ab">IsModified</a>() const </td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline, virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a5f4630348742714e1e1d03c8e4b42e0e">MarkModified</a>(bool value)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>OnConnectionNotice</b>(const PGresult *rs) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>OnConnectionNotice</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>OnConnectionNotification</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnDisconnect</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnExecute</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>OnExecutionFinished</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnQueryComplete</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnReconnect</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>OnShowPosition</b>(wxCommandEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>OnTimerTick</b>(wxTimerEvent &amp;event) (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a0b2bc0b16877aac19405c817e59cede5">OpenFile</a>(const wxString &amp;filename)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#a32ff70691b38bf6b072154fd1e5bf7b9">Populate</a>(const wxString &amp;text)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
@@ -112,6 +117,7 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#adf90b22783a6de81321e529130f3e1ff">SaveFile</a>(const wxString &amp;filename)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>ScriptEditor</b> (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [friend]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#acf5192fbbd0979709a607f9d5b9c3abf">ScriptEditorPane</a>(wxWindow *parent, wxWindowID id=wxID_ANY)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>ScriptExecution</b> (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [friend]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>ScriptQueryWork</b> (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [friend]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classScriptEditorPane.html#aebff7115c99710b8115a0f46c05a6d7b">SetConnection</a>(const ServerConnection &amp;server, DatabaseConnection *db)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>~ScriptEditorPane</b>() (defined in <a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a>)</td><td><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td><code> [inline]</code></td></tr>
@@ -133,7 +139,7 @@ This is the complete list of members for <a class="el" href="classScriptEditorPa
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:18 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:44 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

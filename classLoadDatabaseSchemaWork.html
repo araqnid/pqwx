@@ -109,8 +109,8 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create work object.  <a href="#a7be09917b30c971ba9cdf0ffac7743d4"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadDatabaseSchemaWork.html#a14ea3419d8e880df7aff904d74f6f9bf">Execute</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a14ea3419d8e880df7aff904d74f6f9bf"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadDatabaseSchemaWork.html#af2b0863e505894227b03a1b705809184">operator()</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#af2b0863e505894227b03a1b705809184"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08bfb89c6123936b9d710b1432b71324"></a><!-- doxytag: member="LoadDatabaseSchemaWork::LoadRelations" ref="a08bfb89c6123936b9d710b1432b71324" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>LoadRelations</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4c3f3b58cb99009e6c05bc1187292b1"></a><!-- doxytag: member="LoadDatabaseSchemaWork::LoadFunctions" ref="ac4c3f3b58cb99009e6c05bc1187292b1" args="()" -->
@@ -165,27 +165,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>LoadFunctions</b> ()<
 </div>
 </div>
 <hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="a14ea3419d8e880df7aff904d74f6f9bf"></a><!-- doxytag: member="LoadDatabaseSchemaWork::Execute" ref="a14ea3419d8e880df7aff904d74f6f9bf" args="()" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classLoadDatabaseSchemaWork.html#a14ea3419d8e880df7aff904d74f6f9bf">LoadDatabaseSchemaWork::Execute</a> </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td><code> [inline, protected, virtual]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Execute work. </p>
-<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
-
-<p>Implements <a class="el" href="classObjectBrowserWork.html#a2524cdb93142b455191e7a8845376ff8">ObjectBrowserWork</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="a84503ec6903336b949e34f9bc0573c4d"></a><!-- doxytag: member="LoadDatabaseSchemaWork::LoadIntoView" ref="a84503ec6903336b949e34f9bc0573c4d" args="(ObjectBrowser *ob)" -->
 <div class="memitem">
 <div class="memproto">
@@ -205,6 +184,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>LoadFunctions</b> ()<
 <p>This method is executed on the GUI thread. </p>
 
 <p>Implements <a class="el" href="classObjectBrowserWork.html#a2c57e9ae2a101884a1b654d6a8ed2998">ObjectBrowserWork</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="af2b0863e505894227b03a1b705809184"></a><!-- doxytag: member="LoadDatabaseSchemaWork::operator()" ref="af2b0863e505894227b03a1b705809184" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LoadDatabaseSchemaWork::operator() </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [inline, protected, virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Execute work. </p>
+<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
+
+<p>Implements <a class="el" href="classObjectBrowserWork.html#a8f4975fa54aff8705c059cd9ed88b966">ObjectBrowserWork</a>.</p>
 
 </div>
 </div>
@@ -229,7 +229,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>LoadFunctions</b> ()<
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:14 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:40 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

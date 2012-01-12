@@ -86,7 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">ObjectBrowserDatabaseWork Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<!-- doxytag: class="ObjectBrowserDatabaseWork" --><!-- doxytag: inherits="DatabaseWork" -->
+<!-- doxytag: class="ObjectBrowserDatabaseWork" --><!-- doxytag: inherits="DatabaseWorkWithDictionary" -->
 <p>Implementation of <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> that deals with passing results back to the GUI thread.  
  <a href="classObjectBrowserDatabaseWork.html#details">More...</a></p>
 
@@ -97,6 +97,7 @@ Inheritance diagram for ObjectBrowserDatabaseWork:</div>
  <div class="center">
   <img src="classObjectBrowserDatabaseWork.png" usemap="#ObjectBrowserDatabaseWork_map" alt=""/>
   <map id="ObjectBrowserDatabaseWork_map" name="ObjectBrowserDatabaseWork_map">
+<area href="classDatabaseWorkWithDictionary.html" title="Some database work with a SQL dictionary." alt="DatabaseWorkWithDictionary" shape="rect" coords="0,56,178,80"/>
 <area href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection." alt="DatabaseWork" shape="rect" coords="0,0,178,24"/>
 </map>
  </div></div>
@@ -115,8 +116,8 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb77aec71cf6caf7c995ad4fb4f32e02"></a><!-- doxytag: member="ObjectBrowserDatabaseWork::ObjectBrowserDatabaseWork" ref="adb77aec71cf6caf7c995ad4fb4f32e02" args="(wxEvtHandler *dest, ObjectBrowserWork *work)" -->
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserDatabaseWork.html#adb77aec71cf6caf7c995ad4fb4f32e02">ObjectBrowserDatabaseWork</a> (wxEvtHandler *dest, <a class="el" href="classObjectBrowserWork.html">ObjectBrowserWork</a> *work)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create work object. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9824d631ca05a6f2b83343af831f12ac"></a><!-- doxytag: member="ObjectBrowserDatabaseWork::Execute" ref="a9824d631ca05a6f2b83343af831f12ac" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Execute</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3599c17c20e286730bb440fb5fe0cb57"></a><!-- doxytag: member="ObjectBrowserDatabaseWork::operator()" ref="a3599c17c20e286730bb440fb5fe0cb57" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a114639c35786adef9b78cb6195ee85e3"></a><!-- doxytag: member="ObjectBrowserDatabaseWork::NotifyFinished" ref="a114639c35786adef9b78cb6195ee85e3" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>NotifyFinished</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8463d678f1095604bdf0b83ed48bb716"></a><!-- doxytag: member="ObjectBrowserDatabaseWork::GetState" ref="a8463d678f1095604bdf0b83ed48bb716" args="() const " -->
@@ -146,7 +147,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>NotifyFinished</b> ()
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:15 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:41 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

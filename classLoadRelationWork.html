@@ -108,8 +108,8 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadRelationWork.html#a0e467faae6377d6f0428d737982944b0">LoadRelationWork</a> (<a class="el" href="classRelationModel.html">RelationModel</a> *relationModel, wxTreeItemId relationItem)</td></tr>
 <tr><td colspan="2"><h2><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadRelationWork.html#a54f6792423995d7f9716879f505c65c3">Execute</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a54f6792423995d7f9716879f505c65c3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadRelationWork.html#a340ac4a68a01beb642e9e883b5e5d040">operator()</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a340ac4a68a01beb642e9e883b5e5d040"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLoadRelationWork.html#ad31b8c274dc9fe0f45631cf01f72b1d3">LoadIntoView</a> (<a class="el" href="classObjectBrowser.html">ObjectBrowser</a> *ob)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge data obtained by work object into object browser.  <a href="#ad31b8c274dc9fe0f45631cf01f72b1d3"></a><br/></td></tr>
 </table>
@@ -151,27 +151,6 @@ Protected Member Functions</h2></td></tr>
 </div>
 </div>
 <hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="a54f6792423995d7f9716879f505c65c3"></a><!-- doxytag: member="LoadRelationWork::Execute" ref="a54f6792423995d7f9716879f505c65c3" args="()" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classLoadRelationWork.html#a54f6792423995d7f9716879f505c65c3">LoadRelationWork::Execute</a> </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td><code> [inline, protected, virtual]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Execute work. </p>
-<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
-
-<p>Implements <a class="el" href="classObjectBrowserWork.html#a2524cdb93142b455191e7a8845376ff8">ObjectBrowserWork</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="ad31b8c274dc9fe0f45631cf01f72b1d3"></a><!-- doxytag: member="LoadRelationWork::LoadIntoView" ref="ad31b8c274dc9fe0f45631cf01f72b1d3" args="(ObjectBrowser *ob)" -->
 <div class="memitem">
 <div class="memproto">
@@ -191,6 +170,27 @@ Protected Member Functions</h2></td></tr>
 <p>This method is executed on the GUI thread. </p>
 
 <p>Implements <a class="el" href="classObjectBrowserWork.html#a2c57e9ae2a101884a1b654d6a8ed2998">ObjectBrowserWork</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a340ac4a68a01beb642e9e883b5e5d040"></a><!-- doxytag: member="LoadRelationWork::operator()" ref="a340ac4a68a01beb642e9e883b5e5d040" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LoadRelationWork::operator() </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [inline, protected, virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Execute work. </p>
+<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
+
+<p>Implements <a class="el" href="classObjectBrowserWork.html#a8f4975fa54aff8705c059cd9ed88b966">ObjectBrowserWork</a>.</p>
 
 </div>
 </div>
@@ -215,7 +215,7 @@ Protected Member Functions</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:15 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:41 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

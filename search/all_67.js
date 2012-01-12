@@ -18,7 +18,7 @@ var searchData=
   ['getserver',['GetServer',['../classScriptEditorPane.html#a0abb5ee5f0070e83a47e1333f1006b8a',1,'ScriptEditorPane']]],
   ['getserveradminconnection',['GetServerAdminConnection',['../classServerModel.html#a0457bacdc3c2d9bb59bcebdd6b42a3eb',1,'ServerModel']]],
   ['getserverparameters',['GetServerParameters',['../classConnectDialogue.html#a17b6c8d9ec08e20f2ca57992ce7bc8d0',1,'ConnectDialogue']]],
-  ['getsql',['GetSql',['../classVersionedSql.html#a58c335ddce7d5c3d8620c28f30eea188',1,'VersionedSql']]],
+  ['getsql',['GetSql',['../classDatabaseWorkWithDictionary.html#aae1b677e829b1fb2061c19fce99c5d49',1,'DatabaseWorkWithDictionary::GetSql()'],['../classVersionedSql.html#a58c335ddce7d5c3d8620c28f30eea188',1,'VersionedSql::GetSql()']]],
   ['getsqldictionary',['GetSqlDictionary',['../classObjectBrowser.html#a4e7cb6952a5d0efaafd6e8f9ffb58060',1,'ObjectBrowser']]],
   ['getstate',['GetState',['../classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7',1,'DatabaseConnection::GetState()'],['../classObjectBrowserDatabaseWork.html#a8463d678f1095604bdf0b83ed48bb716',1,'ObjectBrowserDatabaseWork::GetState()']]],
   ['gettype',['GetType',['../classQueryResults_1_1Field.html#a997ad603647eaf6c41557b8f3469ce06',1,'QueryResults::Field']]],

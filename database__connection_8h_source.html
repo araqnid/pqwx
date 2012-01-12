@@ -93,121 +93,160 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00015"></a>00015 <span class="preprocessor">#include &quot;wx/log.h&quot;</span>
 <a name="l00016"></a>00016 <span class="preprocessor">#include &quot;<a class="code" href="server__connection_8h.html">server_connection.h</a>&quot;</span>
 <a name="l00017"></a>00017 <span class="preprocessor">#include &quot;<a class="code" href="pg__error_8h.html">pg_error.h</a>&quot;</span>
-<a name="l00018"></a>00018 
-<a name="l00019"></a>00019 <span class="keyword">class </span><a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>;
-<a name="l00020"></a>00020 <span class="keyword">class </span><a class="code" href="classDisconnectWork.html">DisconnectWork</a>;
-<a name="l00021"></a>00021 
-<a name="l00025"></a><a class="code" href="classConnectionCallback.html">00025</a> <span class="keyword">class </span><a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> {
-<a name="l00026"></a>00026 <span class="keyword">public</span>:
-<a name="l00027"></a>00027   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnection(<span class="keywordtype">bool</span> usedPassword) = 0;
-<a name="l00028"></a>00028   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnectionFailed(<span class="keyword">const</span> wxString &amp;message) = 0;
-<a name="l00029"></a>00029   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnectionNeedsPassword() = 0;
-<a name="l00030"></a>00030 };
-<a name="l00031"></a>00031 
-<a name="l00049"></a><a class="code" href="classDatabaseConnection.html">00049</a> <span class="keyword">class </span><a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> {
-<a name="l00050"></a>00050 <span class="keyword">public</span>:
-<a name="l00056"></a><a class="code" href="classDatabaseConnection.html#a95bc5c496c83846966bfa8d69cb493d9">00056</a>   <a class="code" href="classDatabaseConnection.html#a95bc5c496c83846966bfa8d69cb493d9" title="Create a database connection.">DatabaseConnection</a>(<span class="keyword">const</span> <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> &amp;server, <span class="keyword">const</span> wxString &amp;dbname
-<a name="l00057"></a>00057 #<span class="keywordflow">if</span> PG_VERSION_NUM &gt;= 90000
-<a name="l00058"></a>00058                      , <span class="keyword">const</span> wxString &amp;label = wxEmptyString
-<a name="l00059"></a>00059 #endif
-<a name="l00060"></a>00060                      )
-<a name="l00061"></a>00061   : server(server), dbname(dbname), workCondition(workQueueMutex),
-<a name="l00062"></a>00062 #if PG_VERSION_NUM &gt;= 90000
-<a name="l00063"></a>00063     label(label),
-<a name="l00064"></a>00064 #endif
-<a name="l00065"></a>00065     workerThread(this), connectionCallback(NULL), disconnectQueued(false)
-<a name="l00066"></a>00066   {
-<a name="l00067"></a>00067     identification = server.Identification() + _T(<span class="stringliteral">&quot; &quot;</span>) + dbname;
-<a name="l00068"></a>00068   }
-<a name="l00069"></a>00069 
-<a name="l00070"></a>00070   ~<a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a>() {
-<a name="l00071"></a>00071     wxCHECK2_MSG(<a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>() == <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>, <a class="code" href="classDatabaseConnection.html#a2db9b9fc08e8551343d7f0d9d52f6f34" title="Dispose of this database connection.">Dispose</a>(), identification.c_str());
-<a name="l00072"></a>00072   }
-<a name="l00073"></a>00073 
-<a name="l00091"></a>00091   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a74b007c99626b37e0105a38111e9ca85" title="Begin connection to database.">Connect</a>(<a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> *callback = NULL);
-<a name="l00097"></a>00097   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#ac0be91d57adf17622dcb32bb2247b804" title="Close the connection synchronously.">CloseSync</a>();
-<a name="l00103"></a>00103   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a0afbcc93d90448e5639ca18f734e14c9" title="Request disconnection.">BeginDisconnection</a>();
-<a name="l00109"></a>00109   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a1843e1eff1fd933a3b97d03cce820070" title="Wait until the connection has closed.">WaitUntilClosed</a>();
-<a name="l00115"></a>00115   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a2db9b9fc08e8551343d7f0d9d52f6f34" title="Dispose of this database connection.">Dispose</a>();
-<a name="l00121"></a>00121   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#af296a8eac29ce02536da0f056c507346" title="Adds work to this connection&#39;s work queue.">AddWork</a>(<a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>*);
-<a name="l00127"></a>00127   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a2039df6813bd1f9900f3967d4b68351d" title="Adds work to this connections&#39; work queue, if possible.">AddWorkOnlyIfConnected</a>(<a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> *work);
-<a name="l00128"></a>00128 
-<a name="l00134"></a>00134   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a172ba517f12e13b5f085eef1e40db7d8" title="Logs SQL performed on this connection.">LogSql</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *sql);
-<a name="l00138"></a>00138   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a511f88b7e270f0f2fd9b39a4d6b637d5" title="Logs a disconnection event.">LogDisconnect</a>();
-<a name="l00142"></a>00142   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a6c1e932b235c57a569dec6cffcb99eb7" title="Logs a connection event.">LogConnect</a>();
-<a name="l00146"></a>00146   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a1c7af436c57959fac795e7ac662d8642" title="Logs a connection failure.">LogConnectFailed</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *msg);
-<a name="l00150"></a>00150   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#ab7428feadba1e425d49f5e2c8ce0e261" title="Logs an indication that connection failed due to no password.">LogConnectNeedsPassword</a>();
-<a name="l00154"></a>00154   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a022c1799439b39c0e7ce0f6b7d53499e" title="Logs an indication that a query failed due to reaching an invalid state.">LogSqlQueryInvalidStatus</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *msg, ExecStatusType status);
-<a name="l00158"></a>00158   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#aafe2af477f2ce8be13a7f1c5be044581" title="Logs an indication that a query failed due to the server throwing an error.">LogSqlQueryFailed</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;error);
-<a name="l00162"></a><a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22">00162</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22" title="Tests if this connection is actually connected.">IsConnected</a>()<span class="keyword"> const </span>{ <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state = workerThread.GetState(); <span class="keywordflow">return</span> state != <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a> &amp;&amp; state != <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf" title="worker thread finished running, but not joined">DISCONNECTED</a>; };
-<a name="l00168"></a><a class="code" href="classDatabaseConnection.html#a0c52145f227a92b01f19e5aeb1206223">00168</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a0c52145f227a92b01f19e5aeb1206223" title="Tests if this connection is able to accept work.">IsAcceptingWork</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22" title="Tests if this connection is actually connected.">IsConnected</a>() &amp;&amp; !disconnectQueued; }
-<a name="l00172"></a><a class="code" href="classDatabaseConnection.html#a45e392ab88b22878b8599eb46006bd9d">00172</a>   <span class="keyword">const</span> wxString&amp; <a class="code" href="classDatabaseConnection.html#a45e392ab88b22878b8599eb46006bd9d">DbName</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> dbname; }
-<a name="l00176"></a>00176   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#aec598901d1a38e8c2d8387265e3bc0f6" title="Change the label (application_name) of this connection.">Relabel</a>(<span class="keyword">const</span> wxString &amp;newLabel);
-<a name="l00180"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92">00180</a>   <span class="keyword">enum</span> <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> { 
-<a name="l00184"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae">00184</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>,
-<a name="l00188"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a14a506e7c11ef09afcd5daaec811a572">00188</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a14a506e7c11ef09afcd5daaec811a572" title="worker thread is starting up">INITIALISING</a>,
-<a name="l00192"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92ae5093d334f5876d1200e4e16d7a7319f">00192</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92ae5093d334f5876d1200e4e16d7a7319f" title="connection in progress">CONNECTING</a>,
-<a name="l00196"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a825b1401114c4dd6ebc6630c9e753128">00196</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a825b1401114c4dd6ebc6630c9e753128" title="worker thread waiting for work">IDLE</a>,
-<a name="l00200"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92afd4222b29a5671fcd2dfaf5c0645fbba">00200</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92afd4222b29a5671fcd2dfaf5c0645fbba" title="worker thread is executing work">EXECUTING</a>,
-<a name="l00204"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf">00204</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf" title="worker thread finished running, but not joined">DISCONNECTED</a> };
-<a name="l00208"></a><a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">00208</a>   <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> <a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> workerThread.GetState(); }
-<a name="l00212"></a><a class="code" href="classDatabaseConnection.html#a768e2d066a5e4af7854dd9cc9853054f">00212</a>   <span class="keyword">const</span> wxString&amp; <a class="code" href="classDatabaseConnection.html#a768e2d066a5e4af7854dd9cc9853054f">Identification</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> identification; }
-<a name="l00213"></a>00213 
-<a name="l00217"></a><a class="code" href="classDatabaseConnection.html#af0e56e431bcd27f76527d83e45e56634">00217</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#af0e56e431bcd27f76527d83e45e56634">IsStatementPrepared</a>(<span class="keyword">const</span> wxString&amp; name)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> preparedStatements.count(name); }
-<a name="l00221"></a><a class="code" href="classDatabaseConnection.html#af2df448b7b2d207e82c9b4e341385d12">00221</a>   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#af2df448b7b2d207e82c9b4e341385d12" title="Mark a statement as having been prepared on this connection.">MarkStatementPrepared</a>(<span class="keyword">const</span> wxString&amp; name) { preparedStatements.insert(name); }
-<a name="l00222"></a>00222 <span class="keyword">private</span>:
-<a name="l00223"></a>00223   <span class="keyword">class </span>WorkerThread : <span class="keyword">public</span> wxThread {
-<a name="l00224"></a>00224   <span class="keyword">public</span>:
-<a name="l00225"></a>00225     WorkerThread(<a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(<a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>) { }
-<a name="l00226"></a>00226   <span class="keyword">protected</span>:
-<a name="l00227"></a>00227     <span class="keyword">virtual</span> ExitCode Entry();
-<a name="l00228"></a>00228   <span class="keyword">private</span>:
-<a name="l00229"></a>00229     PGconn *conn;
-<a name="l00230"></a>00230     <a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db;
-<a name="l00231"></a>00231     <span class="keywordtype">bool</span> disconnect;
-<a name="l00232"></a>00232     <span class="keyword">mutable</span> wxCriticalSection stateCriticalSection;
-<a name="l00233"></a>00233     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state;
-<a name="l00234"></a>00234 
-<a name="l00235"></a>00235     <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a74b007c99626b37e0105a38111e9ca85" title="Begin connection to database.">Connect</a>();
-<a name="l00236"></a>00236 
-<a name="l00237"></a>00237     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> <a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>()<span class="keyword"> const </span>{
-<a name="l00238"></a>00238       wxCriticalSectionLocker locker(stateCriticalSection);
-<a name="l00239"></a>00239       <span class="keywordflow">return</span> state;
-<a name="l00240"></a>00240     }
-<a name="l00241"></a>00241 
-<a name="l00242"></a>00242     <span class="keywordtype">void</span> SetState(<a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state_) {
-<a name="l00243"></a>00243       wxCriticalSectionLocker locker(stateCriticalSection);
-<a name="l00244"></a>00244       state = state_;
-<a name="l00245"></a>00245     }
-<a name="l00246"></a>00246 
-<a name="l00247"></a>00247     <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a>;
-<a name="l00248"></a>00248   };
-<a name="l00249"></a>00249 
-<a name="l00250"></a>00250   <span class="keywordtype">void</span> FinishDisconnection();
-<a name="l00251"></a>00251   wxString identification;
-<a name="l00252"></a>00252   <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> server;
-<a name="l00253"></a>00253   <span class="keyword">const</span> wxString dbname;
-<a name="l00254"></a>00254   std::deque&lt;DatabaseWork*&gt; workQueue;
-<a name="l00255"></a>00255   wxMutex workQueueMutex;
-<a name="l00256"></a>00256   wxCondition workCondition;
-<a name="l00257"></a>00257 <span class="preprocessor">#if PG_VERSION_NUM &gt;= 90000</span>
-<a name="l00258"></a>00258 <span class="preprocessor"></span>  wxString label;
-<a name="l00259"></a>00259 <span class="preprocessor">#endif</span>
-<a name="l00260"></a>00260 <span class="preprocessor"></span>  WorkerThread workerThread;
-<a name="l00261"></a>00261   <a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> *connectionCallback;
-<a name="l00262"></a>00262   std::set&lt;wxString&gt; preparedStatements;
-<a name="l00263"></a>00263   <span class="keywordtype">bool</span> disconnectQueued;
-<a name="l00264"></a>00264 
-<a name="l00265"></a>00265   <span class="keyword">friend</span> <span class="keyword">class </span>WorkerThread;
-<a name="l00266"></a>00266   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDisconnectWork.html">DisconnectWork</a>;
-<a name="l00267"></a>00267   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>;
-<a name="l00268"></a>00268 };
-<a name="l00269"></a>00269 
-<a name="l00270"></a>00270 <span class="preprocessor">#endif</span>
-<a name="l00271"></a>00271 <span class="preprocessor"></span>
-<a name="l00272"></a>00272 <span class="comment">// Local Variables:</span>
-<a name="l00273"></a>00273 <span class="comment">// mode: c++</span>
-<a name="l00274"></a>00274 <span class="comment">// End:</span>
+<a name="l00018"></a>00018 <span class="preprocessor">#include &quot;<a class="code" href="database__notification__monitor_8h.html" title="Database connection and worker thread declarations.">database_notification_monitor.h</a>&quot;</span>
+<a name="l00019"></a>00019 
+<a name="l00020"></a>00020 <span class="keyword">class </span><a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>;
+<a name="l00021"></a>00021 <span class="keyword">class </span><a class="code" href="classDisconnectWork.html">DisconnectWork</a>;
+<a name="l00022"></a>00022 
+<a name="l00026"></a><a class="code" href="classConnectionCallback.html">00026</a> <span class="keyword">class </span><a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> {
+<a name="l00027"></a>00027 <span class="keyword">public</span>:
+<a name="l00028"></a>00028   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnection(<span class="keywordtype">bool</span> usedPassword) = 0;
+<a name="l00029"></a>00029   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnectionFailed(<span class="keyword">const</span> wxString &amp;message) = 0;
+<a name="l00030"></a>00030   <span class="keyword">virtual</span> <span class="keywordtype">void</span> OnConnectionNeedsPassword() = 0;
+<a name="l00031"></a>00031 };
+<a name="l00032"></a>00032 
+<a name="l00050"></a><a class="code" href="classDatabaseConnection.html">00050</a> <span class="keyword">class </span><a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> {
+<a name="l00051"></a>00051 <span class="keyword">public</span>:
+<a name="l00057"></a><a class="code" href="classDatabaseConnection.html#a95bc5c496c83846966bfa8d69cb493d9">00057</a>   <a class="code" href="classDatabaseConnection.html#a95bc5c496c83846966bfa8d69cb493d9" title="Create a database connection.">DatabaseConnection</a>(<span class="keyword">const</span> <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> &amp;server, <span class="keyword">const</span> wxString &amp;dbname
+<a name="l00058"></a>00058 #<span class="keywordflow">if</span> PG_VERSION_NUM &gt;= 90000
+<a name="l00059"></a>00059                      , <span class="keyword">const</span> wxString &amp;label = wxEmptyString
+<a name="l00060"></a>00060 #endif
+<a name="l00061"></a>00061                      )
+<a name="l00062"></a>00062   : server(server), dbname(dbname), workCondition(workQueueMutex),
+<a name="l00063"></a>00063 #if PG_VERSION_NUM &gt;= 90000
+<a name="l00064"></a>00064     label(label),
+<a name="l00065"></a>00065 #endif
+<a name="l00066"></a>00066     workerThread(this), connectionCallback(NULL), disconnectQueued(false)
+<a name="l00067"></a>00067   {
+<a name="l00068"></a>00068     identification = server.Identification() + _T(<span class="stringliteral">&quot; &quot;</span>) + dbname;
+<a name="l00069"></a>00069   }
+<a name="l00070"></a>00070 
+<a name="l00071"></a>00071   ~<a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a>() {
+<a name="l00072"></a>00072     wxCHECK2_MSG(<a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>() == <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>, <a class="code" href="classDatabaseConnection.html#a2db9b9fc08e8551343d7f0d9d52f6f34" title="Dispose of this database connection.">Dispose</a>(), identification.c_str());
+<a name="l00073"></a>00073   }
+<a name="l00074"></a>00074 
+<a name="l00092"></a>00092   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a74b007c99626b37e0105a38111e9ca85" title="Begin connection to database.">Connect</a>(<a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> *callback = NULL);
+<a name="l00098"></a>00098   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#ac0be91d57adf17622dcb32bb2247b804" title="Close the connection synchronously.">CloseSync</a>();
+<a name="l00104"></a>00104   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a0afbcc93d90448e5639ca18f734e14c9" title="Request disconnection.">BeginDisconnection</a>();
+<a name="l00110"></a>00110   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a1843e1eff1fd933a3b97d03cce820070" title="Wait until the connection has closed.">WaitUntilClosed</a>();
+<a name="l00116"></a>00116   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a2db9b9fc08e8551343d7f0d9d52f6f34" title="Dispose of this database connection.">Dispose</a>();
+<a name="l00122"></a>00122   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#af296a8eac29ce02536da0f056c507346" title="Adds work to this connection&#39;s work queue.">AddWork</a>(<a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>*);
+<a name="l00128"></a>00128   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a2039df6813bd1f9900f3967d4b68351d" title="Adds work to this connections&#39; work queue, if possible.">AddWorkOnlyIfConnected</a>(<a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> *work);
+<a name="l00129"></a>00129 
+<a name="l00135"></a>00135   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a172ba517f12e13b5f085eef1e40db7d8" title="Logs SQL performed on this connection.">LogSql</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *sql);
+<a name="l00139"></a>00139   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a511f88b7e270f0f2fd9b39a4d6b637d5" title="Logs a disconnection event.">LogDisconnect</a>();
+<a name="l00143"></a>00143   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a6c1e932b235c57a569dec6cffcb99eb7" title="Logs a connection event.">LogConnect</a>();
+<a name="l00147"></a>00147   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a1c7af436c57959fac795e7ac662d8642" title="Logs a connection failure.">LogConnectFailed</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *msg);
+<a name="l00151"></a>00151   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#ab7428feadba1e425d49f5e2c8ce0e261" title="Logs an indication that connection failed due to no password.">LogConnectNeedsPassword</a>();
+<a name="l00155"></a>00155   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#a022c1799439b39c0e7ce0f6b7d53499e" title="Logs an indication that a query failed due to reaching an invalid state.">LogSqlQueryInvalidStatus</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *msg, ExecStatusType status);
+<a name="l00159"></a>00159   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#aafe2af477f2ce8be13a7f1c5be044581" title="Logs an indication that a query failed due to the server throwing an error.">LogSqlQueryFailed</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;error);
+<a name="l00163"></a><a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22">00163</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22" title="Tests if this connection is actually connected.">IsConnected</a>()<span class="keyword"> const </span>{ <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state = workerThread.GetState(); <span class="keywordflow">return</span> state != <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a> &amp;&amp; state != <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf" title="worker thread finished running, but not joined">DISCONNECTED</a>; };
+<a name="l00169"></a><a class="code" href="classDatabaseConnection.html#a0c52145f227a92b01f19e5aeb1206223">00169</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a0c52145f227a92b01f19e5aeb1206223" title="Tests if this connection is able to accept work.">IsAcceptingWork</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code" href="classDatabaseConnection.html#afa9cb7e335b43120351a3f59edef0b22" title="Tests if this connection is actually connected.">IsConnected</a>() &amp;&amp; !disconnectQueued; }
+<a name="l00173"></a><a class="code" href="classDatabaseConnection.html#a45e392ab88b22878b8599eb46006bd9d">00173</a>   <span class="keyword">const</span> wxString&amp; <a class="code" href="classDatabaseConnection.html#a45e392ab88b22878b8599eb46006bd9d">DbName</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> dbname; }
+<a name="l00177"></a>00177   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#aec598901d1a38e8c2d8387265e3bc0f6" title="Change the label (application_name) of this connection.">Relabel</a>(<span class="keyword">const</span> wxString &amp;newLabel);
+<a name="l00181"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92">00181</a>   <span class="keyword">enum</span> <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> { 
+<a name="l00185"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae">00185</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>,
+<a name="l00189"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a14a506e7c11ef09afcd5daaec811a572">00189</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a14a506e7c11ef09afcd5daaec811a572" title="worker thread is starting up">INITIALISING</a>,
+<a name="l00193"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92ae5093d334f5876d1200e4e16d7a7319f">00193</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92ae5093d334f5876d1200e4e16d7a7319f" title="connection in progress">CONNECTING</a>,
+<a name="l00197"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a825b1401114c4dd6ebc6630c9e753128">00197</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a825b1401114c4dd6ebc6630c9e753128" title="worker thread waiting for work">IDLE</a>,
+<a name="l00201"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92afd4222b29a5671fcd2dfaf5c0645fbba">00201</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92afd4222b29a5671fcd2dfaf5c0645fbba" title="worker thread is executing work">EXECUTING</a>,
+<a name="l00205"></a><a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf">00205</a>     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92a398a7d72845d5f7cdf9acdd9f3a081cf" title="worker thread finished running, but not joined">DISCONNECTED</a> };
+<a name="l00209"></a><a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">00209</a>   <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> <a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> workerThread.GetState(); }
+<a name="l00213"></a><a class="code" href="classDatabaseConnection.html#a768e2d066a5e4af7854dd9cc9853054f">00213</a>   <span class="keyword">const</span> wxString&amp; <a class="code" href="classDatabaseConnection.html#a768e2d066a5e4af7854dd9cc9853054f">Identification</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> identification; }
+<a name="l00214"></a>00214 
+<a name="l00215"></a>00215 <span class="preprocessor">#ifdef PQWX_NOTIFICATION_MONITOR</span>
+<a name="l00216"></a>00216 <span class="preprocessor"></span>
+<a name="l00219"></a><a class="code" href="classDatabaseConnection_1_1NotificationReceiver.html">00219</a>   <span class="keyword">class </span><a class="code" href="classDatabaseConnection_1_1NotificationReceiver.html" title="Interface for receiving an asynchronous notification from the monitor.">NotificationReceiver</a> {
+<a name="l00220"></a>00220   <span class="keyword">public</span>:
+<a name="l00221"></a>00221     <span class="keyword">virtual</span> <span class="keywordtype">void</span> operator()(PGnotify*) = 0;
+<a name="l00222"></a>00222   };
+<a name="l00223"></a>00223 
+<a name="l00227"></a>00227   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#aae660ef9de24ba2c27b95a0940d7c148" title="Associate this connection with a notification monitor.">SetNotificationMonitor</a>(<a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a> *monitor, <a class="code" href="classDatabaseConnection_1_1NotificationReceiver.html" title="Interface for receiving an asynchronous notification from the monitor.">NotificationReceiver</a> *receiver);
+<a name="l00228"></a>00228 <span class="preprocessor">#endif</span>
+<a name="l00229"></a>00229 <span class="preprocessor"></span>
+<a name="l00233"></a><a class="code" href="classDatabaseConnection.html#af0e56e431bcd27f76527d83e45e56634">00233</a>   <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#af0e56e431bcd27f76527d83e45e56634">IsStatementPrepared</a>(<span class="keyword">const</span> wxString&amp; name)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> preparedStatements.count(name); }
+<a name="l00237"></a><a class="code" href="classDatabaseConnection.html#af2df448b7b2d207e82c9b4e341385d12">00237</a>   <span class="keywordtype">void</span> <a class="code" href="classDatabaseConnection.html#af2df448b7b2d207e82c9b4e341385d12" title="Mark a statement as having been prepared on this connection.">MarkStatementPrepared</a>(<span class="keyword">const</span> wxString&amp; name) { preparedStatements.insert(name); }
+<a name="l00238"></a>00238 <span class="keyword">private</span>:
+<a name="l00239"></a>00239   <span class="keyword">class </span>WorkerThread : <span class="keyword">public</span> wxThread {
+<a name="l00240"></a>00240   <span class="keyword">public</span>:
+<a name="l00241"></a>00241     WorkerThread(<a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(<a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92aeb128abcd9165b2dba1ebfdece72dcae" title="worker thread not started or already joined">NOT_CONNECTED</a>)
+<a name="l00242"></a>00242 #ifdef PQWX_NOTIFICATION_MONITOR
+<a name="l00243"></a>00243         ,monitor(NULL), monitorProcessor(this)
+<a name="l00244"></a>00244 #endif
+<a name="l00245"></a>00245   { }
+<a name="l00246"></a>00246   <span class="keyword">protected</span>:
+<a name="l00247"></a>00247     <span class="keyword">virtual</span> ExitCode Entry();
+<a name="l00248"></a>00248   <span class="keyword">private</span>:
+<a name="l00249"></a>00249     PGconn *conn;
+<a name="l00250"></a>00250     <a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a> *db;
+<a name="l00251"></a>00251     <span class="keywordtype">bool</span> disconnect;
+<a name="l00252"></a>00252     <span class="keyword">mutable</span> wxCriticalSection stateCriticalSection;
+<a name="l00253"></a>00253     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state;
+<a name="l00254"></a>00254 <span class="preprocessor">#ifdef PQWX_NOTIFICATION_MONITOR</span>
+<a name="l00255"></a>00255 <span class="preprocessor"></span>    <a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a> *monitor;
+<a name="l00256"></a>00256     NotificationReceiver *notificationReceiver;
+<a name="l00257"></a>00257     <span class="keyword">class </span>MonitorInputProcessor : <span class="keyword">public</span> <a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a>::InputProcessor {
+<a name="l00258"></a>00258     <span class="keyword">public</span>:
+<a name="l00259"></a>00259       MonitorInputProcessor(WorkerThread *worker) : worker(worker) {}
+<a name="l00260"></a>00260       <span class="keywordtype">void</span> operator()()
+<a name="l00261"></a>00261       {
+<a name="l00262"></a>00262         PQconsumeInput(worker-&gt;conn);
+<a name="l00263"></a>00263         PGnotify *notification;
+<a name="l00264"></a>00264         <span class="keywordflow">while</span> ((notification = PQnotifies(worker-&gt;conn)) != NULL) {
+<a name="l00265"></a>00265           (*worker-&gt;notificationReceiver)(notification);
+<a name="l00266"></a>00266         }
+<a name="l00267"></a>00267       }
+<a name="l00268"></a>00268     <span class="keyword">private</span>:
+<a name="l00269"></a>00269       WorkerThread *worker;
+<a name="l00270"></a>00270     } monitorProcessor;
+<a name="l00271"></a>00271 <span class="preprocessor">#endif</span>
+<a name="l00272"></a>00272 <span class="preprocessor"></span>
+<a name="l00273"></a>00273     <span class="keywordtype">bool</span> <a class="code" href="classDatabaseConnection.html#a74b007c99626b37e0105a38111e9ca85" title="Begin connection to database.">Connect</a>();
+<a name="l00274"></a>00274     <span class="keywordtype">void</span> HandleNotification();
+<a name="l00275"></a>00275 
+<a name="l00276"></a>00276     <a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> <a class="code" href="classDatabaseConnection.html#a6e6ea9cc02963516fff50b212b1228c7">GetState</a>()<span class="keyword"> const </span>{
+<a name="l00277"></a>00277       wxCriticalSectionLocker locker(stateCriticalSection);
+<a name="l00278"></a>00278       <span class="keywordflow">return</span> state;
+<a name="l00279"></a>00279     }
+<a name="l00280"></a>00280 
+<a name="l00281"></a>00281     <span class="keywordtype">void</span> SetState(<a class="code" href="classDatabaseConnection.html#aa5a494e6ccea6dd279d6be7db04c2e92" title="Connection state.">State</a> state_) {
+<a name="l00282"></a>00282       wxCriticalSectionLocker locker(stateCriticalSection);
+<a name="l00283"></a>00283       state = state_;
+<a name="l00284"></a>00284     }
+<a name="l00285"></a>00285 
+<a name="l00286"></a>00286     <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDatabaseConnection.html" title="Represents a connection to a server/database.">DatabaseConnection</a>;
+<a name="l00287"></a>00287     <span class="keyword">friend</span> <span class="keyword">class </span>MonitorInputProcessor;
+<a name="l00288"></a>00288     <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classRegisterWithMonitor.html">RegisterWithMonitor</a>;
+<a name="l00289"></a>00289     <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classUnregisterWithMonitor.html">UnregisterWithMonitor</a>;
+<a name="l00290"></a>00290   };
+<a name="l00291"></a>00291 
+<a name="l00292"></a>00292   <span class="keywordtype">void</span> FinishDisconnection();
+<a name="l00293"></a>00293   wxString identification;
+<a name="l00294"></a>00294   <a class="code" href="classServerConnection.html" title="Defines connection parameters for a server.">ServerConnection</a> server;
+<a name="l00295"></a>00295   <span class="keyword">const</span> wxString dbname;
+<a name="l00296"></a>00296   std::deque&lt;DatabaseWork*&gt; workQueue;
+<a name="l00297"></a>00297   wxMutex workQueueMutex;
+<a name="l00298"></a>00298   wxCondition workCondition;
+<a name="l00299"></a>00299 <span class="preprocessor">#if PG_VERSION_NUM &gt;= 90000</span>
+<a name="l00300"></a>00300 <span class="preprocessor"></span>  wxString label;
+<a name="l00301"></a>00301 <span class="preprocessor">#endif</span>
+<a name="l00302"></a>00302 <span class="preprocessor"></span>  WorkerThread workerThread;
+<a name="l00303"></a>00303   <a class="code" href="classConnectionCallback.html" title="Interface for communicating the result of a connection attempt.">ConnectionCallback</a> *connectionCallback;
+<a name="l00304"></a>00304   std::set&lt;wxString&gt; preparedStatements;
+<a name="l00305"></a>00305   <span class="keywordtype">bool</span> disconnectQueued;
+<a name="l00306"></a>00306 
+<a name="l00307"></a>00307   <span class="keyword">friend</span> <span class="keyword">class </span>WorkerThread;
+<a name="l00308"></a>00308   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDisconnectWork.html">DisconnectWork</a>;
+<a name="l00309"></a>00309   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>;
+<a name="l00310"></a>00310   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classRegisterWithMonitor.html">RegisterWithMonitor</a>;
+<a name="l00311"></a>00311   <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classUnregisterWithMonitor.html">UnregisterWithMonitor</a>;
+<a name="l00312"></a>00312 };
+<a name="l00313"></a>00313 
+<a name="l00314"></a>00314 <span class="preprocessor">#endif</span>
+<a name="l00315"></a>00315 <span class="preprocessor"></span>
+<a name="l00316"></a>00316 <span class="comment">// Local Variables:</span>
+<a name="l00317"></a>00317 <span class="comment">// mode: c++</span>
+<a name="l00318"></a>00318 <span class="comment">// End:</span>
 </pre></div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -226,7 +265,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:35 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

@@ -11,7 +11,6 @@ var searchData=
   ['refreshdatabaselistwork',['RefreshDatabaseListWork',['../classRefreshDatabaseListWork.html#af38121a2c6e9b30d4b5e1a5bfc5c18d6',1,'RefreshDatabaseListWork']]],
   ['relabel',['Relabel',['../classDatabaseConnection.html#aec598901d1a38e8c2d8387265e3bc0f6',1,'DatabaseConnection']]],
   ['reset',['Reset',['../classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee',1,'ResultsNotebook']]],
-  ['result',['Result',['../classScriptExecutionWork_1_1Result.html#aa0fa87a092df2365972c27d54d238702',1,'ScriptExecutionWork::Result']]],
   ['resultsnotebook',['ResultsNotebook',['../classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc',1,'ResultsNotebook']]],
   ['row',['Row',['../classQueryResults_1_1Row.html#ab8132e397ae10189cc914550ccd06015',1,'QueryResults::Row']]]
 ];

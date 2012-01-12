@@ -85,44 +85,54 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00007"></a>00007 <span class="preprocessor">#ifndef __pqwx_h</span>
 <a name="l00008"></a>00008 <span class="preprocessor"></span><span class="preprocessor">#define __pqwx_h</span>
 <a name="l00009"></a>00009 <span class="preprocessor"></span>
-<a name="l00010"></a>00010 <span class="preprocessor">#include &lt;vector&gt;</span>
-<a name="l00011"></a>00011 
-<a name="l00012"></a>00012 <span class="comment">/*</span>
-<a name="l00013"></a>00013 <span class="comment"> * controls and menu commands</span>
-<a name="l00014"></a>00014 <span class="comment"> */</span>
-<a name="l00015"></a>00015 <span class="keyword">enum</span> {
-<a name="l00016"></a>00016   <span class="comment">// local</span>
-<a name="l00017"></a>00017   Pqwx_ObjectBrowser = 16384,
-<a name="l00018"></a>00018   Pqwx_ConnectObjectBrowser,
-<a name="l00019"></a>00019   Pqwx_DisconnectObjectBrowser,
-<a name="l00020"></a>00020   Pqwx_MainSplitter,
-<a name="l00021"></a>00021   Pqwx_EditorSplitter,
-<a name="l00022"></a>00022   Pqwx_DocumentsNotebook,
-<a name="l00023"></a>00023   Pqwx_ResultsNotebook,
-<a name="l00024"></a>00024   Pqwx_MessagesPage,
-<a name="l00025"></a>00025   Pqwx_MessagesDisplay,
-<a name="l00026"></a>00026   Pqwx_ObjectFinderResults,
-<a name="l00027"></a>00027 };
-<a name="l00028"></a>00028 
-<a name="l00034"></a><a class="code" href="classPQWXApp.html">00034</a> <span class="keyword">class </span><a class="code" href="classPQWXApp.html" title="The wxApp implementation for PQWX.">PQWXApp</a> : <span class="keyword">public</span> wxApp {
-<a name="l00035"></a>00035 <span class="keyword">public</span>:
-<a name="l00036"></a>00036   <span class="keyword">virtual</span> <span class="keywordtype">bool</span> OnInit();
-<a name="l00037"></a>00037   <span class="keywordtype">void</span> OnInitCmdLine(wxCmdLineParser &amp;parser);
-<a name="l00038"></a>00038   <span class="keywordtype">bool</span> OnCmdLineParsed(wxCmdLineParser &amp;parser);
-<a name="l00039"></a>00039 <span class="keyword">private</span>:
-<a name="l00040"></a>00040   <span class="keywordtype">bool</span> haveInitial;
-<a name="l00041"></a>00041   wxString initialServer;
-<a name="l00042"></a>00042   wxString initialUser;
-<a name="l00043"></a>00043   wxString initialPassword;
-<a name="l00044"></a>00044   wxString initialDatabase;
-<a name="l00045"></a>00045   std::vector&lt;wxString&gt; initialFiles;
-<a name="l00046"></a>00046 };
-<a name="l00047"></a>00047 
-<a name="l00048"></a>00048 <span class="preprocessor">#endif</span>
-<a name="l00049"></a>00049 <span class="preprocessor"></span>
-<a name="l00050"></a>00050 <span class="comment">// Local Variables:</span>
-<a name="l00051"></a>00051 <span class="comment">// mode: c++</span>
-<a name="l00052"></a>00052 <span class="comment">// End:</span>
+<a name="l00010"></a>00010 <span class="preprocessor">#include &quot;<a class="code" href="pqwx__config_8h.html" title="Compile-time configuration preprocessor symbols.">pqwx_config.h</a>&quot;</span>
+<a name="l00011"></a>00011 <span class="preprocessor">#include &lt;vector&gt;</span>
+<a name="l00012"></a>00012 
+<a name="l00013"></a>00013 <span class="comment">/*</span>
+<a name="l00014"></a>00014 <span class="comment"> * controls and menu commands</span>
+<a name="l00015"></a>00015 <span class="comment"> */</span>
+<a name="l00016"></a>00016 <span class="keyword">enum</span> {
+<a name="l00017"></a>00017   <span class="comment">// local</span>
+<a name="l00018"></a>00018   Pqwx_ObjectBrowser = 16384,
+<a name="l00019"></a>00019   Pqwx_ConnectObjectBrowser,
+<a name="l00020"></a>00020   Pqwx_DisconnectObjectBrowser,
+<a name="l00021"></a>00021   Pqwx_MainSplitter,
+<a name="l00022"></a>00022   Pqwx_EditorSplitter,
+<a name="l00023"></a>00023   Pqwx_DocumentsNotebook,
+<a name="l00024"></a>00024   Pqwx_ResultsNotebook,
+<a name="l00025"></a>00025   Pqwx_MessagesPage,
+<a name="l00026"></a>00026   Pqwx_MessagesDisplay,
+<a name="l00027"></a>00027   Pqwx_ObjectFinderResults,
+<a name="l00028"></a>00028 };
+<a name="l00029"></a>00029 
+<a name="l00030"></a>00030 <span class="keyword">class </span><a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a>;
+<a name="l00031"></a>00031 
+<a name="l00037"></a><a class="code" href="classPQWXApp.html">00037</a> <span class="keyword">class </span><a class="code" href="classPQWXApp.html" title="The wxApp implementation for PQWX.">PQWXApp</a> : <span class="keyword">public</span> wxApp {
+<a name="l00038"></a>00038 <span class="keyword">public</span>:
+<a name="l00039"></a>00039   <span class="keyword">virtual</span> <span class="keywordtype">bool</span> OnInit();
+<a name="l00040"></a>00040   <span class="keywordtype">void</span> OnInitCmdLine(wxCmdLineParser &amp;parser);
+<a name="l00041"></a>00041   <span class="keywordtype">bool</span> OnCmdLineParsed(wxCmdLineParser &amp;parser);
+<a name="l00042"></a>00042   <span class="keywordtype">int</span> OnExit();
+<a name="l00043"></a>00043 <span class="preprocessor">#ifdef PQWX_NOTIFICATION_MONITOR</span>
+<a name="l00044"></a>00044 <span class="preprocessor"></span>  <span class="keyword">static</span> <a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a>* GetNotificationMonitor();
+<a name="l00045"></a>00045 <span class="preprocessor">#endif</span>
+<a name="l00046"></a>00046 <span class="preprocessor"></span><span class="keyword">private</span>:
+<a name="l00047"></a>00047   <span class="keywordtype">bool</span> haveInitial;
+<a name="l00048"></a>00048   wxString initialServer;
+<a name="l00049"></a>00049   wxString initialUser;
+<a name="l00050"></a>00050   wxString initialPassword;
+<a name="l00051"></a>00051   wxString initialDatabase;
+<a name="l00052"></a>00052   std::vector&lt;wxString&gt; initialFiles;
+<a name="l00053"></a>00053 <span class="preprocessor">#ifdef PQWX_NOTIFICATION_MONITOR</span>
+<a name="l00054"></a>00054 <span class="preprocessor"></span>  <span class="keyword">static</span> <a class="code" href="classDatabaseNotificationMonitor.html" title="Listen for asynchronous notifications on database connections.">DatabaseNotificationMonitor</a> *monitor;
+<a name="l00055"></a>00055 <span class="preprocessor">#endif</span>
+<a name="l00056"></a>00056 <span class="preprocessor"></span>};
+<a name="l00057"></a>00057 
+<a name="l00058"></a>00058 <span class="preprocessor">#endif</span>
+<a name="l00059"></a>00059 <span class="preprocessor"></span>
+<a name="l00060"></a>00060 <span class="comment">// Local Variables:</span>
+<a name="l00061"></a>00061 <span class="comment">// mode: c++</span>
+<a name="l00062"></a>00062 <span class="comment">// End:</span>
 </pre></div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -141,7 +151,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:36 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

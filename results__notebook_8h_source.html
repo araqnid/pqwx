@@ -86,48 +86,50 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00007"></a>00007 <span class="preprocessor"></span><span class="preprocessor">#define __results_book_h</span>
 <a name="l00008"></a>00008 <span class="preprocessor"></span>
 <a name="l00009"></a>00009 <span class="preprocessor">#include &quot;wx/notebook.h&quot;</span>
-<a name="l00010"></a>00010 <span class="preprocessor">#include &quot;wx/stc/stc.h&quot;</span>
-<a name="l00011"></a>00011 <span class="preprocessor">#include &quot;<a class="code" href="pqwx_8h.html" title="Global IDs and declare the application class itself.">pqwx.h</a>&quot;</span>
-<a name="l00012"></a>00012 <span class="preprocessor">#include &quot;<a class="code" href="script__events_8h.html" title="Defines event types used for managing scripting and editors.">script_events.h</a>&quot;</span>
-<a name="l00013"></a>00013 <span class="preprocessor">#include &quot;<a class="code" href="query__results_8h.html">query_results.h</a>&quot;</span>
-<a name="l00014"></a>00014 
-<a name="l00018"></a><a class="code" href="classResultsNotebook.html">00018</a> <span class="keyword">class </span><a class="code" href="classResultsNotebook.html" title="Notebook widget containing messages and result grids from a script execution.">ResultsNotebook</a> : <span class="keyword">public</span> wxNotebook {
-<a name="l00019"></a>00019 <span class="keyword">public</span>:
-<a name="l00023"></a><a class="code" href="classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc">00023</a>   <a class="code" href="classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc" title="Create notebook.">ResultsNotebook</a>(wxWindow *parent, wxWindowID <span class="keywordtype">id</span> = wxID_ANY, <span class="keyword">const</span> wxPoint&amp; pos = wxDefaultPosition, <span class="keyword">const</span> wxSize&amp; size = wxDefaultSize) : wxNotebook(parent, id, pos, size) { Setup(); }
-<a name="l00024"></a>00024 
-<a name="l00029"></a><a class="code" href="classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee">00029</a>   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee" title="Reset notebook.">Reset</a>() { DeleteAllPages(); Setup(); }
-<a name="l00030"></a>00030 
-<a name="l00034"></a>00034   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#abf0df2ae5d8707f09edfa82d66c79597" title="Add command completion to messages.">ScriptCommandCompleted</a>(<span class="keyword">const</span> wxString&amp; statusTag);
-<a name="l00038"></a>00038   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#ae76565df62ad07b138df1e4e5aa6a055" title="Add a result set.">ScriptResultSet</a>(<span class="keyword">const</span> wxString &amp;statusTag, <span class="keyword">const</span> <a class="code" href="classQueryResults.html" title="Simple query result set representation.">QueryResults</a> &amp;data);
-<a name="l00042"></a>00042   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a1e04210b51b3958450a4fe49a379c901" title="Add a server error.">ScriptError</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;error, <span class="keyword">const</span> wxString &amp;query);
-<a name="l00046"></a>00046   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#ae782b5c4dd7e0082c6ceb2d2557f52cd" title="Add an internal error.">ScriptInternalError</a>(<span class="keyword">const</span> wxString &amp;error, <span class="keyword">const</span> wxString &amp;query);
-<a name="l00050"></a>00050   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a5f01591552ea86d7f1239974a586342b" title="Add a message output by a script using the echo command.">ScriptEcho</a>(<span class="keyword">const</span> wxString &amp;message);
-<a name="l00054"></a>00054   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a8475c9d47a0ac06c2e40a62efd11d29e" title="Add a notice message that occurred while executing a query.">ScriptQueryNotice</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;notice, <span class="keyword">const</span> wxString &amp;query);
-<a name="l00058"></a>00058   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a0e3973c70f1190c7bbf3eaf1f4e98829" title="Add a notice message that occurred asynchronously.">ScriptAsynchronousNotice</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;notice);
-<a name="l00059"></a>00059 
-<a name="l00060"></a>00060 <span class="keyword">private</span>:
-<a name="l00061"></a>00061   wxPanel *messagesPanel;
-<a name="l00062"></a>00062   wxStyledTextCtrl *messagesDisplay;
-<a name="l00063"></a>00063 
-<a name="l00064"></a>00064   <span class="keywordtype">void</span> AddResultSet(wxPanel *parent, <span class="keyword">const</span> <a class="code" href="classQueryResults.html" title="Simple query result set representation.">QueryResults</a> &amp;data);
-<a name="l00065"></a>00065   <span class="keywordtype">bool</span> addedResultSet;
-<a name="l00066"></a>00066   <span class="keywordtype">bool</span> addedError;
-<a name="l00067"></a>00067 
-<a name="l00068"></a>00068   <span class="keywordtype">void</span> Setup();
+<a name="l00010"></a>00010 <span class="preprocessor">#include &quot;<a class="code" href="pqwx_8h.html" title="Global IDs and declare the application class itself.">pqwx.h</a>&quot;</span>
+<a name="l00011"></a>00011 <span class="preprocessor">#include &quot;<a class="code" href="script__events_8h.html" title="Defines event types used for managing scripting and editors.">script_events.h</a>&quot;</span>
+<a name="l00012"></a>00012 <span class="preprocessor">#include &quot;<a class="code" href="query__results_8h.html">query_results.h</a>&quot;</span>
+<a name="l00013"></a>00013 
+<a name="l00014"></a>00014 <span class="keyword">class </span>wxHtmlWindow;
+<a name="l00015"></a>00015 <span class="keyword">class </span>wxHtmlCellEvent;
+<a name="l00016"></a>00016 
+<a name="l00020"></a><a class="code" href="classResultsNotebook.html">00020</a> <span class="keyword">class </span><a class="code" href="classResultsNotebook.html" title="Notebook widget containing messages and result grids from a script execution.">ResultsNotebook</a> : <span class="keyword">public</span> wxNotebook {
+<a name="l00021"></a>00021 <span class="keyword">public</span>:
+<a name="l00025"></a><a class="code" href="classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc">00025</a>   <a class="code" href="classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc" title="Create notebook.">ResultsNotebook</a>(wxWindow *parent, wxWindowID <span class="keywordtype">id</span> = wxID_ANY, <span class="keyword">const</span> wxPoint&amp; pos = wxDefaultPosition, <span class="keyword">const</span> wxSize&amp; size = wxDefaultSize) : wxNotebook(parent, id, pos, size) { Setup(); }
+<a name="l00026"></a>00026 
+<a name="l00031"></a><a class="code" href="classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee">00031</a>   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee" title="Reset notebook.">Reset</a>() { DeleteAllPages(); Setup(); }
+<a name="l00032"></a>00032 
+<a name="l00036"></a>00036   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a82ce535cc53f4d77102df6c3168c8570" title="Add command completion to messages.">ScriptCommandCompleted</a>(<span class="keyword">const</span> wxString&amp; statusTag, <span class="keyword">const</span> wxString &amp;query, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00040"></a>00040   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a8c1485777266cb1dc4419a19360784fa" title="Add a result set.">ScriptResultSet</a>(<span class="keyword">const</span> wxString &amp;statusTag, <span class="keyword">const</span> <a class="code" href="classQueryResults.html" title="Simple query result set representation.">QueryResults</a> &amp;data, <span class="keyword">const</span> wxString &amp;query, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00044"></a>00044   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a59f3b97d5a5f55c10bf46b4aa4fcbe6a" title="Add a server error.">ScriptError</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;error, <span class="keyword">const</span> wxString &amp;query, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00048"></a>00048   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a301679bd19db6c3d84a5a18a45c64c4b" title="Add an internal error.">ScriptInternalError</a>(<span class="keyword">const</span> wxString &amp;error, <span class="keyword">const</span> wxString &amp;query, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00052"></a>00052   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#ab93fde1deb3c8b1a794ad789d3dc4918" title="Add a message output by a script using the echo command.">ScriptEcho</a>(<span class="keyword">const</span> wxString &amp;message, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00056"></a>00056   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#ab656c88c40119bf53b0d532f3d4c92a3" title="Add a notice message that occurred while executing a query.">ScriptQueryNotice</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;notice, <span class="keyword">const</span> wxString &amp;query, <span class="keywordtype">unsigned</span> scriptPosition);
+<a name="l00060"></a>00060   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a0e3973c70f1190c7bbf3eaf1f4e98829" title="Add a notice message that occurred asynchronously.">ScriptAsynchronousNotice</a>(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;notice);
+<a name="l00064"></a>00064   <span class="keywordtype">void</span> <a class="code" href="classResultsNotebook.html#a0b5cdb5b5024be651220bfb40b66729b" title="Add an asynchronous notification.">ScriptAsynchronousNotification</a>(<span class="keyword">const</span> wxString &amp;notification);
+<a name="l00065"></a>00065 
+<a name="l00066"></a>00066 <span class="keyword">private</span>:
+<a name="l00067"></a>00067   wxPanel *messagesPanel;
+<a name="l00068"></a>00068   wxHtmlWindow *messagesDisplay;
 <a name="l00069"></a>00069 
-<a name="l00070"></a>00070   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> Style_Default = 0;
-<a name="l00071"></a>00071   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> Style_Error = 1;
-<a name="l00072"></a>00072   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> Style_Notice = 2;
-<a name="l00073"></a>00073   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> Style_EchoMessage = 3;
-<a name="l00074"></a>00074 
-<a name="l00075"></a>00075   DECLARE_EVENT_TABLE()
-<a name="l00076"></a>00076 };
+<a name="l00070"></a>00070   <span class="keywordtype">void</span> AddResultSet(wxPanel *parent, <span class="keyword">const</span> <a class="code" href="classQueryResults.html" title="Simple query result set representation.">QueryResults</a> &amp;data);
+<a name="l00071"></a>00071   <span class="keywordtype">bool</span> addedResultSet;
+<a name="l00072"></a>00072   <span class="keywordtype">bool</span> addedError;
+<a name="l00073"></a>00073 
+<a name="l00074"></a>00074   <span class="keywordtype">void</span> Setup();
+<a name="l00075"></a>00075 
+<a name="l00076"></a>00076   <span class="keywordtype">void</span> AppendServerMessage(<span class="keyword">const</span> <a class="code" href="classPgError.html" title="Represents an error from the database server.">PgError</a> &amp;message, <span class="keyword">const</span> wxString &amp;color = _T(<span class="stringliteral">&quot;000000&quot;</span>), <span class="keywordtype">bool</span> bold = <span class="keyword">false</span>);
 <a name="l00077"></a>00077 
-<a name="l00078"></a>00078 <span class="preprocessor">#endif</span>
-<a name="l00079"></a>00079 <span class="preprocessor"></span>
-<a name="l00080"></a>00080 <span class="comment">// Local Variables:</span>
-<a name="l00081"></a>00081 <span class="comment">// mode: c++</span>
-<a name="l00082"></a>00082 <span class="comment">// End:</span>
+<a name="l00078"></a>00078   <span class="keywordtype">void</span> OnMessageClicked(wxHtmlCellEvent&amp;);
+<a name="l00079"></a>00079 
+<a name="l00080"></a>00080   DECLARE_EVENT_TABLE()
+<a name="l00081"></a>00081 };
+<a name="l00082"></a>00082 
+<a name="l00083"></a>00083 <span class="preprocessor">#endif</span>
+<a name="l00084"></a>00084 <span class="preprocessor"></span>
+<a name="l00085"></a>00085 <span class="comment">// Local Variables:</span>
+<a name="l00086"></a>00086 <span class="comment">// mode: c++</span>
+<a name="l00087"></a>00087 <span class="comment">// End:</span>
 </pre></div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -146,7 +148,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:36 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

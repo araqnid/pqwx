@@ -9,17 +9,17 @@ var searchData=
   ['readstatus',['ReadStatus',['../classScriptExecutionWork_1_1Result.html#adbd3717af8ac81ffa040b785452b669d',1,'ScriptExecutionWork::Result']]],
   ['readtext',['ReadText',['../classQueryResults_1_1Row.html#a054f0d137b99abe63802cfbbb7f1cd96',1,'QueryResults::Row']]],
   ['refreshdatabaselistwork',['RefreshDatabaseListWork',['../classRefreshDatabaseListWork.html',1,'RefreshDatabaseListWork'],['../classRefreshDatabaseListWork.html#af38121a2c6e9b30d4b5e1a5bfc5c18d6',1,'RefreshDatabaseListWork::RefreshDatabaseListWork()']]],
+  ['registerwithmonitor',['RegisterWithMonitor',['../classRegisterWithMonitor.html',1,'']]],
   ['relabel',['Relabel',['../classDatabaseConnection.html#aec598901d1a38e8c2d8387265e3bc0f6',1,'DatabaseConnection']]],
   ['relabelwork',['RelabelWork',['../classRelabelWork.html',1,'']]],
   ['relationloader',['RelationLoader',['../classRelationLoader.html',1,'']]],
   ['relationmodel',['RelationModel',['../classRelationModel.html',1,'']]],
   ['reset',['Reset',['../classResultsNotebook.html#a4a09bb5ea98e8214e062c01af2b185ee',1,'ResultsNotebook']]],
-  ['result',['Result',['../classScriptExecutionWork_1_1Result.html',1,'ScriptExecutionWork']]],
   ['result',['Result',['../classCatalogueIndex_1_1Result.html',1,'CatalogueIndex']]],
-  ['result',['Result',['../classScriptExecutionWork_1_1Result.html#aa0fa87a092df2365972c27d54d238702',1,'ScriptExecutionWork::Result']]],
+  ['result',['Result',['../classScriptExecutionWork_1_1Result.html',1,'ScriptExecutionWork']]],
   ['results_5fnotebook_2eh',['results_notebook.h',['../results__notebook_8h.html',1,'']]],
   ['resultsnotebook',['ResultsNotebook',['../classResultsNotebook.html',1,'ResultsNotebook'],['../classResultsNotebook.html#a69a98a6db4d654cb84a7a3afc4022fbc',1,'ResultsNotebook::ResultsNotebook()']]],
   ['rolemodel',['RoleModel',['../classRoleModel.html',1,'']]],
-  ['row',['Row',['../classQueryResults_1_1Row.html',1,'QueryResults']]],
-  ['row',['Row',['../classQueryResults_1_1Row.html#ab8132e397ae10189cc914550ccd06015',1,'QueryResults::Row']]]
+  ['row',['Row',['../classQueryResults_1_1Row.html#ab8132e397ae10189cc914550ccd06015',1,'QueryResults::Row']]],
+  ['row',['Row',['../classQueryResults_1_1Row.html',1,'QueryResults']]]
 ];

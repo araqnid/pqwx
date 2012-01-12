@@ -106,14 +106,16 @@ Inheritance diagram for ScriptEditorPane:</div>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>ChangeScriptConnection</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>Execution</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>MonitorInputProcessor</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>SetupNoticeProcessorWork</b></td></tr>
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf5192fbbd0979709a607f9d5b9c3abf"></a><!-- doxytag: member="ScriptEditorPane::ScriptEditorPane" ref="acf5192fbbd0979709a607f9d5b9c3abf" args="(wxWindow *parent, wxWindowID id=wxID_ANY)" -->
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#acf5192fbbd0979709a607f9d5b9c3abf">ScriptEditorPane</a> (wxWindow *parent, wxWindowID id=wxID_ANY)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create editor pane. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04d8fbb880f1c10f2f42a22d6919f332"></a><!-- doxytag: member="ScriptEditorPane::Dispose" ref="a04d8fbb880f1c10f2f42a22d6919f332" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#a04d8fbb880f1c10f2f42a22d6919f332">Dispose</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Disconnect and dispose of resources. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56b013e6340d4529e399d151e5b217d1"></a><!-- doxytag: member="ScriptEditorPane::OnDisconnect" ref="a56b013e6340d4529e399d151e5b217d1" args="(wxCommandEvent &amp;event)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>OnDisconnect</b> (wxCommandEvent &amp;event)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb9902baca6df9ed9ddc5591b686a380"></a><!-- doxytag: member="ScriptEditorPane::OnReconnect" ref="acb9902baca6df9ed9ddc5591b686a380" args="(wxCommandEvent &amp;event)" -->
@@ -122,10 +124,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>OnReconnect</b> (wxCo
 void&#160;</td><td class="memItemRight" valign="bottom"><b>OnExecute</b> (wxCommandEvent &amp;event)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bf29eb731880ec0899f313b873e1c13"></a><!-- doxytag: member="ScriptEditorPane::OnQueryComplete" ref="a4bf29eb731880ec0899f313b873e1c13" args="(wxCommandEvent &amp;event)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>OnQueryComplete</b> (wxCommandEvent &amp;event)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e56165cdf31defaf89f6f502c30838b"></a><!-- doxytag: member="ScriptEditorPane::OnConnectionNotice" ref="a2e56165cdf31defaf89f6f502c30838b" args="(const PGresult *rs)" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>OnConnectionNotice</b> (const PGresult *rs)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b3946c0ffcf5da1fed7ffccf84b945a"></a><!-- doxytag: member="ScriptEditorPane::OnConnectionNotice" ref="a6b3946c0ffcf5da1fed7ffccf84b945a" args="(wxCommandEvent &amp;event)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>OnConnectionNotice</b> (wxCommandEvent &amp;event)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7f0594b5542d30d312ccea2caacc3e6"></a><!-- doxytag: member="ScriptEditorPane::OnConnectionNotification" ref="ae7f0594b5542d30d312ccea2caacc3e6" args="(wxCommandEvent &amp;event)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>OnConnectionNotification</b> (wxCommandEvent &amp;event)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8643eb1f420e648463b3204171b93293"></a><!-- doxytag: member="ScriptEditorPane::OnTimerTick" ref="a8643eb1f420e648463b3204171b93293" args="(wxTimerEvent &amp;event)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>OnTimerTick</b> (wxTimerEvent &amp;event)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc44025f8222a477a7bba9c22415a7e9"></a><!-- doxytag: member="ScriptEditorPane::OnShowPosition" ref="afc44025f8222a477a7bba9c22415a7e9" args="(wxCommandEvent &amp;event)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>OnShowPosition</b> (wxCommandEvent &amp;event)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e3ceeeef924e45a3b6ee0ad7f1e8c79"></a><!-- doxytag: member="ScriptEditorPane::OnExecutionFinished" ref="a6e3ceeeef924e45a3b6ee0ad7f1e8c79" args="(wxCommandEvent &amp;event)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>OnExecutionFinished</b> (wxCommandEvent &amp;event)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab8b32eba97468f0485a6d97fd3510fef"></a><!-- doxytag: member="ScriptEditorPane::GetEditor" ref="ab8b32eba97468f0485a6d97fd3510fef" args="() const " -->
 <a class="el" href="classScriptEditor.html">ScriptEditor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#ab8b32eba97468f0485a6d97fd3510fef">GetEditor</a> () const </td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the script editor. <br/></td></tr>
@@ -150,6 +158,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aebff7115c99710b8115a0f46c05a6d7b"></a><!-- doxytag: member="ScriptEditorPane::SetConnection" ref="aebff7115c99710b8115a0f46c05a6d7b" args="(const ServerConnection &amp;server, DatabaseConnection *db)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#aebff7115c99710b8115a0f46c05a6d7b">SetConnection</a> (const <a class="el" href="classServerConnection.html">ServerConnection</a> &amp;server, <a class="el" href="classDatabaseConnection.html">DatabaseConnection</a> *db)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Register an existing database connection. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae51e27c6c17d5974e8f8721d7b2996c0"></a><!-- doxytag: member="ScriptEditorPane::BeginDisconnect" ref="ae51e27c6c17d5974e8f8721d7b2996c0" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#ae51e27c6c17d5974e8f8721d7b2996c0">BeginDisconnect</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initiate disconnection. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#afe5c34bd690d5afc37cd0c9d98d586f8">HasConnection</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#aec39d7206a71672d5f7c6c112bd02241">IsConnected</a> () const </td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">wxString&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classScriptEditorPane.html#acb8a95f8c2498236e475898537c298ab">ConnectionIdentification</a> () const </td></tr>
@@ -171,6 +182,8 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ChangeScriptConnecti
 class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptQueryWork</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c8df3393cc1849f6dd9346bed7f30a7"></a><!-- doxytag: member="ScriptEditorPane::ScriptEditor" ref="a1c8df3393cc1849f6dd9346bed7f30a7" args="" -->
 class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf9d8808e01116464cde7607a9d4ebc3"></a><!-- doxytag: member="ScriptEditorPane::ScriptExecution" ref="abf9d8808e01116464cde7607a9d4ebc3" args="" -->
+class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptExecution</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Script editor, with results notebook and status bar. </p>
@@ -422,7 +435,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditor</b></td
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:18 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:44 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

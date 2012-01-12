@@ -85,6 +85,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <div class="textblock">Here are the classes, structs, unions and interfaces with brief descriptions:</div><table>
   <tr><td class="indexkey"><a class="el" href="classCatalogueIndex.html">CatalogueIndex</a></td><td class="indexvalue">Database catalogue search index </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseNotificationMonitor_1_1Client.html">DatabaseNotificationMonitor::Client</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classColumnModel.html">ColumnModel</a></td><td class="indexvalue">A relation column </td></tr>
   <tr><td class="indexkey"><a class="el" href="classObjectFinder_1_1Completion.html">ObjectFinder::Completion</a></td><td class="indexvalue">Callback interface for non-modal use of object finder dialogue </td></tr>
   <tr><td class="indexkey"><a class="el" href="classConnectDialogue_1_1CompletionCallback.html">ConnectDialogue::CompletionCallback</a></td><td class="indexvalue">Callback interface for non-modal operation of the connection dialogue </td></tr>
@@ -94,8 +95,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classDatabaseConnection.html">DatabaseConnection</a></td><td class="indexvalue">Represents a connection to a server/database </td></tr>
   <tr><td class="indexkey"><a class="el" href="classDatabaseLoader.html">DatabaseLoader</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classDatabaseModel.html">DatabaseModel</a></td><td class="indexvalue">A database </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseNotificationMonitor.html">DatabaseNotificationMonitor</a></td><td class="indexvalue">Listen for asynchronous notifications on database connections </td></tr>
   <tr><td class="indexkey"><a class="el" href="classDatabaseScriptWork.html">DatabaseScriptWork</a></td><td class="indexvalue">Produce database scripts </td></tr>
   <tr><td class="indexkey"><a class="el" href="classDatabaseWork.html">DatabaseWork</a></td><td class="indexvalue">Encapsulates a unit of work to be performed on a database connection </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseWorkWithDictionary.html">DatabaseWorkWithDictionary</a></td><td class="indexvalue">Some database work with a SQL dictionary </td></tr>
   <tr><td class="indexkey"><a class="el" href="classDependenciesView.html">DependenciesView</a></td><td class="indexvalue">Dialogue box to show dependencies/dependents of database objects </td></tr>
   <tr><td class="indexkey"><a class="el" href="classDependenciesViewSql.html">DependenciesViewSql</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classDependencyModel.html">DependencyModel</a></td><td class="indexvalue"></td></tr>
@@ -116,6 +119,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classIndexSchemaCompletionCallback.html">IndexSchemaCompletionCallback</a></td><td class="indexvalue">Callback interface to notify some client that the schema index has been built </td></tr>
   <tr><td class="indexkey"><a class="el" href="classInitialiseWork.html">InitialiseWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classInitialObjectInfo.html">InitialObjectInfo</a></td><td class="indexvalue"></td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseNotificationMonitor_1_1InputProcessor.html">DatabaseNotificationMonitor::InputProcessor</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classLazyLoader.html">LazyLoader</a></td><td class="indexvalue">Implemented by a tree item that is a marker for lazily-loaded data </td></tr>
   <tr><td class="indexkey"><a class="el" href="classLoadDatabaseDescriptionsWork.html">LoadDatabaseDescriptionsWork</a></td><td class="indexvalue">Load descriptions of objects from database </td></tr>
   <tr><td class="indexkey"><a class="el" href="classLoadDatabaseSchemaWork.html">LoadDatabaseSchemaWork</a></td><td class="indexvalue">Load schema members (relations and functions) for a database </td></tr>
@@ -123,6 +127,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classLoadInitialObjectWork.html">LoadInitialObjectWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classLoadMoreDependenciesWork.html">LoadMoreDependenciesWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classLoadRelationWork.html">LoadRelationWork</a></td><td class="indexvalue">Load relation details from database </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseWorkWithDictionary_1_1NamedQueryExecutor.html">DatabaseWorkWithDictionary::NamedQueryExecutor</a></td><td class="indexvalue">Fluent-style named query executor class </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseConnection_1_1NotificationReceiver.html">DatabaseConnection::NotificationReceiver</a></td><td class="indexvalue">Interface for receiving an asynchronous notification from the monitor </td></tr>
   <tr><td class="indexkey"><a class="el" href="classObjectBrowser.html">ObjectBrowser</a></td><td class="indexvalue">The object browser tree control </td></tr>
   <tr><td class="indexkey"><a class="el" href="classObjectBrowserDatabaseWork.html">ObjectBrowserDatabaseWork</a></td><td class="indexvalue">Implementation of <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> that deals with passing results back to the GUI thread </td></tr>
   <tr><td class="indexkey"><a class="el" href="classObjectBrowserSql.html">ObjectBrowserSql</a></td><td class="indexvalue"></td></tr>
@@ -137,8 +143,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classPQWXApp.html">PQWXApp</a></td><td class="indexvalue">The wxApp implementation for PQWX </td></tr>
   <tr><td class="indexkey"><a class="el" href="classPQWXDatabaseEvent.html">PQWXDatabaseEvent</a></td><td class="indexvalue">A "database event" is a notification event with the context of a database connection and state </td></tr>
   <tr><td class="indexkey"><a class="el" href="classPqwxFrame.html">PqwxFrame</a></td><td class="indexvalue">PQWX application frame </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classPsqlArgumentsParser.html">PsqlArgumentsParser</a></td><td class="indexvalue"></td></tr>
+  <tr><td class="indexkey"><a class="el" href="classDatabaseWork_1_1QueryExecutor.html">DatabaseWork::QueryExecutor</a></td><td class="indexvalue">Fluent-style query executor class </td></tr>
   <tr><td class="indexkey"><a class="el" href="classQueryResults.html">QueryResults</a></td><td class="indexvalue">Simple query result set representation </td></tr>
   <tr><td class="indexkey"><a class="el" href="classRefreshDatabaseListWork.html">RefreshDatabaseListWork</a></td><td class="indexvalue">Load server information, database list and role list from server </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classRegisterWithMonitor.html">RegisterWithMonitor</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classRelabelWork.html">RelabelWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classRelationLoader.html">RelationLoader</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classRelationModel.html">RelationModel</a></td><td class="indexvalue">A relation - table, view or sequence </td></tr>
@@ -150,6 +159,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classSchemaMemberModel.html">SchemaMemberModel</a></td><td class="indexvalue">A schema member - function or relation </td></tr>
   <tr><td class="indexkey"><a class="el" href="classScriptEditor.html">ScriptEditor</a></td><td class="indexvalue">Script editor widget </td></tr>
   <tr><td class="indexkey"><a class="el" href="classScriptEditorPane.html">ScriptEditorPane</a></td><td class="indexvalue">Script editor, with results notebook and status bar </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classScriptExecution.html">ScriptExecution</a></td><td class="indexvalue">Responsible for executing a script on a database connection </td></tr>
   <tr><td class="indexkey"><a class="el" href="classScriptExecutionWork.html">ScriptExecutionWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classScriptPutCopyDataWork.html">ScriptPutCopyDataWork</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classScriptQueryWork.html">ScriptQueryWork</a></td><td class="indexvalue">Execute a query from a script on the database </td></tr>
@@ -163,6 +173,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="indexkey"><a class="el" href="classTestCatalogueApp.html">TestCatalogueApp</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classExecutionLexer_1_1Token.html">ExecutionLexer::Token</a></td><td class="indexvalue">A unit returned by the lexer </td></tr>
   <tr><td class="indexkey"><a class="el" href="classTriggerModel.html">TriggerModel</a></td><td class="indexvalue">A trigger associated with a table </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classUnregisterWithMonitor.html">UnregisterWithMonitor</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey"><a class="el" href="classVersionedSql.html">VersionedSql</a></td><td class="indexvalue">Associates name strings with SQL statements, with variations based on server version </td></tr>
   <tr><td class="indexkey"><a class="el" href="classViewScriptWork.html">ViewScriptWork</a></td><td class="indexvalue">Produce view scripts </td></tr>
   <tr><td class="indexkey"><a class="el" href="classZoomToFoundObjectOnCompletion.html">ZoomToFoundObjectOnCompletion</a></td><td class="indexvalue"></td></tr>
@@ -185,7 +196,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:20 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:47 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

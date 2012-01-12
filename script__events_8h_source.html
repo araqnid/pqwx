@@ -110,26 +110,35 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00032"></a>00032   DECLARE_EVENT_TYPE(PQWX_ScriptConnectionStatus, -1)
 <a name="l00033"></a>00033 <span class="comment">// sent asynchronously by execution work when it completes</span>
 <a name="l00034"></a>00034   DECLARE_EVENT_TYPE(PQWX_ScriptQueryComplete, -1)
-<a name="l00035"></a>00035 END_DECLARE_EVENT_TYPES()
-<a name="l00036"></a>00036 
-<a name="l00037"></a>00037 <span class="preprocessor">#define PQWX_DOCUMENT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_DocumentSelected, fn)</span>
-<a name="l00038"></a>00038 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_NO_DOCUMENT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_NoDocumentSelected, fn)</span>
-<a name="l00039"></a>00039 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_NEW(id, fn) EVT_DATABASE(id, PQWX_ScriptNew, fn)</span>
-<a name="l00040"></a>00040 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_TO_WINDOW(id, fn) EVT_DATABASE(id, PQWX_ScriptToWindow, fn)</span>
-<a name="l00041"></a>00041 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_STATE_UPDATED(id, fn) EVT_DATABASE(id, PQWX_ScriptStateUpdated, fn)</span>
-<a name="l00042"></a>00042 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTE(id, fn) EVT_COMMAND(id, PQWX_ScriptExecute, fn)</span>
-<a name="l00043"></a>00043 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_DISCONNECT(id, fn) EVT_COMMAND(id, PQWX_ScriptDisconnect, fn)</span>
-<a name="l00044"></a>00044 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_RECONNECT(id, fn) EVT_COMMAND(id, PQWX_ScriptReconnect, fn)</span>
-<a name="l00045"></a>00045 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_QUERY_COMPLETE(id, fn) EVT_COMMAND(id, PQWX_ScriptQueryComplete, fn)</span>
-<a name="l00046"></a>00046 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTION_BEGINNING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionBeginning, fn)</span>
-<a name="l00047"></a>00047 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTION_FINISHING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionFinishing, fn)</span>
-<a name="l00048"></a>00048 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)</span>
-<a name="l00049"></a>00049 <span class="preprocessor"></span>
-<a name="l00050"></a>00050 <span class="preprocessor">#endif</span>
-<a name="l00051"></a>00051 <span class="preprocessor"></span>
-<a name="l00052"></a>00052 <span class="comment">// Local Variables:</span>
-<a name="l00053"></a>00053 <span class="comment">// mode: c++</span>
-<a name="l00054"></a>00054 <span class="comment">// End:</span>
+<a name="l00035"></a>00035 <span class="comment">// sent by notice processor when a notice is received</span>
+<a name="l00036"></a>00036   DECLARE_EVENT_TYPE(PQWX_ScriptServerNotice, -1)
+<a name="l00037"></a>00037 <span class="comment">// sent by notification receiver when a notification is received</span>
+<a name="l00038"></a>00038   DECLARE_EVENT_TYPE(PQWX_ScriptAsyncNotification, -1)
+<a name="l00039"></a>00039 <span class="comment">// sent by results notebook to move to a position in the source script when clicking on an error etc</span>
+<a name="l00040"></a>00040   DECLARE_EVENT_TYPE(PQWX_ScriptShowPosition, -1)
+<a name="l00041"></a>00041 END_DECLARE_EVENT_TYPES()
+<a name="l00042"></a>00042 
+<a name="l00043"></a>00043 <span class="preprocessor">#define PQWX_DOCUMENT_SELECTED(id, fn) EVT_DATABASE(id, PQWX_DocumentSelected, fn)</span>
+<a name="l00044"></a>00044 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_NO_DOCUMENT_SELECTED(id, fn) EVT_COMMAND(id, PQWX_NoDocumentSelected, fn)</span>
+<a name="l00045"></a>00045 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_NEW(id, fn) EVT_DATABASE(id, PQWX_ScriptNew, fn)</span>
+<a name="l00046"></a>00046 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_TO_WINDOW(id, fn) EVT_DATABASE(id, PQWX_ScriptToWindow, fn)</span>
+<a name="l00047"></a>00047 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_STATE_UPDATED(id, fn) EVT_DATABASE(id, PQWX_ScriptStateUpdated, fn)</span>
+<a name="l00048"></a>00048 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTE(id, fn) EVT_COMMAND(id, PQWX_ScriptExecute, fn)</span>
+<a name="l00049"></a>00049 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_DISCONNECT(id, fn) EVT_COMMAND(id, PQWX_ScriptDisconnect, fn)</span>
+<a name="l00050"></a>00050 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_RECONNECT(id, fn) EVT_COMMAND(id, PQWX_ScriptReconnect, fn)</span>
+<a name="l00051"></a>00051 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_QUERY_COMPLETE(id, fn) EVT_COMMAND(id, PQWX_ScriptQueryComplete, fn)</span>
+<a name="l00052"></a>00052 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTION_BEGINNING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionBeginning, fn)</span>
+<a name="l00053"></a>00053 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_EXECUTION_FINISHING(id, fn) EVT_COMMAND(id, PQWX_ScriptExecutionFinishing, fn)</span>
+<a name="l00054"></a>00054 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_CONNECTION_STATUS(id, fn) EVT_COMMAND(id, PQWX_ScriptConnectionStatus, fn)</span>
+<a name="l00055"></a>00055 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_SERVER_NOTICE(id, fn) EVT_COMMAND(id, PQWX_ScriptServerNotice, fn)</span>
+<a name="l00056"></a>00056 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_ASYNC_NOTIFICATION(id, fn) EVT_COMMAND(id, PQWX_ScriptAsyncNotification, fn)</span>
+<a name="l00057"></a>00057 <span class="preprocessor"></span><span class="preprocessor">#define PQWX_SCRIPT_SHOW_POSITION(id, fn) EVT_COMMAND(id, PQWX_ScriptShowPosition, fn)</span>
+<a name="l00058"></a>00058 <span class="preprocessor"></span>
+<a name="l00059"></a>00059 <span class="preprocessor">#endif</span>
+<a name="l00060"></a>00060 <span class="preprocessor"></span>
+<a name="l00061"></a>00061 <span class="comment">// Local Variables:</span>
+<a name="l00062"></a>00062 <span class="comment">// mode: c++</span>
+<a name="l00063"></a>00063 <span class="comment">// End:</span>
 </pre></div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -148,7 +157,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:36 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

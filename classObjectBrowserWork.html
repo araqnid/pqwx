@@ -117,24 +117,14 @@ Inheritance diagram for ObjectBrowserWork:</div>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a2524cdb93142b455191e7a8845376ff8">Execute</a> ()=0</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a2524cdb93142b455191e7a8845376ff8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a8f4975fa54aff8705c059cd9ed88b966">operator()</a> ()=0</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a8f4975fa54aff8705c059cd9ed88b966"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a2c57e9ae2a101884a1b654d6a8ed2998">LoadIntoView</a> (<a class="el" href="classObjectBrowser.html">ObjectBrowser</a> *browser)=0</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge data obtained by work object into object browser.  <a href="#a2c57e9ae2a101884a1b654d6a8ed2998"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4620fe5a8cd2a88c886492ac020391fb"></a><!-- doxytag: member="ObjectBrowserWork::DoQuery" ref="a4620fe5a8cd2a88c886492ac020391fb" args="(const wxString &amp;name, Oid paramType, unsigned long paramValue)" -->
-<a class="el" href="classQueryResults.html">QueryResults</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a4620fe5a8cd2a88c886492ac020391fb">DoQuery</a> (const wxString &amp;name, Oid paramType, unsigned long paramValue)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a query with a single numeric parameter and return a result set. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92d831c5473831ff027415fde5491fc3"></a><!-- doxytag: member="ObjectBrowserWork::DoSingleRowQuery" ref="a92d831c5473831ff027415fde5491fc3" args="(const wxString &amp;name, Oid paramType, unsigned long paramValue)" -->
-<a class="el" href="classQueryResults_1_1Row.html">QueryResults::Row</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a92d831c5473831ff027415fde5491fc3">DoSingleRowQuery</a> (const wxString &amp;name, Oid paramType, unsigned long paramValue)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a query with a single numerc parameter and return a single row. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a545030c34de202eab32272c17bbbafa2"></a><!-- doxytag: member="ObjectBrowserWork::DoQuery" ref="a545030c34de202eab32272c17bbbafa2" args="(const wxString &amp;name, Oid paramType, const char *paramValue)" -->
-<a class="el" href="classQueryResults.html">QueryResults</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a545030c34de202eab32272c17bbbafa2">DoQuery</a> (const wxString &amp;name, Oid paramType, const char *paramValue)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a query with a single string parameter and return a result set. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1a715c41ab7ff2b6b935341b5d78e53"></a><!-- doxytag: member="ObjectBrowserWork::DoQuery" ref="ae1a715c41ab7ff2b6b935341b5d78e53" args="(const wxString &amp;name)" -->
-<a class="el" href="classQueryResults.html">QueryResults</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#ae1a715c41ab7ff2b6b935341b5d78e53">DoQuery</a> (const wxString &amp;name)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a query with a no parameters and return a result set. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2cd535f30a03e0efafbb854db8a8056"></a><!-- doxytag: member="ObjectBrowserWork::Query" ref="ac2cd535f30a03e0efafbb854db8a8056" args="(const wxString &amp;name)" -->
+<a class="el" href="classDatabaseWorkWithDictionary_1_1NamedQueryExecutor.html">DatabaseWorkWithDictionary::NamedQueryExecutor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Query</b> (const wxString &amp;name)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3172b237c3a7191ced9fb954a5afe83"></a><!-- doxytag: member="ObjectBrowserWork::QuoteIdent" ref="ac3172b237c3a7191ced9fb954a5afe83" args="(const wxString &amp;value)" -->
 wxString&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#ac3172b237c3a7191ced9fb954a5afe83">QuoteIdent</a> (const wxString &amp;value)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Quote an identified for use in a generated SQL statement. <br/></td></tr>
@@ -143,8 +133,8 @@ wxString&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Quote an literal string for use in a generated SQL statement. <br/></td></tr>
 <tr><td colspan="2"><h2><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ddfcbfbeb43f6bceae1fff13ba33039"></a><!-- doxytag: member="ObjectBrowserWork::owner" ref="a3ddfcbfbeb43f6bceae1fff13ba33039" args="" -->
-<a class="el" href="classDatabaseWork.html">DatabaseWork</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a3ddfcbfbeb43f6bceae1fff13ba33039">owner</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af51b8b07ad667c1b2a0c2016b77b5055"></a><!-- doxytag: member="ObjectBrowserWork::owner" ref="af51b8b07ad667c1b2a0c2016b77b5055" args="" -->
+<a class="el" href="classDatabaseWorkWithDictionary.html">DatabaseWorkWithDictionary</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#af51b8b07ad667c1b2a0c2016b77b5055">owner</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The actual database work object wrapping this. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6dc215fdc8acaba09aaac3045a61bde8"></a><!-- doxytag: member="ObjectBrowserWork::conn" ref="a6dc215fdc8acaba09aaac3045a61bde8" args="" -->
 PGconn *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObjectBrowserWork.html#a6dc215fdc8acaba09aaac3045a61bde8">conn</a></td></tr>
@@ -158,27 +148,6 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ObjectBrowserDatabas
 <div class="textblock"><p>Unit of work to be performed on a database connection for the object browser. </p>
 <p>An instance of this class is wrapped by a <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> in order to be executed. However, the <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a> is deleted as soon as it has completed, but the wrapper will pass this class back to object browser as part of a "work finished" event so that is is available in the GUI thread. </p>
 </div><hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="a2524cdb93142b455191e7a8845376ff8"></a><!-- doxytag: member="ObjectBrowserWork::Execute" ref="a2524cdb93142b455191e7a8845376ff8" args="()=0" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void <a class="el" href="classObjectBrowserWork.html#a2524cdb93142b455191e7a8845376ff8">ObjectBrowserWork::Execute</a> </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td><code> [pure virtual]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Execute work. </p>
-<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
-
-<p>Implemented in <a class="el" href="classFunctionScriptWork.html#aead1497337764836e9307347efe652fa">FunctionScriptWork</a>, <a class="el" href="classSequenceScriptWork.html#a44e79dc52d6de78dfeffb44dfe18fc13">SequenceScriptWork</a>, <a class="el" href="classViewScriptWork.html#ab80d59a052544df1bf94600cf5162e65">ViewScriptWork</a>, <a class="el" href="classTableScriptWork.html#af8fbfc5070f859e196253a3c61c323de">TableScriptWork</a>, <a class="el" href="classDatabaseScriptWork.html#af65f464d41abdbd8efd4d8fbedc5745c">DatabaseScriptWork</a>, <a class="el" href="classLoadRelationWork.html#a54f6792423995d7f9716879f505c65c3">LoadRelationWork</a>, <a class="el" href="classIndexDatabaseSchemaWork.html#a3d5d91cddc480a185773cdf083114b50">IndexDatabaseSchemaWork</a>, <a class="el" href="classLoadDatabaseDescriptionsWork.html#af27d9e7bcda2115a2599a9d1100e61b2">LoadDatabaseDescriptionsWork</a>, <a class="el" href="classLoadDatabaseSchemaWork.html#a14ea3419d8e880df7aff904d74f6f9bf">LoadDatabaseSchemaWork</a>, and <a class="el" href="classRefreshDatabaseListWork.html#a7514f1306fcf2e79e9d4774e73480b10">RefreshDatabaseListWork</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="a2c57e9ae2a101884a1b654d6a8ed2998"></a><!-- doxytag: member="ObjectBrowserWork::LoadIntoView" ref="a2c57e9ae2a101884a1b654d6a8ed2998" args="(ObjectBrowser *browser)=0" -->
 <div class="memitem">
 <div class="memproto">
@@ -198,6 +167,27 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ObjectBrowserDatabas
 <p>This method is executed on the GUI thread. </p>
 
 <p>Implemented in <a class="el" href="classScriptWork.html#a6711f8c813c1a15df02132e5826331b5">ScriptWork</a>, <a class="el" href="classLoadRelationWork.html#ad31b8c274dc9fe0f45631cf01f72b1d3">LoadRelationWork</a>, <a class="el" href="classIndexDatabaseSchemaWork.html#aa14fe3f61754472f5e276f3f20321a99">IndexDatabaseSchemaWork</a>, <a class="el" href="classLoadDatabaseDescriptionsWork.html#a039543b1b027afa16eb4d077b3fda4e4">LoadDatabaseDescriptionsWork</a>, <a class="el" href="classLoadDatabaseSchemaWork.html#a84503ec6903336b949e34f9bc0573c4d">LoadDatabaseSchemaWork</a>, and <a class="el" href="classRefreshDatabaseListWork.html#a84c101745855a2d6dd698582cdaefd9a">RefreshDatabaseListWork</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a8f4975fa54aff8705c059cd9ed88b966"></a><!-- doxytag: member="ObjectBrowserWork::operator()" ref="a8f4975fa54aff8705c059cd9ed88b966" args="()=0" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void ObjectBrowserWork::operator() </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [pure virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Execute work. </p>
+<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
+
+<p>Implemented in <a class="el" href="classFunctionScriptWork.html#a38910c39c047e7187ad414ddda2b43b7">FunctionScriptWork</a>, <a class="el" href="classSequenceScriptWork.html#a85ebb637fbcfc026b5a62d106e014d03">SequenceScriptWork</a>, <a class="el" href="classViewScriptWork.html#a32282d726a4c9d742902975083c57c85">ViewScriptWork</a>, <a class="el" href="classTableScriptWork.html#a5b71c380bbb5d4892f81337d0973db41">TableScriptWork</a>, <a class="el" href="classDatabaseScriptWork.html#a1ba82bf1940cfef4f42ba14dccf4a4d3">DatabaseScriptWork</a>, <a class="el" href="classLoadRelationWork.html#a340ac4a68a01beb642e9e883b5e5d040">LoadRelationWork</a>, <a class="el" href="classIndexDatabaseSchemaWork.html#a9e745a27b4c85b184dff88d76b470655">IndexDatabaseSchemaWork</a>, <a class="el" href="classLoadDatabaseDescriptionsWork.html#a6e6f989c4dda63a8057cbb0fdc37e508">LoadDatabaseDescriptionsWork</a>, <a class="el" href="classLoadDatabaseSchemaWork.html#af2b0863e505894227b03a1b705809184">LoadDatabaseSchemaWork</a>, and <a class="el" href="classRefreshDatabaseListWork.html#a0180f702b56e1040911da10dcc85a724">RefreshDatabaseListWork</a>.</p>
 
 </div>
 </div>
@@ -222,7 +212,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ObjectBrowserDatabas
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:15 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:42 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

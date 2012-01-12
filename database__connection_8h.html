@@ -94,6 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &quot;wx/log.h&quot;</code><br/>
 <code>#include &quot;<a class="el" href="server__connection_8h_source.html">server_connection.h</a>&quot;</code><br/>
 <code>#include &quot;<a class="el" href="pg__error_8h_source.html">pg_error.h</a>&quot;</code><br/>
+<code>#include &quot;<a class="el" href="database__notification__monitor_8h_source.html">database_notification_monitor.h</a>&quot;</code><br/>
 </div>
 <p><a href="database__connection_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -103,7 +104,10 @@ Classes</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface for communicating the result of a connection attempt.  <a href="classConnectionCallback.html#details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDatabaseConnection.html">DatabaseConnection</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a connection to a server/database.  <a href="classDatabaseConnection.html#details">More...</a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDatabaseConnection_1_1NotificationReceiver.html">DatabaseConnection::NotificationReceiver</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface for receiving an asynchronous notification from the monitor.  <a href="classDatabaseConnection_1_1NotificationReceiver.html#details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>DatabaseConnection::WorkerThread</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><b>DatabaseConnection::WorkerThread::MonitorInputProcessor</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Database connection and worker thread declarations. </p>
@@ -126,7 +130,7 @@ Classes</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:10 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:36 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

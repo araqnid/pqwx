@@ -109,8 +109,8 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create work object.  <a href="#af38121a2c6e9b30d4b5e1a5bfc5c18d6"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRefreshDatabaseListWork.html#a7514f1306fcf2e79e9d4774e73480b10">Execute</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a7514f1306fcf2e79e9d4774e73480b10"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRefreshDatabaseListWork.html#a0180f702b56e1040911da10dcc85a724">operator()</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute work.  <a href="#a0180f702b56e1040911da10dcc85a724"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRefreshDatabaseListWork.html#a84c101745855a2d6dd698582cdaefd9a">LoadIntoView</a> (<a class="el" href="classObjectBrowser.html">ObjectBrowser</a> *ob)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge data obtained by work object into object browser.  <a href="#a84c101745855a2d6dd698582cdaefd9a"></a><br/></td></tr>
 </table>
@@ -154,27 +154,6 @@ Protected Member Functions</h2></td></tr>
 </div>
 </div>
 <hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="a7514f1306fcf2e79e9d4774e73480b10"></a><!-- doxytag: member="RefreshDatabaseListWork::Execute" ref="a7514f1306fcf2e79e9d4774e73480b10" args="()" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classRefreshDatabaseListWork.html#a7514f1306fcf2e79e9d4774e73480b10">RefreshDatabaseListWork::Execute</a> </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td><code> [inline, protected, virtual]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Execute work. </p>
-<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
-
-<p>Implements <a class="el" href="classObjectBrowserWork.html#a2524cdb93142b455191e7a8845376ff8">ObjectBrowserWork</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="a84c101745855a2d6dd698582cdaefd9a"></a><!-- doxytag: member="RefreshDatabaseListWork::LoadIntoView" ref="a84c101745855a2d6dd698582cdaefd9a" args="(ObjectBrowser *ob)" -->
 <div class="memitem">
 <div class="memproto">
@@ -194,6 +173,27 @@ Protected Member Functions</h2></td></tr>
 <p>This method is executed on the GUI thread. </p>
 
 <p>Implements <a class="el" href="classObjectBrowserWork.html#a2c57e9ae2a101884a1b654d6a8ed2998">ObjectBrowserWork</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a0180f702b56e1040911da10dcc85a724"></a><!-- doxytag: member="RefreshDatabaseListWork::operator()" ref="a0180f702b56e1040911da10dcc85a724" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RefreshDatabaseListWork::operator() </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [inline, protected, virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Execute work. </p>
+<p>Similar to the same-named method in <a class="el" href="classDatabaseWork.html" title="Encapsulates a unit of work to be performed on a database connection.">DatabaseWork</a>. This method is executed on the database worker thread. </p>
+
+<p>Implements <a class="el" href="classObjectBrowserWork.html#a8f4975fa54aff8705c059cd9ed88b966">ObjectBrowserWork</a>.</p>
 
 </div>
 </div>
@@ -218,7 +218,7 @@ Protected Member Functions</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:16 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:43 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

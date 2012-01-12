@@ -80,8 +80,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#friends">Friends</a>  </div>
+<a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
 <div class="title">PgError Class Reference</div>  </div>
 </div><!--header-->
@@ -100,14 +99,26 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PgError</b> (const PGresult *rs)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f4f4805f77bda8dd557b16abd366789"></a><!-- doxytag: member="PgError::PgError" ref="a0f4f4805f77bda8dd557b16abd366789" args="(const PGconn *conn)" -->
 &#160;</td><td class="memItemRight" valign="bottom"><b>PgError</b> (const PGconn *conn)</td></tr>
-<tr><td colspan="2"><h2><a name="friends"></a>
-Friends</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2149aa8b07a03bbdbced1f5cf0013840"></a><!-- doxytag: member="PgError::ScriptEditorPane" ref="a2149aa8b07a03bbdbced1f5cf0013840" args="" -->
-class&#160;</td><td class="memItemRight" valign="bottom"><b>ScriptEditorPane</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8cd8c35b6da71d49ce7688a1ecff582"></a><!-- doxytag: member="PgError::DatabaseConnection" ref="aa8cd8c35b6da71d49ce7688a1ecff582" args="" -->
-class&#160;</td><td class="memItemRight" valign="bottom"><b>DatabaseConnection</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1af118ee0f96c31df181ad0ecd296b8"></a><!-- doxytag: member="PgError::ResultsNotebook" ref="ae1af118ee0f96c31df181ad0ecd296b8" args="" -->
-class&#160;</td><td class="memItemRight" valign="bottom"><b>ResultsNotebook</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeef679709e9c344c75f7f5eed7bb0c20"></a><!-- doxytag: member="PgError::GetPrimary" ref="aeef679709e9c344c75f7f5eed7bb0c20" args="() const " -->
+wxString&#160;</td><td class="memItemRight" valign="bottom"><b>GetPrimary</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b9780476cf2bfccb4039fdede6bc1db"></a><!-- doxytag: member="PgError::GetSeverity" ref="a1b9780476cf2bfccb4039fdede6bc1db" args="() const " -->
+wxString&#160;</td><td class="memItemRight" valign="bottom"><b>GetSeverity</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6093e5bab0233db3940ff7fc431fe674"></a><!-- doxytag: member="PgError::GetHint" ref="a6093e5bab0233db3940ff7fc431fe674" args="() const " -->
+wxString&#160;</td><td class="memItemRight" valign="bottom"><b>GetHint</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d39ec598da8ae56129ebae0de037fec"></a><!-- doxytag: member="PgError::HasHint" ref="a9d39ec598da8ae56129ebae0de037fec" args="() const " -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>HasHint</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ace50fa64e68248e87cd0ac1e106332"></a><!-- doxytag: member="PgError::GetDetail" ref="a6ace50fa64e68248e87cd0ac1e106332" args="() const " -->
+wxString&#160;</td><td class="memItemRight" valign="bottom"><b>GetDetail</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab8c96263140e714daf72512d2e4801d6"></a><!-- doxytag: member="PgError::HasDetail" ref="ab8c96263140e714daf72512d2e4801d6" args="() const " -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>HasDetail</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0837f71bea6f7676866b2801e28bd407"></a><!-- doxytag: member="PgError::GetContext" ref="a0837f71bea6f7676866b2801e28bd407" args="() const " -->
+const std::vector&lt; wxString &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>GetContext</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac6f62f9f1eb964073aa1c4c3ed35e96c"></a><!-- doxytag: member="PgError::HasContext" ref="ac6f62f9f1eb964073aa1c4c3ed35e96c" args="() const " -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>HasContext</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3542465b4b4764ea5c3ca01d7c0fc579"></a><!-- doxytag: member="PgError::GetPosition" ref="a3542465b4b4764ea5c3ca01d7c0fc579" args="() const " -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>GetPosition</b> () const </td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d922d94034dc0fd1cbbb6b6d3fa889e"></a><!-- doxytag: member="PgError::HasPosition" ref="a5d922d94034dc0fd1cbbb6b6d3fa889e" args="() const " -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>HasPosition</b> () const </td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Represents an error from the database server. </p>
@@ -132,7 +143,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ResultsNotebook</b><
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jan 8 2012 03:37:16 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 12 2012 01:34:43 for PQWX by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

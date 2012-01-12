@@ -3,6 +3,7 @@ var searchData=
   ['cancelled',['Cancelled',['../classConnectDialogue_1_1CompletionCallback.html#ac1baa58f953fb4c3190ecbfc6f0ae6a9',1,'ConnectDialogue::CompletionCallback']]],
   ['catalogue_5findex_2eh',['catalogue_index.h',['../catalogue__index_8h.html',1,'']]],
   ['catalogueindex',['CatalogueIndex',['../classCatalogueIndex.html',1,'']]],
+  ['client',['Client',['../classDatabaseNotificationMonitor_1_1Client.html',1,'DatabaseNotificationMonitor']]],
   ['closesync',['CloseSync',['../classDatabaseConnection.html#ac0be91d57adf17622dcb32bb2247b804',1,'DatabaseConnection']]],
   ['columnmodel',['ColumnModel',['../classColumnModel.html',1,'']]],
   ['commit',['Commit',['../classCatalogueIndex.html#aa60c7f9dbb1ed30e9603841b813c6f58',1,'CatalogueIndex']]],

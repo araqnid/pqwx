@@ -214,6 +214,7 @@ private:
     wxString GetWXString(const ExecutionLexer::Token &token) const { return lexer.GetWXString(token); }
     const char* GetBuffer() const { return buffer.data(); }
     wxString GetQueryBuffer() const { return queryBuffer; }
+    void ResetQueryBuffer() { queryBuffer = wxEmptyString; }
     unsigned GetLastSqlPosition() const { return lastSqlPosition; }
     void MarkSqlExecuted() { queryBufferExecuted = true; }
     void AppendSql(const ExecutionLexer::Token& token)
@@ -252,7 +253,9 @@ private:
   static std::map<wxString, PsqlCommandHandler> InitPsqlCommandHandlers();
 
   bool PsqlChangeDatabase(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlExecuteBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  bool PsqlExecuteQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  bool PsqlPrintQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  bool PsqlResetQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
   bool PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
 
   void ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition);

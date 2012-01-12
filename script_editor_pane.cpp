@@ -40,8 +40,11 @@ std::map<wxString, ScriptEditorPane::PsqlCommandHandler> ScriptEditorPane::InitP
 {
   std::map<wxString, PsqlCommandHandler> handlers;
   handlers[_T("c")] = &ScriptEditorPane::PsqlChangeDatabase;
-  handlers[_T("g")] = &ScriptEditorPane::PsqlExecuteBuffer;
+  handlers[_T("connect")] = &ScriptEditorPane::PsqlChangeDatabase;
+  handlers[_T("g")] = &ScriptEditorPane::PsqlExecuteQueryBuffer;
   handlers[_T("echo")] = &ScriptEditorPane::PsqlPrintMessage;
+  handlers[_T("p")] = &ScriptEditorPane::PsqlPrintQueryBuffer;
+  handlers[_T("r")] = &ScriptEditorPane::PsqlResetQueryBuffer;
   return handlers;
 }
 
@@ -585,10 +588,21 @@ bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const Exec
   return true;
 }
 
-bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+bool ScriptEditorPane::PsqlExecuteQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   BeginQuery();
   return false;
+}
+
+bool ScriptEditorPane::PsqlPrintQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+{
+  return true;
+}
+
+bool ScriptEditorPane::PsqlResetQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+{
+  execution->ResetQueryBuffer();
+  return true;
 }
 
 bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)

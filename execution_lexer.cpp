@@ -25,8 +25,19 @@ ExecutionLexer::Token ExecutionLexer::PullPsql()
       return Token(Token::PSQL, start, pos - start);
     }
     else if (c == '\\') {
-      BackUp();
-      return Token(Token::PSQL, start, pos - start);
+      if (Peek() == '\\') {
+	// skip over terminating double-backslash
+	Take();
+	return Token(Token::PSQL, start, pos - start - 2);
+      }
+      else {
+	// preserve starting backslash of next command
+	BackUp();
+	return Token(Token::PSQL, start, pos - start);
+      }
+    }
+    else if (c == '\'') {
+      PassSingleQuotedString(false);
     }
 
   } while (true);

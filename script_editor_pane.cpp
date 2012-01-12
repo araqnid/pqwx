@@ -459,6 +459,90 @@ void ScriptEditorPane::OnQueryComplete(wxCommandEvent &event)
   }
 }
 
+class PsqlArgumentsParser {
+public:
+  PsqlArgumentsParser(const wxString &str) : str(str), ptr(0), len(str.length()) {}
+  bool HasMoreArguments()
+  {
+    SkipWhitespace();
+    return HaveMore();
+  }
+  wxString GetNextArgument()
+  {
+    SkipWhitespace();
+    if (Peek() == _T('\''))
+      return GetQuotedString();
+    else
+      return GetPlainString();
+  }
+private:
+  void SkipWhitespace()
+  {
+    while (HaveMore() && iswspace(str[ptr]))
+      ++ptr;
+  }
+  wxString GetQuotedString()
+  {
+    wxString out;
+    ++ptr;
+    while (HaveMore()) {
+      wxChar c = Take();
+      if (c == _T('\'')) {
+	if (!HaveMore()) break;
+	if (Peek() == _T('\'')) {
+	  // escaped quote mark
+	  out += _T('\'');
+	  Take();
+	}
+	else {
+	  break;
+	}
+      }
+      else if (c == _T('\\')) {
+	if (!HaveMore()) break; // illegal, really
+	char c = Take();
+	if (c == _T('\\'))
+	  out += c;
+	else if (c == _T('n'))
+	  out += _T('\n');
+	else if (c == _T('r'))
+	  out += _T('\r');
+	else
+	  out += c;
+      }
+      else {
+	out += c;
+      }
+    }
+    return out;
+  }
+  wxString GetPlainString()
+  {
+    unsigned pos = ptr;
+    while (HaveMore()) {
+      wxChar c = Take();
+      if (iswspace(c))
+	break;
+    }
+    return str.Mid(pos, ptr - pos);
+  }
+  bool HaveMore() const
+  {
+    return ptr < len;
+  }
+  wxChar Peek() const
+  {
+    return HaveMore() ? str[ptr] : ((wxChar) -1);
+  }
+  wxChar Take()
+  {
+    return HaveMore() ? str[ptr++] : ((wxChar) -1);
+  }
+  const wxString &str;
+  unsigned ptr;
+  unsigned len;
+};
+
 bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   // TODO handle connection problems...
@@ -468,21 +552,21 @@ bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const Exec
   db = NULL;
   ShowDisconnectedStatus();
   UpdateStateInUI(); // refresh title etc
-  wxStringTokenizer tkz(parameters, _T(" "));
-  if (tkz.HasMoreTokens()) {
-    wxString t = tkz.GetNextToken();
+  PsqlArgumentsParser tkz(parameters);
+  if (tkz.HasMoreArguments()) {
+    wxString t = tkz.GetNextArgument();
     if (t != _T("-")) newDbName = t;
   }
-  if (tkz.HasMoreTokens()) {
-    wxString t = tkz.GetNextToken();
+  if (tkz.HasMoreArguments()) {
+    wxString t = tkz.GetNextArgument();
     if (t != _T("-")) server.username = t;
   }
-  if (tkz.HasMoreTokens()) {
-    wxString t = tkz.GetNextToken();
+  if (tkz.HasMoreArguments()) {
+    wxString t = tkz.GetNextArgument();
     if (t != _T("-")) server.hostname = t;
   }
-  if (tkz.HasMoreTokens()) {
-    wxString t = tkz.GetNextToken();
+  if (tkz.HasMoreArguments()) {
+    wxString t = tkz.GetNextArgument();
     if (t != _T("-")) {
       long port;
       if (t.ToLong(&port))
@@ -493,7 +577,7 @@ bool ScriptEditorPane::PsqlChangeDatabase(const wxString &parameters, const Exec
       }
     }
   }
-  if (tkz.HasMoreTokens()) {
+  if (tkz.HasMoreArguments()) {
     // syntax error...
     wxASSERT_MSG(false, wxString::Format(_T("too many parameters: %s"), parameters.c_str()));
   }
@@ -509,7 +593,13 @@ bool ScriptEditorPane::PsqlExecuteBuffer(const wxString &parameters, const Execu
 
 bool ScriptEditorPane::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)
 {
-  GetOrCreateResultsBook()->ScriptEcho(parameters, t.offset);
+  PsqlArgumentsParser tkz(parameters);
+  wxString output;
+  while (tkz.HasMoreArguments()) {
+    if (!output.empty()) output += _T(' ');
+    output += tkz.GetNextArgument();
+  }
+  GetOrCreateResultsBook()->ScriptEcho(output, t.offset);
   return true;
 }
 

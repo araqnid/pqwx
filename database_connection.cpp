@@ -62,26 +62,18 @@ void DatabaseConnection::Connect(ConnectionCallback *callback) {
 }
 
 void DatabaseConnection::CloseSync() {
-  State state = GetState();
-
-  if (state == NOT_CONNECTED) {
-    wxLogDebug(_T("%s: CloseSync: not connected"), identification.c_str());
-    return;
-  }
-
-  if (state == DISCONNECTED) {
-    wxLogDebug(_T("%s: CloseSync: connection already broken"), identification.c_str());
+  if (!disconnectQueued) {
+    if (!BeginDisconnection()) {
+      wxLogDebug(_T("%s: CloseSync: not connected"), identification.c_str());
+      return;
+    }
+    wxLogDebug(_T("%s: CloseSync: requested disconnect"), identification.c_str());
   }
   else {
-    wxLogDebug(_T("%s: CloseSync: adding disconnect work"), identification.c_str());
-    AddWork(new DisconnectWork());
+    wxLogDebug(_T("%s: CloseSync: disconnect already requested"), identification.c_str());
   }
 
-  wxLogDebug(_T("%s: CloseSync: waiting for worker completion"), identification.c_str());
-  workerThread.Wait();
-  workerThread.state = NOT_CONNECTED;
-
-  wxLogDebug(_T("%s: CloseSync: worker completed after waiting"), identification.c_str());
+  WaitUntilClosed();
 }
 
 bool DatabaseConnection::WaitUntilClosed() {
@@ -286,7 +278,7 @@ void DatabaseConnection::AddWork(DatabaseWork *work) {
 
 bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
   wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
-  if (workerThread.state == DISCONNECTED)
+  if (workerThread.state == DISCONNECTED || workerThread.state == NOT_CONNECTED)
     return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
   workQueue.push_back(work);
@@ -296,7 +288,7 @@ bool DatabaseConnection::AddWorkOnlyIfConnected(DatabaseWork *work) {
 
 bool DatabaseConnection::BeginDisconnection() {
   wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
-  if (workerThread.state == DISCONNECTED)
+  if (workerThread.state == DISCONNECTED || workerThread.state == NOT_CONNECTED)
     return false;
   wxMutexLocker workQueueLocker(workQueueMutex);
   workQueue.push_back(new DisconnectWork());
@@ -307,7 +299,7 @@ bool DatabaseConnection::BeginDisconnection() {
 
 void DatabaseConnection::FinishDisconnection() {
   wxCriticalSectionLocker stateLocker(workerThread.stateCriticalSection);
-  if (workerThread.state == DISCONNECTED)
+  if (workerThread.state == DISCONNECTED || workerThread.state == NOT_CONNECTED)
     return;
   wxMutexLocker workQueueLocker(workQueueMutex);
   workerThread.disconnect = true;

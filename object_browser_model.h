@@ -197,7 +197,6 @@ public:
    */
   ServerModel(const ServerConnection &conninfo, DatabaseConnection *db) : conninfo(conninfo) {
     connections[db->DbName()] = db;
-    db->Relabel(_("Object Browser"));
   }
   /**
    * Initialise some server parameters.

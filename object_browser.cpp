@@ -246,11 +246,7 @@ DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
     delete db;
     connections.erase(dbname);
   }
-#if PG_VERSION_NUM >= 90000
-  DatabaseConnection *db = new DatabaseConnection(conninfo, dbname, _("Object Browser"));
-#else
   DatabaseConnection *db = new DatabaseConnection(conninfo, dbname);
-#endif
   wxLogDebug(_T("Allocating connection to %s"), db->Identification().c_str());
   for (std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.begin(); iter != connections.end(); iter++) {
     if (iter->second->IsConnected()) {
@@ -323,9 +319,6 @@ void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork 
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
-#if PG_VERSION_NUM < 90000
-    db->Relabel(_("Object Browser"));
-#endif
   }
   db->AddWork(new ObjectBrowserDatabaseWork(this, work));
 }

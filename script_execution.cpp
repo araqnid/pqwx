@@ -41,7 +41,10 @@ bool ScriptExecution::ProcessExecution()
 
   ExecutionLexer::Token t = NextToken();
   if (t.type == ExecutionLexer::Token::END) {
-    FinishExecution();
+    if (!queryBuffer.empty() && !queryBufferExecuted)
+      BeginQuery();
+    else
+      FinishExecution();
     return false;
   }
 

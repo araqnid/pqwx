@@ -192,11 +192,6 @@ static std::vector<PgCluster> VersionClusters(const wxString &version) {
     closedir(dir);
     free(entryData);
   }
-#ifdef __WXDEBUG__
-  else {
-    wxLogSysError(_T("Unable to read '%s' directory"), versionDir.c_str());
-  }
-#endif
   return clusters;
 }
 

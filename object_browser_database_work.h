@@ -75,44 +75,23 @@ private:
 class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
 public:
   /**
-   * State of this work object.
-   */
-  enum State { PENDING, EXECUTED, NOTIFIED };
-  /**
    * Create work object.
    */
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work), state(PENDING) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work) {}
   void operator()() {
-    ChangeState(PENDING, EXECUTED);
     work->owner = this;
     work->conn = conn;
     (*work)();
-    state = EXECUTED;
   }
   void NotifyFinished() {
-    ChangeState(EXECUTED, NOTIFIED);
     wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
     event.SetClientData(work);
     dest->AddPendingEvent(event);
-  }
-  /**
-   * Get the current state of this work object.
-   */
-  State GetState() const {
-    wxCriticalSectionLocker locker(crit);
-    return state;
   }
 
 private:
   wxEvtHandler *dest;
   ObjectBrowserWork *work;
-  mutable wxCriticalSection crit;
-  State state;
-  void ChangeState(State oldState, State newState) {
-    wxCriticalSectionLocker locker(crit);
-    wxASSERT(state == oldState);
-    state = newState;
-  }
 };
 
 /**

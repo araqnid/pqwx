@@ -214,10 +214,6 @@ protected:
     LoadFunctions();
   }
   void LoadRelations() {
-    std::map<wxString, RelationModel::Type> typemap;
-    typemap[_T("r")] = RelationModel::TABLE;
-    typemap[_T("v")] = RelationModel::VIEW;
-    typemap[_T("S")] = RelationModel::SEQUENCE;
     QueryResults relationRows = Query(_T("Relations")).List();
     for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
       RelationModel *relation = new RelationModel();
@@ -229,18 +225,13 @@ protected:
 	relation->name = (*iter).ReadText(2);
 	wxString relkind((*iter).ReadText(3));
 	relation->extension = (*iter).ReadText(4);
-	relation->type = typemap[relkind];
+	wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
+	relation->type = relationTypeMap.find(relkind)->second;
       }
       databaseModel->relations.push_back(relation);
     }
   }
   void LoadFunctions() {
-    std::map<wxString, FunctionModel::Type> typemap;
-    typemap[_T("f")] = FunctionModel::SCALAR;
-    typemap[_T("ft")] = FunctionModel::TRIGGER;
-    typemap[_T("fs")] = FunctionModel::RECORDSET;
-    typemap[_T("fa")] = FunctionModel::AGGREGATE;
-    typemap[_T("fw")] = FunctionModel::WINDOW;
     QueryResults functionRows = Query(_T("Functions")).List();
     for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
       FunctionModel *func = new FunctionModel();
@@ -251,8 +242,8 @@ protected:
       func->arguments = (*iter).ReadText(3);
       wxString type((*iter).ReadText(4));
       func->extension = (*iter).ReadText(5);
-      wxASSERT_MSG(typemap.find(type) != typemap.end(), type);
-      func->type = typemap[type];
+      wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
+      func->type = functionTypeMap.find(type)->second;
       func->user = !IsSystemSchema(func->schema);
       databaseModel->functions.push_back(func);
     }
@@ -266,6 +257,8 @@ private:
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
   }
+  static const std::map<wxString, RelationModel::Type> relationTypeMap;
+  static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };
 
 /**
@@ -340,44 +333,29 @@ private:
   DatabaseModel *database;
   IndexSchemaCompletionCallback *completion;
   CatalogueIndex *catalogueIndex;
+  static const std::map<wxString, CatalogueIndex::Type> typeMap;
 protected:
   void operator()() {
-    std::map<wxString, CatalogueIndex::Type> typeMap;
-    typeMap[_T("t")] = CatalogueIndex::TABLE;
-    typeMap[_T("v")] = CatalogueIndex::VIEW;
-    typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
-    typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
-    typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
-    typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
-    typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
-    typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
-    typeMap[_T("T")] = CatalogueIndex::TYPE;
-    typeMap[_T("x")] = CatalogueIndex::EXTENSION;
-    typeMap[_T("O")] = CatalogueIndex::COLLATION;
     QueryResults rs = Query(_T("IndexSchema")).List();
     catalogueIndex = new CatalogueIndex();
     catalogueIndex->Begin();
     for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-      Oid entityId;
-      wxString typeString;
-      wxString symbol;
-      wxString disambig;
-      entityId = (*iter).ReadOid(0);
-      typeString = (*iter).ReadText(1);
-      symbol = (*iter).ReadText(2);
-      disambig = (*iter).ReadText(3);
+      Oid entityId = (*iter).ReadOid(0);
+      wxString typeString = (*iter).ReadText(1);
+      wxString symbol = (*iter).ReadText(2);
+      wxString disambig = (*iter).ReadText(3);
       bool systemObject;
       CatalogueIndex::Type entityType;
       if (typeString.Last() == _T('S')) {
 	systemObject = true;
 	typeString.RemoveLast();
 	wxASSERT(typeMap.count(typeString) > 0);
-	entityType = typeMap[typeString];
+	entityType = typeMap.find(typeString)->second;
       }
       else {
 	systemObject = false;
 	wxASSERT(typeMap.count(typeString) > 0);
-	entityType = typeMap[typeString];
+	entityType = typeMap.find(typeString)->second;
       }
       catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, symbol, disambig));
     }

@@ -112,6 +112,49 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
 
+static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
+{
+  std::map<wxString, CatalogueIndex::Type> typeMap;
+  typeMap[_T("t")] = CatalogueIndex::TABLE;
+  typeMap[_T("v")] = CatalogueIndex::VIEW;
+  typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
+  typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
+  typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
+  typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
+  typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
+  typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
+  typeMap[_T("T")] = CatalogueIndex::TYPE;
+  typeMap[_T("x")] = CatalogueIndex::EXTENSION;
+  typeMap[_T("O")] = CatalogueIndex::COLLATION;
+  return typeMap;
+}
+
+const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitIndexerTypeMap();
+
+static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
+{
+  std::map<wxString, RelationModel::Type> typemap;
+  typemap[_T("r")] = RelationModel::TABLE;
+  typemap[_T("v")] = RelationModel::VIEW;
+  typemap[_T("S")] = RelationModel::SEQUENCE;
+  return typemap;
+}
+
+const std::map<wxString, RelationModel::Type> LoadDatabaseSchemaWork::relationTypeMap = InitRelationTypeMap();
+
+static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
+{
+  std::map<wxString, FunctionModel::Type> typemap;
+  typemap[_T("f")] = FunctionModel::SCALAR;
+  typemap[_T("ft")] = FunctionModel::TRIGGER;
+  typemap[_T("fs")] = FunctionModel::RECORDSET;
+  typemap[_T("fa")] = FunctionModel::AGGREGATE;
+  typemap[_T("fw")] = FunctionModel::WINDOW;
+  return typemap;
+}
+
+const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
+
 class DatabaseLoader : public LazyLoader {
 public:
   DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}

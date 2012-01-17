@@ -181,7 +181,7 @@ void ScriptEditorPane::OnReconnect(wxCommandEvent &event)
   if (db != NULL)
     dbox.Suggest(server);
   if (dbox.ShowModal() == wxID_CANCEL) return;
-  SetConnection(server, dbox.GetConnection());
+  SetConnection(dbox.GetServerParameters(), dbox.GetConnection());
 }
 
 void ScriptEditorNoticeReceiver(void *arg, const PGresult *rs)

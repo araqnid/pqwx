@@ -264,10 +264,12 @@ SELECT pg_proc.oid, nspname, proname, pg_proc.oid::regprocedure::text as longnam
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 ) x
+
 -- SQL :: Object Descriptions
 SELECT objoid, description
 FROM pg_description
 WHERE classoid IN ('pg_class'::regclass, 'pg_proc'::regclass)
+AND objsubid = 0
 
 -- SQL :: Columns
 SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef,

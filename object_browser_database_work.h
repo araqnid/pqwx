@@ -79,6 +79,7 @@ public:
    */
   ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work) {}
   void operator()() {
+    TransactionBoundary txn(this);
     work->owner = this;
     work->conn = conn;
     (*work)();
@@ -92,6 +93,28 @@ public:
 private:
   wxEvtHandler *dest;
   ObjectBrowserWork *work;
+
+  class TransactionBoundary {
+  public:
+    TransactionBoundary(DatabaseWork *work) : work(work), began(FALSE)
+    {
+      work->DoCommand("BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY");
+      began = TRUE;
+    }
+    ~TransactionBoundary()
+    {
+      if (began) {
+	try {
+	  work->DoCommand("END");
+	} catch (...) {
+	  // ignore exceptions trying to end transaction
+	}
+      }
+    }
+  private:
+    DatabaseWork *work;
+    bool began;
+  };
 };
 
 /**

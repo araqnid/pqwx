@@ -10,6 +10,8 @@
 #include "pqwx_config.h"
 #include <vector>
 
+#include "pg_tools_registry.h"
+
 /*
  * controls and menu commands
  */
@@ -53,6 +55,7 @@ private:
 #ifdef PQWX_NOTIFICATION_MONITOR
   static DatabaseNotificationMonitor *monitor;
 #endif
+  PgToolsRegistry toolsRegistry;
 };
 
 #endif

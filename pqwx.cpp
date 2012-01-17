@@ -43,6 +43,13 @@ bool PQWXApp::OnInit()
   monitor = new DatabaseNotificationMonitor();
 #endif
 
+#ifdef USE_DEBIAN_PGCLUSTER
+  toolsRegistry.SetUseSystemPath(false);
+  toolsRegistry.AddSuggestion(_T("/usr/lib/postgresql"));
+#endif
+
+  toolsRegistry.BeginFindInstallations();
+
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 

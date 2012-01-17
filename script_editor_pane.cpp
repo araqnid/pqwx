@@ -7,7 +7,6 @@
 #endif
 
 #include "wx/splitter.h"
-#include "wx/tokenzr.h"
 #include "script_editor.h"
 #include "script_editor_pane.h"
 #include "script_events.h"

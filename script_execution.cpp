@@ -32,20 +32,21 @@ inline void ScriptExecution::ReportInternalError(const wxString &error, const wx
   owner->GetOrCreateResultsBook()->ScriptInternalError(error, command, scriptPosition);
 }
 
-bool ScriptExecution::ProcessExecution()
+ScriptExecution::NextState ScriptExecution::ProcessExecution()
 {
   if (owner->state == CopyToServer) {
     BeginPutCopyData();
-    return false;
+    return NoMore;
   }
 
   ExecutionLexer::Token t = NextToken();
   if (t.type == ExecutionLexer::Token::END) {
-    if (!queryBuffer.empty() && !queryBufferExecuted)
+    if (!queryBuffer.empty() && !queryBufferExecuted) {
       BeginQuery();
+      return NoMore;
+    }
     else
-      FinishExecution();
-    return false;
+      return Finish;
   }
 
   if (t.type == ExecutionLexer::Token::SQL) {
@@ -56,7 +57,7 @@ bool ScriptExecution::ProcessExecution()
       if (c == ';') {
 	// execute immediately
 	BeginQuery();
-	return false;
+	return NoMore;
       }
       else if (!isspace(c)) {
 	break;
@@ -64,7 +65,7 @@ bool ScriptExecution::ProcessExecution()
     }
 
     // look for following psql command or end of input
-    return true;
+    return NeedMore;
   }
   else {
     wxString fullCommandString = GetWXString(t);
@@ -83,7 +84,7 @@ bool ScriptExecution::ProcessExecution()
     if (handler == psqlCommandHandlers.end()) {
       ReportInternalError(wxString::Format(_T("Unrecognised command: \\%s"), command.c_str()), fullCommandString, t.offset);
       BumpErrors();
-      return true;
+      return NeedMore;
     }
     else {
       return CALL_PSQL_HANDLER(*this, handler->second)(parameters, t);
@@ -194,7 +195,7 @@ private:
   unsigned len;
 };
 
-bool ScriptExecution::PsqlChangeDatabase(const wxString &parameters, const ExecutionLexer::Token &t)
+ScriptExecution::NextState ScriptExecution::PsqlChangeDatabase(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   // TODO handle connection problems...
   wxString newDbName = owner->db->DbName();
@@ -233,28 +234,28 @@ bool ScriptExecution::PsqlChangeDatabase(const wxString &parameters, const Execu
     wxASSERT_MSG(false, wxString::Format(_T("too many parameters: %s"), parameters.c_str()));
   }
   owner->Connect(owner->server, newDbName);
-  return true;
+  return NeedMore;
 }
 
-bool ScriptExecution::PsqlExecuteQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+ScriptExecution::NextState ScriptExecution::PsqlExecuteQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   BeginQuery();
-  return false;
+  return NoMore;
 }
 
-bool ScriptExecution::PsqlPrintQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+ScriptExecution::NextState ScriptExecution::PsqlPrintQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   owner->GetOrCreateResultsBook()->ScriptEcho(queryBuffer, t.offset);
-  return true;
+  return NeedMore;
 }
 
-bool ScriptExecution::PsqlResetQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
+ScriptExecution::NextState ScriptExecution::PsqlResetQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   queryBuffer = wxEmptyString;
-  return true;
+  return NeedMore;
 }
 
-bool ScriptExecution::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)
+ScriptExecution::NextState ScriptExecution::PsqlPrintMessage(const wxString &parameters, const ExecutionLexer::Token &t)
 {
   PsqlArgumentsParser tkz(parameters);
   wxString output;
@@ -263,7 +264,7 @@ bool ScriptExecution::PsqlPrintMessage(const wxString &parameters, const Executi
     output += tkz.GetNextArgument();
   }
   owner->GetOrCreateResultsBook()->ScriptEcho(output, t.offset);
-  return true;
+  return NeedMore;
 }
 
 void ScriptExecution::ProcessQueryResult(ScriptQueryWork::Result *result)
@@ -293,4 +294,3 @@ void ScriptExecution::ProcessConnectionNotice(const PgError& error)
 {
   owner->GetOrCreateResultsBook()->ScriptQueryNotice(error, queryBuffer, lastSqlPosition);
 }
-

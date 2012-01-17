@@ -35,11 +35,13 @@ public:
    */
   void Proceed()
   {
-    while (true) {
-      if (!ProcessExecution()) {
-	break;
+    NextState nextState;
+    do {
+      nextState = ProcessExecution();
+      if (nextState == Finish) {
+	FinishExecution();
       }
-    }
+    } while (nextState == NeedMore);
   }
 
   /**
@@ -62,17 +64,23 @@ private:
   unsigned rowsRetrieved, errorsEncountered;
   wxStopWatch stopwatch;
 
-  typedef bool (ScriptExecution::*PsqlCommandHandler)(const wxString&, const ExecutionLexer::Token&);
+  enum NextState {
+    NeedMore,
+    NoMore,
+    Finish
+  };
+
+  typedef NextState (ScriptExecution::*PsqlCommandHandler)(const wxString&, const ExecutionLexer::Token&);
   static const std::map<wxString, PsqlCommandHandler> psqlCommandHandlers;
   static std::map<wxString, PsqlCommandHandler> InitPsqlCommandHandlers();
 
-  bool PsqlChangeDatabase(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlExecuteQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlPrintQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlResetQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
-  bool PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlChangeDatabase(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlExecuteQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlPrintQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlResetQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
 
-  bool ProcessExecution();
+  NextState ProcessExecution();
   void FinishExecution();
   void BeginQuery();
   void BeginPutCopyData();

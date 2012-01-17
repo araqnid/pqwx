@@ -103,7 +103,7 @@ private:
   const char *buffer;
   const unsigned length;
   unsigned pos;
-  void SkipWhitespace();
+  void PassWhitespace();
   char CharAt(unsigned ofs) const { return buffer[ofs]; }
   int Peek() const { return pos >= length ? -1 : CharAt(pos); }
   int Take() { return pos >= length ? -1 : CharAt(pos++); }
@@ -111,7 +111,9 @@ private:
   bool Done() const { return pos >= length; }
   void PassDoubleQuotedString();
   void PassSingleQuotedString(bool escapeSyntax);
-  void ProcessDollarQuote();
+  void PassSingleLineComment();
+  void PassBlockComment();
+  void PassDollarQuote();
   Token Pull0();
   Token PullPsql();
   Token PullSql();

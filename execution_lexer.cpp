@@ -2,7 +2,7 @@
 
 ExecutionLexer::Token ExecutionLexer::Pull0()
 {
-  SkipWhitespace();
+  PassWhitespace();
   if (Done()) return Token(Token::END);
 
   if (Peek() == '\\') {
@@ -57,7 +57,7 @@ ExecutionLexer::Token ExecutionLexer::PullSql()
     // note that dollar-quoting takes priority over *everything* (except end of input of course)
 
     if (c == '$')
-      ProcessDollarQuote();
+      PassDollarQuote();
     else if (quoteStack.empty()) {
       if (c == '\'')
 	PassSingleQuotedString(false); // FIXME handle E'...' flag for escape syntax
@@ -66,8 +66,18 @@ ExecutionLexer::Token ExecutionLexer::PullSql()
       else if (c == ';') {
 	// inclusive end character
 	int end = ++pos;
-	SkipWhitespace();
+	PassWhitespace();
 	return Token(Token::SQL, start, end - start);
+      }
+      else if (c == '-') {
+	if (Peek() == '-') {
+	  PassSingleLineComment();
+	}
+      }
+      else if (c == '/') {
+	if (Peek() == '*') {
+	  PassBlockComment();
+	}
       }
       else if (c == '\\') {
 	// exclusive end character
@@ -80,27 +90,51 @@ ExecutionLexer::Token ExecutionLexer::PullSql()
 
 void ExecutionLexer::PassSingleQuotedString(bool escapeSyntax)
 {
+  int c;
   do {
-    int c = Take();
+    c = Take();
     if (c == '\'') {
       if (Peek() != '\'')
 	return;
     }
-  } while (true);
+  } while (c >= 0);
 }
 
 void ExecutionLexer::PassDoubleQuotedString()
 {
+  int c;
   do {
-    int c = Take();
+    c = Take();
     if (c == '\"') {
       if (Peek() != '\"')
 	return;
     }
-  } while (true);
+  } while (c >= 0);
 }
 
-void ExecutionLexer::ProcessDollarQuote()
+void ExecutionLexer::PassSingleLineComment()
+{
+  int c;
+  do {
+    c = Take();
+    if (c == '\n')
+      return;
+  } while (c >= 0);
+}
+
+void ExecutionLexer::PassBlockComment()
+{
+  int c;
+  do {
+    c = Take();
+    if (c == '*') {
+      if (Peek() == '/')
+	return;
+    }
+  } while (c >= 0);
+}
+
+void ExecutionLexer::PassDollarQuote()
 {
   if (isdigit(Peek())) return; // $1 etc. are not dollar-quoted strings
 
@@ -122,7 +156,7 @@ void ExecutionLexer::ProcessDollarQuote()
   }
 }
 
-void ExecutionLexer::SkipWhitespace()
+void ExecutionLexer::PassWhitespace()
 {
   do {
     int c = Take();

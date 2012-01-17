@@ -70,18 +70,25 @@ private:
       grantor = pattern.GetMatch(input, 3);
       wxString privs = pattern.GetMatch(input, 2);
       for (unsigned i = 0; i < privs.length(); i++) {
-	wxChar priv = privs[i];
-	privileges.insert(priv);
+	Privilege priv;
+	priv.specifier = privs[i];
 	if (i < privs.length() && privs[i+1] == '*') {
-	  grantOptions.insert(priv);
+	  priv.grantOption = true;
 	  ++i;
 	}
+	else {
+	  priv.grantOption = false;
+	}
+	privileges.push_back(priv);
       }
     }
 
     wxString grantee;
-    std::set<wxChar> privileges;
-    std::set<wxChar> grantOptions;
+    struct Privilege {
+      wxChar specifier;
+      bool grantOption;
+    };
+    std::vector<Privilege> privileges;
     wxString grantor;
 
     template <class OutputIterator>
@@ -89,12 +96,10 @@ private:
     {
       wxString sql = _T("GRANT ");
       bool first = true;
-      for (std::set<wxChar>::const_iterator iter = privileges.begin(); iter != privileges.end(); iter++) {
-	if (withGrantOption && !grantOptions.count(*iter))
+      for (std::vector<Privilege>::const_iterator iter = privileges.begin(); iter != privileges.end(); iter++) {
+	if ((*iter).grantOption != withGrantOption)
 	  continue;
-	if (!withGrantOption && grantOptions.count(*iter))
-	  continue;
-	std::map<wxChar, wxString>::const_iterator privPtr = privilegeNames.find(*iter);
+	std::map<wxChar, wxString>::const_iterator privPtr = privilegeNames.find((*iter).specifier);
 	wxASSERT(privPtr != privilegeNames.end());
 	if (first)
 	  first = false;

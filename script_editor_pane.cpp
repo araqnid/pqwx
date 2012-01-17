@@ -123,9 +123,7 @@ void ScriptEditorPane::Connect(const ServerConnection &server_, const wxString &
   state = Idle;
   ShowConnectedStatus();
   db->AddWork(new SetupNoticeProcessorWork(this));
-#ifdef PQWX_NOTIFICATION_MONITOR
-  db->SetNotificationMonitor(PQWXApp::GetNotificationMonitor(), &notificationReceiver);
-#endif
+  db->SetNotificationReceiver(&notificationReceiver);
   UpdateStateInUI();
 }
 
@@ -140,9 +138,7 @@ void ScriptEditorPane::SetConnection(const ServerConnection &server_, DatabaseCo
   server = server_;
   db->Relabel(_("Query"));
   db->AddWork(new SetupNoticeProcessorWork(this));
-#ifdef PQWX_NOTIFICATION_MONITOR
-  db->SetNotificationMonitor(PQWXApp::GetNotificationMonitor(), &notificationReceiver);
-#endif
+  db->SetNotificationReceiver(&notificationReceiver);
   state = Idle;
   ShowConnectedStatus();
   UpdateStateInUI();

@@ -4,6 +4,7 @@
 #include "database_connection.h"
 #include "database_work.h"
 #include "database_notification_monitor.h"
+#include "pqwx.h"
 
 class InitialiseWork : public DatabaseWork {
 public:
@@ -130,20 +131,20 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
     }
 
 #ifdef PQWX_NOTIFICATION_MONITOR
-    if (monitor != NULL) {
+    if (notificationReceiver != NULL) {
       PGnotify *notification;
       while ((notification = PQnotifies(conn)) != NULL) {
 	(*notificationReceiver)(notification);
       }
-      monitor->AddConnection(DatabaseNotificationMonitor::Client(PQsocket(conn), &monitorProcessor));
+      ::wxGetApp().GetNotificationMonitor().AddConnection(DatabaseNotificationMonitor::Client(PQsocket(conn), &monitorProcessor));
     }
 #endif
 
     db->workCondition.Wait();
 
 #ifdef PQWX_NOTIFICATION_MONITOR
-    if (monitor != NULL) {
-      monitor->RemoveConnection(PQsocket(conn));
+    if (notificationReceiver != NULL) {
+      ::wxGetApp().GetNotificationMonitor().RemoveConnection(PQsocket(conn));
     }
 #endif
   } while (true);
@@ -333,14 +334,12 @@ void DatabaseConnection::Dispose() {
 
 class RegisterWithMonitor : public DatabaseWork {
 public:
-  RegisterWithMonitor(DatabaseConnection *db, DatabaseNotificationMonitor *monitor, DatabaseConnection::NotificationReceiver *receiver) : db(db), monitor(monitor), receiver(receiver) {}
+  RegisterWithMonitor(DatabaseConnection *db, DatabaseConnection::NotificationReceiver *receiver) : db(db), receiver(receiver) {}
 private:
   DatabaseConnection *db;
-  DatabaseNotificationMonitor *monitor;
   DatabaseConnection::NotificationReceiver *receiver;
   void operator()()
   {
-    db->workerThread.monitor = monitor;
     db->workerThread.notificationReceiver = receiver;
   }
   void NotifyFinished()
@@ -355,7 +354,6 @@ private:
   DatabaseConnection *db;
   void operator()()
   {
-    db->workerThread.monitor = NULL;
     db->workerThread.notificationReceiver = NULL;
   }
   void NotifyFinished()
@@ -363,11 +361,10 @@ private:
   }
 };
 
-void DatabaseConnection::SetNotificationMonitor(DatabaseNotificationMonitor *monitor, NotificationReceiver *receiver)
+void DatabaseConnection::SetNotificationReceiver(NotificationReceiver *receiver)
 {
-  wxASSERT((monitor != NULL && receiver != NULL) || (monitor == NULL && receiver == NULL));
-  if (monitor) {
-    AddWorkOnlyIfConnected(new RegisterWithMonitor(this, monitor, receiver));
+  if (receiver) {
+    AddWorkOnlyIfConnected(new RegisterWithMonitor(this, receiver));
   }
   else {
     AddWorkOnlyIfConnected(new UnregisterWithMonitor(this));

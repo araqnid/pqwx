@@ -10,7 +10,9 @@
 #include "pqwx_config.h"
 #include <vector>
 
+#include "wx/app.h"
 #include "pg_tools_registry.h"
+#include "database_notification_monitor.h"
 
 /*
  * controls and menu commands
@@ -29,8 +31,6 @@ enum {
   Pqwx_ObjectFinderResults,
 };
 
-class DatabaseNotificationMonitor;
-
 /**
  * The wxApp implementation for PQWX.
  *
@@ -38,13 +38,11 @@ class DatabaseNotificationMonitor;
  */
 class PQWXApp : public wxApp {
 public:
-  virtual bool OnInit();
-  void OnInitCmdLine(wxCmdLineParser &parser);
-  bool OnCmdLineParsed(wxCmdLineParser &parser);
-  int OnExit();
+  PQWXApp() : monitor(NULL) {}
 #ifdef PQWX_NOTIFICATION_MONITOR
-  static DatabaseNotificationMonitor* GetNotificationMonitor();
+  DatabaseNotificationMonitor& GetNotificationMonitor();
 #endif
+  PgToolsRegistry& GetToolsRegistry() { return toolsRegistry; }
 private:
   bool haveInitial;
   wxString initialServer;
@@ -53,10 +51,16 @@ private:
   wxString initialDatabase;
   std::vector<wxString> initialFiles;
 #ifdef PQWX_NOTIFICATION_MONITOR
-  static DatabaseNotificationMonitor *monitor;
+  DatabaseNotificationMonitor *monitor;
 #endif
   PgToolsRegistry toolsRegistry;
+  bool OnInit();
+  int OnExit();
+  void OnInitCmdLine(wxCmdLineParser &parser);
+  bool OnCmdLineParsed(wxCmdLineParser &parser);
 };
+
+DECLARE_APP(PQWXApp);
 
 #endif
 

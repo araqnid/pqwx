@@ -212,7 +212,6 @@ public:
    */
   const wxString& Identification() const { return identification; }
 
-#ifdef PQWX_NOTIFICATION_MONITOR
   /**
    * Interface for receiving an asynchronous notification from the monitor.
    */
@@ -222,10 +221,9 @@ public:
   };
 
   /**
-   * Associate this connection with a notification monitor.
+   * Associate this connection with a notification receiver.
    */
-  void SetNotificationMonitor(DatabaseNotificationMonitor *monitor, NotificationReceiver *receiver);
-#endif
+  void SetNotificationReceiver(NotificationReceiver *receiver);
 
   /**
    * @return true if a statement with the given name has been prepared on this connection
@@ -238,9 +236,10 @@ public:
 private:
   class WorkerThread : public wxThread {
   public:
-    WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED)
+    WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED),
+					   notificationReceiver(NULL)
 #ifdef PQWX_NOTIFICATION_MONITOR
-	,monitor(NULL), monitorProcessor(this)
+					 , monitorProcessor(this)
 #endif
   { }
   protected:
@@ -251,9 +250,8 @@ private:
     bool disconnect;
     mutable wxCriticalSection stateCriticalSection;
     State state;
-#ifdef PQWX_NOTIFICATION_MONITOR
-    DatabaseNotificationMonitor *monitor;
     NotificationReceiver *notificationReceiver;
+#ifdef PQWX_NOTIFICATION_MONITOR
     class MonitorInputProcessor : public DatabaseNotificationMonitor::InputProcessor {
     public:
       MonitorInputProcessor(WorkerThread *worker) : worker(worker) {}

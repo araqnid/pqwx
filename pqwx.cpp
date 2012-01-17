@@ -19,11 +19,14 @@ extern void InitXmlResource(void);
 extern void InitStaticResources(void);
 
 #ifdef PQWX_NOTIFICATION_MONITOR
-DatabaseNotificationMonitor* PQWXApp::monitor;
-
-DatabaseNotificationMonitor* PQWXApp::GetNotificationMonitor()
+DatabaseNotificationMonitor& PQWXApp::GetNotificationMonitor()
 {
-  return PQWXApp::monitor;
+  static wxCriticalSection guard;
+  wxCriticalSectionLocker locker(guard);
+  if (!monitor) {
+    monitor = new DatabaseNotificationMonitor();
+  }
+  return *monitor;
 }
 #endif
 
@@ -38,10 +41,6 @@ bool PQWXApp::OnInit()
   wxXmlResource::Get()->InitAllHandlers();
 
   StaticResources::Init();
-
-#ifdef PQWX_NOTIFICATION_MONITOR
-  monitor = new DatabaseNotificationMonitor();
-#endif
 
 #ifdef USE_DEBIAN_PGCLUSTER
   toolsRegistry.SetUseSystemPath(false);
@@ -77,7 +76,7 @@ int PQWXApp::OnExit()
   int rc = wxApp::OnExit();
 
 #ifdef PQWX_NOTIFICATION_MONITOR
-  delete monitor;
+  if (monitor) delete monitor;
 #endif
 
   return rc;

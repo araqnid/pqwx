@@ -39,7 +39,7 @@ FROM pg_db_role_setting LEFT JOIN pg_roles ON pg_roles.oid = pg_db_role_setting.
 WHERE pg_db_role_setting.setdatabase = $1
 
 -- SQL :: Database Settings
-SELECT 0, datconfig
+SELECT '', datconfig
 FROM pg_database
 WHERE pg_database.oid = $1
 

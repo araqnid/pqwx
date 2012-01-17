@@ -370,5 +370,8 @@ void DatabaseConnection::SetNotificationReceiver(NotificationReceiver *receiver)
     AddWorkOnlyIfConnected(new UnregisterWithMonitor(this));
   }
 }
-
+#else
+void DatabaseConnection::SetNotificationReceiver(NotificationReceiver *receiver)
+{
+}
 #endif

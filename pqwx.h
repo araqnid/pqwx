@@ -38,9 +38,11 @@ enum {
  */
 class PQWXApp : public wxApp {
 public:
-  PQWXApp() : monitor(NULL) {}
 #ifdef PQWX_NOTIFICATION_MONITOR
+  PQWXApp() : monitor(NULL) {}
   DatabaseNotificationMonitor& GetNotificationMonitor();
+#else
+  PQWXApp() {}
 #endif
   PgToolsRegistry& GetToolsRegistry() { return toolsRegistry; }
 private:

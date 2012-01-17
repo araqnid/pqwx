@@ -238,7 +238,6 @@ private:
     }
   }
 
-#ifdef PQWX_NOTIFICATION_MONITOR
   class MonitorInputProcessor : public DatabaseConnection::NotificationReceiver {
   public:
     MonitorInputProcessor(ScriptEditorPane *owner) : owner(owner) {}
@@ -246,7 +245,6 @@ private:
   private:
     ScriptEditorPane *owner;
   } notificationReceiver;
-#endif
 
   friend class ScriptExecution;
 

@@ -38,10 +38,7 @@ int ScriptEditorPane::documentCounter = 0;
 
 ScriptEditorPane::ScriptEditorPane(wxWindow *parent, wxWindowID id)
   : wxPanel(parent, id), resultsBook(NULL), db(NULL), modified(false),
-    execution(NULL), statusUpdateTimer(this)
-#ifdef PQWX_NOTIFICATION_MONITOR
-, notificationReceiver(this)
-#endif
+    execution(NULL), statusUpdateTimer(this), notificationReceiver(this)
 {
   splitter = new wxSplitterWindow(this, wxID_ANY);
   editor = new ScriptEditor(splitter, wxID_ANY, this);
@@ -207,7 +204,6 @@ void ScriptEditorPane::OnConnectionNotice(wxCommandEvent &event)
   delete error;
 }
 
-#ifdef PQWX_NOTIFICATION_MONITOR
 void ScriptEditorPane::MonitorInputProcessor::operator()(PGnotify *notification)
 {
   wxString channel(wxString(notification->relname, wxConvUTF8));
@@ -219,7 +215,6 @@ void ScriptEditorPane::MonitorInputProcessor::operator()(PGnotify *notification)
     event.SetString(channel);
   owner->AddPendingEvent(event);
 }
-#endif
 
 void ScriptEditorPane::OnConnectionNotification(wxCommandEvent &event)
 {

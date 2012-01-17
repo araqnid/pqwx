@@ -132,7 +132,8 @@ SELECT attname,
        attstattarget,
        CASE attstorage WHEN 'e' THEN 'EXTERNAL' END,
        attacl,
-       attoptions
+       attoptions,
+       pg_catalog.col_description(attrelid, attnum)
 FROM pg_attribute
      LEFT JOIN pg_attrdef ON pg_attrdef.adrelid = pg_attribute.attrelid AND pg_attrdef.adnum = pg_attribute.attnum
      LEFT JOIN pg_collation ON pg_collation.oid = pg_attribute.attcollation
@@ -153,7 +154,8 @@ SELECT attname,
        attstattarget,
        CASE attstorage WHEN 'e' THEN 'EXTERNAL' END,
        NULL AS attacl,
-       NULL AS attoptions
+       NULL AS attoptions,
+       pg_catalog.col_description(attrelid, attnum)
 FROM pg_attribute
      LEFT JOIN pg_attrdef ON pg_attrdef.adrelid = pg_attribute.attrelid AND pg_attrdef.adnum = pg_attribute.attnum
      JOIN pg_type ON pg_type.oid = pg_attribute.atttypid

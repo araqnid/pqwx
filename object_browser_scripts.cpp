@@ -295,8 +295,20 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       }
     }
 
-    PgAcl(tableDetail[3]).GenerateGrantStatements(output, tableDetail[0], QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name), privilegeMap);
-    PgSettings(tableDetail[4]).GenerateSetStatements(output, this, _T("ALTER TABLE ") + QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name) + _T(' '), true);
+    wxString tableName = QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name);
+
+    PgAcl(tableDetail[3]).GenerateGrantStatements(output, tableDetail[0], tableName, privilegeMap);
+    PgSettings(tableDetail[4]).GenerateSetStatements(output, this, _T("ALTER TABLE ") + tableName + _T(' '), true);
+
+    if (!table->description.empty())
+      *output++ = _T("COMMENT ON TABLE ") + tableName + _T(" IS ") + QuoteLiteral(table->description);
+
+    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++) {
+      wxString description = (*iter).ReadText(10);
+      if (!description.empty()) {
+	*output++ = _T("COMMENT ON COLUMN ") + tableName + _T('.') + (*iter).ReadText(0) + _T(" IS ") + QuoteLiteral(description);
+      }
+    }
   }
     break;
 

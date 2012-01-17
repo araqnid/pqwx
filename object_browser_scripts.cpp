@@ -72,7 +72,7 @@ private:
       for (unsigned i = 0; i < privs.length(); i++) {
 	Privilege priv;
 	priv.specifier = privs[i];
-	if (i < privs.length() && privs[i+1] == '*') {
+	if (i < (privs.length()-1) && privs[i+1] == '*') {
 	  priv.grantOption = true;
 	  ++i;
 	}

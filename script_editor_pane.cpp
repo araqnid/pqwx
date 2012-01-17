@@ -289,7 +289,10 @@ void ScriptEditorPane::OnTimerTick(wxTimerEvent &event)
 {
   long time = execution->ElapsedTime();
   wxString elapsed = wxString::Format(_T("%02ld:%02ld:%02ld"), time / (3600*1000), (time / (60*1000)) % 60, (time / 1000) % 60);
-  statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
+  // It did happen once that a timer tick occurred while a "\c" was being executed and the pane was disconnected momentarily.
+  // Arguably, \c should replace the connection only if the new connection is successfully made.
+  if (StatusBar_TimeElapsed < statusbar->GetFieldsCount())
+    statusbar->SetStatusText(elapsed, StatusBar_TimeElapsed);
 }
 
 void ScriptEditorPane::OnExecute(wxCommandEvent &event)

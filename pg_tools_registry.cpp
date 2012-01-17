@@ -181,7 +181,7 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
   wxCharBuffer exeBuffer = toolExe.utf8_str();
   if (!onPath && access(exeBuffer.data(), X_OK) != 0) return wxEmptyString;
 
-  std::vector<char*> args;
+  std::vector<const char*> args;
   args.push_back(exeBuffer.data());
   args.push_back("-V");
   args.push_back(NULL);
@@ -200,9 +200,9 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
       exit(200);
     }
     if (onPath)
-      execvp(exeBuffer.data(), &args[0]);
+      execvp(exeBuffer.data(), (char* const*) &args[0]);
     else
-      execv(exeBuffer.data(), &args[0]);
+      execv(exeBuffer.data(), (char* const*) &args[0]);
     exit(200);
   }
 

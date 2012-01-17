@@ -28,9 +28,15 @@ class SchemaMemberModel;
 class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
   DECLARE_EVENT_TYPE(PQWX_NoObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
+
+/**
+ * Event issued when asynchronous database work finishes
+ */
+#define PQWX_OBJECT_BROWSER_WORK_FINISHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkFinished, fn)
 
 /**
  * Event issued when an object is selected in the object browser.

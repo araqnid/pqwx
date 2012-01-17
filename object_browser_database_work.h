@@ -85,7 +85,7 @@ public:
     (*work)();
   }
   void NotifyFinished() {
-    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_WORK_FINISHED);
+    wxCommandEvent event(PQWX_ObjectBrowserWorkFinished);
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }

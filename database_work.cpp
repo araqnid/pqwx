@@ -92,7 +92,7 @@ bool DatabaseWork::DoCommand(const char *sql) const {
   return true;
 }
 
-QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const
+QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const
 {
   db->LogSql(sql);
 
@@ -125,7 +125,19 @@ QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, Oid paramTyp
   return results;
 }
 
-QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const
+QueryResults DatabaseWork::DoQuery(const char *sql, const std::vector<Oid>& paramTypes, const std::vector<wxString>& paramValues) const
+{
+  unsigned paramCount = paramTypes.size();
+  std::vector<wxCharBuffer> buffers;
+  std::vector<const char*> values;
+  for (unsigned i = 0; i < paramCount; i++) {
+    buffers.push_back(paramValues[i].utf8_str());
+    values.push_back(buffers.back().data());
+  }
+  return DoQuery(sql, paramCount, &(paramTypes[0]), &(values[0]));
+}
+
+QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const
 {
   if (!db->IsStatementPrepared(name)) {
     db->LogSql((wxString(_T("/* prepare */ ")) + wxString(sql, wxConvUTF8)).utf8_str());
@@ -181,16 +193,11 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, i
 QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, const std::vector<Oid>& paramTypes, const std::vector<wxString>& paramValues) const
 {
   unsigned paramCount = paramTypes.size();
-  Oid *paramTypesArray = new Oid[paramCount];
   std::vector<wxCharBuffer> buffers;
-  const char **paramValuesArray = new const char *[paramCount];
+  std::vector<const char*> values;
   for (unsigned i = 0; i < paramCount; i++) {
-    paramTypesArray[i] = paramTypes[i];
     buffers.push_back(paramValues[i].utf8_str());
-    paramValuesArray[i] = buffers.back().data();
+    values.push_back(buffers.back().data());
   }
-  QueryResults rs = DoNamedQuery(name, sql, paramCount, paramTypesArray, paramValuesArray);
-  delete[] paramTypesArray;
-  delete[] paramValuesArray;
-  return rs;
+  return DoNamedQuery(name, sql, paramCount, &(paramTypes[0]), &(values[0]));
 }

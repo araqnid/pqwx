@@ -46,6 +46,11 @@ protected:
   }
 
   /**
+   * The actual libpq connection object.
+   */
+  PGconn *conn;
+public:
+  /**
    * Quote an identified for use in a generated SQL statement.
    */
   wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
@@ -57,10 +62,6 @@ protected:
    * The actual database work object wrapping this.
    */
   DatabaseWorkWithDictionary *owner;
-  /**
-   * The actual libpq connection object.
-   */
-  PGconn *conn;
 
 private:
   const VersionedSql& sqlDictionary;
@@ -459,148 +460,6 @@ protected:
       ob->SetItemText(relationItem, itemText.Left(space));
     }
   }
-};
-
-/**
- * Generate SQL script for some database item.
- *
- * The SQL script is generated in some mode (create, alter, etc) and
- * with a designated output. This class deals with dispatching
- * generated SQL to the output: subclasses must supply implementations
- * to produce the script by populating the statements member in an
- * Execute() implementation.
- */
-class ScriptWork : public ObjectBrowserWork {
-public:
-  /**
-   * Type of script to produce.
-   */
-  enum Mode { Create, Alter, Drop, Select, Insert, Update, Delete };
-  /**
-   * Output channel.
-   */
-  enum Output { Window, File, Clipboard };
-  ScriptWork(DatabaseModel *database, Mode mode, Output output) : database(database), mode(mode), output(output) {}
-protected:
-  std::vector<wxString> statements;
-  void LoadIntoView(ObjectBrowser *ob) {
-    wxString message;
-    switch (output) {
-    case Window: {
-      PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
-      wxString script;
-      for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
-	script << *iter << _T("\n\n");
-      }
-      evt.SetString(script);
-      ob->ProcessEvent(evt);
-      return;
-    }
-      break;
-    case File:
-      message << _T("TODO Send to file:\n\n");
-      break;
-    case Clipboard:
-      message << _T("TODO Send to clipboard:\n\n");
-      break;
-    default:
-      wxASSERT(false);
-    }
-    for (std::vector<wxString>::iterator iter = statements.begin(); iter != statements.end(); iter++) {
-      message << *iter << _T("\n\n");
-    }
-    wxLogDebug(_T("%s"), message.c_str());
-    wxMessageBox(message);
-  }
-  DatabaseModel *database;
-  const Mode mode;
-private:
-  const Output output;
-};
-
-/**
- * Produce database scripts.
- */
-class DatabaseScriptWork : public ScriptWork {
-public:
-  DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(database, mode, output) {
-    wxLogDebug(_T("%p: work to generate database script"), this);
-  }
-protected:
-  void operator()();
-};
-
-/**
- * Produce table scripts.
- */
-class TableScriptWork : public ScriptWork {
-public:
-  TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(table->database, mode, output), table(table) {
-    wxLogDebug(_T("%p: work to generate table script"), this);
-  }
-private:
-  RelationModel *table;
-protected:
-  void operator()();
-};
-
-/**
- * Produce view scripts.
- */
-class ViewScriptWork : public ScriptWork {
-public:
-  ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view->database, mode, output), view(view) {
-    wxLogDebug(_T("%p: work to generate view script"), this);
-  }
-private:
-  RelationModel *view;
-protected:
-  void operator()();
-};
-
-/**
- * Produce sequence scripts.
- */
-class SequenceScriptWork : public ScriptWork {
-public:
-  SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequence->database, mode, output), sequence(sequence) {
-    wxLogDebug(_T("%p: work to generate sequence script"), this);
-  }
-private:
-  RelationModel *sequence;
-protected:
-  void operator()();
-};
-
-/**
- * Produce function scripts.
- */
-class FunctionScriptWork : public ScriptWork {
-public:
-  FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(function->database, mode, output), function(function) {
-    wxLogDebug(_T("%p: work to generate function script"), this);
-  }
-private:
-  FunctionModel *function;
-protected:
-  void operator()();
-private:
-  struct Typeinfo {
-    wxString schema;
-    wxString name;
-    int arrayDepth;
-  };
-  std::map<Oid, Typeinfo> FetchTypes(const std::vector<Oid> &types1, const std::vector<Oid> &types2) {
-    std::set<Oid> typeSet;
-    for (std::vector<Oid>::const_iterator iter = types1.begin(); iter != types1.end(); iter++) {
-      typeSet.insert(*iter);
-    }
-    for (std::vector<Oid>::const_iterator iter = types2.begin(); iter != types2.end(); iter++) {
-      typeSet.insert(*iter);
-    }
-    return FetchTypes(typeSet);
-  }
-  std::map<Oid, Typeinfo> FetchTypes(const std::set<Oid> &types);
 };
 
 #endif

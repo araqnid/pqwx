@@ -31,10 +31,10 @@ public:
   bool DoCommand(const wxString &sql) const { return DoCommand((const char*) sql.utf8_str()); }
   bool DoCommand(const char *sql) const;
 
-  QueryResults DoQuery(const char *sql, int paramCount, Oid paramTypes[], const char *paramValues[]) const;
+  QueryResults DoQuery(const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const;
   QueryResults DoQuery(const char *sql, std::vector<Oid> const& paramTypes, std::vector<wxString> const& paramValues) const;
 
-  QueryResults DoNamedQuery(const wxString &name, const char *sql, int paramCount, Oid *paramTypes, const char **paramValues) const;
+  QueryResults DoNamedQuery(const wxString &name, const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const;
   QueryResults DoNamedQuery(const wxString &name, const char *sql, std::vector<Oid> const& paramTypes, std::vector<wxString> const& paramValues) const;
 
   /**

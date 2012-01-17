@@ -1,17 +1,187 @@
+#include "wx/wxprec.h"
+#ifdef __BORLANDC__
+    #pragma hdrstop
+#endif
+#ifndef WX_PRECOMP
+    #include "wx/wx.h"
+#endif
+
 #include "object_browser.h"
 #include "object_browser_model.h"
-#include "object_browser_database_work.h"
+#include "object_browser_scripts.h"
 
-void DatabaseScriptWork::operator()() {
-  QueryResults rs = Query(_T("Database Detail")).OidParam(database->oid).List();
-  wxASSERT(rs.size() == 1);
-  wxASSERT(rs[0].size() >= 5);
-  wxString ownerName = rs[0][0];
-  wxString encoding = rs[0][1];
-  wxString collation = rs[0][2];
-  wxString ctype = rs[0][3];
+#include "wx/tokenzr.h"
+#include "wx/regex.h"
+
+std::map<wxChar, wxString> ScriptWork::PrivilegeMap(const wxString &spec)
+{
+  std::map<wxChar, wxString> privilegeMap;
+  wxStringTokenizer tkz(spec, _T(", \n\t"));
+  while (tkz.HasMoreTokens()) {
+    wxString token = tkz.GetNextToken();
+    wxASSERT(token.length() > 2);
+    privilegeMap[token[0]] = token.Mid(2);
+  }
+  return privilegeMap;
+}
+
+class PgAcl {
+public:
+  PgAcl(const wxString& input)
+  {
+    if (!input.empty()) {
+      wxASSERT(input[0] == _T('{'));
+      wxASSERT(input[input.length()-1] == _T('}'));
+      wxStringTokenizer tkz(input.Mid(1, input.length()-2), _T(","));
+      while (tkz.HasMoreTokens()) {
+	entries.push_back(AclEntry(tkz.GetNextToken()));
+      }
+    }
+  }
+
+  template <class OutputIterator>
+  void GenerateGrantStatements(OutputIterator output, const wxString &owner, const wxString &entity, const std::map<wxChar, wxString> &privilegeNames) const
+  {
+    for (std::vector<AclEntry>::const_iterator iter = entries.begin(); iter != entries.end(); iter++) {
+      if ((*iter).grantee != owner) {
+	(*iter).GenerateGrantStatement(output, entity, privilegeNames, true);
+	(*iter).GenerateGrantStatement(output, entity, privilegeNames, false);
+      }
+    }
+  }
+
+  class InvalidAclEntry : public std::exception {
+  public:
+    InvalidAclEntry(const wxString &input) : input(input) {}
+    ~InvalidAclEntry() throw () {}
+    const char *what() { return "Invalid ACL entry"; }
+    const wxString& GetInput() const { return input; }
+  private:
+    wxString input;
+  };
+
+private:
+  class AclEntry {
+  public:
+    AclEntry(const wxString &input)
+    {
+      if (!pattern.Matches(input)) throw InvalidAclEntry(input);
+      grantee = pattern.GetMatch(input, 1);
+      grantor = pattern.GetMatch(input, 3);
+      wxString privs = pattern.GetMatch(input, 2);
+      for (unsigned i = 0; i < privs.length(); i++) {
+	wxChar priv = privs[i];
+	privileges.insert(priv);
+	if (i < privs.length() && privs[i+1] == '*') {
+	  grantOptions.insert(priv);
+	  ++i;
+	}
+      }
+    }
+
+    wxString grantee;
+    std::set<wxChar> privileges;
+    std::set<wxChar> grantOptions;
+    wxString grantor;
+
+    template <class OutputIterator>
+    void GenerateGrantStatement(OutputIterator output, const wxString& entity, const std::map<wxChar, wxString> &privilegeNames, bool withGrantOption) const
+    {
+      wxString sql = _T("GRANT ");
+      bool first = true;
+      for (std::set<wxChar>::const_iterator iter = privileges.begin(); iter != privileges.end(); iter++) {
+	if (withGrantOption && !grantOptions.count(*iter))
+	  continue;
+	if (!withGrantOption && grantOptions.count(*iter))
+	  continue;
+	std::map<wxChar, wxString>::const_iterator privPtr = privilegeNames.find(*iter);
+	wxASSERT(privPtr != privilegeNames.end());
+	if (first)
+	  first = false;
+	else
+	  sql << _T(", ");
+	sql << privPtr->second;
+      }
+      if (first) return;
+      sql << _T(" ON ") << entity << _T(" TO ");
+      if (grantee.empty())
+	sql << _T("PUBLIC");
+      else
+	sql << grantee;
+      if (withGrantOption)
+	sql << _T(" WITH GRANT OPTION");
+      *output++ = sql;
+    }
+
+  private:
+    static wxRegEx pattern;
+  };
+
+  std::vector<AclEntry> entries;
+};
+
+class PgSettings {
+public:
+  PgSettings(const wxString &input)
+  {
+    ScriptWork::ParseTextArray(std::back_inserter(settings), input);
+  }
+
+  template <class OutputIterator>
+  void GenerateSetStatements(OutputIterator output, ObjectBrowserWork *work, const wxString &prefix = wxEmptyString, bool brackets = false) const
+  {
+    for (std::vector<Setting>::const_iterator iter = settings.begin(); iter != settings.end(); iter++) {
+      (*iter).GenerateSetStatement(output, work, prefix, brackets);
+    }
+  }
+
+private:
+  class Setting {
+  public:
+    Setting(const wxString &input)
+    {
+      unsigned splitpt = input.find(_T('='));
+      name = input.Left(splitpt);
+      value = input.Mid(splitpt + 1);
+    }
+
+    template <class OutputIterator>
+    void GenerateSetStatement(OutputIterator output, ObjectBrowserWork *work, const wxString &prefix = wxEmptyString, bool brackets = false) const
+    {
+      wxString sql = prefix;
+      sql << _T("SET ");
+      if (brackets)
+	sql << _T("( ");
+      sql << name << _T(" = ");
+      if (name == _T("search_path"))
+	sql << value;
+      else
+	sql << work->QuoteLiteral(value);
+      if (brackets)
+	sql << _T(" )");
+      *output++ = sql;
+    }
+
+  private:
+    wxString name;
+    wxString value;
+  };
+
+  std::vector<Setting> settings;
+};
+
+wxRegEx PgAcl::AclEntry::pattern(_T("^(.*)=([a-zA-Z*]*)/(.+)"));
+
+void DatabaseScriptWork::GenerateScript(OutputIterator output)
+{
+  QueryResults::Row row = Query(_T("Database Detail")).OidParam(database->oid).UniqueResult();
+  wxASSERT(row.size() >= 6);
+  wxString ownerName = row[0];
+  wxString encoding = row[1];
+  wxString collation = row[2];
+  wxString ctype = row[3];
   long connectionLimit;
-  rs[0][4].ToLong(&connectionLimit);
+  row[4].ToLong(&connectionLimit);
 
   wxString sql;
   switch (mode) {
@@ -38,10 +208,31 @@ void DatabaseScriptWork::operator()() {
     wxASSERT(false);
   }
 
-  statements.push_back(sql);
+  *output++ = sql;
+
+  if (mode != Drop) {
+    PgAcl(row[5]).GenerateGrantStatements(output, ownerName, _T("DATABASE ") + QuoteIdent(database->name), privilegeMap);
+    QueryResults settingsRs = Query(_T("Database Settings")).OidParam(database->oid).List();
+    for (unsigned i = 0; i < settingsRs.size(); i++) {
+      wxString role = settingsRs[i][0];
+      wxString prefix;
+      if (role.empty())
+	prefix << _T("ALTER DATABASE ") << database->name << _T(' ');
+      else
+	prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << database->name << _T(' ');
+      PgSettings(settingsRs[i][1]).GenerateSetStatements(output, this, prefix);
+    }
+
+    if (!row[6].empty()) {
+      *output++ = _T("COMMENT ON DATABASE ") + database->name + _T(" IS ") + QuoteLiteral(row[6]);
+    }
+  }
 }
 
-void TableScriptWork::operator()() {
+std::map<wxChar, wxString> DatabaseScriptWork::privilegeMap = PrivilegeMap(_T("C=CREATE T=TEMP c=CONNECT"));
+
+void TableScriptWork::GenerateScript(OutputIterator output)
+{
   QueryResults::Row tableDetail = Query(_T("Table Detail")).OidParam(table->oid).UniqueResult();
   QueryResults columns = Query(_T("Relation Column Detail")).OidParam(table->oid).List();
 
@@ -89,15 +280,18 @@ void TableScriptWork::operator()() {
       sql << _T("\n");
     }
     sql << _T(")");
-    statements.push_back(sql);
+    *output++ = sql;
     if (!alterSql.empty()) {
       wxString prefix;
       prefix << _T("ALTER TABLE ")
 	     << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("\n\t");
       for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
-	statements.push_back(prefix + *moreSqlIter);
+	*output++ = prefix + *moreSqlIter;
       }
     }
+
+    PgAcl(tableDetail[3]).GenerateGrantStatements(output, tableDetail[0], QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name), privilegeMap);
+    PgSettings(tableDetail[4]).GenerateSetStatements(output, this, _T("ALTER TABLE ") + QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name) + _T(' '), true);
   }
     break;
 
@@ -106,7 +300,7 @@ void TableScriptWork::operator()() {
     sql << _T("DROP TABLE IF EXISTS ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
 
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -123,7 +317,7 @@ void TableScriptWork::operator()() {
 	sql << _T("\n");
     }
     sql << _T("FROM ") << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -152,7 +346,7 @@ void TableScriptWork::operator()() {
 	sql << _T("\n");
     }
     sql << _T(")");
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -172,7 +366,7 @@ void TableScriptWork::operator()() {
 	sql << _T("\n");
     }
     sql << _T("WHERE <") << _("search criteria") << _T(">");
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -180,7 +374,7 @@ void TableScriptWork::operator()() {
     wxString sql;
     sql << _T("DELETE FROM ")
 	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -189,7 +383,10 @@ void TableScriptWork::operator()() {
   }
 }
 
-void ViewScriptWork::operator()() {
+std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=INSERT r=SELECT w=UPDATE d=DELETE D=TRUNCATE x=REFERENCES t=TRIGGER"));
+
+void ViewScriptWork::GenerateScript(OutputIterator output)
+{
   QueryResults::Row viewDetail = Query(_T("View Detail")).OidParam(view->oid).UniqueResult();
   QueryResults columns = Query(_T("Relation Column Detail")).OidParam(view->oid).List();
 
@@ -206,7 +403,9 @@ void ViewScriptWork::operator()() {
     sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name)
 	<< _T(" AS\n")
 	<< definition;
-    statements.push_back(sql);
+    *output++ = sql;
+
+    PgAcl(viewDetail[2]).GenerateGrantStatements(output, viewDetail[0], QuoteIdent(view->schema) + _T('.') + QuoteIdent(view->name), privilegeMap);
   }
     break;
 
@@ -223,7 +422,7 @@ void ViewScriptWork::operator()() {
 	sql << _T("\n");
     }
     sql << _T("FROM ") << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -232,7 +431,7 @@ void ViewScriptWork::operator()() {
     sql << _T("DROP VIEW IF EXISTS ")
 	<< QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
 
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -241,11 +440,66 @@ void ViewScriptWork::operator()() {
   }
 }
 
-void SequenceScriptWork::operator()() {
-  QueryResults::Row sequenceDetail = Query(_T("Sequence Detail")).OidParam(sequence->oid).UniqueResult();
+std::map<wxChar, wxString> ViewScriptWork::privilegeMap = PrivilegeMap(_T("r=SELECT"));
+
+void SequenceScriptWork::GenerateScript(OutputIterator output)
+{
+  wxString sqlTemplate = wxString(owner->GetSql(_T("Sequence Detail")), wxConvUTF8);
+  wxString sequenceName = QuoteIdent(sequence->schema) + _T('.') + QuoteIdent(sequence->name);
+  sqlTemplate.Replace(_T("$sequence"), sequenceName, true);
+  QueryResults::Row sequenceDetail = owner->DatabaseWork::Query(sqlTemplate.utf8_str()).OidParam(sequence->oid).UniqueResult();
+
+  switch (mode) {
+  case Create: {
+    wxString sql;
+    sql << _T("CREATE SEQUENCE ") << sequenceName;
+    sql << _T("\n\tINCREMENT BY ") << sequenceDetail[2];
+    sql << _T("\n\tMINVALUE ") << sequenceDetail[3];
+    sql << _T("\n\tMAXVALUE ") << sequenceDetail[4];
+    sql << _T("\n\tSTART WITH ") << sequenceDetail[5];
+    sql << _T("\n\tCACHE ") << sequenceDetail[6];
+    bool cycled = sequenceDetail.ReadBool(7);
+    sql << ( cycled ? _T("\n\tNO CYCLE") : _T("\n\tCYCLE") );
+    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[7]);
+
+    *output++ = sql;
+
+    *output++ = _T("ALTER SEQUENCE ") + sequenceName + _T(" OWNER TO ") + sequenceDetail[0];
+
+    PgAcl(sequenceDetail[1]).GenerateGrantStatements(output, sequenceDetail[0], _T("SEQUENCE ") + sequenceName, privilegeMap);
+  }
+    break;
+
+  case Alter: {
+    wxString sql;
+
+    sql << _T("ALTER SEQUENCE ") << sequenceName;
+    sql << _T("\n\tINCREMENT BY ") << sequenceDetail[2];
+    sql << _T("\n\tMINVALUE ") << sequenceDetail[3];
+    sql << _T("\n\tMAXVALUE ") << sequenceDetail[4];
+    sql << _T("\n\tRESTART WITH ") << sequenceDetail[5];
+    sql << _T("\n\tCACHE ") << sequenceDetail[6];
+    bool cycled = sequenceDetail.ReadBool(7);
+    sql << ( cycled ? _T("\n\tNO CYCLE") : _T("\n\tCYCLE") );
+    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[7]);
+
+    *output++ = sql;
+
+    *output++ = _T("ALTER SEQUENCE ") + sequenceName + _T(" OWNER TO ") + sequenceDetail[0];
+
+    PgAcl(sequenceDetail[1]).GenerateGrantStatements(output, sequenceDetail[0], _T("SEQUENCE ") + sequenceName, privilegeMap);
+  }
+    break;
+
+  default:
+    wxASSERT(false);
+  }
 }
 
-static void EscapeCode(const wxString &src, wxString &buf) {
+std::map<wxChar, wxString> SequenceScriptWork::privilegeMap = PrivilegeMap(_T("r=SELECT w=UPDATE U=USAGE"));
+
+void FunctionScriptWork::EscapeCode(const wxString &src, wxString &buf)
+{
   if (src.Find(_T("$$")) == wxNOT_FOUND) {
     buf << _T("$$") << src << _T("$$");
     return;
@@ -265,7 +519,10 @@ static void EscapeCode(const wxString &src, wxString &buf) {
   }
 }
 
-static std::vector<Oid> ParseOidVector(const wxString &str) {
+std::map<wxChar, wxString> FunctionScriptWork::privilegeMap = PrivilegeMap(_T("X=EXECUTE"));
+
+std::vector<Oid> ScriptWork::ParseOidVector(const wxString &str)
+{
   std::vector<Oid> result;
   unsigned mark = 0;
   for (unsigned pos = 0; pos < str.length(); pos++) {
@@ -288,73 +545,10 @@ static std::vector<Oid> ParseOidVector(const wxString &str) {
   return result;
 }
 
-static inline std::vector<Oid> ReadOidVector(const QueryResults::Row &row, unsigned index) {
-  return ParseOidVector(row[index]);
-}
-
-static std::vector<wxString> ParseTextArray(const wxString &str) {
-  std::vector<wxString> result;
-  if (str.IsEmpty()) return result;
-  wxASSERT(str[0] == _T('{'));
-  int state = 0;
-  wxString buf;
-  for (unsigned pos = 1; pos < str.length(); pos++) {
-    wxChar c = str[pos];
-    if (state == 0) {
-      if (c == _T('}')) {
-	result.push_back(buf);
-	break;
-      }
-      else if (c == _T(',')) {
-	result.push_back(buf);
-	buf.Clear();
-      }
-      else if (c == _T('\"')) {
-	state = 1;
-      }
-      else {
-	buf << c;
-      }
-    }
-    else if (state == 1) {
-      if (c == _T('\"')) {
-	state = 0;
-      }
-      if (c == _T('\"')) {
-	state = 2;
-      }
-      else {
-	buf << c;
-      }
-    }
-    else if (state == 2) {
-      buf << c;
-      state = 1;
-    }
-  }
-  return result;
-}
-
-static inline std::vector<wxString> ReadTextArray(const QueryResults::Row &row, unsigned index) {
-  return ParseTextArray(row[index]);
-}
-
-static inline std::vector<Oid> ReadOidArray(const QueryResults::Row &row, unsigned index) {
-  std::vector<wxString> strings = ParseTextArray(row[index]);
-  std::vector<Oid> result;
-  result.reserve(strings.size());
-  for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
-    long value;
-    if ((*iter).ToLong(&value)) {
-      result.push_back((Oid) value);
-    }
-  }
-  return result;
-}
-
-static inline std::vector<bool> ReadIOModeArray(const QueryResults::Row &row, unsigned index) {
+std::vector<bool> FunctionScriptWork::ReadIOModeArray(const QueryResults::Row &row, unsigned index)
+{
   wxASSERT(index < row.size());
-  std::vector<wxString> strings = ParseTextArray(row[index]);
+  std::vector<wxString> strings = ReadTextArray(row, index);
   std::vector<bool> result;
   result.reserve(strings.size());
   for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
@@ -364,7 +558,8 @@ static inline std::vector<bool> ReadIOModeArray(const QueryResults::Row &row, un
   return result;
 }
 
-std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const std::set<Oid> &types) {
+std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const std::set<Oid> &types)
+{
   std::map<Oid, Typeinfo> typeMap;
   for (std::set<Oid>::const_iterator iter = types.begin(); iter != types.end(); iter++) {
     QueryResults::Row typeInfo = Query(_T("Type Info")).OidParam(*iter).UniqueResult();
@@ -377,19 +572,8 @@ std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const
   return typeMap;
 }
 
-template <class T>
-static void DumpCollection(const wxString &tag, T collection) {
-  typedef class T::const_iterator I;
-  wxLogDebug(_T("%s:"), tag.c_str());
-  unsigned n = 0;
-  for (I iter = collection.begin(); iter != collection.end(); iter++, n++) {
-    wxString line;
-    line << _T(" [") << n << _T("] ") << *iter;
-    wxLogDebug(_T("%s"), line.c_str());
-  }
-}
-
-void FunctionScriptWork::operator()() {
+void FunctionScriptWork::GenerateScript(OutputIterator output)
+{
   QueryResults::Row functionDetail = Query(_T("Function Detail")).OidParam(function->oid).UniqueResult();
   std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
   std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
@@ -459,7 +643,14 @@ void FunctionScriptWork::operator()() {
 
     sql << _T(" AS ");
     EscapeCode(functionDetail.ReadText(12), sql);
-    statements.push_back(sql);
+    *output++ = sql;
+
+    wxString functionName;
+    functionName
+	<< QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
+	<< _T("(") << function->arguments << _T(")");
+    PgAcl(functionDetail[16]).GenerateGrantStatements(output, functionDetail[5], _T("FUNCTION ") + functionName, privilegeMap);
+    PgSettings(functionDetail[15]).GenerateSetStatements(output, this, _T("ALTER FUNCTION ") + functionName + _T(' '));
   }
     break;
 
@@ -468,7 +659,7 @@ void FunctionScriptWork::operator()() {
     sql << _T("DROP FUNCTION IF EXISTS ")
 	<< QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
 	<< _T("(") << function->arguments << _T(")");
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 
@@ -509,7 +700,7 @@ void FunctionScriptWork::operator()() {
     }
     sql << _T(')');
 
-    statements.push_back(sql);
+    *output++ = sql;
   }
     break;
 

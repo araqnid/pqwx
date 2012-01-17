@@ -26,9 +26,21 @@ SELECT pg_database.oid, datname, datistemplate, datallowconn,
 FROM pg_database
 
 -- SQL :: Database Detail
-SELECT owner.rolname, pg_encoding_to_char(encoding), datcollate, datctype, datconnlimit
+SELECT owner.rolname, pg_encoding_to_char(encoding), datcollate, datctype, datconnlimit, datacl, description
 FROM pg_database
      JOIN pg_roles owner ON owner.oid = pg_database.datdba
+     LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_database'::regclass
+                                   AND pg_shdescription.objoid = pg_database.oid
+WHERE pg_database.oid = $1
+
+-- SQL :: Database Settings :: 9.1
+SELECT pg_roles.rolname, setconfig
+FROM pg_db_role_setting LEFT JOIN pg_roles ON pg_roles.oid = pg_db_role_setting.setrole
+WHERE pg_db_role_setting.setdatabase = $1
+
+-- SQL :: Database Settings
+SELECT 0, datconfig
+FROM pg_database
 WHERE pg_database.oid = $1
 
 -- SQL :: Roles :: 8.2
@@ -153,12 +165,35 @@ ORDER BY attnum
 -- SQL :: View Detail
 
 SELECT owner.rolname,
-       pg_get_viewdef(pg_class.oid, true)
+       pg_get_viewdef(pg_class.oid, true),
+       relacl
 FROM pg_class
      JOIN pg_roles owner ON owner.oid = pg_class.relowner
 WHERE pg_class.oid = $1
 
 -- SQL :: Sequence Detail
+
+SELECT owner.rolname,
+       pg_class.relacl,
+       increment_by,
+       min_value,
+       max_value,
+       start_value,
+       cache_value,
+       is_cycled,
+       COALESCE(quote_ident(owning_table_schema.nspname) || quote_ident(owning_table.relname) || '.' || quote_ident(owning_column.attname), '')
+FROM $sequence AS seq,
+     pg_class
+     JOIN pg_roles owner ON owner.oid = pg_class.relowner
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
+                            AND pg_depend.objid = pg_class.oid
+                            AND pg_depend.deptype = 'a'
+                            AND pg_depend.refclassid = 'pg_class'::regclass
+     LEFT JOIN pg_class owning_table ON owning_table.oid = pg_depend.refobjid
+     LEFT JOIN pg_namespace owning_table_schema ON owning_table_schema.oid = owning_table.relnamespace
+     LEFT JOIN pg_attribute owning_column ON owning_column.attrelid = pg_depend.refobjid
+                                             AND owning_column.attnum = pg_depend.refobjsubid
+WHERE pg_class.oid = $1
 
 -- SQL :: Function Detail
 

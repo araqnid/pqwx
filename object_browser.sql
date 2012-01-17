@@ -165,7 +165,7 @@ ORDER BY attnum
 -- SQL :: View Detail
 
 SELECT owner.rolname,
-       pg_get_viewdef(pg_class.oid, true),
+       rtrim(pg_get_viewdef(pg_class.oid, true), ';'),
        relacl
 FROM pg_class
      JOIN pg_roles owner ON owner.oid = pg_class.relowner

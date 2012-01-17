@@ -26,6 +26,7 @@ public:
   wxString type;
   bool nullable;
   bool hasDefault;
+  int attnum;
 };
 
 /**
@@ -65,6 +66,7 @@ public:
 class RelationModel : public SchemaMemberModel {
 public:
   enum Type { TABLE, VIEW, SEQUENCE } type;
+  int owningColumn; // for sequences that are attached to a column
 };
 
 /**

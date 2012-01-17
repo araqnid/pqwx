@@ -616,7 +616,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers) {
+void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers, std::vector<RelationModel*> &sequences) {
   for (std::vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
@@ -634,6 +634,15 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
+
+    for (std::vector<RelationModel*>::iterator seqIter = sequences.begin(); seqIter != sequences.end(); seqIter++) {
+      RelationModel *sequence = *seqIter;
+      if (sequence->owningColumn != column->attnum) continue;
+
+      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence->schema + _T(".") + sequence->name);
+      SetItemData(sequenceItem, sequence);
+      SetItemImage(sequenceItem, img_sequence);
+    }
   }
 
   if (!indices.empty()) {

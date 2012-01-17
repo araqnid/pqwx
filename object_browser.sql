@@ -271,7 +271,7 @@ WHERE classoid IN ('pg_class'::regclass, 'pg_proc'::regclass)
 
 -- SQL :: Columns
 SELECT attname, pg_catalog.format_type(atttypid, atttypmod), NOT attnotnull, atthasdef,
-       pg_description.description
+       pg_description.description, attnum
 FROM pg_attribute
      LEFT JOIN pg_description ON pg_description.classoid = 'pg_attribute'::regclass
                                  AND pg_description.objoid = pg_attribute.attrelid
@@ -318,6 +318,18 @@ WHERE tgrelid = $1
                      AND d.deptype = 'i'
                      AND c.contype = 'f')
           )
+
+-- SQL :: Sequences
+SELECT seq.oid, nspname, seq.relname, pg_depend.refobjsubid
+FROM pg_class seq
+     JOIN pg_namespace ON pg_namespace.oid = seq.relnamespace
+     JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
+                       AND pg_depend.objid = seq.oid
+                       AND pg_depend.deptype = 'a'
+                       AND pg_depend.refclassid = 'pg_class'::regclass
+                       AND pg_depend.refobjsubid > 0
+WHERE pg_depend.refobjid = $1
+      AND seq.relkind = 'S'
 
 -- SQL :: IndexSchema :: 9.1
 SELECT x.objid,

@@ -388,12 +388,14 @@ private:
   std::vector<ColumnModel*> columns;
   std::vector<IndexModel*> indices;
   std::vector<TriggerModel*> triggers;
+  std::vector<RelationModel*> sequences;
 protected:
   void operator()() {
     ReadColumns();
     if (relationModel->type == RelationModel::TABLE) {
       ReadIndices();
       ReadTriggers();
+      ReadSequences();
     }
   }
 private:
@@ -407,6 +409,7 @@ private:
       column->nullable = (*iter).ReadBool(2);
       column->hasDefault = (*iter).ReadBool(3);
       column->description = (*iter).ReadText(4);
+      column->attnum = (*iter).ReadInt4(5);
       columns.push_back(column);
     }
   }
@@ -426,9 +429,22 @@ private:
       triggers.push_back(trigger);
     }
   }
+  void ReadSequences() {
+    QueryResults sequenceRows = Query(_T("Sequences")).OidParam(relationModel->oid).List();
+    for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
+      RelationModel *sequence = new RelationModel();
+      sequence->type = RelationModel::SEQUENCE;
+      sequence->database = relationModel->database;
+      sequence->oid = (*iter).ReadOid(0);
+      sequence->schema = (*iter).ReadText(1);
+      sequence->name = (*iter).ReadText(2);
+      sequence->owningColumn = (*iter).ReadInt4(3);
+      sequences.push_back(sequence);
+    }
+  }
 protected:
   void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInRelation(relationModel, relationItem, columns, indices, triggers);
+    ob->FillInRelation(relationModel, relationItem, columns, indices, triggers, sequences);
     ob->Expand(relationItem);
 
     // remove 'loading...' tag

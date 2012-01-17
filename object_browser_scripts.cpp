@@ -460,7 +460,7 @@ void SequenceScriptWork::GenerateScript(OutputIterator output)
     sql << _T("\n\tCACHE ") << sequenceDetail[6];
     bool cycled = sequenceDetail.ReadBool(7);
     sql << ( cycled ? _T("\n\tNO CYCLE") : _T("\n\tCYCLE") );
-    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[7]);
+    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[8]);
 
     *output++ = sql;
 
@@ -481,7 +481,7 @@ void SequenceScriptWork::GenerateScript(OutputIterator output)
     sql << _T("\n\tCACHE ") << sequenceDetail[6];
     bool cycled = sequenceDetail.ReadBool(7);
     sql << ( cycled ? _T("\n\tNO CYCLE") : _T("\n\tCYCLE") );
-    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[7]);
+    sql << _T("\n\tOWNED BY ") << (sequenceDetail[8].empty() ? _T("NONE") : sequenceDetail[8]);
 
     *output++ = sql;
 
@@ -489,6 +489,10 @@ void SequenceScriptWork::GenerateScript(OutputIterator output)
 
     PgAcl(sequenceDetail[1]).GenerateGrantStatements(output, sequenceDetail[0], _T("SEQUENCE ") + sequenceName, privilegeMap);
   }
+    break;
+
+  case Drop:
+    *output++ = _T("DROP SEQUENCE ") + sequenceName;
     break;
 
   default:

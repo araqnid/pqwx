@@ -179,19 +179,20 @@ wxRegEx PgAcl::AclEntry::pattern(_T("^(.*)=([a-zA-Z*]*)/(.+)"));
 
 void DatabaseScriptWork::GenerateScript(OutputIterator output)
 {
-  QueryResults::Row row = Query(_T("Database Detail")).OidParam(database->oid).UniqueResult();
+  QueryResults::Row row = Query(_T("Database Detail")).OidParam(dboid).UniqueResult();
   wxASSERT(row.size() >= 6);
-  wxString ownerName = row[0];
-  wxString encoding = row[1];
-  wxString collation = row[2];
-  wxString ctype = row[3];
+  wxString databaseName = row[0];
+  wxString ownerName = row[1];
+  wxString encoding = row[2];
+  wxString collation = row[3];
+  wxString ctype = row[4];
   long connectionLimit;
   row[4].ToLong(&connectionLimit);
 
   wxString sql;
   switch (mode) {
   case Create:
-    sql << _T("CREATE DATABASE ") << QuoteIdent(database->name);
+    sql << _T("CREATE DATABASE ") << QuoteIdent(databaseName);
     sql << _T("\n\tENCODING = ") << QuoteLiteral(encoding);
     sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(collation);
     sql << _T("\n\tLC_CTYPE = ") << QuoteLiteral(ctype);
@@ -200,13 +201,13 @@ void DatabaseScriptWork::GenerateScript(OutputIterator output)
     break;
 
   case Alter:
-    sql << _T("ALTER DATABASE ") << QuoteIdent(database->name);
+    sql << _T("ALTER DATABASE ") << QuoteIdent(databaseName);
     sql << _T("\n\tOWNER = ") << QuoteIdent(ownerName);
     sql << _T("\n\tCONNECTION LIMIT = ") << connectionLimit;
     break;
 
   case Drop:
-    sql << _T("DROP DATABASE ") << QuoteIdent(database->name);
+    sql << _T("DROP DATABASE ") << QuoteIdent(databaseName);
     break;
 
   default:
@@ -216,21 +217,19 @@ void DatabaseScriptWork::GenerateScript(OutputIterator output)
   *output++ = sql;
 
   if (mode != Drop) {
-    PgAcl(row[5]).GenerateGrantStatements(output, ownerName, _T("DATABASE ") + QuoteIdent(database->name), privilegeMap);
-    QueryResults settingsRs = Query(_T("Database Settings")).OidParam(database->oid).List();
+    PgAcl(row[6]).GenerateGrantStatements(output, ownerName, _T("DATABASE ") + QuoteIdent(databaseName), privilegeMap);
+    QueryResults settingsRs = Query(_T("Database Settings")).OidParam(dboid).List();
     for (unsigned i = 0; i < settingsRs.size(); i++) {
       wxString role = settingsRs[i][0];
       wxString prefix;
       if (role.empty())
-	prefix << _T("ALTER DATABASE ") << database->name << _T(' ');
+	prefix << _T("ALTER DATABASE ") << databaseName << _T(' ');
       else
-	prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << database->name << _T(' ');
+	prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << databaseName << _T(' ');
       PgSettings(settingsRs[i][1]).GenerateSetStatements(output, this, prefix);
     }
 
-    if (!row[6].empty()) {
-      *output++ = _T("COMMENT ON DATABASE ") + database->name + _T(" IS ") + QuoteLiteral(row[6]);
-    }
+    AddDescription(output, _T("DATABASE"), databaseName, row[7]);
   }
 }
 
@@ -238,15 +237,15 @@ std::map<wxChar, wxString> DatabaseScriptWork::privilegeMap = PrivilegeMap(_T("C
 
 void TableScriptWork::GenerateScript(OutputIterator output)
 {
-  QueryResults::Row tableDetail = Query(_T("Table Detail")).OidParam(table->oid).UniqueResult();
-  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(table->oid).List();
+  QueryResults::Row tableDetail = Query(_T("Table Detail")).OidParam(reloid).UniqueResult();
+  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(reloid).List();
+  wxString tableName = QuoteIdent(tableDetail[1]) + _T('.') + QuoteIdent(tableDetail[0]);
 
   switch (mode) {
   case Create: {
     wxString sql;
     std::vector< wxString > alterSql;
-    sql << _T("CREATE TABLE ")
-	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("(\n");
+    sql << _T("CREATE TABLE ") << tableName << _T("(\n");
     unsigned n = 0;
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0)),
@@ -288,20 +287,16 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     *output++ = sql;
     if (!alterSql.empty()) {
       wxString prefix;
-      prefix << _T("ALTER TABLE ")
-	     << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name) << _T("\n\t");
+      prefix << _T("ALTER TABLE ") << tableName << _T("\n\t");
       for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
 	*output++ = prefix + *moreSqlIter;
       }
     }
 
-    wxString tableName = QuoteIdent(table->schema) + _T('.') + QuoteIdent(table->name);
+    PgAcl(tableDetail[5]).GenerateGrantStatements(output, tableDetail[2], tableName, privilegeMap);
+    PgSettings(tableDetail[6]).GenerateSetStatements(output, this, _T("ALTER TABLE ") + tableName + _T(' '), true);
 
-    PgAcl(tableDetail[3]).GenerateGrantStatements(output, tableDetail[0], tableName, privilegeMap);
-    PgSettings(tableDetail[4]).GenerateSetStatements(output, this, _T("ALTER TABLE ") + tableName + _T(' '), true);
-
-    if (!table->description.empty())
-      *output++ = _T("COMMENT ON TABLE ") + tableName + _T(" IS ") + QuoteLiteral(table->description);
+    AddDescription(output, _T("TABLE"), tableName, tableDetail[7]);
 
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++) {
       wxString description = (*iter).ReadText(10);
@@ -314,8 +309,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
   case Drop: {
     wxString sql;
-    sql << _T("DROP TABLE IF EXISTS ")
-	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
+    sql << _T("DROP TABLE IF EXISTS ") << tableName;
 
     *output++ = sql;
   }
@@ -333,16 +327,14 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       else
 	sql << _T("\n");
     }
-    sql << _T("FROM ") << QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
+    sql << _T("FROM ") << tableName;
     *output++ = sql;
   }
     break;
 
   case Insert: {
     wxString sql;
-    sql << _T("INSERT INTO ")
-	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
-	<< _T("(\n");
+    sql << _T("INSERT INTO ") << tableName << _T("(\n");
     unsigned n = 0;
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0));
@@ -369,9 +361,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
   case Update: {
     wxString sql;
-    sql << _T("UPDATE ")
-	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name)
-	<< _T("\nSET ");
+    sql << _T("UPDATE ") << tableName << _T("\nSET ");
     unsigned n = 0;
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
@@ -389,8 +379,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
   case Delete: {
     wxString sql;
-    sql << _T("DELETE FROM ")
-	<< QuoteIdent(table->schema) << _T(".") << QuoteIdent(table->name);
+    sql << _T("DELETE FROM ") << tableName;
     *output++ = sql;
   }
     break;
@@ -404,25 +393,26 @@ std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=IN
 
 void ViewScriptWork::GenerateScript(OutputIterator output)
 {
-  QueryResults::Row viewDetail = Query(_T("View Detail")).OidParam(view->oid).UniqueResult();
-  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(view->oid).List();
+  QueryResults::Row viewDetail = Query(_T("View Detail")).OidParam(reloid).UniqueResult();
+  QueryResults columns = Query(_T("Relation Column Detail")).OidParam(reloid).List();
+  wxString viewName = QuoteIdent(viewDetail[1]) + _T('.') + QuoteIdent(viewDetail[0]);
 
   switch (mode) {
   case Create:
   case Alter: {
-    wxString definition = viewDetail.ReadText(1);
+    wxString definition = viewDetail.ReadText(3);
 
     wxString sql;
     if (mode == Create)
       sql << _T("CREATE VIEW ");
     else
       sql << _T("CREATE OR REPLACE VIEW ");
-    sql << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name)
-	<< _T(" AS\n")
-	<< definition;
+    sql << viewName << _T(" AS\n") << definition;
     *output++ = sql;
 
-    PgAcl(viewDetail[2]).GenerateGrantStatements(output, viewDetail[0], QuoteIdent(view->schema) + _T('.') + QuoteIdent(view->name), privilegeMap);
+    PgAcl(viewDetail[4]).GenerateGrantStatements(output, viewDetail[2], viewName, privilegeMap);
+
+    AddDescription(output, _T("VIEW"), viewName, viewDetail[5]);
   }
     break;
 
@@ -438,15 +428,14 @@ void ViewScriptWork::GenerateScript(OutputIterator output)
       else
 	sql << _T("\n");
     }
-    sql << _T("FROM ") << QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
+    sql << _T("FROM ") << viewName;
     *output++ = sql;
   }
     break;
 
   case Drop: {
     wxString sql;
-    sql << _T("DROP VIEW IF EXISTS ")
-	<< QuoteIdent(view->schema) << _T(".") << QuoteIdent(view->name);
+    sql << _T("DROP VIEW IF EXISTS ") << viewName;
 
     *output++ = sql;
   }
@@ -462,9 +451,9 @@ std::map<wxChar, wxString> ViewScriptWork::privilegeMap = PrivilegeMap(_T("r=SEL
 void SequenceScriptWork::GenerateScript(OutputIterator output)
 {
   wxString sqlTemplate = wxString(owner->GetSql(_T("Sequence Detail")), wxConvUTF8);
-  wxString sequenceName = QuoteIdent(sequence->schema) + _T('.') + QuoteIdent(sequence->name);
+  wxString sequenceName = (owner->Query(_T("Sequence Name")).OidParam(reloid).UniqueResult())[0];
   sqlTemplate.Replace(_T("$sequence"), sequenceName, true);
-  QueryResults::Row sequenceDetail = owner->DatabaseWork::Query(sqlTemplate.utf8_str()).OidParam(sequence->oid).UniqueResult();
+  QueryResults::Row sequenceDetail = owner->DatabaseWork::Query(sqlTemplate.utf8_str()).OidParam(reloid).UniqueResult();
 
   switch (mode) {
   case Create: {
@@ -484,6 +473,8 @@ void SequenceScriptWork::GenerateScript(OutputIterator output)
     *output++ = _T("ALTER SEQUENCE ") + sequenceName + _T(" OWNER TO ") + sequenceDetail[0];
 
     PgAcl(sequenceDetail[1]).GenerateGrantStatements(output, sequenceDetail[0], _T("SEQUENCE ") + sequenceName, privilegeMap);
+
+    AddDescription(output, _T("SEQUENCE"), sequenceName, sequenceDetail[9]);
   }
     break;
 
@@ -505,6 +496,8 @@ void SequenceScriptWork::GenerateScript(OutputIterator output)
     *output++ = _T("ALTER SEQUENCE ") + sequenceName + _T(" OWNER TO ") + sequenceDetail[0];
 
     PgAcl(sequenceDetail[1]).GenerateGrantStatements(output, sequenceDetail[0], _T("SEQUENCE ") + sequenceName, privilegeMap);
+
+    AddDescription(output, _T("SEQUENCE"), sequenceName, sequenceDetail[9]);
   }
     break;
 
@@ -595,11 +588,13 @@ std::map<Oid, FunctionScriptWork::Typeinfo> FunctionScriptWork::FetchTypes(const
 
 void FunctionScriptWork::GenerateScript(OutputIterator output)
 {
-  QueryResults::Row functionDetail = Query(_T("Function Detail")).OidParam(function->oid).UniqueResult();
-  std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 1);
-  std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 2);
-  std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 3);
-  std::vector<wxString> extendedArgNames = ReadTextArray(functionDetail, 4);
+  QueryResults::Row functionDetail = Query(_T("Function Detail")).OidParam(procoid).UniqueResult();
+  wxString functionCoreName = QuoteIdent(functionDetail[1]) + _T('.') + QuoteIdent(functionDetail[0]);
+  wxString functionName = functionCoreName + _T('(') + functionDetail[2] + _T(')');
+  std::vector<Oid> basicArgTypes = ReadOidVector(functionDetail, 4);
+  std::vector<Oid> extendedArgTypes = ReadOidArray(functionDetail, 5);
+  std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 6);
+  std::vector<wxString> extendedArgNames = ReadTextArray(functionDetail, 7);
   std::map<Oid, Typeinfo> typeMap = FetchTypes(basicArgTypes, extendedArgTypes);
 
   switch (mode) {
@@ -610,8 +605,7 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
       sql << _T("CREATE FUNCTION ");
     else
       sql << _T("CREATE OR REPLACE FUNCTION ");
-    sql << QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
-	<< _T("(");
+    sql << functionCoreName << _T("(");
     if (!extendedArgTypes.empty()) {
       unsigned pos = 0;
       for (std::vector<Oid>::const_iterator iter = extendedArgTypes.begin(); iter != extendedArgTypes.end(); iter++, pos++) {
@@ -647,46 +641,39 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
     sql << _T(")")
 	<< _T(" RETURNS ");
 
-    if (functionDetail.ReadBool(14)) sql << _T("SETOF ");
-    sql << functionDetail[13];
+    if (functionDetail.ReadBool(17)) sql << _T("SETOF ");
+    sql << functionDetail[16];
 
-    int cost = functionDetail.ReadInt4(7);
+    int cost = functionDetail.ReadInt4(10);
     if (cost > 0) sql << _T(" COST ") << cost;
 
-    int rows = functionDetail.ReadInt4(8);
+    int rows = functionDetail.ReadInt4(11);
     if (rows > 0) sql << _T(" ROWS ") << rows;
 
-    if (functionDetail.ReadBool(9)) sql << _T(" SECURITY DEFINER ");
+    if (functionDetail.ReadBool(12)) sql << _T(" SECURITY DEFINER ");
 
-    if (functionDetail.ReadBool(10)) sql << _T(" STRICT ");
+    if (functionDetail.ReadBool(13)) sql << _T(" STRICT ");
 
-    sql << _T(" ") << functionDetail.ReadText(11); // volatility
+    sql << _T(" ") << functionDetail.ReadText(14); // volatility
 
     sql << _T(" AS ");
-    EscapeCode(functionDetail.ReadText(12), sql);
+    EscapeCode(functionDetail.ReadText(15), sql);
     *output++ = sql;
 
-    wxString functionName;
-    functionName
-	<< QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
-	<< _T("(") << function->arguments << _T(")");
-    PgAcl(functionDetail[16]).GenerateGrantStatements(output, functionDetail[5], _T("FUNCTION ") + functionName, privilegeMap);
-    PgSettings(functionDetail[15]).GenerateSetStatements(output, this, _T("ALTER FUNCTION ") + functionName + _T(' '));
+    PgAcl(functionDetail[19]).GenerateGrantStatements(output, functionDetail[8], _T("FUNCTION ") + functionName, privilegeMap);
+    PgSettings(functionDetail[18]).GenerateSetStatements(output, this, _T("ALTER FUNCTION ") + functionName + _T(' '));
+
+    AddDescription(output, _T("FUNCTION"), functionName, functionDetail[20]);
   }
     break;
 
-  case Drop: {
-    wxString sql;
-    sql << _T("DROP FUNCTION IF EXISTS ")
-	<< QuoteIdent(function->schema) << _T(".") << QuoteIdent(function->name)
-	<< _T("(") << function->arguments << _T(")");
-    *output++ = sql;
-  }
+  case Drop:
+    *output++ = _T("DROP FUNCTION IF EXISTS ") + functionName;
     break;
 
   case Select: {
     wxString sql;
-    Oid returnType = functionDetail.ReadOid(0);
+    Oid returnType = functionDetail.ReadOid(3);
 
     if (returnType == 2249) {
       // "record" return type
@@ -697,7 +684,7 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
       sql << _T("SELECT ");
     }
 
-    sql << QuoteIdent(function->schema) << _T('.') << QuoteIdent(function->name) << _T('(');
+    sql << functionCoreName << _T('(');
     if (!basicArgTypes.empty()) {
       unsigned pos = 0;
       for (std::vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {

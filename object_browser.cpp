@@ -76,36 +76,36 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Function, Select)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, output)		\
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, output)	\
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(field, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(database->server->conninfo, database->name, oid, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, field) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, Window) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, File)    \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, field, Clipboard)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, database, oid)	\
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Window)	\
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, File)	\
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Clipboard)
 
-IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuDatabase)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuDatabase)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase, contextMenuDatabase->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuDatabase, contextMenuDatabase->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuDatabase, contextMenuDatabase->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation->database, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction->database, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction->database, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction->database, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction->database, contextMenuFunction->oid)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)

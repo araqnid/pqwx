@@ -29,14 +29,15 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(DatabaseModel *database, Mode mode, Output output) : database(database), mode(mode), output(output) {}
+  ScriptWork(const ServerConnection &server, const wxString &dbname, Mode mode, Output output) : ObjectBrowserWork(ScriptWork::GetSqlDictionary()), server(server), dbname(dbname), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;
 
   virtual void GenerateScript(OutputIterator output) = 0;
 
-  DatabaseModel *database;
+  const ServerConnection& server;
+  wxString dbname;
   const Mode mode;
 
   static std::map<wxChar, wxString> PrivilegeMap(const wxString &spec);
@@ -54,7 +55,7 @@ private:
     wxString message;
     switch (output) {
     case Window: {
-      PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
+      PQWXDatabaseEvent evt(server, dbname, PQWX_ScriptToWindow);
       evt.SetString(script);
       ob->ProcessEvent(evt);
       return;
@@ -72,6 +73,8 @@ private:
     wxLogDebug(_T("%s"), script.c_str());
     wxMessageBox(script);
   }
+
+  static const VersionedSql& GetSqlDictionary();
 
 public:
   static std::vector<Oid> ParseOidVector(const wxString &str);
@@ -150,6 +153,12 @@ public:
     }
     return result;
   }
+  template <typename OutputIterator>
+  void AddDescription(OutputIterator output, const wxString& ddlElement, const wxString& name, const wxString& description)
+  {
+    if (!description.empty())
+      *output++ = _T("COMMENT ON ") + ddlElement + _T(' ') + name + _T(" IS ") + QuoteLiteral(description);
+  }
 
 private:
   const Output output;
@@ -160,12 +169,14 @@ private:
  */
 class DatabaseScriptWork : public ScriptWork {
 public:
-  DatabaseScriptWork(DatabaseModel *database, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(database, mode, output) {
+  DatabaseScriptWork(const ServerConnection& server, const wxString &dbname, Oid dboid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), dboid(dboid)
+  {
     wxLogDebug(_T("%p: work to generate database script"), this);
   }
 protected:
   void GenerateScript(OutputIterator output);
 private:
+  Oid dboid;
   static std::map<wxChar, wxString> privilegeMap;
 };
 
@@ -174,11 +185,12 @@ private:
  */
 class TableScriptWork : public ScriptWork {
 public:
-  TableScriptWork(RelationModel *table, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(table->database, mode, output), table(table) {
+  TableScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  {
     wxLogDebug(_T("%p: work to generate table script"), this);
   }
 private:
-  RelationModel *table;
+  Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);
@@ -189,11 +201,12 @@ protected:
  */
 class ViewScriptWork : public ScriptWork {
 public:
-  ViewScriptWork(RelationModel *view, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view->database, mode, output), view(view) {
+  ViewScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  {
     wxLogDebug(_T("%p: work to generate view script"), this);
   }
 private:
-  RelationModel *view;
+  Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);
@@ -204,11 +217,12 @@ protected:
  */
 class SequenceScriptWork : public ScriptWork {
 public:
-  SequenceScriptWork(RelationModel *sequence, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequence->database, mode, output), sequence(sequence) {
+  SequenceScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  {
     wxLogDebug(_T("%p: work to generate sequence script"), this);
   }
 private:
-  RelationModel *sequence;
+  Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);
@@ -219,11 +233,12 @@ protected:
  */
 class FunctionScriptWork : public ScriptWork {
 public:
-  FunctionScriptWork(FunctionModel *function, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(function->database, mode, output), function(function) {
+  FunctionScriptWork(const ServerConnection& server, const wxString &dbname, Oid procoid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), procoid(procoid)
+  {
     wxLogDebug(_T("%p: work to generate function script"), this);
   }
 private:
-  FunctionModel *function;
+  Oid procoid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);

@@ -8,6 +8,8 @@
 #define __object_browser_database_work_h
 
 #include "wx/msgdlg.h"
+#include "object_browser.h"
+#include "object_browser_model.h"
 #include "query_results.h"
 #include "database_work.h"
 #include "script_events.h"
@@ -24,7 +26,7 @@
  */
 class ObjectBrowserWork {
 public:
-  ObjectBrowserWork() : sqlDictionary(ObjectBrowser::GetSqlDictionary()) {}
+  ObjectBrowserWork(const VersionedSql &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : sqlDictionary(sqlDictionary) {}
 
   /**
    * Execute work.
@@ -77,7 +79,7 @@ public:
   /**
    * Create work object.
    */
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(ObjectBrowser::GetSqlDictionary()), dest(dest), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), work(work) {}
   void operator()() {
     TransactionBoundary txn(this);
     work->owner = this;

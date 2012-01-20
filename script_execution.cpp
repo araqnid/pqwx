@@ -20,6 +20,7 @@ std::map<wxString, ScriptExecution::PsqlCommandHandler> ScriptExecution::InitPsq
   handlers[_T("echo")] = &ScriptExecution::PsqlPrintMessage;
   handlers[_T("p")] = &ScriptExecution::PsqlPrintQueryBuffer;
   handlers[_T("r")] = &ScriptExecution::PsqlResetQueryBuffer;
+  handlers[_T("quit")] = &ScriptExecution::PsqlQuitExecution;
   return handlers;
 }
 
@@ -293,4 +294,9 @@ void ScriptExecution::ProcessQueryResult(ScriptQueryWork::Result *result)
 void ScriptExecution::ProcessConnectionNotice(const PgError& error)
 {
   owner->GetOrCreateResultsBook()->ScriptQueryNotice(error, queryBuffer, lastSqlPosition);
+}
+
+ScriptExecution::NextState ScriptExecution::PsqlQuitExecution(const wxString &parameters, const ExecutionLexer::Token &t)
+{
+  return Finish;
 }

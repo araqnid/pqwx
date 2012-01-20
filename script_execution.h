@@ -79,6 +79,7 @@ private:
   NextState PsqlPrintQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
   NextState PsqlResetQueryBuffer(const wxString &args, const ExecutionLexer::Token &t);
   NextState PsqlPrintMessage(const wxString &args, const ExecutionLexer::Token &t);
+  NextState PsqlQuitExecution(const wxString &args, const ExecutionLexer::Token &t);
 
   NextState ProcessExecution();
   void FinishExecution();

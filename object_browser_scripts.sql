@@ -142,10 +142,17 @@ SELECT proname,
        proretset,
        proconfig,
        proacl,
-       pg_catalog.obj_description(pg_proc.oid, 'pg_proc')
+       pg_catalog.obj_description(pg_proc.oid, 'pg_proc'),
+       proisagg,
+       aggtransfn::regprocedure,
+       aggtranstype::regtype,
+       case when aggfinalfn > 0 then aggfinalfn::regprocedure end,
+       agginitval,
+       case when aggsortop > 0 then aggsortop::regoper end
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
      JOIN pg_roles owner ON owner.oid = pg_proc.proowner
+     LEFT JOIN pg_aggregate ON pg_aggregate.aggfnoid = pg_proc.oid
 WHERE pg_proc.oid = $1
 
 -- SQL :: Type Info

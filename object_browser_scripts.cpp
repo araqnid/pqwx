@@ -596,15 +596,20 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
   std::vector<bool> extendedArgModes = ReadIOModeArray(functionDetail, 6);
   std::vector<wxString> extendedArgNames = ReadTextArray(functionDetail, 7);
   std::map<Oid, Typeinfo> typeMap = FetchTypes(basicArgTypes, extendedArgTypes);
+  bool aggregate = functionDetail.ReadBool(21);
 
   switch (mode) {
   case Create:
   case Alter: {
     wxString sql;
     if (mode == Create)
-      sql << _T("CREATE FUNCTION ");
+      sql << _T("CREATE ");
     else
-      sql << _T("CREATE OR REPLACE FUNCTION ");
+      sql << _T("CREATE OR REPLACE ");
+    if (aggregate)
+      sql << _T("AGGREGATE ");
+    else
+      sql << _T("FUNCTION ");
     sql << functionCoreName << _T("(");
     if (!extendedArgTypes.empty()) {
       unsigned pos = 0;
@@ -638,26 +643,44 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
 	if (pos != (basicArgTypes.size() - 1)) sql << _T(", ");
       }
     }
-    sql << _T(")")
-	<< _T(" RETURNS ");
+    sql << _T(")");
 
-    if (functionDetail.ReadBool(17)) sql << _T("SETOF ");
-    sql << functionDetail[16];
+    if (!aggregate) {
+      sql << _T(" RETURNS ");
 
-    int cost = functionDetail.ReadInt4(10);
-    if (cost > 0) sql << _T(" COST ") << cost;
+      if (functionDetail.ReadBool(17)) sql << _T("SETOF ");
+      sql << functionDetail[16];
 
-    int rows = functionDetail.ReadInt4(11);
-    if (rows > 0) sql << _T(" ROWS ") << rows;
+      int cost = functionDetail.ReadInt4(10);
+      if (cost > 0) sql << _T(" COST ") << cost;
 
-    if (functionDetail.ReadBool(12)) sql << _T(" SECURITY DEFINER ");
+      int rows = functionDetail.ReadInt4(11);
+      if (rows > 0) sql << _T(" ROWS ") << rows;
 
-    if (functionDetail.ReadBool(13)) sql << _T(" STRICT ");
+      if (functionDetail.ReadBool(12)) sql << _T(" SECURITY DEFINER ");
 
-    sql << _T(" ") << functionDetail.ReadText(14); // volatility
+      if (functionDetail.ReadBool(13)) sql << _T(" STRICT ");
 
-    sql << _T(" AS ");
-    EscapeCode(functionDetail.ReadText(15), sql);
+      sql << _T(" ") << functionDetail.ReadText(14); // volatility
+
+      sql << _T(" AS ");
+      EscapeCode(functionDetail.ReadText(15), sql);
+    }
+    else {
+      sql << _T(" (sfunc = ") << functionDetail.ReadText(22)
+	  << _T(", stype = ") << functionDetail.ReadText(23);
+      wxString finalfunc = functionDetail.ReadText(24);
+      if (!finalfunc.empty())
+	sql << _T(", finalfunc = ") << finalfunc;
+      wxString initval = functionDetail.ReadText(25);
+      if (!initval.empty())
+	sql << _T(", initcond = ") << initval;
+      wxString sortop = functionDetail.ReadText(26);
+      if (!sortop.empty())
+	sql << _T(", sortop = operator(") << sortop << _T(")");
+      sql << _T(")");
+    }
+
     *output++ = sql;
 
     PgAcl(functionDetail[19]).GenerateGrantStatements(output, functionDetail[8], _T("FUNCTION ") + functionName, privilegeMap);
@@ -667,8 +690,16 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
   }
     break;
 
-  case Drop:
-    *output++ = _T("DROP FUNCTION IF EXISTS ") + functionName;
+  case Drop: {
+    wxString sql;
+    sql << _T("DROP");
+    if (aggregate)
+      sql << _T(" AGGREGATE");
+    else
+      sql << _T(" FUNCTION");
+    sql << _T(" IF EXISTS ") << functionName;
+    *output++ = sql;
+  }
     break;
 
   case Select: {

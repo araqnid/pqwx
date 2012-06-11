@@ -120,6 +120,20 @@ private:
 };
 
 /**
+ * Initialise database connection.
+ *
+ * Run once on each database connection added to the object browser.
+ */
+class SetupDatabaseConnectionWork : public ObjectBrowserWork {
+protected:
+  void operator()() {
+    owner->DoCommand(_T("SetupObjectBrowserConnection"));
+  }
+  void LoadIntoView(ObjectBrowser *ob) {
+  }
+};
+
+/**
  * Load server information, database list and role list from server.
  */
 class RefreshDatabaseListWork : public ObjectBrowserWork {

@@ -8,6 +8,9 @@
 -- version that the connected server satisfies is taken. If there is
 -- an instance with no version as well, that is used as a fallback.
 
+-- SQL :: SetupObjectBrowserConnection
+SET search_path = pg_catalog
+
 -- SQL :: Databases :: 8.2
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        has_database_privilege(pg_database.oid, 'connect') AS can_connect,

@@ -264,7 +264,15 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
     return;
   }
 
-  serverModel = db ? new ServerModel(server, db) : new ServerModel(server);
+  if (db) {
+    serverModel = new ServerModel(server, db);
+    if (db->IsConnected()) {
+      SetupDatabaseConnection(db);
+    }
+  }
+  else {
+    serverModel = new ServerModel(server);
+  }
   servers.push_back(serverModel);
 
   // setting the text twice is a bug workaround for wx 2.8
@@ -301,6 +309,10 @@ DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
   }
   connections[dbname] = db;
   return db;
+}
+
+void ObjectBrowser::SetupDatabaseConnection(DatabaseConnection *db) {
+  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork()));
 }
 
 void ObjectBrowser::Dispose() {
@@ -364,6 +376,7 @@ void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork 
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
+    SetupDatabaseConnection(db);
   }
   db->AddWork(new ObjectBrowserDatabaseWork(this, work));
 }

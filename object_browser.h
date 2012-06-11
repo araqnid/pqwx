@@ -220,6 +220,7 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
+  void SetupDatabaseConnection(DatabaseConnection *db);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
 

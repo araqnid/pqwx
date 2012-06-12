@@ -17,7 +17,7 @@ override_dh_auto_clean:
 	-rm -f debian/pqwx.1
 
 override_dh_auto_build:
-	dh_auto_build -- RELEASE=1 LOCAL_CXXFLAGS="-g -DUSE_DEBIAN_PGCLUSTER" pqwx
+	dh_auto_build -- RELEASE=1 LOCAL_CXXFLAGS="-DUSE_DEBIAN_PGCLUSTER $(shell dpkg-buildflags --get CPPFLAGS) $(shell dpkg-buildflags --get CXXFLAGS)" LOCAL_LDFLAGS="$(shell dpkg-buildflags --get LDFLAGS)" pqwx
 	docbook-to-man debian/pqwx.sgml > debian/pqwx.1
 
 override_dh_auto_install:

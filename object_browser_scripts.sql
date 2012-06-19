@@ -23,6 +23,22 @@ SELECT '', datconfig
 FROM pg_database
 WHERE pg_database.oid = $1
 
+-- SQL :: Table Detail :: 9.1
+SELECT relname,
+       nspname,
+       owner.rolname,
+       pg_tablespace.spcname,
+       relhasoids,
+       relacl,
+       reloptions,
+       pg_catalog.obj_description(pg_class.oid, 'pg_class'),
+       relpersistence = 'u' AS is_unlogged
+FROM pg_class
+     JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+     JOIN pg_roles owner ON owner.oid = pg_class.relowner
+     LEFT JOIN pg_tablespace ON pg_tablespace.oid = pg_class.reltablespace
+WHERE pg_class.oid = $1
+
 -- SQL :: Table Detail
 SELECT relname,
        nspname,
@@ -31,7 +47,8 @@ SELECT relname,
        relhasoids,
        relacl,
        reloptions,
-       pg_catalog.obj_description(pg_class.oid, 'pg_class')
+       pg_catalog.obj_description(pg_class.oid, 'pg_class'),
+       false AS is_unlogged
 FROM pg_class
      JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
      JOIN pg_roles owner ON owner.oid = pg_class.relowner

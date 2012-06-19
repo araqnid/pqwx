@@ -273,7 +273,8 @@ void TableScriptWork::GenerateScript(OutputIterator output)
   case Create: {
     wxString sql;
     std::vector< wxString > alterSql;
-    sql << _T("CREATE TABLE ") << tableName << _T("(\n");
+    bool unlogged = tableDetail.ReadBool(8);
+    sql << (unlogged ? _T("CREATE UNLOGGED TABLE ") : _T("CREATE TABLE ")) << tableName << _T("(\n");
     unsigned n = 0;
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0)),

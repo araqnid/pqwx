@@ -307,14 +307,14 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     }
 
     if (foreignKeys.size() > 0) {
-      wxString lastKeyName = wxEmptyString;
-      wxString srcColumns = wxEmptyString;
-      wxString dstColumns = wxEmptyString;
+      wxString lastKeyName;
+      wxString srcColumns;
+      wxString dstColumns;
       const QueryResults::Row *lastKey = NULL;
       for (QueryResults::const_iterator iter = foreignKeys.begin(); iter != foreignKeys.end(); iter++) {
 	wxString fkeyName = (*iter)[_T("conname")];
 	if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
-	  GenerateForeignKey(output, tableName, srcColumns, dstColumns, *iter);
+	  GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
 	  srcColumns = wxEmptyString;
 	  dstColumns = wxEmptyString;
 	}

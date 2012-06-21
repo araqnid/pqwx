@@ -192,7 +192,7 @@ public:
 private:
   Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
-  void GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& keyName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow);
+  void GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow);
 protected:
   void GenerateScript(OutputIterator output);
 };

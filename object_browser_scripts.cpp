@@ -314,7 +314,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       for (QueryResults::const_iterator iter = foreignKeys.begin(); iter != foreignKeys.end(); iter++) {
 	wxString fkeyName = (*iter)[_T("conname")];
 	if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
-	  GenerateForeignKey(output, tableName, lastKeyName, srcColumns, dstColumns, *iter);
+	  GenerateForeignKey(output, tableName, srcColumns, dstColumns, *iter);
 	  srcColumns = wxEmptyString;
 	  dstColumns = wxEmptyString;
 	}
@@ -325,7 +325,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 	if (!dstColumns.IsEmpty()) dstColumns += _T(",");
 	dstColumns += QuoteIdent((*iter)[_T("dstatt")]);
       }
-      GenerateForeignKey(output, tableName, lastKeyName, srcColumns, dstColumns, *lastKey);
+      GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
     }
   }
     break;
@@ -412,13 +412,48 @@ void TableScriptWork::GenerateScript(OutputIterator output)
   }
 }
 
-void TableScriptWork::GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& keyName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow)
+void TableScriptWork::GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow)
 {
-  *output++ = _T("ALTER TABLE ") + tableName +
-    _T(" ADD CONSTRAINT ") + QuoteIdent(keyName) +
+  wxString fkeySql =_T("ALTER TABLE ") + tableName +
+    _T(" ADD CONSTRAINT ") + QuoteIdent(fkeyRow[_T("conname")]) +
     _T("\n\tFOREIGN KEY (") + srcColumns +
     _T(")\n\tREFERENCES ") + QuoteIdent(fkeyRow[_T("dstnspname")]) + _T(".") + QuoteIdent(fkeyRow[_T("dstrelname")]) +
     _T("(") + dstColumns + _T(")");
+
+  wxString confupdtype = fkeyRow[_T("confupdtype")];
+  if (confupdtype == _T("r")) {
+    fkeySql += _T("\n\tON UPDATE RESTRICT");
+  }
+  else if (confupdtype == _T("c")) {
+    fkeySql += _T("\n\tON UPDATE CASCADE");
+  }
+  else if (confupdtype == _T("n")) {
+    fkeySql += _T("\n\tON UPDATE SET NULL");
+  }
+  else if (confupdtype == _T("d")) {
+    fkeySql += _T("\n\tON UPDATE SET DEFAULT");
+  }
+
+  wxString confdeltype = fkeyRow[_T("confdeltype")];
+  if (confdeltype == _T("r")) {
+    fkeySql += _T("\n\tON DELETE RESTRICT");
+  }
+  else if (confdeltype == _T("c")) {
+    fkeySql += _T("\n\tON DELETE CASCADE");
+  }
+  else if (confdeltype == _T("n")) {
+    fkeySql += _T("\n\tON DELETE SET NULL");
+  }
+  else if (confdeltype == _T("d")) {
+    fkeySql += _T("\n\tON DELETE SET DEFAULT");
+  }
+
+  wxString confmatchtype = fkeyRow[_T("confmatchtype")];
+  if (confmatchtype == _T("f")) {
+    fkeySql += _T("\n\tMATCH FULL");
+  }
+
+  *output++ = fkeySql;
 }
 
 std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=INSERT r=SELECT w=UPDATE d=DELETE D=TRUNCATE x=REFERENCES t=TRIGGER"));

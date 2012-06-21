@@ -12,6 +12,33 @@
 
 #include "wx/tokenzr.h"
 #include "wx/regex.h"
+#include "wx/clipbrd.h"
+
+void ScriptWork::LoadIntoView(ObjectBrowser *ob)
+{
+  switch (output) {
+  case Window: {
+    PQWXDatabaseEvent evt(server, dbname, PQWX_ScriptToWindow);
+    evt.SetString(script);
+    ob->ProcessEvent(evt);
+    return;
+  }
+    break;
+
+  case File:
+    wxMessageBox(_T("TODO"));
+    break;
+
+  case Clipboard:
+    if (wxTheClipboard->Open()) {
+      wxTheClipboard->SetData(new wxTextDataObject(script));
+      wxTheClipboard->Close();
+    }
+    break;
+  default:
+    wxASSERT(false);
+  }
+}
 
 std::map<wxChar, wxString> ScriptWork::PrivilegeMap(const wxString &spec)
 {

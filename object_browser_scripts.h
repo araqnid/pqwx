@@ -50,30 +50,7 @@ private:
 
   wxString script;
 
-  void LoadIntoView(ObjectBrowser *ob)
-  {
-    wxString message;
-    switch (output) {
-    case Window: {
-      PQWXDatabaseEvent evt(server, dbname, PQWX_ScriptToWindow);
-      evt.SetString(script);
-      ob->ProcessEvent(evt);
-      return;
-    }
-      break;
-    case File:
-      message << _T("TODO Send to file:\n\n");
-      break;
-    case Clipboard:
-      message << _T("TODO Send to clipboard:\n\n");
-      break;
-    default:
-      wxASSERT(false);
-    }
-    wxLogDebug(_T("%s"), script.c_str());
-    wxMessageBox(script);
-  }
-
+  void LoadIntoView(ObjectBrowser *ob);
   static const VersionedSql& GetSqlDictionary();
 
 public:

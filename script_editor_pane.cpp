@@ -105,6 +105,7 @@ void ScriptEditorPane::SaveFile(const wxString &filename)
 void ScriptEditorPane::Populate(const wxString &text) {
   editor->AddText(text);
   editor->EmptyUndoBuffer();
+  editor->SetSavePoint();
 }
 
 void ScriptEditorPane::Connect(const ServerConnection &server_, const wxString &dbname)

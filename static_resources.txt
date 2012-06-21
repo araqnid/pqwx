@@ -2,6 +2,9 @@
 icon_folder.png			ObjectBrowser
 icon_server.png			ObjectBrowser
 icon_database.png		ObjectBrowser
+icon_index.png			ObjectBrowser
+icon_column.png			ObjectBrowser
+icon_role.png			ObjectBrowser
 icon_table.png			ObjectFinder
 icon_view.png			ObjectFinder
 icon_function.png		ObjectFinder

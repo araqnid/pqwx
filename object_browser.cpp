@@ -221,6 +221,9 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_aggregate.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_index.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_column.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_role.png")));
   AssignImageList(images);
   currentlySelected = false;
 }
@@ -507,6 +510,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
       roleItem = AppendItem(groupsItem, role->name);
     }
     SetItemData(roleItem, role);
+    SetItemImage(roleItem, img_role);
   }
 }
 
@@ -648,6 +652,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
+    SetItemImage(columnItem, img_column);
 
     for (std::vector<RelationModel*>::iterator seqIter = sequences.begin(); seqIter != sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
@@ -665,6 +670,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     for (std::vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
+      SetItemImage(indexItem, img_index);
     }
   }
 

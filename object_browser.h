@@ -279,6 +279,9 @@ private:
   static const int img_function_aggregate = img_function + 1;
   static const int img_function_trigger = img_function_aggregate + 1;
   static const int img_function_window = img_function_trigger + 1;
+  static const int img_index = img_function_window + 1;
+  static const int img_column = img_index + 1;
+  static const int img_role = img_column + 1;
 };
 
 /**

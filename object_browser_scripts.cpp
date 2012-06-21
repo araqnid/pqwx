@@ -239,6 +239,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 {
   QueryResults::Row tableDetail = Query(_T("Table Detail")).OidParam(reloid).UniqueResult();
   QueryResults columns = Query(_T("Relation Column Detail")).OidParam(reloid).List();
+  QueryResults foreignKeys = Query(_T("Table Foreign Keys")).OidParam(reloid).List();
   wxString tableName = QuoteIdent(tableDetail[1]) + _T('.') + QuoteIdent(tableDetail[0]);
 
   switch (mode) {
@@ -303,6 +304,28 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       if (!description.empty()) {
 	*output++ = _T("COMMENT ON COLUMN ") + tableName + _T('.') + (*iter).ReadText(0) + _T(" IS ") + QuoteLiteral(description);
       }
+    }
+
+    if (foreignKeys.size() > 0) {
+      wxString lastKeyName = wxEmptyString;
+      wxString srcColumns = wxEmptyString;
+      wxString dstColumns = wxEmptyString;
+      const QueryResults::Row *lastKey = NULL;
+      for (QueryResults::const_iterator iter = foreignKeys.begin(); iter != foreignKeys.end(); iter++) {
+	wxString fkeyName = (*iter)[_T("conname")];
+	if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
+	  GenerateForeignKey(output, tableName, lastKeyName, srcColumns, dstColumns, *iter);
+	  srcColumns = wxEmptyString;
+	  dstColumns = wxEmptyString;
+	}
+	lastKeyName = fkeyName;
+	lastKey = &(*iter);
+	if (!srcColumns.IsEmpty()) srcColumns += _T(",");
+	srcColumns += QuoteIdent((*iter)[_T("srcatt")]);
+	if (!dstColumns.IsEmpty()) dstColumns += _T(",");
+	dstColumns += QuoteIdent((*iter)[_T("dstatt")]);
+      }
+      GenerateForeignKey(output, tableName, lastKeyName, srcColumns, dstColumns, *lastKey);
     }
   }
     break;
@@ -387,6 +410,15 @@ void TableScriptWork::GenerateScript(OutputIterator output)
   default:
     wxASSERT(false);
   }
+}
+
+void TableScriptWork::GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& keyName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow)
+{
+  *output++ = _T("ALTER TABLE ") + tableName +
+    _T(" ADD CONSTRAINT ") + QuoteIdent(keyName) +
+    _T("\n\tFOREIGN KEY (") + srcColumns +
+    _T(")\n\tREFERENCES ") + QuoteIdent(fkeyRow[_T("dstnspname")]) + _T(".") + QuoteIdent(fkeyRow[_T("dstrelname")]) +
+    _T("(") + dstColumns + _T(")");
 }
 
 std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=INSERT r=SELECT w=UPDATE d=DELETE D=TRUNCATE x=REFERENCES t=TRIGGER"));

@@ -161,3 +161,24 @@ FROM pg_type
      JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace
      LEFT JOIN pg_type elemtype ON elemtype.oid = pg_type.typelem
 WHERE pg_type.oid = $1
+
+-- SQL :: Table Foreign Keys
+SELECT conname,
+       confupdtype,
+       confdeltype,
+       confmatchtype,
+       src.attname AS srcatt,
+       dstrel.relname AS dstrelname,
+       dstnsp.nspname AS dstnspname,
+       dst.attname AS dstatt
+FROM pg_constraint
+     CROSS JOIN generate_series(1,64) g
+     JOIN pg_attribute src ON src.attrelid = pg_constraint.conrelid AND src.attnum = conkey[g]
+     JOIN pg_attribute dst ON dst.attrelid = pg_constraint.confrelid AND dst.attnum = confkey[g]
+     JOIN pg_class dstrel ON dstrel.oid = pg_constraint.confrelid
+     JOIN pg_namespace dstnsp ON dstnsp.oid = dstrel.relnamespace
+WHERE conrelid = $1
+      AND contype = 'f'
+      AND g BETWEEN array_lower(conkey, 1)
+      AND array_upper(conkey, 1)
+ORDER BY g

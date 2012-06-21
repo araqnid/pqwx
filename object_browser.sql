@@ -155,7 +155,7 @@ FROM pg_index
      JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
       AND attnum > 0 AND NOT attisdropped
-ORDER BY CASE WHEN indisprimary THEN 0 WHEN indisunique THEN 1 ELSE 2 END, indexrelid, attnum
+ORDER BY relname, attnum
 
 -- SQL :: Indices
 SELECT relname, indisunique, indisprimary, false AS indisexclusion, indisclustered, attname
@@ -164,7 +164,7 @@ FROM pg_index
      JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
       AND attnum > 0 AND NOT attisdropped
-ORDER BY CASE WHEN indisprimary THEN 0 WHEN indisunique THEN 1 ELSE 2 END, indexrelid, attnum
+ORDER BY relname, attnum
 
 -- SQL :: Triggers :: 9.0
 SELECT tgname, tgfoid::regprocedure, tgenabled

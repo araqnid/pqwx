@@ -181,4 +181,4 @@ WHERE conrelid = $1
       AND contype = 'f'
       AND g BETWEEN array_lower(conkey, 1)
       AND array_upper(conkey, 1)
-ORDER BY g
+ORDER BY pg_constraint.oid, g

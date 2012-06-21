@@ -433,10 +433,20 @@ private:
   }
   void ReadIndices() {
     QueryResults indexRows = Query(_T("Indices")).OidParam(relationModel->oid).List();
+    IndexModel *lastIndex = NULL;
     for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
-      IndexModel *index = new IndexModel();
-      index->name = (*iter).ReadText(0);
-      indices.push_back(index);
+      IndexModel *index;
+      wxString indexName = (*iter)[_T("relname")];
+      if (lastIndex == NULL || lastIndex->name != indexName) {
+	index = new IndexModel();
+	index->name = indexName;
+	lastIndex = index;
+	indices.push_back(index);
+      }
+      else {
+	index = lastIndex;
+      }
+      index->columns.push_back((*iter)[_T("attname")]);
     }
   }
   void ReadTriggers() {

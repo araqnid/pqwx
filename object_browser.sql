@@ -149,16 +149,22 @@ WHERE attrelid = $1
 ORDER BY attnum
 
 -- SQL :: Indices :: 9.0
-SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered
+SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered, attname
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
+     JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
+      AND attnum > 0 AND NOT attisdropped
+ORDER BY indexrelid, attnum
 
 -- SQL :: Indices
-SELECT relname, indisunique, indisprimary, false AS indisexclusion, indisclustered
+SELECT relname, indisunique, indisprimary, false AS indisexclusion, indisclustered, attname
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
+     JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
+      AND attnum > 0 AND NOT attisdropped
+ORDER BY indexrelid, attnum
 
 -- SQL :: Triggers :: 9.0
 SELECT tgname, tgfoid::regprocedure, tgenabled

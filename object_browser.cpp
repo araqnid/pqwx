@@ -671,6 +671,10 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
       SetItemImage(indexItem, img_index);
+      for (std::vector<wxString>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
+	wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter));
+	SetItemImage(indexColumnItem, img_column);
+      }
     }
   }
 

@@ -199,6 +199,7 @@ public:
       if ((*iter).name == fieldName) return pos;
     }
     wxASSERT_MSG(false, fieldName);
+    return -1; // quiet gcc
   }
 
 private:

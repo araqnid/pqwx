@@ -407,6 +407,8 @@ private:
   std::vector<IndexModel*> indices;
   std::vector<TriggerModel*> triggers;
   std::vector<RelationModel*> sequences;
+  std::vector<CheckConstraintModel*> checkConstraints;
+  friend class ObjectBrowser;
 protected:
   void operator()() {
     ReadColumns();
@@ -414,6 +416,7 @@ protected:
       ReadIndices();
       ReadTriggers();
       ReadSequences();
+      ReadConstraints();
     }
   }
 private:
@@ -497,9 +500,21 @@ private:
       sequences.push_back(sequence);
     }
   }
+  void ReadConstraints() {
+    QueryResults rows = Query(_T("Constraints")).OidParam(relationModel->oid).List();
+    for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+      wxString typeCode = (*iter).ReadText(1);
+      if (typeCode == _T("c")) {
+	CheckConstraintModel *constraint = new CheckConstraintModel();
+	constraint->name = (*iter).ReadText(0);
+	constraint->expression = (*iter).ReadText(2);
+	checkConstraints.push_back(constraint);
+      }
+    }
+  }
 protected:
   void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInRelation(relationModel, relationItem, columns, indices, triggers, sequences);
+    ob->FillInRelation(this);
     ob->Expand(relationItem);
 
     // remove 'loading...' tag

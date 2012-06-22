@@ -637,13 +637,13 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers, std::vector<RelationModel*> &sequences) {
+void ObjectBrowser::FillInRelation(LoadRelationWork *work) {
   std::map<int,wxTreeItemId> columnItems;
-  for (std::vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
+  for (std::vector<ColumnModel*>::iterator iter = work->columns.begin(); iter != work->columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
 
-    if (relation->type == RelationModel::TABLE) {
+    if (work->relationModel->type == RelationModel::TABLE) {
       if (column->nullable)
 	itemText += _(", null");
       else
@@ -654,12 +654,12 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 
     itemText += _T(")");
 
-    wxTreeItemId columnItem = AppendItem(relationItem, itemText);
+    wxTreeItemId columnItem = AppendItem(work->relationItem, itemText);
     SetItemData(columnItem, column);
     SetItemImage(columnItem, img_column);
     columnItems[column->attnum] = columnItem;
 
-    for (std::vector<RelationModel*>::iterator seqIter = sequences.begin(); seqIter != sequences.end(); seqIter++) {
+    for (std::vector<RelationModel*>::iterator seqIter = work->sequences.begin(); seqIter != work->sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
       if (sequence->owningColumn != column->attnum) continue;
 
@@ -669,10 +669,10 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     }
   }
 
-  if (!indices.empty()) {
-    wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
+  if (!work->indices.empty()) {
+    wxTreeItemId indicesItem = AppendItem(work->relationItem, _("Indices"));
     SetItemImage(indicesItem, img_folder);
-    for (std::vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
+    for (std::vector<IndexModel*>::iterator iter = work->indices.begin(); iter != work->indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
       if ((*iter)->primaryKey)
@@ -693,10 +693,19 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     }
   }
 
-  if (!triggers.empty()) {
-    wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
+  if (!work->checkConstraints.empty()) {
+    wxTreeItemId constraintsItem = AppendItem(work->relationItem, _("Constraints"));
+    SetItemImage(constraintsItem, img_folder);
+    for (std::vector<CheckConstraintModel*>::iterator iter = work->checkConstraints.begin(); iter != work->checkConstraints.end(); iter++) {
+      wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter)->name);
+      SetItemData(constraintItem, *iter);
+    }
+  }
+
+  if (!work->triggers.empty()) {
+    wxTreeItemId triggersItem = AppendItem(work->relationItem, _("Triggers"));
     SetItemImage(triggersItem, img_folder);
-    for (std::vector<TriggerModel*>::iterator iter = triggers.begin(); iter != triggers.end(); iter++) {
+    for (std::vector<TriggerModel*>::iterator iter = work->triggers.begin(); iter != work->triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
       SetItemData(triggerItem, *iter);
     }

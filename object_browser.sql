@@ -162,6 +162,11 @@ FROM pg_index
 WHERE indrelid = $1
 ORDER BY relname
 
+-- SQL :: Constraints
+SELECT conname, contype, consrc
+FROM pg_constraint
+WHERE conrelid = $1
+
 -- SQL :: Triggers :: 9.0
 SELECT tgname, tgfoid::regprocedure, tgenabled
 FROM pg_trigger

@@ -52,6 +52,16 @@ public:
 };
 
 /**
+ * A check constraint associated with a table.
+ */
+class CheckConstraintModel : public ObjectModel {
+public:
+  RelationModel *relation;
+  wxString expression;
+};
+
+
+/**
  * A schema member - function or relation.
  */
 class SchemaMemberModel : public ObjectModel {

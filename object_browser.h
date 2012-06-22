@@ -57,6 +57,7 @@ END_DECLARE_EVENT_TYPES()
   void On##menu##MenuScript##mode##Clipboard(wxCommandEvent&)
 
 class IndexSchemaCompletionCallback;
+class LoadRelationWork;
 
 /**
  * The object browser tree control.
@@ -140,7 +141,7 @@ public:
   /**
    * Fill in relation details after loading from the database.
    */
-  void FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers, std::vector<RelationModel*> &sequences);
+  void FillInRelation(LoadRelationWork *work);
 
   /**
    * Append database items under the given parent.

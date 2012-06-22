@@ -638,7 +638,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 }
 
 void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers, std::vector<RelationModel*> &sequences) {
-  std::map<wxString,wxTreeItemId> columnItems;
+  std::map<int,wxTreeItemId> columnItems;
   for (std::vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
@@ -657,7 +657,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
     SetItemImage(columnItem, img_column);
-    columnItems[column->name] = columnItem;
+    columnItems[column->attnum] = columnItem;
 
     for (std::vector<RelationModel*>::iterator seqIter = sequences.begin(); seqIter != sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
@@ -681,11 +681,12 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
 	SetItemImage(indexItem, img_index_uniq);
       else
 	SetItemImage(indexItem, img_index);
-      for (std::vector<wxString>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
-	wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter));
+      for (std::vector<int>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
+	wxTreeItemId columnItem = columnItems[(*colIter)];
+	ColumnModel *column = (ColumnModel*) GetItemData(columnItem);
+	wxTreeItemId indexColumnItem = AppendItem(indexItem, column->name);
 	SetItemImage(indexColumnItem, img_column);
 	if ((*iter)->primaryKey) {
-	  wxTreeItemId columnItem = columnItems[(*colIter)];
 	  SetItemImage(columnItem, img_column_pkey);
 	}
       }

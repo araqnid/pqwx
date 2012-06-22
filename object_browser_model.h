@@ -39,7 +39,7 @@ public:
   bool unique;
   bool exclusion;
   bool clustered;
-  std::vector<wxString> columns;
+  std::vector<int> columns;
   wxString type;
 };
 

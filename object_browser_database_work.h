@@ -450,8 +450,31 @@ private:
       else {
 	index = lastIndex;
       }
-      index->columns.push_back((*iter)[_T("attname")]);
+      index->columns = ParseInt2Vector((*iter)[_T("indkey")]);
     }
+  }
+  std::vector<int> ParseInt2Vector(const wxString &str)
+  {
+    std::vector<int> result;
+    unsigned mark = 0;
+    for (unsigned pos = 0; pos < str.length(); pos++) {
+      if (str[pos] == ' ') {
+	long value;
+	if (str.Mid(mark, pos-mark).ToLong(&value)) {
+	  result.push_back((int) value);
+	}
+	mark = pos + 1;
+      }
+    }
+
+    if (mark < str.length()) {
+      long value;
+      if (str.Mid(mark, str.length()-mark).ToLong(&value)) {
+	result.push_back((int) value);
+      }
+    }
+
+    return result;
   }
   void ReadTriggers() {
     QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationModel->oid).List();

@@ -35,6 +35,10 @@ public:
 class IndexModel : public ObjectModel {
 public:
   RelationModel *relation;
+  bool primaryKey;
+  bool unique;
+  bool exclusion;
+  bool clustered;
   std::vector<wxString> columns;
   wxString type;
 };

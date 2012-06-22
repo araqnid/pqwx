@@ -440,6 +440,10 @@ private:
       if (lastIndex == NULL || lastIndex->name != indexName) {
 	index = new IndexModel();
 	index->name = indexName;
+	index->primaryKey = (*iter).ReadBool(_T("indisprimary"));
+	index->unique = (*iter).ReadBool(_T("indisunique"));
+	index->exclusion = (*iter).ReadBool(_T("indisexclusion"));
+	index->clustered = (*iter).ReadBool(_T("indisclustered"));
 	lastIndex = index;
 	indices.push_back(index);
       }

@@ -3,7 +3,10 @@ icon_folder.png			ObjectBrowser
 icon_server.png			ObjectBrowser
 icon_database.png		ObjectBrowser
 icon_index.png			ObjectBrowser
+icon_index_pkey.png		ObjectBrowser
+icon_index_uniq.png		ObjectBrowser
 icon_column.png			ObjectBrowser
+icon_column_pkey.png		ObjectBrowser
 icon_role.png			ObjectBrowser
 icon_table.png			ObjectFinder
 icon_view.png			ObjectFinder

@@ -107,6 +107,13 @@ public:
     }
 
     /**
+     * Get boolean value by field name.
+     */
+    bool ReadBool(const wxString& fieldName) const {
+      return data[owner->GetFieldNumber(fieldName)] == _T("t");
+    }
+
+    /**
      * Get string value by field index.
      * This is basically identical to operator[](unsigned)
      */

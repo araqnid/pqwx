@@ -280,8 +280,11 @@ private:
   static const int img_function_trigger = img_function_aggregate + 1;
   static const int img_function_window = img_function_trigger + 1;
   static const int img_index = img_function_window + 1;
-  static const int img_column = img_index + 1;
-  static const int img_role = img_column + 1;
+  static const int img_index_pkey = img_index + 1;
+  static const int img_index_uniq = img_index_pkey + 1;
+  static const int img_column = img_index_uniq + 1;
+  static const int img_column_pkey = img_column + 1;
+  static const int img_role = img_column_pkey + 1;
 };
 
 /**

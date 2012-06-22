@@ -222,7 +222,10 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_trigger.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function_window.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_index.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_index_pkey.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_index_uniq.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_column.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_column_pkey.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_role.png")));
   AssignImageList(images);
   currentlySelected = false;
@@ -635,6 +638,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 }
 
 void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relationItem, std::vector<ColumnModel*> &columns, std::vector<IndexModel*> &indices, std::vector<TriggerModel*> &triggers, std::vector<RelationModel*> &sequences) {
+  std::map<wxString,wxTreeItemId> columnItems;
   for (std::vector<ColumnModel*>::iterator iter = columns.begin(); iter != columns.end(); iter++) {
     ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
@@ -653,6 +657,7 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
     SetItemImage(columnItem, img_column);
+    columnItems[column->name] = columnItem;
 
     for (std::vector<RelationModel*>::iterator seqIter = sequences.begin(); seqIter != sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
@@ -670,10 +675,19 @@ void ObjectBrowser::FillInRelation(RelationModel *relation, wxTreeItemId relatio
     for (std::vector<IndexModel*>::iterator iter = indices.begin(); iter != indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
-      SetItemImage(indexItem, img_index);
+      if ((*iter)->primaryKey)
+	SetItemImage(indexItem, img_index_pkey);
+      else if ((*iter)->unique || (*iter)->exclusion)
+	SetItemImage(indexItem, img_index_uniq);
+      else
+	SetItemImage(indexItem, img_index);
       for (std::vector<wxString>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
 	wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter));
 	SetItemImage(indexColumnItem, img_column);
+	if ((*iter)->primaryKey) {
+	  wxTreeItemId columnItem = columnItems[(*colIter)];
+	  SetItemImage(columnItem, img_column_pkey);
+	}
       }
     }
   }

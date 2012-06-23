@@ -106,7 +106,18 @@ public:
   }
   void NotifyCrashed(const std::exception& e) {
     wxLogDebug(_T("%p: object browser work crashed with some exception, notifying GUI thread"), work);
-    work->crashMessage = wxString(e.what(), wxConvUTF8);
+
+    const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
+    if (query != NULL) {
+      if (query->IsFromNamedQuery())
+	work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n") + wxString(e.what(), wxConvUTF8);
+      else
+	work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n") + wxString(e.what(), wxConvUTF8);
+    }
+    else {
+	work->crashMessage = wxString(e.what(), wxConvUTF8);
+    }
+
     wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
     event.SetClientData(work);
     dest->AddPendingEvent(event);

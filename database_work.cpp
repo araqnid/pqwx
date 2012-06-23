@@ -111,11 +111,11 @@ QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, const Oid *p
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {
     db->LogSqlQueryFailed(PgError(rs));
-    throw PgQueryFailure(PgError(rs));
+    throw PgQueryFailure(sql, PgError(rs));
   }
   else if (status != PGRES_TUPLES_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    throw PgInvalidQuery(_T("expected data back"));
+    throw PgInvalidQuery(sql, _T("expected data back"));
   }
 
   QueryResults results(rs);
@@ -147,11 +147,11 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, i
     ExecStatusType prepareStatus = PQresultStatus(prepareResult);
     if (prepareStatus == PGRES_FATAL_ERROR) {
       db->LogSqlQueryFailed(PgError(prepareResult));
-      throw PgQueryFailure(PgError(prepareResult));
+      throw PgQueryFailure(name, PgError(prepareResult));
     }
     else if (prepareStatus != PGRES_COMMAND_OK) {
       db->LogSqlQueryInvalidStatus(PQresultErrorMessage(prepareResult), prepareStatus);
-      throw PgInvalidQuery(_T("unexpected status"));
+      throw PgInvalidQuery(name, _T("unexpected status"));
     }
 
     db->MarkStatementPrepared(name);
@@ -176,11 +176,11 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, i
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {
     db->LogSqlQueryFailed(PgError(rs));
-    throw PgQueryFailure(PgError(rs));
+    throw PgQueryFailure(name, PgError(rs));
   }
   else if (status != PGRES_TUPLES_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    throw PgInvalidQuery(_T("expected data back"));
+    throw PgInvalidQuery(name, _T("expected data back"));
   }
 
   QueryResults results(rs);

@@ -215,6 +215,21 @@ private:
 };
 
 /**
+ * Base class included by exceptions that retain which query caused them.
+ */
+class PgQueryRelatedException {
+public:
+  PgQueryRelatedException(const wxString &queryName_) : queryName(queryName_), sql() {}
+  PgQueryRelatedException(const char *sql_) : queryName(), sql(wxString(sql_, wxConvUTF8)) {}
+  bool IsFromNamedQuery() const { return !queryName.empty(); }
+  const wxString& GetQueryName() const { return queryName; }
+  const wxString& GetSql() const { return sql; }
+private:
+  const wxString queryName;
+  const wxString sql;
+};
+
+/**
  * Exception thrown when libpq was unable to return a result due to out of memory.
  */
 class PgResourceFailure : public std::exception {
@@ -223,9 +238,10 @@ class PgResourceFailure : public std::exception {
 /**
  * Execption thrown echoing a server error.
  */
-class PgQueryFailure : public std::exception {
+class PgQueryFailure : public std::exception, public PgQueryRelatedException {
 public:
-  PgQueryFailure(const PgError &error) : error(error), messageBuf(error.GetPrimary().utf8_str()) {}
+  PgQueryFailure(const wxString &name, const PgError &error_) : PgQueryRelatedException(name), error(error_), messageBuf(error.GetPrimary().utf8_str()) {}
+  PgQueryFailure(const char *sql, const PgError &error_) : PgQueryRelatedException(sql), error(error_), messageBuf(error.GetPrimary().utf8_str()) {}
   virtual ~PgQueryFailure() throw () {}
   const PgError& GetDetails() const { return error; }
   const char *what() const throw () { return messageBuf.data(); }
@@ -239,9 +255,10 @@ private:
  *
  * For example, if a query that was expected to return tuples did not or vice versa.
  */
-class PgInvalidQuery : public std::exception {
+class PgInvalidQuery : public std::exception, public PgQueryRelatedException {
 public:
-  PgInvalidQuery(const wxString &message) : message(message), messageBuf(message.utf8_str()) {}
+  PgInvalidQuery(const wxString &name, const wxString &message) : PgQueryRelatedException(name), message(message), messageBuf(message.utf8_str()) {}
+  PgInvalidQuery(const char *sql, const wxString &message) : PgQueryRelatedException(sql), message(message), messageBuf(message.utf8_str()) {}
   virtual ~PgInvalidQuery() throw () {}
   const wxString& GetMessage() const throw () { return message; }
   const char *what() const throw () { return messageBuf.data(); }

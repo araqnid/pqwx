@@ -219,6 +219,8 @@ void LoadRelationWork::ReadColumns() {
 void LoadRelationWork::ReadIndices() {
   QueryResults indexRows = Query(_T("Indices")).OidParam(oid).List();
   IndexModel *lastIndex = NULL;
+  std::vector<int> indexColumns;
+  std::vector<int>::const_iterator indexColumnsIter;
   for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
     IndexModel *index;
     wxString indexName = (*iter)[_T("relname")];
@@ -229,13 +231,16 @@ void LoadRelationWork::ReadIndices() {
       index->unique = (*iter).ReadBool(_T("indisunique"));
       index->exclusion = (*iter).ReadBool(_T("indisexclusion"));
       index->clustered = (*iter).ReadBool(_T("indisclustered"));
+      indexColumns = ParseInt2Vector((*iter)[_T("indkey")]);
+      indexColumnsIter = indexColumns.begin();
       lastIndex = index;
       detail->indices.push_back(index);
     }
     else {
       index = lastIndex;
     }
-    index->columns = ParseInt2Vector((*iter)[_T("indkey")]);
+    wxString expression = (*iter)[_T("indexattdef")];
+    index->columns.push_back(IndexModel::Column(*indexColumnsIter++, expression));
   }
 }
 

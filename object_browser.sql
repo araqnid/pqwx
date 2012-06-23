@@ -149,18 +149,20 @@ WHERE attrelid = $1
 ORDER BY attnum
 
 -- SQL :: Indices :: 9.0
-SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered, indkey
+SELECT relname, indisunique, indisprimary, indisexclusion, indisclustered, indkey, pg_get_indexdef(indexrelid, attnum, true) as indexattdef
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
+     JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
-ORDER BY relname
+ORDER BY relname, pg_attribute.attnum
 
 -- SQL :: Indices
-SELECT relname, indisunique, indisprimary, false AS indisexclusion, indisclustered, indkey
+SELECT relname, indisunique, indisprimary, false as indisexclusion, indisclustered, indkey, pg_get_indexdef(indexrelid, attnum, true) as indexattdef
 FROM pg_index
      JOIN pg_class ON pg_class.oid = pg_index.indexrelid
+     JOIN pg_attribute ON pg_attribute.attrelid = pg_index.indexrelid
 WHERE indrelid = $1
-ORDER BY relname
+ORDER BY relname, pg_attribute.attnum
 
 -- SQL :: Constraints
 SELECT conname, contype, consrc

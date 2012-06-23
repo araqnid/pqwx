@@ -34,12 +34,18 @@ public:
  */
 class IndexModel : public ObjectModel {
 public:
+  class Column {
+  public:
+    Column(int column_, const wxString& expression_) : column(column_), expression(expression_) {}
+    int column;
+    wxString expression;
+  };
   RelationModel *relation;
   bool primaryKey;
   bool unique;
   bool exclusion;
   bool clustered;
-  std::vector<int> columns;
+  std::vector<Column> columns;
   wxString type;
 };
 

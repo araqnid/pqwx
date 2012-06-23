@@ -688,13 +688,17 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
 	SetItemImage(indexItem, img_index_uniq);
       else
 	SetItemImage(indexItem, img_index);
-      for (std::vector<int>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
-	wxTreeItemId columnItem = columnItems[(*colIter)];
-	ColumnModel *column = (ColumnModel*) GetItemData(columnItem);
-	wxTreeItemId indexColumnItem = AppendItem(indexItem, column->name);
-	SetItemImage(indexColumnItem, img_column);
-	if ((*iter)->primaryKey) {
-	  SetItemImage(columnItem, img_column_pkey);
+      for (std::vector<IndexModel::Column>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
+	wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter).expression);
+	if ((*colIter).column > 0) {
+	  SetItemImage(indexColumnItem, img_column);
+	  wxTreeItemId columnItem = columnItems[(*colIter).column];
+	  if ((*iter)->primaryKey) {
+	    SetItemImage(columnItem, img_column_pkey);
+	  }
+	}
+	else {
+	  SetItemImage(indexColumnItem, img_function);
 	}
       }
     }

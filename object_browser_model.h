@@ -137,6 +137,16 @@ public:
 };
 
 /**
+ * A tablespace.
+ */
+class TablespaceModel : public ObjectModel {
+public:
+  Oid oid;
+  wxString location;
+  bool IsSystem() const { return name.StartsWith(_T("pg_")); }
+};
+
+/**
  * A database.
  *
  * This also contains a OID-to-tree-item lookup table and a CatalogueIndex.
@@ -337,8 +347,13 @@ public:
    * @return The roles on this server
    */
   const std::vector<RoleModel*>& GetRoles() const { return roles; }
+  /**
+   * @return The tablespaces on this server
+   */
+  const std::vector<TablespaceModel*>& GetTablespaces() const { return tablespaces; }
 private:
   std::vector<DatabaseModel*> databases;
+  std::vector<TablespaceModel*> tablespaces;
   std::vector<RoleModel*> roles;
   int serverVersion;
   wxString serverVersionString;

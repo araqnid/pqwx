@@ -414,6 +414,7 @@ void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverIt
   SetItemText(serverItem, serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")") + (serverModel->IsUsingSSL() ? _T(" [SSL]") : wxEmptyString));
   FillInDatabases(serverModel, serverItem);
   FillInRoles(serverModel, serverItem);
+  FillInTablespaces(serverModel, serverItem);
 }
 
 void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem) {
@@ -476,6 +477,40 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
     }
     SetItemData(roleItem, role);
     SetItemImage(roleItem, img_role);
+  }
+}
+
+void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem)
+{
+  const std::vector<TablespaceModel*> &tablespaces = serverModel->GetTablespaces();
+  std::vector<TablespaceModel*> userTablespaces;
+  std::vector<TablespaceModel*> systemTablespaces;
+
+  for (std::vector<TablespaceModel*>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+    if ((*iter)->IsSystem())
+      systemTablespaces.push_back(*iter);
+    else
+      userTablespaces.push_back(*iter);
+  }
+
+  if (!userTablespaces.empty()) {
+    wxTreeItemId folderItem = AppendItem(serverItem, _("Tablespaces"));
+    SetItemImage(folderItem, img_folder);
+    for (std::vector<TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
+      wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
+      SetItemData(spcItem, *iter);
+      SetItemImage(spcItem, img_database);
+    }
+  }
+
+  if (!systemTablespaces.empty()) {
+    wxTreeItemId folderItem = AppendItem(serverItem, _("System Tablespaces"));
+    SetItemImage(folderItem, img_folder);
+    for (std::vector<TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
+      wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
+      SetItemData(spcItem, *iter);
+      SetItemImage(spcItem, img_database);
+    }
   }
 }
 

@@ -17,6 +17,7 @@ void RefreshDatabaseListWork::operator()()
   ReadServer();
   ReadDatabases();
   ReadRoles();
+  ReadTablespaces();
 }
 
 void RefreshDatabaseListWork::LoadIntoView(ObjectBrowser *ob)
@@ -63,6 +64,18 @@ void RefreshDatabaseListWork::ReadRoles()
     serverModel->roles.push_back(role);
   }
   sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
+}
+
+void RefreshDatabaseListWork::ReadTablespaces()
+{
+  QueryResults rows = Query(_T("Tablespaces")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    TablespaceModel *spc = new TablespaceModel();
+    spc->oid = (*iter).ReadOid(0);
+    spc->name = (*iter).ReadText(1);
+    spc->location = (*iter).ReadText(2);
+    serverModel->tablespaces.push_back(spc);
+  }
 }
 
 /*

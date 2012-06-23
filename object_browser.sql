@@ -25,6 +25,14 @@ SELECT pg_database.oid, datname, datistemplate, datallowconn,
        null AS description
 FROM pg_database
 
+-- SQL :: Tablespaces :: 9.2
+SELECT pg_tablespace.oid, spcname, pg_catalog.pg_tablespace_location(pg_tablespace.oid)
+FROM pg_tablespace
+
+-- SQL :: Tablespaces
+SELECT pg_tablespace.oid, spcname, spclocation
+FROM pg_tablespace
+
 -- SQL :: Roles :: 8.2
 SELECT pg_roles.oid, rolname, rolcanlogin, rolsuper,
        pg_shdescription.description

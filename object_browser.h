@@ -224,6 +224,7 @@ private:
   void SetupDatabaseConnection(DatabaseConnection *db);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
+  void FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem);
 
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);

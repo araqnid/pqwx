@@ -158,6 +158,7 @@ private:
   void ReadServer();
   void ReadDatabases();
   void ReadRoles();
+  void ReadTablespaces();
 
   static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
     return d1->name < d2->name;

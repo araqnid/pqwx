@@ -252,6 +252,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
   SetItemText(serverItem, server.Identification());
   SetItemData(serverItem, serverModel);
   SetItemImage(serverItem, img_server);
+  SetFocus();
 
   RefreshDatabaseList(serverItem);
 }

@@ -141,7 +141,7 @@ public:
   /**
    * Fill in relation details after loading from the database.
    */
-  void FillInRelation(LoadRelationWork *work);
+  void FillInRelation(RelationModel *updated, wxTreeItemId relationItem);
 
   /**
    * Append database items under the given parent.

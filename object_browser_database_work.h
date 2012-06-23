@@ -397,12 +397,13 @@ public:
    * @param relationModel Relation model to populate
    * @param relationItem Relation tree item to populate
    */
-  LoadRelationWork(RelationModel *relationModel, wxTreeItemId relationItem) : relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : relationModel(relationModel), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
-  RelationModel *relationModel;
+  const RelationModel *relationModel;
   wxTreeItemId relationItem;
+  RelationModel *detail;
   std::vector<ColumnModel*> columns;
   std::vector<IndexModel*> indices;
   std::vector<TriggerModel*> triggers;
@@ -411,6 +412,7 @@ private:
   friend class ObjectBrowser;
 protected:
   void operator()() {
+    detail = new RelationModel();
     ReadColumns();
     if (relationModel->type == RelationModel::TABLE) {
       ReadIndices();
@@ -424,14 +426,13 @@ private:
     QueryResults attributeRows = Query(_T("Columns")).OidParam(relationModel->oid).List();
     for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
       ColumnModel *column = new ColumnModel();
-      column->relation = relationModel;
       column->name = (*iter).ReadText(0);
       column->type = (*iter).ReadText(1);
       column->nullable = (*iter).ReadBool(2);
       column->hasDefault = (*iter).ReadBool(3);
       column->description = (*iter).ReadText(4);
       column->attnum = (*iter).ReadInt4(5);
-      columns.push_back(column);
+      detail->columns.push_back(column);
     }
   }
   void ReadIndices() {
@@ -448,7 +449,7 @@ private:
 	index->exclusion = (*iter).ReadBool(_T("indisexclusion"));
 	index->clustered = (*iter).ReadBool(_T("indisclustered"));
 	lastIndex = index;
-	indices.push_back(index);
+	detail->indices.push_back(index);
       }
       else {
 	index = lastIndex;
@@ -484,7 +485,7 @@ private:
     for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
       TriggerModel *trigger = new TriggerModel();
       trigger->name = (*iter).ReadText(0);
-      triggers.push_back(trigger);
+      detail->triggers.push_back(trigger);
     }
   }
   void ReadSequences() {
@@ -508,13 +509,13 @@ private:
 	CheckConstraintModel *constraint = new CheckConstraintModel();
 	constraint->name = (*iter).ReadText(0);
 	constraint->expression = (*iter).ReadText(2);
-	checkConstraints.push_back(constraint);
+	detail->checkConstraints.push_back(constraint);
       }
     }
   }
 protected:
   void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInRelation(this);
+    ob->FillInRelation(detail, relationItem);
     ob->Expand(relationItem);
 
     // remove 'loading...' tag

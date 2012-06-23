@@ -637,13 +637,18 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(LoadRelationWork *work) {
+void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relationItem) {
+  RelationModel *relationModel = dynamic_cast<RelationModel*>(GetItemData(relationItem));
+  wxASSERT(relationModel != NULL);
+
+  relationModel->columns = incoming->columns;
   std::map<int,wxTreeItemId> columnItems;
-  for (std::vector<ColumnModel*>::iterator iter = work->columns.begin(); iter != work->columns.end(); iter++) {
+  for (std::vector<ColumnModel*>::iterator iter = incoming->columns.begin(); iter != incoming->columns.end(); iter++) {
     ColumnModel *column = *iter;
+    column->relation = relationModel;
     wxString itemText = column->name + _T(" (") + column->type;
 
-    if (work->relationModel->type == RelationModel::TABLE) {
+    if (relationModel->type == RelationModel::TABLE) {
       if (column->nullable)
 	itemText += _(", null");
       else
@@ -654,12 +659,12 @@ void ObjectBrowser::FillInRelation(LoadRelationWork *work) {
 
     itemText += _T(")");
 
-    wxTreeItemId columnItem = AppendItem(work->relationItem, itemText);
+    wxTreeItemId columnItem = AppendItem(relationItem, itemText);
     SetItemData(columnItem, column);
     SetItemImage(columnItem, img_column);
     columnItems[column->attnum] = columnItem;
 
-    for (std::vector<RelationModel*>::iterator seqIter = work->sequences.begin(); seqIter != work->sequences.end(); seqIter++) {
+    for (std::vector<RelationModel*>::iterator seqIter = incoming->sequences.begin(); seqIter != incoming->sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
       if (sequence->owningColumn != column->attnum) continue;
 
@@ -669,10 +674,11 @@ void ObjectBrowser::FillInRelation(LoadRelationWork *work) {
     }
   }
 
-  if (!work->indices.empty()) {
-    wxTreeItemId indicesItem = AppendItem(work->relationItem, _("Indices"));
+  relationModel->indices = incoming->indices;
+  if (!incoming->indices.empty()) {
+    wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
     SetItemImage(indicesItem, img_folder);
-    for (std::vector<IndexModel*>::iterator iter = work->indices.begin(); iter != work->indices.end(); iter++) {
+    for (std::vector<IndexModel*>::iterator iter = incoming->indices.begin(); iter != incoming->indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
       if ((*iter)->primaryKey)
@@ -693,19 +699,21 @@ void ObjectBrowser::FillInRelation(LoadRelationWork *work) {
     }
   }
 
-  if (!work->checkConstraints.empty()) {
-    wxTreeItemId constraintsItem = AppendItem(work->relationItem, _("Constraints"));
+  relationModel->checkConstraints = incoming->checkConstraints;
+  if (!incoming->checkConstraints.empty()) {
+    wxTreeItemId constraintsItem = AppendItem(relationItem, _("Constraints"));
     SetItemImage(constraintsItem, img_folder);
-    for (std::vector<CheckConstraintModel*>::iterator iter = work->checkConstraints.begin(); iter != work->checkConstraints.end(); iter++) {
+    for (std::vector<CheckConstraintModel*>::iterator iter = incoming->checkConstraints.begin(); iter != incoming->checkConstraints.end(); iter++) {
       wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter)->name);
       SetItemData(constraintItem, *iter);
     }
   }
 
-  if (!work->triggers.empty()) {
-    wxTreeItemId triggersItem = AppendItem(work->relationItem, _("Triggers"));
+  relationModel->triggers = incoming->triggers;
+  if (!incoming->triggers.empty()) {
+    wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
     SetItemImage(triggersItem, img_folder);
-    for (std::vector<TriggerModel*>::iterator iter = work->triggers.begin(); iter != work->triggers.end(); iter++) {
+    for (std::vector<TriggerModel*>::iterator iter = incoming->triggers.begin(); iter != incoming->triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
       SetItemData(triggerItem, *iter);
     }

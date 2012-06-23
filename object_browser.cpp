@@ -149,7 +149,7 @@ public:
   SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, std::vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
 
   bool load(wxTreeItemId parent) {
-    ob->AppendDivision(division, parent);
+    ob->AppendDivision(db, division, parent);
     return false;
   }
 
@@ -185,6 +185,10 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_column.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_column_pkey.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_role.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_template.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_parser.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_dictionary.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_configuration.png")));
   AssignImageList(images);
   currentlySelected = false;
 }
@@ -489,13 +493,20 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
 
   int relationsCount = 0;
   int functionsCount = 0;
+  int textSearchDictionariesCount = 0;
+  int textSearchParsersCount = 0;
+  int textSearchTemplatesCount = 0;
+  int textSearchConfigurationsCount = 0;
   for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) continue;
     RelationModel *relation = dynamic_cast<RelationModel*>(member);
     if (relation == NULL) {
-      FunctionModel *function = dynamic_cast<FunctionModel*>(member);
-      if (function != NULL) ++functionsCount;
+      if ((dynamic_cast<FunctionModel*>(member)) != NULL) ++functionsCount;
+      else if ((dynamic_cast<TextSearchDictionaryModel*>(member)) != NULL) ++textSearchDictionariesCount;
+      else if ((dynamic_cast<TextSearchParserModel*>(member)) != NULL) ++textSearchParsersCount;
+      else if ((dynamic_cast<TextSearchTemplateModel*>(member)) != NULL) ++textSearchTemplatesCount;
+      else if ((dynamic_cast<TextSearchConfigurationModel*>(member)) != NULL) ++textSearchConfigurationsCount;
       continue;
     }
     ++relationsCount;
@@ -521,52 +532,140 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     }
   }
 
-  if (functionsCount == 0)
-    return;
+  if (functionsCount > 0) {
+    wxTreeItemId functionsItem = parent;
+    if (relationsCount != 0 && createSchemaItem) {
+      functionsItem = AppendItem(parent, _("Functions"));
+      SetItemImage(functionsItem, img_folder);
+    }
+    else {
+      // no relations, so add functions directly in the schema item
+      functionsItem = parent;
+    }
 
-  wxTreeItemId functionsItem = parent;
-  if (relationsCount != 0 && createSchemaItem) {
-    functionsItem = AppendItem(parent, _("Functions"));
-    SetItemImage(functionsItem, img_folder);
-  }
-  else {
-    // no relations, so add functions directly in the schema item
-    functionsItem = parent;
+    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (member->name.IsEmpty()) continue;
+      FunctionModel *function = dynamic_cast<FunctionModel*>(member);
+      if (function == NULL) continue;
+      wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
+      SetItemData(memberItem, function);
+      function->database->symbolItemLookup[function->oid] = memberItem;
+      // see images->Add calls in constructor
+      switch (function->type) {
+      case FunctionModel::SCALAR:
+      case FunctionModel::RECORDSET:
+	SetItemImage(memberItem, img_function);
+	break;
+      case FunctionModel::AGGREGATE:
+	SetItemImage(memberItem, img_function_aggregate);
+	break;
+      case FunctionModel::TRIGGER:
+	SetItemImage(memberItem, img_function_trigger);
+	break;
+      case FunctionModel::WINDOW:
+	SetItemImage(memberItem, img_function_window);
+	break;
+      }
+    }
   }
 
-  for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-    SchemaMemberModel *member = *iter;
-    if (member->name.IsEmpty()) continue;
-    FunctionModel *function = dynamic_cast<FunctionModel*>(member);
-    if (function == NULL) continue;
-    wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
-    SetItemData(memberItem, function);
-    function->database->symbolItemLookup[function->oid] = memberItem;
-    // see images->Add calls in constructor
-    switch (function->type) {
-    case FunctionModel::SCALAR:
-    case FunctionModel::RECORDSET:
-      SetItemImage(memberItem, img_function);
-      break;
-    case FunctionModel::AGGREGATE:
-      SetItemImage(memberItem, img_function_aggregate);
-      break;
-    case FunctionModel::TRIGGER:
-      SetItemImage(memberItem, img_function_trigger);
-      break;
-    case FunctionModel::WINDOW:
-      SetItemImage(memberItem, img_function_window);
-      break;
+  if (textSearchDictionariesCount > 0) {
+    wxTreeItemId dictionariesItem;
+    if (relationsCount != 0 && createSchemaItem) {
+      dictionariesItem = AppendItem(parent, _("Text Search Dictionaries"));
+      SetItemImage(dictionariesItem, img_folder);
+    }
+    else {
+      dictionariesItem = parent;
+    }
+
+    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (member->name.empty()) continue;
+      TextSearchDictionaryModel *dict = dynamic_cast<TextSearchDictionaryModel*>(member);
+      if (dict == NULL) continue;
+      wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->name : dict->schema + _T(".") + dict->name);
+      SetItemData(memberItem, member);
+      SetItemImage(memberItem, img_text_search_dictionary);
+      member->database->symbolItemLookup[member->oid] = memberItem;
+    }
+  }
+
+  if (textSearchParsersCount > 0) {
+    wxTreeItemId parsersItem;
+    if (relationsCount != 0 && createSchemaItem) {
+      parsersItem = AppendItem(parent, _("Text Search Parsers"));
+      SetItemImage(parsersItem, img_folder);
+    }
+    else {
+      parsersItem = parent;
+    }
+
+    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (member->name.empty()) continue;
+      TextSearchParserModel *prs = dynamic_cast<TextSearchParserModel*>(member);
+      if (prs == NULL) continue;
+      wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->name : prs->schema + _T(".") + prs->name);
+      SetItemData(memberItem, member);
+      SetItemImage(memberItem, img_text_search_parser);
+      member->database->symbolItemLookup[member->oid] = memberItem;
+    }
+  }
+
+  if (textSearchTemplatesCount > 0) {
+    wxTreeItemId templatesItem;
+    if (relationsCount != 0 && createSchemaItem) {
+      templatesItem = AppendItem(parent, _("Text Search Templates"));
+      SetItemImage(templatesItem, img_folder);
+    }
+    else {
+      templatesItem = parent;
+    }
+
+    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (member->name.empty()) continue;
+      TextSearchTemplateModel *tmpl = dynamic_cast<TextSearchTemplateModel*>(member);
+      if (tmpl == NULL) continue;
+      wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->name : tmpl->schema + _T(".") + tmpl->name);
+      SetItemData(memberItem, member);
+      SetItemImage(memberItem, img_text_search_template);
+      member->database->symbolItemLookup[member->oid] = memberItem;
+    }
+  }
+
+  if (textSearchConfigurationsCount > 0) {
+    wxTreeItemId configurationsItem;
+    if (relationsCount != 0 && createSchemaItem) {
+      configurationsItem = AppendItem(parent, _("Text Search Configurations"));
+      SetItemImage(configurationsItem, img_folder);
+    }
+    else {
+      configurationsItem = parent;
+    }
+
+    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      SchemaMemberModel *member = *iter;
+      if (member->name.empty()) continue;
+      TextSearchConfigurationModel *cfg = dynamic_cast<TextSearchConfigurationModel*>(member);
+      if (cfg == NULL) continue;
+      wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->name : cfg->schema + _T(".") + cfg->name);
+      SetItemData(memberItem, member);
+      SetItemImage(memberItem, img_text_search_configuration);
+      member->database->symbolItemLookup[member->oid] = memberItem;
     }
   }
 }
 
-void ObjectBrowser::AppendDivision(std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
+void ObjectBrowser::AppendDivision(DatabaseModel *databaseModel, std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
   std::map<wxString, std::vector<SchemaMemberModel*> > schemas;
 
   for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     SchemaMemberModel *member = *iter;
     schemas[member->schema].push_back(member);
+    member->database = databaseModel;
   }
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
@@ -580,7 +679,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
 
-  AppendDivision(divisions.userDivision, databaseItem);
+  AppendDivision(databaseModel, divisions.userDivision, databaseItem);
 
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
@@ -588,7 +687,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
     for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
       wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
       SetItemImage(extensionItem, img_folder);
-      AppendDivision(iter->second, extensionItem);
+      AppendDivision(databaseModel, iter->second, extensionItem);
     }
   }
 

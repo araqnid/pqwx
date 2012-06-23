@@ -76,8 +76,11 @@ public:
   Oid oid;
   wxString schema;
   wxString extension;
-  bool user;
   wxString FormatName() const { return schema + _T('.') + name; }
+  bool IsUser() const { return !IsSystemSchema(schema); }
+  static inline bool IsSystemSchema(wxString schema) {
+    return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
+  }
 };
 
 /**
@@ -103,6 +106,34 @@ public:
   wxString arguments;
   enum Type { SCALAR, RECORDSET, TRIGGER, AGGREGATE, WINDOW } type;
   wxString FormatName() const { return schema + _T('.') + name + _T('(') + arguments + _T(')'); }
+};
+
+/**
+ * A full-text search configuration.
+ */
+class TextSearchConfigurationModel : public SchemaMemberModel {
+public:
+};
+
+/**
+ * A full-text search parser.
+ */
+class TextSearchParserModel : public SchemaMemberModel {
+public:
+};
+
+/**
+ * A full-text search configuration.
+ */
+class TextSearchDictionaryModel : public SchemaMemberModel {
+public:
+};
+
+/**
+ * A full-text search configuration.
+ */
+class TextSearchTemplateModel : public SchemaMemberModel {
+public:
 };
 
 /**
@@ -133,6 +164,10 @@ public:
   std::map<Oid, wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
+  std::vector<TextSearchDictionaryModel*> textSearchDictionaries;
+  std::vector<TextSearchParserModel*> textSearchParsers;
+  std::vector<TextSearchTemplateModel*> textSearchTemplates;
+  std::vector<TextSearchConfigurationModel*> textSearchConfigurations;
 
   /**
    * @return A string identifying this database, such as "[local] postgres"
@@ -166,6 +201,18 @@ public:
     for (std::vector<FunctionModel*>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
       members.push_back(*iter);
     }
+    for (std::vector<TextSearchDictionaryModel*>::const_iterator iter = textSearchDictionaries.begin(); iter != textSearchDictionaries.end(); iter++) {
+      members.push_back(*iter);
+    }
+    for (std::vector<TextSearchParserModel*>::const_iterator iter = textSearchParsers.begin(); iter != textSearchParsers.end(); iter++) {
+      members.push_back(*iter);
+    }
+    for (std::vector<TextSearchTemplateModel*>::const_iterator iter = textSearchTemplates.begin(); iter != textSearchTemplates.end(); iter++) {
+      members.push_back(*iter);
+    }
+    for (std::vector<TextSearchConfigurationModel*>::const_iterator iter = textSearchConfigurations.begin(); iter != textSearchConfigurations.end(); iter++) {
+      members.push_back(*iter);
+    }
 
     sort(members.begin(), members.end(), CollateSchemaMembers);
   
@@ -175,7 +222,7 @@ public:
       SchemaMemberModel *member = *iter;
       if (!member->extension.IsEmpty())
 	result.extensionDivisions[member->extension].push_back(member);
-      else if (!member->user)
+      else if (!member->IsUser())
 	result.systemDivision.push_back(member);
       else
 	result.userDivision.push_back(member);

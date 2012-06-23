@@ -152,7 +152,7 @@ public:
    * Append a division of schema members under the given parent.
    * The parent is typically the database itself, or "System schemas".
    */
-  void AppendDivision(std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  void AppendDivision(DatabaseModel *db, std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
   /**
    * Divide up schema members into user, extension and system "divisions".
    */
@@ -287,6 +287,10 @@ private:
   static const int img_column = img_index_uniq + 1;
   static const int img_column_pkey = img_column + 1;
   static const int img_role = img_column_pkey + 1;
+  static const int img_text_search_template = img_role + 1;
+  static const int img_text_search_parser = img_text_search_template + 1;
+  static const int img_text_search_dictionary = img_text_search_parser + 1;
+  static const int img_text_search_configuration = img_text_search_dictionary + 1;
 };
 
 /**

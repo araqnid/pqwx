@@ -207,6 +207,26 @@ FROM pg_class seq
 WHERE pg_depend.refobjid = $1
       AND seq.relkind = 'S'
 
+-- SQL :: Text search dictionaries
+SELECT pg_ts_dict.oid, nspname, dictname
+FROM pg_ts_dict
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
+
+-- SQL :: Text search parsers
+SELECT pg_ts_parser.oid, nspname, prsname
+FROM pg_ts_parser
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
+
+-- SQL :: Text search templates
+SELECT pg_ts_template.oid, nspname, tmplname
+FROM pg_ts_template
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
+
+-- SQL :: Text search configurations
+SELECT pg_ts_config.oid, nspname, cfgname
+FROM pg_ts_config
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
+
 -- SQL :: IndexSchema :: 9.1
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'

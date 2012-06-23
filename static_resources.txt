@@ -16,6 +16,10 @@ icon_function_aggregate.png	ObjectFinder
 icon_function_trigger.png	ObjectFinder
 icon_function_window.png	ObjectFinder
 icon_sequence.png		ObjectFinder
+icon_text_search_template.png	ObjectFinder
+icon_text_search_parser.png	ObjectFinder
+icon_text_search_dictionary.png	ObjectFinder
+icon_text_search_configuration.png	ObjectFinder
 pqwx-appicon-32.png		PqwxFrame
 pqwx-appicon-48.png		PqwxFrame
 pqwx-appicon-64.png		PqwxFrame

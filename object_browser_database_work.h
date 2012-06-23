@@ -190,11 +190,12 @@ protected:
   void operator()();
   void LoadRelations();
   void LoadFunctions();
+  void LoadTextSearchDictionaries();
+  void LoadTextSearchTemplates();
+  void LoadTextSearchParsers();
+  void LoadTextSearchConfigurations();
   void LoadIntoView(ObjectBrowser *ob);
 private:
-  static inline bool IsSystemSchema(wxString schema) {
-    return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
-  }
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };

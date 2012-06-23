@@ -96,6 +96,10 @@ const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTy
 void LoadDatabaseSchemaWork::operator()() {
   LoadRelations();
   LoadFunctions();
+  LoadTextSearchParsers();
+  LoadTextSearchDictionaries();
+  LoadTextSearchTemplates();
+  LoadTextSearchConfigurations();
 }
 
 void LoadDatabaseSchemaWork::LoadRelations() {
@@ -104,7 +108,6 @@ void LoadDatabaseSchemaWork::LoadRelations() {
     RelationModel *relation = new RelationModel();
     relation->database = databaseModel;
     relation->schema = (*iter).ReadText(1);
-    relation->user = !IsSystemSchema(relation->schema);
     if (!(*iter)[0].IsEmpty()) {
       relation->oid = (*iter).ReadOid(0);
       relation->name = (*iter).ReadText(2);
@@ -131,8 +134,55 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
     func->extension = (*iter).ReadText(5);
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
     func->type = functionTypeMap.find(type)->second;
-    func->user = !IsSystemSchema(func->schema);
     databaseModel->functions.push_back(func);
+  }
+}
+
+void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
+{
+  QueryResults rows = Query(_T("Text search dictionaries")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    TextSearchDictionaryModel *dict = new TextSearchDictionaryModel();
+    dict->oid = (*iter).ReadOid(0);
+    dict->schema = (*iter).ReadText(1);
+    dict->name = (*iter).ReadText(2);
+    databaseModel->textSearchDictionaries.push_back(dict);
+  }
+}
+
+void LoadDatabaseSchemaWork::LoadTextSearchParsers()
+{
+  QueryResults rows = Query(_T("Text search parsers")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    TextSearchParserModel *prs = new TextSearchParserModel();
+    prs->oid = (*iter).ReadOid(0);
+    prs->schema = (*iter).ReadText(1);
+    prs->name = (*iter).ReadText(2);
+    databaseModel->textSearchParsers.push_back(prs);
+  }
+}
+
+void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
+{
+  QueryResults rows = Query(_T("Text search templates")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    TextSearchTemplateModel *tmpl = new TextSearchTemplateModel();
+    tmpl->oid = (*iter).ReadOid(0);
+    tmpl->schema = (*iter).ReadText(1);
+    tmpl->name = (*iter).ReadText(2);
+    databaseModel->textSearchTemplates.push_back(tmpl);
+  }
+}
+
+void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
+{
+  QueryResults rows = Query(_T("Text search configurations")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    TextSearchConfigurationModel *cfg = new TextSearchConfigurationModel();
+    cfg->oid = (*iter).ReadOid(0);
+    cfg->schema = (*iter).ReadText(1);
+    cfg->name = (*iter).ReadText(2);
+    databaseModel->textSearchConfigurations.push_back(cfg);
   }
 }
 

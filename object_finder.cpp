@@ -43,6 +43,9 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
     results.clear();
   }
 
+  if (results.empty())
+    return;
+
   wxArrayString htmlList;
   std::map<wxString, unsigned> seenSymbols;
   std::set<wxString> dupeSymbols;
@@ -93,6 +96,7 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
   }
 
   resultsCtrl->Append(htmlList);
+  resultsCtrl->SetSelection(0);
 }
 
 void ObjectFinder::OnOk(wxCommandEvent &event) {

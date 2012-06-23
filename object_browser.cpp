@@ -671,6 +671,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
       wxTreeItemId sequenceItem = AppendItem(columnItem, sequence->schema + _T(".") + sequence->name);
       SetItemData(sequenceItem, sequence);
       SetItemImage(sequenceItem, img_sequence);
+      sequence->database = relationModel->database;
     }
   }
 

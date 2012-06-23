@@ -147,64 +147,24 @@ public:
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void operator()() {
-    ReadServer();
-    ReadDatabases();
-    ReadRoles();
-  }
-  void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInServer(serverModel, serverItem);
-    ob->EnsureVisible(serverItem);
-    ob->SelectItem(serverItem);
-    ob->Expand(serverItem);
-  }
+  void operator()();
+  void LoadIntoView(ObjectBrowser *ob);
 private:
   ServerModel *serverModel;
   wxTreeItemId serverItem;
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
-  void ReadServer() {
-    serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), PQgetssl(conn));
-  }
+  void ReadServer();
+  void ReadDatabases();
+  void ReadRoles();
 
   static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
     return d1->name < d2->name;
   }
 
-  void ReadDatabases() {
-    QueryResults databaseRows = Query(_T("Databases")).List();
-    for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
-      DatabaseModel *database = new DatabaseModel();
-      database->server = serverModel;
-      database->loaded = false;
-      database->oid = (*iter).ReadOid(0);
-      database->name = (*iter).ReadText(1);
-      database->isTemplate = (*iter).ReadBool(2);
-      database->allowConnections = (*iter).ReadBool(3);
-      database->havePrivsToConnect = (*iter).ReadBool(4);
-      database->description = (*iter).ReadText(5);
-      serverModel->databases.push_back(database);
-    }
-    sort(serverModel->databases.begin(), serverModel->databases.end(), CollateDatabases);
-  }
-
   static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
     return r1->name < r2->name;
-  }
-
-  void ReadRoles() {
-    QueryResults roleRows = Query(_T("Roles")).List();
-    for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
-      RoleModel *role = new RoleModel();
-      role->oid = (*iter).ReadOid(0);
-      role->name = (*iter).ReadText(1);
-      role->canLogin = (*iter).ReadBool(2);
-      role->superuser = (*iter).ReadBool(3);
-      role->description = (*iter).ReadText(4);
-      serverModel->roles.push_back(role);
-    }
-    sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
   }
 };
 
@@ -227,50 +187,10 @@ private:
   wxTreeItemId databaseItem;
   bool expandAfter;
 protected:
-  void operator()() {
-    LoadRelations();
-    LoadFunctions();
-  }
-  void LoadRelations() {
-    QueryResults relationRows = Query(_T("Relations")).List();
-    for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
-      RelationModel *relation = new RelationModel();
-      relation->database = databaseModel;
-      relation->schema = (*iter).ReadText(1);
-      relation->user = !IsSystemSchema(relation->schema);
-      if (!(*iter)[0].IsEmpty()) {
-	relation->oid = (*iter).ReadOid(0);
-	relation->name = (*iter).ReadText(2);
-	wxString relkind((*iter).ReadText(3));
-	relation->extension = (*iter).ReadText(4);
-	wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
-	relation->type = relationTypeMap.find(relkind)->second;
-      }
-      databaseModel->relations.push_back(relation);
-    }
-  }
-  void LoadFunctions() {
-    QueryResults functionRows = Query(_T("Functions")).List();
-    for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
-      FunctionModel *func = new FunctionModel();
-      func->database = databaseModel;
-      func->oid = (*iter).ReadOid(0);
-      func->schema = (*iter).ReadText(1);
-      func->name = (*iter).ReadText(2);
-      func->arguments = (*iter).ReadText(3);
-      wxString type((*iter).ReadText(4));
-      func->extension = (*iter).ReadText(5);
-      wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
-      func->type = functionTypeMap.find(type)->second;
-      func->user = !IsSystemSchema(func->schema);
-      databaseModel->functions.push_back(func);
-    }
-  }
-  void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInDatabaseSchema(databaseModel, databaseItem);
-    if (expandAfter) ob->Expand(databaseItem);
-    ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
-  }
+  void operator()();
+  void LoadRelations();
+  void LoadFunctions();
+  void LoadIntoView(ObjectBrowser *ob);
 private:
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
@@ -294,34 +214,8 @@ private:
   DatabaseModel *databaseModel;
   std::map<unsigned long, wxString> descriptions;
 protected:
-  void operator()() {
-    QueryResults rs = Query(_T("Object Descriptions")).List();
-    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-      unsigned long oid;
-      wxString description;
-      oid = (*iter).ReadOid(0);
-      description = (*iter).ReadText(1);
-      descriptions[oid] = description;
-    }
-  }
-  void LoadIntoView(ObjectBrowser *ob) {
-    int count = 0;
-    for (std::vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
-      std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
-      if (ptr != descriptions.end()) {
-	(*iter)->description = (*ptr).second;
-	++count;
-      }
-    }
-    for (std::vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
-      std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
-      if (ptr != descriptions.end()) {
-	(*iter)->description = (*ptr).second;
-	++count;
-      }
-    }
-    wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
-  }
+  void operator()();
+  void LoadIntoView(ObjectBrowser *ob);
 };
 
 /**
@@ -353,39 +247,8 @@ private:
   CatalogueIndex *catalogueIndex;
   static const std::map<wxString, CatalogueIndex::Type> typeMap;
 protected:
-  void operator()() {
-    QueryResults rs = Query(_T("IndexSchema")).List();
-    catalogueIndex = new CatalogueIndex();
-    catalogueIndex->Begin();
-    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-      Oid entityId = (*iter).ReadOid(0);
-      wxString typeString = (*iter).ReadText(1);
-      wxString symbol = (*iter).ReadText(2);
-      wxString disambig = (*iter).ReadText(3);
-      bool systemObject;
-      CatalogueIndex::Type entityType;
-      if (typeString.Last() == _T('S')) {
-	systemObject = true;
-	typeString.RemoveLast();
-	wxASSERT(typeMap.count(typeString) > 0);
-	entityType = typeMap.find(typeString)->second;
-      }
-      else {
-	systemObject = false;
-	wxASSERT(typeMap.count(typeString) > 0);
-	entityType = typeMap.find(typeString)->second;
-      }
-      catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, symbol, disambig));
-    }
-    catalogueIndex->Commit();
-  }
-  void LoadIntoView(ObjectBrowser *ob) {
-    database->catalogueIndex = catalogueIndex;
-    if (completion) {
-      completion->Completed(ob, database, catalogueIndex);
-      delete completion;
-    }
-  }
+  void operator()();
+  void LoadIntoView(ObjectBrowser *ob);
 };
 
 /**
@@ -397,134 +260,24 @@ public:
    * @param relationModel Relation model to populate
    * @param relationItem Relation tree item to populate
    */
-  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : relationModel(relationModel), relationItem(relationItem) {
+  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : relationType(relationModel->type), oid(relationModel->oid), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
-  const RelationModel *relationModel;
+  const RelationModel::Type relationType;
+  const Oid oid;
   wxTreeItemId relationItem;
   RelationModel *detail;
-  std::vector<ColumnModel*> columns;
-  std::vector<IndexModel*> indices;
-  std::vector<TriggerModel*> triggers;
-  std::vector<RelationModel*> sequences;
-  std::vector<CheckConstraintModel*> checkConstraints;
   friend class ObjectBrowser;
-protected:
-  void operator()() {
-    detail = new RelationModel();
-    ReadColumns();
-    if (relationModel->type == RelationModel::TABLE) {
-      ReadIndices();
-      ReadTriggers();
-      ReadSequences();
-      ReadConstraints();
-    }
-  }
 private:
-  void ReadColumns() {
-    QueryResults attributeRows = Query(_T("Columns")).OidParam(relationModel->oid).List();
-    for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
-      ColumnModel *column = new ColumnModel();
-      column->name = (*iter).ReadText(0);
-      column->type = (*iter).ReadText(1);
-      column->nullable = (*iter).ReadBool(2);
-      column->hasDefault = (*iter).ReadBool(3);
-      column->description = (*iter).ReadText(4);
-      column->attnum = (*iter).ReadInt4(5);
-      detail->columns.push_back(column);
-    }
-  }
-  void ReadIndices() {
-    QueryResults indexRows = Query(_T("Indices")).OidParam(relationModel->oid).List();
-    IndexModel *lastIndex = NULL;
-    for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
-      IndexModel *index;
-      wxString indexName = (*iter)[_T("relname")];
-      if (lastIndex == NULL || lastIndex->name != indexName) {
-	index = new IndexModel();
-	index->name = indexName;
-	index->primaryKey = (*iter).ReadBool(_T("indisprimary"));
-	index->unique = (*iter).ReadBool(_T("indisunique"));
-	index->exclusion = (*iter).ReadBool(_T("indisexclusion"));
-	index->clustered = (*iter).ReadBool(_T("indisclustered"));
-	lastIndex = index;
-	detail->indices.push_back(index);
-      }
-      else {
-	index = lastIndex;
-      }
-      index->columns = ParseInt2Vector((*iter)[_T("indkey")]);
-    }
-  }
-  std::vector<int> ParseInt2Vector(const wxString &str)
-  {
-    std::vector<int> result;
-    unsigned mark = 0;
-    for (unsigned pos = 0; pos < str.length(); pos++) {
-      if (str[pos] == ' ') {
-	long value;
-	if (str.Mid(mark, pos-mark).ToLong(&value)) {
-	  result.push_back((int) value);
-	}
-	mark = pos + 1;
-      }
-    }
-
-    if (mark < str.length()) {
-      long value;
-      if (str.Mid(mark, str.length()-mark).ToLong(&value)) {
-	result.push_back((int) value);
-      }
-    }
-
-    return result;
-  }
-  void ReadTriggers() {
-    QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationModel->oid).List();
-    for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
-      TriggerModel *trigger = new TriggerModel();
-      trigger->name = (*iter).ReadText(0);
-      detail->triggers.push_back(trigger);
-    }
-  }
-  void ReadSequences() {
-    QueryResults sequenceRows = Query(_T("Sequences")).OidParam(relationModel->oid).List();
-    for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
-      RelationModel *sequence = new RelationModel();
-      sequence->type = RelationModel::SEQUENCE;
-      sequence->database = relationModel->database;
-      sequence->oid = (*iter).ReadOid(0);
-      sequence->schema = (*iter).ReadText(1);
-      sequence->name = (*iter).ReadText(2);
-      sequence->owningColumn = (*iter).ReadInt4(3);
-      sequences.push_back(sequence);
-    }
-  }
-  void ReadConstraints() {
-    QueryResults rows = Query(_T("Constraints")).OidParam(relationModel->oid).List();
-    for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-      wxString typeCode = (*iter).ReadText(1);
-      if (typeCode == _T("c")) {
-	CheckConstraintModel *constraint = new CheckConstraintModel();
-	constraint->name = (*iter).ReadText(0);
-	constraint->expression = (*iter).ReadText(2);
-	detail->checkConstraints.push_back(constraint);
-      }
-    }
-  }
-protected:
-  void LoadIntoView(ObjectBrowser *ob) {
-    ob->FillInRelation(detail, relationItem);
-    ob->Expand(relationItem);
-
-    // remove 'loading...' tag
-    wxString itemText = ob->GetItemText(relationItem);
-    int space = itemText.Find(_T(' '));
-    if (space != wxNOT_FOUND) {
-      ob->SetItemText(relationItem, itemText.Left(space));
-    }
-  }
+  void operator()();
+  void ReadColumns();
+  void ReadIndices();
+  void ReadTriggers();
+  void ReadSequences();
+  void ReadConstraints();
+  void LoadIntoView(ObjectBrowser *ob);
+  static std::vector<int> ParseInt2Vector(const wxString &str);
 };
 
 #endif

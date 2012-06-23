@@ -41,23 +41,22 @@ public:
   /**
    * Create filter for object finder results.
    *
-   * This filter removes system objects and trigger functions.
+   * This filter removes trigger functions.
    */
-  static CatalogueIndex::Filter CreateFilter(const CatalogueIndex *catalogue) {
-    return catalogue->CreateNonSystemFilter()
-      & (catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
-         | catalogue->CreateTypeFilter(CatalogueIndex::TABLE_UNLOGGED)
-         | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
-         | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
-         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
-         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
-         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
-         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
-         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_CONFIGURATION)
-         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_DICTIONARY)
-         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_PARSER)
-         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_TEMPLATE)
-         );
+  static CatalogueIndex::Filter CreateTypesFilter(const CatalogueIndex *catalogue) {
+    return catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
+      | catalogue->CreateTypeFilter(CatalogueIndex::TABLE_UNLOGGED)
+      | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
+      | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
+      | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
+      | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
+      | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
+      | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
+      | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_CONFIGURATION)
+      | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_DICTIONARY)
+      | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_PARSER)
+      | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_TEMPLATE)
+      ;
   }
 
   /**
@@ -66,7 +65,9 @@ public:
    * This constructor is for a modal dialogue.
    */
   ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue)
-    : wxDialog(), catalogue(catalogue), completion(NULL), filter(CreateFilter(catalogue)) {
+    : wxDialog(), catalogue(catalogue), completion(NULL),
+      nonSystemFilter(catalogue->CreateNonSystemFilter()),
+      typesFilter(CreateTypesFilter(catalogue)) {
     Init(parent);
   }
 
@@ -76,7 +77,9 @@ public:
    * This constructor is for a non-modal dialogue.
    */
   ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue, Completion *callback)
-    : wxDialog(), catalogue(catalogue), completion(callback), filter(CreateFilter(catalogue)) {
+    : wxDialog(), catalogue(catalogue), completion(callback),
+      nonSystemFilter(catalogue->CreateNonSystemFilter()),
+      typesFilter(CreateTypesFilter(catalogue)) {
     Init(parent);
   }
 
@@ -84,20 +87,25 @@ public:
     delete completion;
   }
 
-  void OnQueryChanged(wxCommandEvent&);
+  void OnQueryChanged(wxCommandEvent& e) { SearchCatalogue(); }
   void OnOk(wxCommandEvent&);
   void OnDoubleClickResult(wxCommandEvent&);
   void OnCancel(wxCommandEvent&);
   void OnClose(wxCloseEvent&);
+  void OnIncludeSystem(wxCommandEvent& e) { SearchCatalogue(); }
+
+  void SearchCatalogue();
 
 protected:
   wxTextCtrl *queryInput;
   wxSimpleHtmlListBox *resultsCtrl;
+  wxCheckBox *includeSystemInput;
 
 private:
   const CatalogueIndex *catalogue;
   Completion *completion;
-  CatalogueIndex::Filter filter;
+  const CatalogueIndex::Filter nonSystemFilter;
+  const CatalogueIndex::Filter typesFilter;
   std::vector<CatalogueIndex::Result> results;
   void Init(wxWindow *parent);
   std::map<CatalogueIndex::Type, wxString> iconMap;

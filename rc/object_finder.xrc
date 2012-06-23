@@ -8,7 +8,7 @@
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
         <object class="wxStaticText">
-          <label>Enter type or view name, either underscore_symbols or StudlyCaps:</label>
+          <label>Enter partial name of table, view etc. Use either underscore_symbols or StudlyCaps:</label>
         </object>
         <flag>wxALL</flag>
         <border>4</border>
@@ -33,6 +33,11 @@
         <option>1</option>
         <flag>wxALL|wxEXPAND</flag>
         <border>4</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxCheckBox" name="includeSystem">
+          <label>Search in &amp;system catalogues</label>
+        </object>
       </object>
       <object class="sizeritem">
         <object class="wxStdDialogButtonSizer">

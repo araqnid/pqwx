@@ -48,8 +48,8 @@ FROM pg_group
 
 -- SQL :: Relations :: 9.1
 SELECT pg_class.oid, nspname, relname, relkind,
-       pg_extension.extname
-FROM (SELECT oid, relname, relkind, relnamespace
+       pg_extension.extname, relpersistence = 'u' AS is_unlogged
+FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
       FROM pg_class
       WHERE relkind IN ('r','v')
             OR (relkind = 'S' AND NOT EXISTS (
@@ -74,7 +74,7 @@ FROM (SELECT oid, relname, relkind, relnamespace
 
 -- SQL :: Relations
 SELECT pg_class.oid, nspname, relname, relkind,
-       NULL AS extname
+       NULL AS extname, false AS is_unlogged
 FROM (SELECT oid, relname, relkind, relnamespace
       FROM pg_class
       WHERE relkind IN ('r','v')
@@ -220,7 +220,7 @@ FROM pg_namespace
                         relname AS objname,
                         null AS objdisambig,
                         CASE relkind
-                             WHEN 'r' THEN 't'
+                             WHEN 'r' THEN CASE relpersistence WHEN 'u' THEN 'tu' ELSE 't' END
                              WHEN 'S' THEN 's'
                              WHEN 'v' THEN 'v'
                         END AS objtype

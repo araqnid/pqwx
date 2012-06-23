@@ -46,7 +46,7 @@ public:
    * callers can individually filter out trigger functions, for
    * example.
    */
-  enum Type { TABLE, VIEW, SEQUENCE,
+  enum Type { TABLE, TABLE_UNLOGGED, VIEW, SEQUENCE,
 	      FUNCTION_SCALAR, FUNCTION_ROWSET, FUNCTION_TRIGGER, FUNCTION_AGGREGATE, FUNCTION_WINDOW,
 	      TYPE, EXTENSION, COLLATION };
 

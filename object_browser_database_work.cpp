@@ -69,6 +69,30 @@ void RefreshDatabaseListWork::ReadRoles()
  * Schema of a single database
  */
 
+static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
+{
+  std::map<wxString, RelationModel::Type> typemap;
+  typemap[_T("r")] = RelationModel::TABLE;
+  typemap[_T("v")] = RelationModel::VIEW;
+  typemap[_T("S")] = RelationModel::SEQUENCE;
+  return typemap;
+}
+
+const std::map<wxString, RelationModel::Type> LoadDatabaseSchemaWork::relationTypeMap = InitRelationTypeMap();
+
+static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
+{
+  std::map<wxString, FunctionModel::Type> typemap;
+  typemap[_T("f")] = FunctionModel::SCALAR;
+  typemap[_T("ft")] = FunctionModel::TRIGGER;
+  typemap[_T("fs")] = FunctionModel::RECORDSET;
+  typemap[_T("fa")] = FunctionModel::AGGREGATE;
+  typemap[_T("fw")] = FunctionModel::WINDOW;
+  return typemap;
+}
+
+const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
+
 void LoadDatabaseSchemaWork::operator()() {
   LoadRelations();
   LoadFunctions();
@@ -86,6 +110,7 @@ void LoadDatabaseSchemaWork::LoadRelations() {
       relation->name = (*iter).ReadText(2);
       wxString relkind((*iter).ReadText(3));
       relation->extension = (*iter).ReadText(4);
+      relation->unlogged = (*iter).ReadBool(5);
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
       relation->type = relationTypeMap.find(relkind)->second;
     }
@@ -153,6 +178,26 @@ void LoadDatabaseDescriptionsWork::LoadIntoView(ObjectBrowser *ob) {
 /**
  * Compile database catalogue index.
  */
+static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
+{
+  std::map<wxString, CatalogueIndex::Type> typeMap;
+  typeMap[_T("t")] = CatalogueIndex::TABLE;
+  typeMap[_T("tu")] = CatalogueIndex::TABLE_UNLOGGED;
+  typeMap[_T("v")] = CatalogueIndex::VIEW;
+  typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
+  typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
+  typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
+  typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
+  typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
+  typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
+  typeMap[_T("T")] = CatalogueIndex::TYPE;
+  typeMap[_T("x")] = CatalogueIndex::EXTENSION;
+  typeMap[_T("O")] = CatalogueIndex::COLLATION;
+  return typeMap;
+}
+
+const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitIndexerTypeMap();
+
 void IndexDatabaseSchemaWork::operator()() {
   QueryResults rs = Query(_T("IndexSchema")).List();
   catalogueIndex = new CatalogueIndex();

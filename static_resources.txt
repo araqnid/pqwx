@@ -9,6 +9,7 @@ icon_column.png			ObjectBrowser
 icon_column_pkey.png		ObjectBrowser
 icon_role.png			ObjectBrowser
 icon_table.png			ObjectFinder
+icon_unlogged_table.png		ObjectFinder
 icon_view.png			ObjectFinder
 icon_function.png		ObjectFinder
 icon_function_aggregate.png	ObjectFinder

@@ -113,49 +113,6 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)
 
-static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
-{
-  std::map<wxString, CatalogueIndex::Type> typeMap;
-  typeMap[_T("t")] = CatalogueIndex::TABLE;
-  typeMap[_T("v")] = CatalogueIndex::VIEW;
-  typeMap[_T("s")] = CatalogueIndex::SEQUENCE;
-  typeMap[_T("f")] = CatalogueIndex::FUNCTION_SCALAR;
-  typeMap[_T("fs")] = CatalogueIndex::FUNCTION_ROWSET;
-  typeMap[_T("ft")] = CatalogueIndex::FUNCTION_TRIGGER;
-  typeMap[_T("fa")] = CatalogueIndex::FUNCTION_AGGREGATE;
-  typeMap[_T("fw")] = CatalogueIndex::FUNCTION_WINDOW;
-  typeMap[_T("T")] = CatalogueIndex::TYPE;
-  typeMap[_T("x")] = CatalogueIndex::EXTENSION;
-  typeMap[_T("O")] = CatalogueIndex::COLLATION;
-  return typeMap;
-}
-
-const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitIndexerTypeMap();
-
-static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
-{
-  std::map<wxString, RelationModel::Type> typemap;
-  typemap[_T("r")] = RelationModel::TABLE;
-  typemap[_T("v")] = RelationModel::VIEW;
-  typemap[_T("S")] = RelationModel::SEQUENCE;
-  return typemap;
-}
-
-const std::map<wxString, RelationModel::Type> LoadDatabaseSchemaWork::relationTypeMap = InitRelationTypeMap();
-
-static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
-{
-  std::map<wxString, FunctionModel::Type> typemap;
-  typemap[_T("f")] = FunctionModel::SCALAR;
-  typemap[_T("ft")] = FunctionModel::TRIGGER;
-  typemap[_T("fs")] = FunctionModel::RECORDSET;
-  typemap[_T("fa")] = FunctionModel::AGGREGATE;
-  typemap[_T("fw")] = FunctionModel::WINDOW;
-  return typemap;
-}
-
-const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
-
 class DatabaseLoader : public LazyLoader {
 public:
   DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}
@@ -215,6 +172,7 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_unlogged_table.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_view.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_sequence.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_function.png")));
@@ -548,7 +506,10 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
     switch (relation->type) {
     case RelationModel::TABLE:
-      SetItemImage(memberItem, img_table);
+      if (relation->unlogged)
+	SetItemImage(memberItem, img_unlogged_table);
+      else
+	SetItemImage(memberItem, img_table);
       break;
     case RelationModel::VIEW:
       SetItemImage(memberItem, img_view);

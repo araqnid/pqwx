@@ -274,7 +274,8 @@ private:
   static const int img_server = 1;
   static const int img_database = 2;
   static const int img_table = 3;
-  static const int img_view = img_table + 1;
+  static const int img_unlogged_table = img_table + 1;
+  static const int img_view = img_unlogged_table + 1;
   static const int img_sequence = img_view + 1;
   static const int img_function = img_sequence + 1;
   static const int img_function_aggregate = img_function + 1;

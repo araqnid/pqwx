@@ -153,6 +153,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   dummyResultsCtrl->Destroy();
 
   iconMap[CatalogueIndex::TABLE] = _T("icon_table.png");
+  iconMap[CatalogueIndex::TABLE_UNLOGGED] = _T("icon_unlogged_table.png");
   iconMap[CatalogueIndex::VIEW] = _T("icon_view.png");
   iconMap[CatalogueIndex::SEQUENCE] = _T("icon_sequence.png");
   iconMap[CatalogueIndex::FUNCTION_SCALAR] = _T("icon_function.png");

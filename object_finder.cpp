@@ -160,4 +160,8 @@ void ObjectFinder::Init(wxWindow *parent) {
   iconMap[CatalogueIndex::FUNCTION_ROWSET] = _T("icon_function.png");
   iconMap[CatalogueIndex::FUNCTION_AGGREGATE] = _T("icon_function_aggregate.png");
   iconMap[CatalogueIndex::FUNCTION_WINDOW] = _T("icon_function_window.png");
+  iconMap[CatalogueIndex::TEXT_CONFIGURATION] = _T("icon_text_search_configuration.png");
+  iconMap[CatalogueIndex::TEXT_DICTIONARY] = _T("icon_text_search_dictionary.png");
+  iconMap[CatalogueIndex::TEXT_PARSER] = _T("icon_text_search_parser.png");
+  iconMap[CatalogueIndex::TEXT_TEMPLATE] = _T("icon_text_search_template.png");
 }

@@ -287,6 +287,38 @@ FROM pg_namespace
                         null AS objdisambig,
 			'O' AS objtype
                  FROM pg_collation
+                 -- text search dictionaries
+                 UNION ALL
+                 SELECT dictnamespace AS nspoid,
+                        pg_ts_dict.oid AS objid,
+                        dictname AS objname,
+                        null AS objdisambig,
+                        'Fd' AS objtype
+                 FROM pg_ts_dict
+                 -- text search parsers
+                 UNION ALL
+                 SELECT prsnamespace AS nspoid,
+                        pg_ts_parser.oid AS objid,
+                        prsname AS objname,
+                        null AS objdisambig,
+                        'Fp' AS objtype
+                 FROM pg_ts_parser
+                 -- text search templates
+                 UNION ALL
+                 SELECT tmplnamespace AS nspoid,
+                        pg_ts_template.oid AS objid,
+                        tmplname AS objname,
+                        null AS objdisambig,
+                        'Ft' AS objtype
+                 FROM pg_ts_template
+                 -- text search configurations
+                 UNION ALL
+                 SELECT cfgnamespace AS nspoid,
+                        pg_ts_config.oid AS objid,
+                        cfgname AS objname,
+                        null AS objdisambig,
+                        'F' AS objtype
+                 FROM pg_ts_config
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
@@ -335,6 +367,38 @@ FROM pg_namespace
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
                        AND NOT typrelid > 0
+                 -- text search dictionaries
+                 UNION ALL
+                 SELECT dictnamespace AS nspoid,
+                        pg_ts_dict.oid AS objid,
+                        dictname AS objname,
+                        null AS objdisambig,
+                        'Fd' AS objtype
+                 FROM pg_ts_dict
+                 -- text search parsers
+                 UNION ALL
+                 SELECT prsnamespace AS nspoid,
+                        pg_ts_parser.oid AS objid,
+                        prsname AS objname,
+                        null AS objdisambig,
+                        'Fp' AS objtype
+                 FROM pg_ts_parser
+                 -- text search templates
+                 UNION ALL
+                 SELECT tmplnamespace AS nspoid,
+                        pg_ts_template.oid AS objid,
+                        tmplname AS objname,
+                        null AS objdisambig,
+                        'Ft' AS objtype
+                 FROM pg_ts_template
+                 -- text search configurations
+                 UNION ALL
+                 SELECT cfgnamespace AS nspoid,
+                        pg_ts_config.oid AS objid,
+                        cfgname AS objname,
+                        null AS objdisambig,
+                        'F' AS objtype
+                 FROM pg_ts_config
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3

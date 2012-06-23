@@ -243,6 +243,10 @@ static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
   typeMap[_T("T")] = CatalogueIndex::TYPE;
   typeMap[_T("x")] = CatalogueIndex::EXTENSION;
   typeMap[_T("O")] = CatalogueIndex::COLLATION;
+  typeMap[_T("F")] = CatalogueIndex::TEXT_CONFIGURATION;
+  typeMap[_T("Fd")] = CatalogueIndex::TEXT_DICTIONARY;
+  typeMap[_T("Fp")] = CatalogueIndex::TEXT_PARSER;
+  typeMap[_T("Ft")] = CatalogueIndex::TEXT_TEMPLATE;
   return typeMap;
 }
 

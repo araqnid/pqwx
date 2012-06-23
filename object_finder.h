@@ -53,6 +53,10 @@ public:
 	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
 	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
 	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_CONFIGURATION)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_DICTIONARY)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_PARSER)
+	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_TEMPLATE)
 	 );
   }
 

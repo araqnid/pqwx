@@ -8,7 +8,7 @@
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
         <object class="wxStaticText">
-          <label>Enter partial name of table, view etc. Use either underscore_symbols or StudlyCaps:</label>
+          <label>Enter partial &amp;name of table, view etc. Use either underscore_symbols or StudlyCaps:</label>
         </object>
         <flag>wxALL</flag>
         <border>4</border>

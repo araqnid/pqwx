@@ -100,3 +100,7 @@ void ScriptPutCopyDataWork::operator()()
 
   output->Finalise(stopwatch.Time(), conn);
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

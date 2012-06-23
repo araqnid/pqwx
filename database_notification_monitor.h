@@ -70,8 +70,8 @@ private:
     {
       int max = workerControlEndpoint;
       for (std::list<Client>::const_iterator iter = clients.begin(); iter != clients.end(); iter++) {
-	int clientFd = (*iter).GetFD();
-	if (clientFd > max) max = clientFd;
+        int clientFd = (*iter).GetFD();
+        if (clientFd > max) max = clientFd;
       }
       return max;
     }
@@ -122,7 +122,7 @@ private:
     {
       wxMutexLocker locker(conditionMutex);
       while (!done) {
-	condition.Wait();
+        condition.Wait();
       }
     }
   private:
@@ -173,4 +173,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

@@ -36,9 +36,9 @@ void DocumentsNotebook::DoClose()
   if (editor->IsModified()) {
     wxString messageText = wxString::Format(_("%s is modified, do you want to save it before closing?"), editor->GetCoreTitle().c_str());
     wxMessageDialog dbox(this,
-			 messageText,
-			 _("Save before closing?"),
-			 wxCANCEL | wxYES_NO);
+                         messageText,
+                         _("Save before closing?"),
+                         wxCANCEL | wxYES_NO);
     switch (dbox.ShowModal()) {
     case wxID_YES:
       DoSave();
@@ -80,9 +80,9 @@ bool DocumentsNotebook::ConfirmCloseAll()
   }
 
   wxMessageDialog dbox(this,
-		       messageText,
-		       _("Save before closing?"),
-		       wxCANCEL | wxYES_NO);
+                       messageText,
+                       _("Save before closing?"),
+                       wxCANCEL | wxYES_NO);
   switch (dbox.ShowModal()) {
   case wxID_CANCEL:
     return false;
@@ -90,7 +90,7 @@ bool DocumentsNotebook::ConfirmCloseAll()
   case wxID_YES:
     for (std::vector<ScriptEditorPane*>::const_iterator iter = modifiedEditors.begin(); iter != modifiedEditors.end(); iter++) {
       if (!DoSave(*iter)) {
-	return false; // save cancelled
+        return false; // save cancelled
       }
     }
     break;
@@ -145,13 +145,13 @@ bool DocumentsNotebook::DoSave()
 bool DocumentsNotebook::DoSaveAs(ScriptEditorPane *editor)
 {
   wxString filename = wxFileSelector(_("Choose file to save as"),
-				     wxEmptyString, // default path
-				     editor->GetCoreTitle(),
-				     _T(".sql"),
-				     _T("*.sql"),
-				     wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
-				     this
-				     );
+                                     wxEmptyString, // default path
+                                     editor->GetCoreTitle(),
+                                     _T(".sql"),
+                                     _T("*.sql"),
+                                     wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
+                                     this
+                                     );
   if (filename.empty()) return false; // cancelled
   editor->SaveFile(filename);
   return true;
@@ -208,3 +208,7 @@ void DocumentsNotebook::EmitDocumentChanged(unsigned page)
   event.SetString(editor->FormatTitle());
   ProcessEvent(event);
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

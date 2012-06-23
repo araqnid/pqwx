@@ -112,13 +112,13 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       work->conn = conn;
       try {
         (*work)();
-	work->NotifyFinished();
+        work->NotifyFinished();
       } catch (std::exception &e) {
         wxLogDebug(_T("Exception thrown by database work: %s"), wxString(e.what(), wxConvUTF8).c_str());
-	work->NotifyCrashed(e);
+        work->NotifyCrashed(e);
       } catch (...) {
         wxLogDebug(_T("Unrecognisable exception thrown by database work"));
-	work->NotifyCrashed();
+        work->NotifyCrashed();
       }
       delete work;
       SetState(DatabaseConnection::IDLE);
@@ -126,9 +126,9 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
 
       ConnStatusType connStatus = PQstatus(conn);
       if (connStatus == CONNECTION_BAD) {
-	wxLogDebug(_T("thr#%lx [%s] connection invalid, exiting"), wxThread::GetCurrentId(), db->identification.c_str());
-	SetState(DatabaseConnection::DISCONNECTED);
-	return 0;
+        wxLogDebug(_T("thr#%lx [%s] connection invalid, exiting"), wxThread::GetCurrentId(), db->identification.c_str());
+        SetState(DatabaseConnection::DISCONNECTED);
+        return 0;
       }
     }
 
@@ -142,7 +142,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
     if (notificationReceiver != NULL) {
       PGnotify *notification;
       while ((notification = PQnotifies(conn)) != NULL) {
-	(*notificationReceiver)(notification);
+        (*notificationReceiver)(notification);
       }
       ::wxGetApp().GetNotificationMonitor().AddConnection(DatabaseNotificationMonitor::Client(PQsocket(conn), &monitorProcessor));
     }
@@ -383,3 +383,7 @@ void DatabaseConnection::SetNotificationReceiver(NotificationReceiver *receiver)
 {
 }
 #endif
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

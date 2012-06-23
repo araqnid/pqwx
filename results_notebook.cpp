@@ -169,13 +169,13 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
       switch (data.Fields()[columnIndex].GetType()) {
 #if 0
       case 16: // boolean
-	grid->GetTable()->SetValueAsBool(rowIndex, columnIndex, value == _T("t"));
-	break;
+        grid->GetTable()->SetValueAsBool(rowIndex, columnIndex, value == _T("t"));
+        break;
 #endif
 
       default:
-	grid->SetCellValue(rowIndex, columnIndex, value);
-	break;
+        grid->SetCellValue(rowIndex, columnIndex, value);
+        break;
       }
     }
   }
@@ -190,18 +190,18 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
 
     for (; rowIter != data.end(); rowIter++, rowIndex++) {
       for (int columnIndex = 0; columnIndex < fieldCount; columnIndex++) {
-	const wxString &value = (*rowIter)[columnIndex];
-	switch (data.Fields()[columnIndex].GetType()) {
+        const wxString &value = (*rowIter)[columnIndex];
+        switch (data.Fields()[columnIndex].GetType()) {
 #if 0
-	case 16: // boolean
-	  grid->GetTable()->SetValueAsBool(rowIndex, columnIndex, value == _T("t"));
-	  break;
+        case 16: // boolean
+          grid->GetTable()->SetValueAsBool(rowIndex, columnIndex, value == _T("t"));
+          break;
 #endif
 
-	default:
-	  grid->SetCellValue(rowIndex, columnIndex, value);
-	  break;
-	}
+        default:
+          grid->SetCellValue(rowIndex, columnIndex, value);
+          break;
+        }
       }
     }
   }
@@ -209,3 +209,7 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
   grid->EndBatch();
   parent->GetSizer()->Add(grid, 1, wxEXPAND);
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

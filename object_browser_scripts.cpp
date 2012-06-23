@@ -61,7 +61,7 @@ public:
       wxASSERT(input[input.length()-1] == _T('}'));
       wxStringTokenizer tkz(input.Mid(1, input.length()-2), _T(","));
       while (tkz.HasMoreTokens()) {
-	entries.push_back(AclEntry(tkz.GetNextToken()));
+        entries.push_back(AclEntry(tkz.GetNextToken()));
       }
     }
   }
@@ -71,8 +71,8 @@ public:
   {
     for (std::vector<AclEntry>::const_iterator iter = entries.begin(); iter != entries.end(); iter++) {
       if ((*iter).grantee != owner) {
-	(*iter).GenerateGrantStatement(output, entity, privilegeNames, true);
-	(*iter).GenerateGrantStatement(output, entity, privilegeNames, false);
+        (*iter).GenerateGrantStatement(output, entity, privilegeNames, true);
+        (*iter).GenerateGrantStatement(output, entity, privilegeNames, false);
       }
     }
   }
@@ -97,16 +97,16 @@ private:
       grantor = pattern.GetMatch(input, 3);
       wxString privs = pattern.GetMatch(input, 2);
       for (unsigned i = 0; i < privs.length(); i++) {
-	Privilege priv;
-	priv.specifier = privs[i];
-	if (i < (privs.length()-1) && privs[i+1] == '*') {
-	  priv.grantOption = true;
-	  ++i;
-	}
-	else {
-	  priv.grantOption = false;
-	}
-	privileges.push_back(priv);
+        Privilege priv;
+        priv.specifier = privs[i];
+        if (i < (privs.length()-1) && privs[i+1] == '*') {
+          priv.grantOption = true;
+          ++i;
+        }
+        else {
+          priv.grantOption = false;
+        }
+        privileges.push_back(priv);
       }
     }
 
@@ -124,24 +124,24 @@ private:
       wxString sql = _T("GRANT ");
       bool first = true;
       for (std::vector<Privilege>::const_iterator iter = privileges.begin(); iter != privileges.end(); iter++) {
-	if ((*iter).grantOption != withGrantOption)
-	  continue;
-	std::map<wxChar, wxString>::const_iterator privPtr = privilegeNames.find((*iter).specifier);
-	wxASSERT(privPtr != privilegeNames.end());
-	if (first)
-	  first = false;
-	else
-	  sql << _T(", ");
-	sql << privPtr->second;
+        if ((*iter).grantOption != withGrantOption)
+          continue;
+        std::map<wxChar, wxString>::const_iterator privPtr = privilegeNames.find((*iter).specifier);
+        wxASSERT(privPtr != privilegeNames.end());
+        if (first)
+          first = false;
+        else
+          sql << _T(", ");
+        sql << privPtr->second;
       }
       if (first) return;
       sql << _T(" ON ") << entity << _T(" TO ");
       if (grantee.empty())
-	sql << _T("PUBLIC");
+        sql << _T("PUBLIC");
       else
-	sql << grantee;
+        sql << grantee;
       if (withGrantOption)
-	sql << _T(" WITH GRANT OPTION");
+        sql << _T(" WITH GRANT OPTION");
       *output++ = sql;
     }
 
@@ -183,14 +183,14 @@ private:
       wxString sql = prefix;
       sql << _T("SET ");
       if (brackets)
-	sql << _T("( ");
+        sql << _T("( ");
       sql << name << _T(" = ");
       if (name == _T("search_path"))
-	sql << value;
+        sql << value;
       else
-	sql << work->QuoteLiteral(value);
+        sql << work->QuoteLiteral(value);
       if (brackets)
-	sql << _T(" )");
+        sql << _T(" )");
       *output++ = sql;
     }
 
@@ -250,9 +250,9 @@ void DatabaseScriptWork::GenerateScript(OutputIterator output)
       wxString role = settingsRs[i][0];
       wxString prefix;
       if (role.empty())
-	prefix << _T("ALTER DATABASE ") << databaseName << _T(' ');
+        prefix << _T("ALTER DATABASE ") << databaseName << _T(' ');
       else
-	prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << databaseName << _T(' ');
+        prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << databaseName << _T(' ');
       PgSettings(settingsRs[i][1]).GenerateSetStatements(output, this, prefix);
     }
 
@@ -278,7 +278,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     unsigned n = 0;
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0)),
-	type((*iter).ReadText(1));
+        type((*iter).ReadText(1));
       sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
 
       bool notnull = (*iter).ReadBool(2);
@@ -286,8 +286,8 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
       bool hasdefault = (*iter).ReadBool(3);
       if (hasdefault) {
-	wxString defaultexpr((*iter).ReadText(4));
-	sql << _T(" DEFAULT ") << defaultexpr;
+        wxString defaultexpr((*iter).ReadText(4));
+        sql << _T(" DEFAULT ") << defaultexpr;
       }
 
       wxString collation((*iter).ReadText(5));
@@ -295,18 +295,18 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
       long statsTarget((*iter).ReadInt4(6));
       if (statsTarget >= 0) {
-	wxString statsSql;
-	statsSql << _T("ALTER COLUMN ") << QuoteIdent(name)
-		 << _T(" SET STATISTICS ") << statsTarget;
-	alterSql.push_back(statsSql);
+        wxString statsSql;
+        statsSql << _T("ALTER COLUMN ") << QuoteIdent(name)
+                 << _T(" SET STATISTICS ") << statsTarget;
+        alterSql.push_back(statsSql);
       }
 
       wxString storageType((*iter).ReadText(7));
       if (!storageType.IsEmpty()) {
-	wxString storageSql;
-	storageSql << _T("ALTER COLUMN ") << QuoteIdent(name)
-		   << _T(" SET STORAGE ") << storageType;
-	alterSql.push_back(storageSql);
+        wxString storageSql;
+        storageSql << _T("ALTER COLUMN ") << QuoteIdent(name)
+                   << _T(" SET STORAGE ") << storageType;
+        alterSql.push_back(storageSql);
       }
 
       if (n != (columns.size()-1)) sql << _T(',');
@@ -318,7 +318,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       wxString prefix;
       prefix << _T("ALTER TABLE ") << tableName << _T("\n\t");
       for (std::vector<wxString>::iterator moreSqlIter = alterSql.begin(); moreSqlIter != alterSql.end(); moreSqlIter++) {
-	*output++ = prefix + *moreSqlIter;
+        *output++ = prefix + *moreSqlIter;
       }
     }
 
@@ -330,7 +330,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++) {
       wxString description = (*iter).ReadText(10);
       if (!description.empty()) {
-	*output++ = _T("COMMENT ON COLUMN ") + tableName + _T('.') + (*iter).ReadText(0) + _T(" IS ") + QuoteLiteral(description);
+        *output++ = _T("COMMENT ON COLUMN ") + tableName + _T('.') + (*iter).ReadText(0) + _T(" IS ") + QuoteLiteral(description);
       }
     }
 
@@ -340,18 +340,18 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       wxString dstColumns;
       const QueryResults::Row *lastKey = NULL;
       for (QueryResults::const_iterator iter = foreignKeys.begin(); iter != foreignKeys.end(); iter++) {
-	wxString fkeyName = (*iter)[_T("conname")];
-	if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
-	  GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
-	  srcColumns = wxEmptyString;
-	  dstColumns = wxEmptyString;
-	}
-	lastKeyName = fkeyName;
-	lastKey = &(*iter);
-	if (!srcColumns.IsEmpty()) srcColumns += _T(",");
-	srcColumns += QuoteIdent((*iter)[_T("srcatt")]);
-	if (!dstColumns.IsEmpty()) dstColumns += _T(",");
-	dstColumns += QuoteIdent((*iter)[_T("dstatt")]);
+        wxString fkeyName = (*iter)[_T("conname")];
+        if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
+          GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
+          srcColumns = wxEmptyString;
+          dstColumns = wxEmptyString;
+        }
+        lastKeyName = fkeyName;
+        lastKey = &(*iter);
+        if (!srcColumns.IsEmpty()) srcColumns += _T(",");
+        srcColumns += QuoteIdent((*iter)[_T("srcatt")]);
+        if (!dstColumns.IsEmpty()) dstColumns += _T(",");
+        dstColumns += QuoteIdent((*iter)[_T("dstatt")]);
       }
       GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
     }
@@ -374,9 +374,9 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
       if (n != (columns.size()-1))
-	sql << _T(",\n       ");
+        sql << _T(",\n       ");
       else
-	sql << _T("\n");
+        sql << _T("\n");
     }
     sql << _T("FROM ") << tableName;
     *output++ = sql;
@@ -391,9 +391,9 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       wxString name((*iter).ReadText(0));
       sql << _T("            ") << QuoteIdent(name);
       if (n != (columns.size()-1))
-	sql << _T(",\n");
+        sql << _T(",\n");
       else
-	sql << _T("\n");
+        sql << _T("\n");
     }
     sql << _T(") VALUES (\n");
     n = 0;
@@ -401,9 +401,9 @@ void TableScriptWork::GenerateScript(OutputIterator output)
       wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << _T("            <") << QuoteIdent(name) << _T(", ") << type << _T(">");
       if (n != (columns.size()-1))
-	sql << _T(",\n");
+        sql << _T(",\n");
       else
-	sql << _T("\n");
+        sql << _T("\n");
     }
     sql << _T(")");
     *output++ = sql;
@@ -417,11 +417,11 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
       wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << QuoteIdent(name) << _T(" = ")
-	  << _T("<") << QuoteIdent(name) << _T(", ") << type << _T(">");
+          << _T("<") << QuoteIdent(name) << _T(", ") << type << _T(">");
       if (n != (columns.size()-1))
-	sql << _T(",\n    ");
+        sql << _T(",\n    ");
       else
-	sql << _T("\n");
+        sql << _T("\n");
     }
     sql << _T("WHERE <") << _("search criteria") << _T(">");
     *output++ = sql;
@@ -519,9 +519,9 @@ void ViewScriptWork::GenerateScript(OutputIterator output)
       wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
       if (n != (columns.size()-1))
-	sql << _T(",\n       ");
+        sql << _T(",\n       ");
       else
-	sql << _T("\n");
+        sql << _T("\n");
     }
     sql << _T("FROM ") << viewName;
     *output++ = sql;
@@ -638,7 +638,7 @@ std::vector<Oid> ScriptWork::ParseOidVector(const wxString &str)
     if (str[pos] == ' ') {
       long typeOid;
       if (str.Mid(mark, pos-mark).ToLong(&typeOid)) {
-	result.push_back((Oid) typeOid);
+        result.push_back((Oid) typeOid);
       }
       mark = pos + 1;
     }
@@ -709,33 +709,33 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
     if (!extendedArgTypes.empty()) {
       unsigned pos = 0;
       for (std::vector<Oid>::const_iterator iter = extendedArgTypes.begin(); iter != extendedArgTypes.end(); iter++, pos++) {
-	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
-	Typeinfo typeinfo = typeMap[*iter];
-	if (pos < extendedArgNames.size())
-	  sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
-	if (extendedArgModes[pos])
-	  sql << _T("OUT ");
-	if (typeinfo.schema == _T("pg_catalog"))
-	  sql << QuoteIdent(typeinfo.name);
-	else
-	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
-	for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
-	if (pos != (extendedArgTypes.size() - 1)) sql << _T(", ");
+        wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
+        Typeinfo typeinfo = typeMap[*iter];
+        if (pos < extendedArgNames.size())
+          sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
+        if (extendedArgModes[pos])
+          sql << _T("OUT ");
+        if (typeinfo.schema == _T("pg_catalog"))
+          sql << QuoteIdent(typeinfo.name);
+        else
+          sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
+        for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
+        if (pos != (extendedArgTypes.size() - 1)) sql << _T(", ");
       }
     }
     else {
       unsigned pos = 0;
       for (std::vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
-	wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
-	Typeinfo typeinfo = typeMap[*iter];
-	if (pos < extendedArgNames.size())
-	  sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
-	if (typeinfo.schema == _T("pg_catalog"))
-	  sql << QuoteIdent(typeinfo.name);
-	else
-	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
-	for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
-	if (pos != (basicArgTypes.size() - 1)) sql << _T(", ");
+        wxASSERT_MSG(typeMap.count(*iter) > 0, wxString::Format(_T("OID %u not in typeMap"), *iter));
+        Typeinfo typeinfo = typeMap[*iter];
+        if (pos < extendedArgNames.size())
+          sql << QuoteIdent(extendedArgNames[pos]) << _T(' ');
+        if (typeinfo.schema == _T("pg_catalog"))
+          sql << QuoteIdent(typeinfo.name);
+        else
+          sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
+        for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
+        if (pos != (basicArgTypes.size() - 1)) sql << _T(", ");
       }
     }
     sql << _T(")");
@@ -763,16 +763,16 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
     }
     else {
       sql << _T(" (sfunc = ") << functionDetail.ReadText(22)
-	  << _T(", stype = ") << functionDetail.ReadText(23);
+          << _T(", stype = ") << functionDetail.ReadText(23);
       wxString finalfunc = functionDetail.ReadText(24);
       if (!finalfunc.empty())
-	sql << _T(", finalfunc = ") << finalfunc;
+        sql << _T(", finalfunc = ") << finalfunc;
       wxString initval = functionDetail.ReadText(25);
       if (!initval.empty())
-	sql << _T(", initcond = ") << initval;
+        sql << _T(", initcond = ") << initval;
       wxString sortop = functionDetail.ReadText(26);
       if (!sortop.empty())
-	sql << _T(", sortop = operator(") << sortop << _T(")");
+        sql << _T(", sortop = operator(") << sortop << _T(")");
       sql << _T(")");
     }
 
@@ -814,22 +814,22 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
     if (!basicArgTypes.empty()) {
       unsigned pos = 0;
       for (std::vector<Oid>::const_iterator iter = basicArgTypes.begin(); iter != basicArgTypes.end(); iter++, pos++) {
-	Typeinfo typeinfo = typeMap[*iter];
-	sql << _T('<');
-	if (pos < extendedArgNames.size())
-	  sql << QuoteIdent(extendedArgNames[pos]);
-	else
-	  sql << _("Argument ") << pos;
-	if (typeinfo.schema == _T("pg_catalog"))
-	  sql << QuoteIdent(typeinfo.name);
-	else
-	  sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
-	for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
-	sql << _T('>');
-	if (pos != (basicArgTypes.size() - 1))
-	  sql << _T(",\n    ");
-	else if (basicArgTypes.size() > 1)
-	  sql << _T("\n");
+        Typeinfo typeinfo = typeMap[*iter];
+        sql << _T('<');
+        if (pos < extendedArgNames.size())
+          sql << QuoteIdent(extendedArgNames[pos]);
+        else
+          sql << _("Argument ") << pos;
+        if (typeinfo.schema == _T("pg_catalog"))
+          sql << QuoteIdent(typeinfo.name);
+        else
+          sql << QuoteIdent(typeinfo.schema) << _T('.') << QuoteIdent(typeinfo.name);
+        for (int i = 0; i < typeinfo.arrayDepth; i++) sql << _T("[]");
+        sql << _T('>');
+        if (pos != (basicArgTypes.size() - 1))
+          sql << _T(",\n    ");
+        else if (basicArgTypes.size() > 1)
+          sql << _T("\n");
       }
     }
     sql << _T(')');
@@ -842,3 +842,7 @@ void FunctionScriptWork::GenerateScript(OutputIterator output)
     wxASSERT(false);
   }
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

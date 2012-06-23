@@ -67,46 +67,46 @@ public:
       wxChar c = str[pos];
       switch (state) {
       case 0:
-	switch (c) {
-	case _T('}'):
-	  *output++ = buf;
-	  return;
+        switch (c) {
+        case _T('}'):
+          *output++ = buf;
+          return;
 
-	case _T(','):
-	  *output++ = buf;
-	  buf.Clear();
-	  break;
+        case _T(','):
+          *output++ = buf;
+          buf.Clear();
+          break;
 
-	case _T('\"'):
-	  state = 1;
-	  break;
+        case _T('\"'):
+          state = 1;
+          break;
 
-	default:
-	  buf << c;
-	  break;
-	}
-	break;
+        default:
+          buf << c;
+          break;
+        }
+        break;
 
       case 1:
-	switch (c) {
-	case _T('\"'):
-	  state = 0;
-	  break;
+        switch (c) {
+        case _T('\"'):
+          state = 0;
+          break;
 
-	case _T('\\'):
-	  state = 2;
-	  break;
+        case _T('\\'):
+          state = 2;
+          break;
 
-	default:
-	  buf << c;
-	  break;
-	}
-	break;
+        default:
+          buf << c;
+          break;
+        }
+        break;
 
       case 2:
-	buf << c;
-	state = 1;
-	break;
+        buf << c;
+        state = 1;
+        break;
 
       }
     }
@@ -125,7 +125,7 @@ public:
     for (std::vector<wxString>::const_iterator iter = strings.begin(); iter != strings.end(); iter++) {
       long value;
       if ((*iter).ToLong(&value)) {
-	result.push_back((Oid) value);
+        result.push_back((Oid) value);
       }
     }
     return result;
@@ -229,9 +229,9 @@ private:
   std::map<Oid, Typeinfo> FetchTypes(const std::vector<Oid> &types1, const std::vector<Oid> &types2) {
     std::set<Oid> typeSet;
     copy(types2.begin(), types2.end(),
-	 copy(types1.begin(), types1.end(),
-	      std::inserter(typeSet, typeSet.begin()))
-	 );
+         copy(types1.begin(), types1.end(),
+              std::inserter(typeSet, typeSet.begin()))
+         );
     return FetchTypes(typeSet);
   }
   std::map<Oid, Typeinfo> FetchTypes(const std::set<Oid> &types);
@@ -243,4 +243,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

@@ -232,7 +232,7 @@ void PqwxFrame::OnOpenScript(wxCommandEvent& event)
   }
 
   wxFileDialog dbox(this, _("Open File"), wxEmptyString, wxEmptyString,
-		    _("SQL files (*.sql)|*.sql"));
+                    _("SQL files (*.sql)|*.sql"));
   dbox.CentreOnParent();
   if (dbox.ShowModal() == wxID_OK) {
     ScriptEditorPane *editor = documentsBook->OpenNewScript();
@@ -343,3 +343,7 @@ void PqwxFrame::EnableIffScriptModified(wxUpdateUIEvent &event)
 {
   event.Enable(currentEditor != NULL && currentEditor->IsModified());
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

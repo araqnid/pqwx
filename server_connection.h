@@ -48,13 +48,13 @@ public:
     }
     else {
       if (colon > 0)
-	hostname = serverName.Mid(0, colon);
+        hostname = serverName.Mid(0, colon);
       unsigned long portUL;
       serverName.Mid(colon+1).ToULong(&portUL);
       if (portUL == DEF_PGPORT)
-	port = 0;
+        port = 0;
       else
-	port = portUL;
+        port = portUL;
     }
 
     identifiedAs = identifiedAs_;
@@ -76,13 +76,13 @@ private:
     }
     else {
       if (!hostname.IsEmpty()) {
-	identification << hostname;
+        identification << hostname;
       }
       else {
-	identification << _("[local]");
+        identification << _("[local]");
       }
       if (port > 0) {
-	identification << _T(":") << wxString::Format(_T("%d"), port);
+        identification << _T(":") << wxString::Format(_T("%d"), port);
       }
     }
   }
@@ -94,4 +94,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

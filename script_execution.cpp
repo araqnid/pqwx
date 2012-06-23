@@ -56,12 +56,12 @@ ScriptExecution::NextState ScriptExecution::ProcessExecution()
     for (unsigned ofs = t.length - 1; ofs >= 0; ofs--) {
       char c = CharAt(t.offset + ofs);
       if (c == ';') {
-	// execute immediately
-	BeginQuery();
-	return NoMore;
+        // execute immediately
+        BeginQuery();
+        return NoMore;
       }
       else if (!isspace(c)) {
-	break;
+        break;
       }
     }
 
@@ -141,30 +141,30 @@ private:
     while (HaveMore()) {
       wxChar c = Take();
       if (c == _T('\'')) {
-	if (!HaveMore()) break;
-	if (Peek() == _T('\'')) {
-	  // escaped quote mark
-	  out += _T('\'');
-	  Take();
-	}
-	else {
-	  break;
-	}
+        if (!HaveMore()) break;
+        if (Peek() == _T('\'')) {
+          // escaped quote mark
+          out += _T('\'');
+          Take();
+        }
+        else {
+          break;
+        }
       }
       else if (c == _T('\\')) {
-	if (!HaveMore()) break; // illegal, really
-	char c = Take();
-	if (c == _T('\\'))
-	  out += c;
-	else if (c == _T('n'))
-	  out += _T('\n');
-	else if (c == _T('r'))
-	  out += _T('\r');
-	else
-	  out += c;
+        if (!HaveMore()) break; // illegal, really
+        char c = Take();
+        if (c == _T('\\'))
+          out += c;
+        else if (c == _T('n'))
+          out += _T('\n');
+        else if (c == _T('r'))
+          out += _T('\r');
+        else
+          out += c;
       }
       else {
-	out += c;
+        out += c;
       }
     }
     return out;
@@ -175,7 +175,7 @@ private:
     while (HaveMore()) {
       wxChar c = Take();
       if (iswspace(c))
-	break;
+        break;
     }
     return str.Mid(pos, ptr - pos);
   }
@@ -223,10 +223,10 @@ ScriptExecution::NextState ScriptExecution::PsqlChangeDatabase(const wxString &p
     if (t != _T("-")) {
       long port;
       if (t.ToLong(&port))
-	owner->server.port = port;
+        owner->server.port = port;
       else {
-	// syntax error...
-	wxASSERT_MSG(false, wxString::Format(_T("port syntax error: %s"), t.c_str()));
+        // syntax error...
+        wxASSERT_MSG(false, wxString::Format(_T("port syntax error: %s"), t.c_str()));
       }
     }
   }
@@ -300,3 +300,7 @@ ScriptExecution::NextState ScriptExecution::PsqlQuitExecution(const wxString &pa
 {
   return Finish;
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

@@ -234,14 +234,14 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
     else {
       static wxRegEx pattern(_T("^([^ ]+) .+ ([0-9]+\\.[0-9]+\\.[0-9]+)$"), wxRE_NEWLINE);
       if (pattern.Matches(output)) {
-	wxString toolname = pattern.GetMatch(output, 1);
-	wxString version = pattern.GetMatch(output, 2);
-	wxLogDebug(_T("Found %s version %s at %s"), toolname.c_str(), version.c_str(), toolExe.c_str());
-	return version;
+        wxString toolname = pattern.GetMatch(output, 1);
+        wxString version = pattern.GetMatch(output, 2);
+        wxLogDebug(_T("Found %s version %s at %s"), toolname.c_str(), version.c_str(), toolExe.c_str());
+        return version;
       }
       else {
-	wxLogDebug(_T("Output did not match pattern: %s"), output.c_str());
-	return wxEmptyString;
+        wxLogDebug(_T("Output did not match pattern: %s"), output.c_str());
+        return wxEmptyString;
       }
     }
   }
@@ -258,3 +258,7 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
   return wxEmptyString;
 #endif
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

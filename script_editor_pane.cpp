@@ -339,3 +339,7 @@ void ScriptEditorPane::OnShowPosition(wxCommandEvent &event)
   editor->GotoPos(event.GetInt());
   editor->SetFocus();
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

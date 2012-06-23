@@ -110,26 +110,26 @@ public:
     const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
     if (query != NULL) {
       if (query->IsFromNamedQuery())
-	work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n");
+        work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n");
       else
-	work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n");
+        work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n");
       const PgQueryFailure* queryError = dynamic_cast<const PgQueryFailure*>(&e);
       if (queryError != NULL) {
-	const PgError& details = queryError->GetDetails();
-	work->crashMessage += details.GetSeverity() + _T(": ") + details.GetPrimary();
-	if (!details.GetDetail().empty())
-	  work->crashMessage += _T("\nDETAIL: ") + details.GetDetail();
-	if (!details.GetHint().empty())
-	  work->crashMessage += _T("\bHINT: ") + details.GetDetail();
-	for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
-	  work->crashMessage += _T("\nCONTEXT: ") + *iter;
-	}
+        const PgError& details = queryError->GetDetails();
+        work->crashMessage += details.GetSeverity() + _T(": ") + details.GetPrimary();
+        if (!details.GetDetail().empty())
+          work->crashMessage += _T("\nDETAIL: ") + details.GetDetail();
+        if (!details.GetHint().empty())
+          work->crashMessage += _T("\bHINT: ") + details.GetDetail();
+        for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
+          work->crashMessage += _T("\nCONTEXT: ") + *iter;
+        }
       }
       else
-	work->crashMessage += wxString(e.what(), wxConvUTF8);
+        work->crashMessage += wxString(e.what(), wxConvUTF8);
     }
     else {
-	work->crashMessage = wxString(e.what(), wxConvUTF8);
+        work->crashMessage = wxString(e.what(), wxConvUTF8);
     }
 
     wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
@@ -151,11 +151,11 @@ private:
     ~TransactionBoundary()
     {
       if (began) {
-	try {
-	  work->DoCommand("END");
-	} catch (...) {
-	  // ignore exceptions trying to end transaction
-	}
+        try {
+          work->DoCommand("END");
+        } catch (...) {
+          // ignore exceptions trying to end transaction
+        }
       }
     }
   private:
@@ -331,4 +331,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

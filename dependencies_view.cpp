@@ -247,3 +247,7 @@ void DependenciesView::OnSelectionChanged(wxTreeEvent &event) {
     selectedTypeCtrl->SetValue(dep->type);
   }
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

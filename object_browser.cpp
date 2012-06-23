@@ -77,14 +77,14 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Function, Select)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, output)	\
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, output)        \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
   SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(database->server->conninfo, database->name, oid, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, database, oid)	\
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Window)	\
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, File)	\
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, database, oid)        \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Window)        \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, File)        \
   IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Clipboard)
 
 IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase, contextMenuDatabase->oid)
@@ -570,9 +570,9 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     switch (relation->type) {
     case RelationModel::TABLE:
       if (relation->unlogged)
-	SetItemImage(memberItem, img_unlogged_table);
+        SetItemImage(memberItem, img_unlogged_table);
       else
-	SetItemImage(memberItem, img_table);
+        SetItemImage(memberItem, img_table);
       break;
     case RelationModel::VIEW:
       SetItemImage(memberItem, img_view);
@@ -607,17 +607,17 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       switch (function->type) {
       case FunctionModel::SCALAR:
       case FunctionModel::RECORDSET:
-	SetItemImage(memberItem, img_function);
-	break;
+        SetItemImage(memberItem, img_function);
+        break;
       case FunctionModel::AGGREGATE:
-	SetItemImage(memberItem, img_function_aggregate);
-	break;
+        SetItemImage(memberItem, img_function_aggregate);
+        break;
       case FunctionModel::TRIGGER:
-	SetItemImage(memberItem, img_function_trigger);
-	break;
+        SetItemImage(memberItem, img_function_trigger);
+        break;
       case FunctionModel::WINDOW:
-	SetItemImage(memberItem, img_function_window);
-	break;
+        SetItemImage(memberItem, img_function_window);
+        break;
       }
     }
   }
@@ -762,11 +762,11 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
 
     if (relationModel->type == RelationModel::TABLE) {
       if (column->nullable)
-	itemText += _(", null");
+        itemText += _(", null");
       else
-	itemText += _(", not null");
+        itemText += _(", not null");
       if (column->hasDefault)
-	itemText += _(", default");
+        itemText += _(", default");
     }
 
     itemText += _T(")");
@@ -795,23 +795,23 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
       SetItemData(indexItem, *iter);
       if ((*iter)->primaryKey)
-	SetItemImage(indexItem, img_index_pkey);
+        SetItemImage(indexItem, img_index_pkey);
       else if ((*iter)->unique || (*iter)->exclusion)
-	SetItemImage(indexItem, img_index_uniq);
+        SetItemImage(indexItem, img_index_uniq);
       else
-	SetItemImage(indexItem, img_index);
+        SetItemImage(indexItem, img_index);
       for (std::vector<IndexModel::Column>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
-	wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter).expression);
-	if ((*colIter).column > 0) {
-	  SetItemImage(indexColumnItem, img_column);
-	  wxTreeItemId columnItem = columnItems[(*colIter).column];
-	  if ((*iter)->primaryKey) {
-	    SetItemImage(columnItem, img_column_pkey);
-	  }
-	}
-	else {
-	  SetItemImage(indexColumnItem, img_function);
-	}
+        wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter).expression);
+        if ((*colIter).column > 0) {
+          SetItemImage(indexColumnItem, img_column);
+          wxTreeItemId columnItem = columnItems[(*colIter).column];
+          if ((*iter)->primaryKey) {
+            SetItemImage(columnItem, img_column_pkey);
+          }
+        }
+        else {
+          SetItemImage(indexColumnItem, img_function);
+        }
       }
     }
   }
@@ -1033,9 +1033,9 @@ void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **serv
     wxTreeItemData *data = GetItemData(cursor);
     if (data != NULL) {
       if (*database == NULL)
-	*database = dynamic_cast<DatabaseModel*>(data);
+        *database = dynamic_cast<DatabaseModel*>(data);
       if (*server == NULL)
-	*server = dynamic_cast<ServerModel*>(data);
+        *server = dynamic_cast<ServerModel*>(data);
     }
   }
 }
@@ -1141,3 +1141,7 @@ void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
   DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

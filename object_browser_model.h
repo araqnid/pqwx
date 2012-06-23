@@ -231,11 +231,11 @@ public:
     for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
       SchemaMemberModel *member = *iter;
       if (!member->extension.IsEmpty())
-	result.extensionDivisions[member->extension].push_back(member);
+        result.extensionDivisions[member->extension].push_back(member);
       else if (!member->IsUser())
-	result.systemDivision.push_back(member);
+        result.systemDivision.push_back(member);
       else
-	result.userDivision.push_back(member);
+        result.userDivision.push_back(member);
     }
 
     return result;
@@ -378,4 +378,5 @@ inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

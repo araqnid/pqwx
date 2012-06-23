@@ -53,7 +53,7 @@ typedef void (wxEvtHandler::*PQWXDatabaseEventFunction)(PQWXDatabaseEvent&);
 /**
  * Static event table macro.
  */
-#define EVT_DATABASE(id, type, fn)			  \
+#define EVT_DATABASE(id, type, fn)                          \
     DECLARE_EVENT_TABLE_ENTRY( type, id, -1, \
     (wxObjectEventFunction) (wxEventFunction) (PQWXDatabaseEventFunction) (wxNotifyEventFunction) \
     wxStaticCastEvent( PQWXDatabaseEventFunction, & fn ), (wxObject *) NULL ),
@@ -62,4 +62,5 @@ typedef void (wxEvtHandler::*PQWXDatabaseEventFunction)(PQWXDatabaseEvent&);
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

@@ -43,7 +43,7 @@ public:
     wxASSERT_MSG(ptr != data.end(), name);
     for (std::set<Statement>::const_reverse_iterator iter = ptr->second.rbegin(); iter != ptr->second.rend(); iter++) {
       if (serverVersion >= iter->minVersion) {
-	return iter->sql;
+        return iter->sql;
       }
     }
     wxFAIL_MSG(name);
@@ -70,4 +70,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

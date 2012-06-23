@@ -46,18 +46,18 @@ public:
   static CatalogueIndex::Filter CreateFilter(const CatalogueIndex *catalogue) {
     return catalogue->CreateNonSystemFilter()
       & (catalogue->CreateTypeFilter(CatalogueIndex::TABLE)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::TABLE_UNLOGGED)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_CONFIGURATION)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_DICTIONARY)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_PARSER)
-	 | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_TEMPLATE)
-	 );
+         | catalogue->CreateTypeFilter(CatalogueIndex::TABLE_UNLOGGED)
+         | catalogue->CreateTypeFilter(CatalogueIndex::VIEW)
+         | catalogue->CreateTypeFilter(CatalogueIndex::SEQUENCE)
+         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_SCALAR)
+         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_ROWSET)
+         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_AGGREGATE)
+         | catalogue->CreateTypeFilter(CatalogueIndex::FUNCTION_WINDOW)
+         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_CONFIGURATION)
+         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_DICTIONARY)
+         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_PARSER)
+         | catalogue->CreateTypeFilter(CatalogueIndex::TEXT_TEMPLATE)
+         );
   }
 
   /**
@@ -115,4 +115,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

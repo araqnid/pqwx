@@ -56,9 +56,9 @@ public:
    */
   DatabaseConnection(const ServerConnection &server, const wxString &dbname
 #if PG_VERSION_NUM >= 90000
-		     , const wxString &label = wxEmptyString
+                     , const wxString &label = wxEmptyString
 #endif
-		     )
+                     )
   : server(server), dbname(dbname), workCondition(workQueueMutex),
 #if PG_VERSION_NUM >= 90000
     label(label),
@@ -237,9 +237,9 @@ private:
   class WorkerThread : public wxThread {
   public:
     WorkerThread(DatabaseConnection *db) : wxThread(wxTHREAD_JOINABLE), db(db), disconnect(false), state(NOT_CONNECTED),
-					   notificationReceiver(NULL)
+                                           notificationReceiver(NULL)
 #ifdef PQWX_NOTIFICATION_MONITOR
-					 , monitorProcessor(this)
+                                         , monitorProcessor(this)
 #endif
   { }
   protected:
@@ -257,11 +257,11 @@ private:
       MonitorInputProcessor(WorkerThread *worker) : worker(worker) {}
       void operator()()
       {
-	PQconsumeInput(worker->conn);
-	PGnotify *notification;
-	while ((notification = PQnotifies(worker->conn)) != NULL) {
-	  (*worker->notificationReceiver)(notification);
-	}
+        PQconsumeInput(worker->conn);
+        PGnotify *notification;
+        while ((notification = PQnotifies(worker->conn)) != NULL) {
+          (*worker->notificationReceiver)(notification);
+        }
       }
     private:
       WorkerThread *worker;
@@ -313,4 +313,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

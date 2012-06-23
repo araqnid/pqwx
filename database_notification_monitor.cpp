@@ -87,13 +87,13 @@ wxThread::ExitCode DatabaseNotificationMonitor::WorkerThread::Entry()
       read(workerControlEndpoint, buffer, sizeof(buffer));
       Work *work;
       while ((work = ShiftWork()) != NULL) {
-	(*work)();
+        (*work)();
       }
     }
     for (std::list<Client>::const_iterator iter = clients.begin(); iter != clients.end(); iter++) {
       int clientFd = (*iter).GetFD();
       if (FD_ISSET(clientFd, &readfds)) {
-	(*iter).Invoke();
+        (*iter).Invoke();
       }
     }
   }
@@ -124,3 +124,7 @@ void DatabaseNotificationMonitor::QuitWork::operator()()
 {
   worker->quit = true;
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

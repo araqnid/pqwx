@@ -59,8 +59,8 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
     for (std::vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
       int skip = (*extentIter).offset - pos;
       if (skip > 0) {
-	html << symbol.Mid(pos, skip);
-	pos += skip;
+        html << symbol.Mid(pos, skip);
+        pos += skip;
       }
       html << _T("<b>");
       html << symbol.Mid(pos, (*extentIter).length);
@@ -76,13 +76,13 @@ void ObjectFinder::OnQueryChanged(wxCommandEvent &event) {
     bool subsequentRepeat = dupeSymbols.count(symbol) > 0;
     if (firstRepeat || subsequentRepeat) {
       if (!iter->document->disambig.IsEmpty()) {
-	html << _T('(') << iter->document->disambig << _T(')');
+        html << _T('(') << iter->document->disambig << _T(')');
       }
       if (!subsequentRepeat) {
-	unsigned index = seenSymbols[symbol];
-	const CatalogueIndex::Result &firstResult = results[index];
-	htmlList[index] << _T('(') << firstResult.document->disambig << _T(')');
-	dupeSymbols.insert(symbol);
+        unsigned index = seenSymbols[symbol];
+        const CatalogueIndex::Result &firstResult = results[index];
+        htmlList[index] << _T('(') << firstResult.document->disambig << _T(')');
+        dupeSymbols.insert(symbol);
       }
     }
     else {
@@ -165,3 +165,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   iconMap[CatalogueIndex::TEXT_PARSER] = _T("icon_text_search_parser.png");
   iconMap[CatalogueIndex::TEXT_TEMPLATE] = _T("icon_text_search_template.png");
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

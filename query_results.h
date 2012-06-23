@@ -67,8 +67,8 @@ public:
       int colCount = PQnfields(rs);
       data.reserve(colCount);
       for (int colNum = 0; colNum < colCount; colNum++) {
-	const char *value = PQgetvalue(rs, rowNum, colNum);
-	data.push_back(wxString(value, wxConvUTF8));
+        const char *value = PQgetvalue(rs, rowNum, colNum);
+        data.push_back(wxString(value, wxConvUTF8));
       }
     }
 
@@ -271,4 +271,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

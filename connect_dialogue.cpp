@@ -56,20 +56,20 @@ static wxString ReadConfigValue(const wxString &filename, const wxString &keywor
 
       value = value.Trim();
       if (value[0] == _T('\'') && value[value.length() - 1] == _T('\'')) {
-	wxString unquoted;
-	for (size_t pos = 1; pos < (value.length() - 1); pos++) {
-	  if (value[pos] == _T('\'') && value[pos+1] == _T('\'')) {
-	    unquoted << _T('\'');
-	    pos++;
-	  }
-	  else {
-	    unquoted << value[pos];
-	  }
-	}
-	return unquoted;
+        wxString unquoted;
+        for (size_t pos = 1; pos < (value.length() - 1); pos++) {
+          if (value[pos] == _T('\'') && value[pos+1] == _T('\'')) {
+            unquoted << _T('\'');
+            pos++;
+          }
+          else {
+            unquoted << value[pos];
+          }
+        }
+        return unquoted;
       }
       else
-	return value;
+        return value;
     }
   }
 
@@ -132,18 +132,18 @@ static std::vector<wxString> ClusterVersions() {
     struct dirent *result;
     do {
       if (readdir_r(dir, entryData, &result) != 0) {
-	wxLogSysError(_T("Unable to read " PGCLUSTER_BINDIR " directory"));
-	break;
+        wxLogSysError(_T("Unable to read " PGCLUSTER_BINDIR " directory"));
+        break;
       }
       if (result == NULL)
-	break;
+        break;
       wxString filename(entryData->d_name, wxConvUTF8);
       if (versionPattern.Matches(filename)) {
-	wxLogDebug(_T(" Found '%s'"), filename.c_str());
-	versions.push_back(filename);
+        wxLogDebug(_T(" Found '%s'"), filename.c_str());
+        versions.push_back(filename);
       }
       else {
-	wxLogDebug(_T(" Ignored '%s'"), filename.c_str());
+        wxLogDebug(_T(" Ignored '%s'"), filename.c_str());
       }
     } while (1);
     closedir(dir);
@@ -167,26 +167,26 @@ static std::vector<PgCluster> VersionClusters(const wxString &version) {
     struct dirent *result;
     do {
       if (readdir_r(dir, entryData, &result) != 0) {
-	wxLogSysError(_T("Unable to read '%s' directory"), versionDir.c_str());
-	break;
+        wxLogSysError(_T("Unable to read '%s' directory"), versionDir.c_str());
+        break;
       }
       if (result == NULL)
-	break;
+        break;
       wxString filename(entryData->d_name, wxConvUTF8);
       wxString configFile = versionDir + filename + _T("/postgresql.conf");
       struct stat statbuf;
       if (stat(configFile.fn_str(), &statbuf) == 0) {
-	PgCluster cluster;
-	cluster.version = version;
-	cluster.name = filename;
-	wxString portString = ReadConfigValue(configFile, _T("port"));
-	long port;
-	if (!portString.ToLong(&port)) {
-	  wxLogError(_("Incomprehensible 'port' setting in %s: \"%s\""), configFile.c_str(), portString.c_str());
-	  continue;
-	}
-	cluster.port = (int) port;
-	clusters.push_back(cluster);
+        PgCluster cluster;
+        cluster.version = version;
+        cluster.name = filename;
+        wxString portString = ReadConfigValue(configFile, _T("port"));
+        long port;
+        if (!portString.ToLong(&port)) {
+          wxLogError(_("Incomprehensible 'port' setting in %s: \"%s\""), configFile.c_str(), portString.c_str());
+          continue;
+        }
+        cluster.port = (int) port;
+        clusters.push_back(cluster);
       }
     } while (1);
     closedir(dir);
@@ -328,7 +328,7 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
     connection->server.passwordNeededToConnect = connection->usedPassword;
     if (!passwordInput->GetValue().empty()) {
       if (!connection->usedPassword)
-	wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
+        wxMessageBox(_("You supplied a password to connect to the server, but the connection was successfully made to the server without using it."));
     }
     SaveRecentServers();
     server = connection->server;
@@ -519,3 +519,7 @@ void ConnectDialogue::OnRecentServerChosen(wxCommandEvent& event) {
   wxASSERT(false);
 #endif
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

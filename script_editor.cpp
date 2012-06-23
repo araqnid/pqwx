@@ -127,3 +127,7 @@ wxCharBuffer ScriptEditor::GetRegion(int *lengthp)
     return GetTextRangeRaw(start, end);
   }
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

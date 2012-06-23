@@ -17,7 +17,7 @@ void CatalogueIndex::AddDocument(const Document& document) {
       termsIndex[(*iter).value] = termId;
       // still doing this the perl-ish way
       for (unsigned len = 1; len <= (*iter).value.length(); len++) {
-	prefixes[(*iter).value.Left(len)].push_back(termId);
+        prefixes[(*iter).value.Left(len)].push_back(termId);
       }
     }
     else {
@@ -37,12 +37,12 @@ std::vector<CatalogueIndex::Token> CatalogueIndex::Analyse(const wxString &input
     wxChar c = input[pos];
     if (iswalnum(c)) {
       if (mark < 0) {
-	mark = pos;
+        mark = pos;
       }
       else if (iswupper(c)) {
-	// upper-case letter causes a flush
-	output.push_back(Token(input.Mid(mark, pos-mark), (size_t) mark));
-	mark = pos;
+        // upper-case letter causes a flush
+        output.push_back(Token(input.Mid(mark, pos-mark), (size_t) mark));
+        mark = pos;
       }
     }
     else if (mark >= 0) {
@@ -95,7 +95,7 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
     for (std::vector<int>::iterator matchedTermsIter = matchedTerms.begin(); matchedTermsIter != matchedTerms.end(); matchedTermsIter++) {
       const std::vector<Occurrence> * termOccurrences = TermOccurrences(*matchedTermsIter);
       for (std::vector<Occurrence>::const_iterator occurrenceIter = termOccurrences->begin(); occurrenceIter != termOccurrences->end(); occurrenceIter++) {
-	tokenOccurrences[*occurrenceIter] = &(*occurrenceIter);
+        tokenOccurrences[*occurrenceIter] = &(*occurrenceIter);
       }
     }
     tokenMatches.push_back(tokenOccurrences);
@@ -106,8 +106,8 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
     wxLogDebug(_T("Token %d=\"%s\":"), dumpTokenPosition, tokens[dumpTokenPosition].c_str());
     for (std::map<DocumentPosition, Occurrence*>::iterator iter2 = iter->begin(); iter2 != iter->end(); iter2++) {
       wxLogDebug(_T(" Document#%d at %d => Document#%d at %d %d:\"%s\""), iter2->first.documentId, iter2->first.position,
-		 iter2->second->documentId, iter2->second->position, iter2->second->termId,
-		 terms[iter2->second->termId].c_str());
+                 iter2->second->documentId, iter2->second->position, iter2->second->termId,
+                 terms[iter2->second->termId].c_str());
     }
   }
 #endif
@@ -132,9 +132,9 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
       const Occurrence *occurrence = tokenMatches[offset][DocumentPosition(documentId, position + offset)];
       if (!occurrence) {
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX
-	wxLogDebug(_T(" No match for subsequent token %d=\"%s\" in Document#%d at %d"), offset, tokens[offset].c_str(), documentId, position + offset);
+        wxLogDebug(_T(" No match for subsequent token %d=\"%s\" in Document#%d at %d"), offset, tokens[offset].c_str(), documentId, position + offset);
 #endif
-	break;
+        break;
       }
       matched.push_back(occurrence);
     }
@@ -229,3 +229,7 @@ CatalogueIndex::Filter CatalogueIndex::CreateSchemaFilter(const wxString &schema
 
   return filter;
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

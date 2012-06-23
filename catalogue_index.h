@@ -47,8 +47,8 @@ public:
    * example.
    */
   enum Type { TABLE, TABLE_UNLOGGED, VIEW, SEQUENCE,
-	      FUNCTION_SCALAR, FUNCTION_ROWSET, FUNCTION_TRIGGER, FUNCTION_AGGREGATE, FUNCTION_WINDOW,
-	      TYPE, EXTENSION, COLLATION, TEXT_CONFIGURATION, TEXT_PARSER, TEXT_TEMPLATE, TEXT_DICTIONARY };
+              FUNCTION_SCALAR, FUNCTION_ROWSET, FUNCTION_TRIGGER, FUNCTION_AGGREGATE, FUNCTION_WINDOW,
+              TYPE, EXTENSION, COLLATION, TEXT_CONFIGURATION, TEXT_PARSER, TEXT_TEMPLATE, TEXT_DICTIONARY };
 
   /**
    * Datum stored in the search index.
@@ -117,7 +117,7 @@ public:
     std::vector<Extent> extents;
     bool operator<(const CatalogueIndex::Result &r2) const {
       return score < r2.score
-	|| (score == r2.score && document->symbol < r2.document->symbol);
+        || (score == r2.score && document->symbol < r2.document->symbol);
     }
   };
 
@@ -142,13 +142,13 @@ public:
     Filter(int capacity) : capacity(capacity) {
       data = new wxUint64[NumWords()];
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = 0;
+        data[i] = 0;
       }
     }
     Filter(const Filter &other) : capacity(other.capacity) {
       data = new wxUint64[NumWords()];
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = other.data[i];
+        data[i] = other.data[i];
       }
     }
     virtual ~Filter() {
@@ -164,32 +164,32 @@ public:
     }
     void Clear() {
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = 0;
+        data[i] = 0;
       }
     }
     void operator =(const Filter &other) {
       wxASSERT(other.capacity == capacity);
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] = other.data[i];
+        data[i] = other.data[i];
       }
     }
     void operator &=(const Filter &other) {
       wxASSERT(other.capacity == capacity);
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] &= other.data[i];
+        data[i] &= other.data[i];
       }
     }
     void operator |=(const Filter &other) {
       wxASSERT(other.capacity == capacity);
       for (int i = NumWords() - 1; i >= 0; i--) {
-	data[i] |= other.data[i];
+        data[i] |= other.data[i];
       }
     }
     Filter operator&(const Filter &other) const {
       wxASSERT(other.capacity == capacity);
       Filter result(capacity);
       for (int i = result.NumWords() - 1; i >= 0; i--) {
-	result.data[i] = data[i] & other.data[i];
+        result.data[i] = data[i] & other.data[i];
       }
       return result;
     }
@@ -197,31 +197,31 @@ public:
       wxASSERT(other.capacity == capacity);
       Filter result(capacity);
       for (int i = result.NumWords() - 1; i >= 0; i--) {
-	result.data[i] = data[i] | other.data[i];
+        result.data[i] = data[i] | other.data[i];
       }
       return result;
     }
     Filter operator~() const {
       Filter result(capacity);
       for (int i = result.NumWords() - 1; i >= 0; i--) {
-	result.data[i] = ~data[i];
+        result.data[i] = ~data[i];
       }
       return result;
     }
     int cardinality() const {
       int result = 0;
       for (int i = NumWords() - 1; i >= 0; i--) {
-	wxUint64 mask = 1;
-	for (int j = 0; j < 64; j++) {
-	  if (data[i] & mask) result++;
-	  mask = mask << 1;
-	}
+        wxUint64 mask = 1;
+        for (int j = 0; j < 64; j++) {
+          if (data[i] & mask) result++;
+          mask = mask << 1;
+        }
       }
       return result;
     }
     bool IsEmpty() const {
       for (int i = NumWords() - 1; i >= 0; i--) {
-	if (data[i]) return false;
+        if (data[i]) return false;
       }
       return true;
     }
@@ -270,7 +270,7 @@ public:
     for (std::vector<Document>::iterator docIter = documents.begin(); docIter != documents.end(); docIter++, documentId++) {
       wxString documentDump;
       for (std::vector<int>::iterator termIter = documentTerms[documentId].begin(); termIter != documentTerms[documentId].end(); termIter++) {
-	documentDump << _T(" | ") << *termIter << _T(":\"") << terms[*termIter] << _T("\"");
+        documentDump << _T(" | ") << *termIter << _T(":\"") << terms[*termIter] << _T("\"");
       }
       wxLogDebug(_T("Document#%d : %s"), documentId, documentDump.Mid(3).c_str());
     }
@@ -290,7 +290,7 @@ private:
     int position;
     bool operator< (const DocumentPosition &other) const {
       return documentId < other.documentId
-	|| (documentId == other.documentId && position < other.position);
+        || (documentId == other.documentId && position < other.position);
     }
   };
   class Occurrence : public DocumentPosition {
@@ -333,4 +333,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

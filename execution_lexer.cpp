@@ -26,14 +26,14 @@ ExecutionLexer::Token ExecutionLexer::PullPsql()
     }
     else if (c == '\\') {
       if (Peek() == '\\') {
-	// skip over terminating double-backslash
-	Take();
-	return Token(Token::PSQL, start, pos - start - 2);
+        // skip over terminating double-backslash
+        Take();
+        return Token(Token::PSQL, start, pos - start - 2);
       }
       else {
-	// preserve starting backslash of next command
-	BackUp();
-	return Token(Token::PSQL, start, pos - start);
+        // preserve starting backslash of next command
+        BackUp();
+        return Token(Token::PSQL, start, pos - start);
       }
     }
     else if (c == '\'') {
@@ -60,29 +60,29 @@ ExecutionLexer::Token ExecutionLexer::PullSql()
       PassDollarQuote();
     else if (quoteStack.empty()) {
       if (c == '\'')
-	PassSingleQuotedString(false); // FIXME handle E'...' flag for escape syntax
+        PassSingleQuotedString(false); // FIXME handle E'...' flag for escape syntax
       else if (c == '\"')
       PassDoubleQuotedString();
       else if (c == ';') {
-	// inclusive end character
-	int end = ++pos;
-	PassWhitespace();
-	return Token(Token::SQL, start, end - start);
+        // inclusive end character
+        int end = ++pos;
+        PassWhitespace();
+        return Token(Token::SQL, start, end - start);
       }
       else if (c == '-') {
-	if (Peek() == '-') {
-	  PassSingleLineComment();
-	}
+        if (Peek() == '-') {
+          PassSingleLineComment();
+        }
       }
       else if (c == '/') {
-	if (Peek() == '*') {
-	  PassBlockComment();
-	}
+        if (Peek() == '*') {
+          PassBlockComment();
+        }
       }
       else if (c == '\\') {
-	// exclusive end character
-	BackUp();
-	return Token(Token::SQL, start, pos - start);
+        // exclusive end character
+        BackUp();
+        return Token(Token::SQL, start, pos - start);
       }
     }
   } while (true);
@@ -95,7 +95,7 @@ void ExecutionLexer::PassSingleQuotedString(bool escapeSyntax)
     c = Take();
     if (c == '\'') {
       if (Peek() != '\'')
-	return;
+        return;
     }
   } while (c >= 0);
 }
@@ -107,7 +107,7 @@ void ExecutionLexer::PassDoubleQuotedString()
     c = Take();
     if (c == '\"') {
       if (Peek() != '\"')
-	return;
+        return;
     }
   } while (c >= 0);
 }
@@ -129,7 +129,7 @@ void ExecutionLexer::PassBlockComment()
     c = Take();
     if (c == '*') {
       if (Peek() == '/')
-	return;
+        return;
     }
   } while (c >= 0);
 }
@@ -184,14 +184,18 @@ ExecutionLexer::Token ExecutionLexer::ReadCopyData0()
 
     if (backslashed) {
       if (c == '.') {
-	// remove the "\." from the returned token
-	return Token(Token::COPY_DATA, start, pos - 2 - start);
+        // remove the "\." from the returned token
+        return Token(Token::COPY_DATA, start, pos - 2 - start);
       }
       backslashed = false;
     }
     else {
       if (c == '\\')
-	backslashed = true;
+        backslashed = true;
     }
   } while (true);
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

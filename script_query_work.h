@@ -36,7 +36,7 @@ public:
       elapsed = elapsed_;
       complete = true;
       if (newConnectionState == Idle) {
-	newConnectionState = Decode(PQtransactionStatus(conn));
+        newConnectionState = Decode(PQtransactionStatus(conn));
       }
     }
   private:
@@ -111,4 +111,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

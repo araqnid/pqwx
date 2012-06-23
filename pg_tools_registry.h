@@ -72,10 +72,10 @@ private:
     void ScanForInstallations()
     {
       for (std::vector<wxString>::const_iterator iter = owner->suggestions.begin(); iter != owner->suggestions.end(); iter++) {
-	ScanSuggestedLocation(*iter);
+        ScanSuggestedLocation(*iter);
       }
       if (owner->includeSystemPath)
-	ScanExecutionPath();
+        ScanExecutionPath();
     }
     void ScanSuggestedLocation(const wxString& dir);
     void ScanExecutionPath();
@@ -100,4 +100,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

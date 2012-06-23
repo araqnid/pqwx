@@ -39,7 +39,7 @@ public:
     do {
       nextState = ProcessExecution();
       if (nextState == Finish) {
-	FinishExecution();
+        FinishExecution();
       }
     } while (nextState == NeedMore);
   }
@@ -115,4 +115,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

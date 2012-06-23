@@ -201,3 +201,7 @@ QueryResults DatabaseWork::DoNamedQuery(const wxString &name, const char *sql, c
   }
   return DoNamedQuery(name, sql, paramCount, &(paramTypes[0]), &(values[0]));
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

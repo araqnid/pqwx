@@ -364,7 +364,7 @@ std::vector<int> LoadRelationWork::ParseInt2Vector(const wxString &str)
     if (str[pos] == ' ') {
       long value;
       if (str.Mid(mark, pos-mark).ToLong(&value)) {
-	result.push_back((int) value);
+        result.push_back((int) value);
       }
       mark = pos + 1;
     }
@@ -426,3 +426,7 @@ void LoadRelationWork::LoadIntoView(ObjectBrowser *ob) {
     ob->SetItemText(relationItem, itemText.Left(space));
   }
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

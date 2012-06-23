@@ -54,3 +54,7 @@ bool DumpCatalogueApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   return true;
 }
 
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

@@ -312,4 +312,5 @@ const int EVENT_WORK_FINISHED = 10000;
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

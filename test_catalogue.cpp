@@ -95,18 +95,18 @@ int TestCatalogueApp::OnRun() {
       typesFilter.Clear();
       std::vector<CatalogueIndex::Type> types = ParseTypeListString((*iter).Mid(1));
       for (std::vector<CatalogueIndex::Type>::iterator iter = types.begin(); iter != types.end(); iter++) {
-	wxLogDebug(_T("Filtering on %s"), CatalogueIndex::EntityTypeName(*iter).c_str());
-	typesFilter |= index.CreateTypeFilter(*iter);
+        wxLogDebug(_T("Filtering on %s"), CatalogueIndex::EntityTypeName(*iter).c_str());
+        typesFilter |= index.CreateTypeFilter(*iter);
       }
     }
     else if ((*iter)[0] == _T('<')) {
       long value;
       if ((*iter).Mid(1).ToLong(&value)) {
-	maxResults = (int) value;
-	wxLogDebug(_T("Max results: %d"), maxResults);
+        maxResults = (int) value;
+        wxLogDebug(_T("Max results: %d"), maxResults);
       }
       else {
-	wxLogWarning(_T("Incomprehensible max results setting: %s"), (*iter).c_str());
+        wxLogWarning(_T("Incomprehensible max results setting: %s"), (*iter).c_str());
       }
     }
     else {
@@ -116,36 +116,36 @@ int TestCatalogueApp::OnRun() {
       CatalogueIndex::Filter filter = baseFilter & typesFilter;
 
       if (dot != wxNOT_FOUND)
-	filter &= index.CreateSchemaFilter(query.Left(dot));
+        filter &= index.CreateSchemaFilter(query.Left(dot));
 
       results = index.Search(query, filter, maxResults);
 
       for (std::vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++) {
-	wxString resultDump = iter->document->symbol;
+        wxString resultDump = iter->document->symbol;
 
-	if (!iter->document->disambig.IsEmpty()) {
-	  resultDump << _T("(") << iter->document->disambig << _T(")");
-	}
-	resultDump << _T(' ') << CatalogueIndex::EntityTypeName(iter->document->entityType) << _T('#') << iter->document->entityId;
-	resultDump << _T(" (") << iter->score << _T(")");
-	wxLogDebug(_T("%s"), resultDump.c_str());
+        if (!iter->document->disambig.IsEmpty()) {
+          resultDump << _T("(") << iter->document->disambig << _T(")");
+        }
+        resultDump << _T(' ') << CatalogueIndex::EntityTypeName(iter->document->entityType) << _T('#') << iter->document->entityId;
+        resultDump << _T(" (") << iter->score << _T(")");
+        wxLogDebug(_T("%s"), resultDump.c_str());
 
-	wxString extentsLine1;
-	wxString extentsLine2;
-	size_t pos = 0;
-	for (std::vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
-	  for (; pos < (*extentIter).offset; pos++) {
-	    extentsLine1 << _T(' ');
-	    extentsLine2 << _T(' ');
-	  }
-	  for (size_t len = 0; len < (*extentIter).length; len++, pos++) {
-	    extentsLine1 << _T('^');
-	    extentsLine2 << (len ? _T(' ') : _T('|'));
-	  }
-	}
+        wxString extentsLine1;
+        wxString extentsLine2;
+        size_t pos = 0;
+        for (std::vector<CatalogueIndex::Result::Extent>::iterator extentIter = (*iter).extents.begin(); extentIter != (*iter).extents.end(); extentIter++) {
+          for (; pos < (*extentIter).offset; pos++) {
+            extentsLine1 << _T(' ');
+            extentsLine2 << _T(' ');
+          }
+          for (size_t len = 0; len < (*extentIter).length; len++, pos++) {
+            extentsLine1 << _T('^');
+            extentsLine2 << (len ? _T(' ') : _T('|'));
+          }
+        }
 
-	wxLogDebug(_T("%s"), extentsLine1.c_str());
-	wxLogDebug(_T("%s"), extentsLine2.c_str());
+        wxLogDebug(_T("%s"), extentsLine1.c_str());
+        wxLogDebug(_T("%s"), extentsLine2.c_str());
       }
     }
   }
@@ -183,3 +183,7 @@ std::vector<CatalogueIndex::Type> TestCatalogueApp::ParseTypeListString(const wx
 
   return result;
 }
+// Local Variables:
+// mode: c++
+// indent-tabs-mode: nil
+// End:

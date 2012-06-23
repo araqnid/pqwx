@@ -63,7 +63,7 @@ private:
     if (message != NULL) {
       wxStringTokenizer tkz(wxString(message, wxConvUTF8), _T("\n"));
       while (tkz.HasMoreTokens()) {
-	lines.push_back(tkz.GetNextToken());
+        lines.push_back(tkz.GetNextToken());
       }
     }
     return lines;
@@ -88,4 +88,5 @@ private:
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

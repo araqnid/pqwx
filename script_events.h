@@ -60,4 +60,5 @@ END_DECLARE_EVENT_TYPES()
 
 // Local Variables:
 // mode: c++
+// indent-tabs-mode: nil
 // End:

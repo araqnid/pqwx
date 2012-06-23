@@ -41,6 +41,11 @@ public:
    * This method is executed on the GUI thread.
    */
   virtual void LoadIntoView(ObjectBrowser *browser) = 0;
+
+  /**
+   * If the database work threw a fatal exception, this will retrieve the message.
+   */
+  const wxString& GetCrashMessage() const { return crashMessage; }
 protected:
   DatabaseWorkWithDictionary::NamedQueryExecutor Query(const wxString &name)
   {
@@ -67,6 +72,7 @@ public:
 
 private:
   const VersionedSql& sqlDictionary;
+  wxString crashMessage;
 
   friend class ObjectBrowserDatabaseWork;
 };
@@ -87,7 +93,21 @@ public:
     (*work)();
   }
   void NotifyFinished() {
+    wxLogDebug(_T("%p: object browser work finished, notifying GUI thread"), work);
     wxCommandEvent event(PQWX_ObjectBrowserWorkFinished);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
+  void NotifyCrashed() {
+    wxLogDebug(_T("%p: object browser work crashed with no known exception, notifying GUI thread"), work);
+    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
+  void NotifyCrashed(const std::exception& e) {
+    wxLogDebug(_T("%p: object browser work crashed with some exception, notifying GUI thread"), work);
+    work->crashMessage = wxString(e.what(), wxConvUTF8);
+    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }

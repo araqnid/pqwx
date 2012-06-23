@@ -41,6 +41,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_SEL_CHANGED(Pqwx_ObjectBrowser, ObjectBrowser::OnItemSelected)
   EVT_SET_FOCUS(ObjectBrowser::OnSetFocus)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowser::OnWorkFinished)
+  PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowser::OnWorkCrashed)
 
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
   EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
@@ -112,6 +113,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed)
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -354,6 +356,21 @@ void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
 
   wxLogDebug(_T("%p: work finished"), work);
   work->LoadIntoView(this);
+
+  delete work;
+}
+
+void ObjectBrowser::OnWorkCrashed(wxCommandEvent &e)
+{
+  ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
+
+  wxLogDebug(_T("%p: work crashed"), work);
+  if (!work->GetCrashMessage().empty()) {
+    wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());
+  }
+  else {
+    wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
+  }
 
   delete work;
 }

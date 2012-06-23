@@ -29,6 +29,7 @@ class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
   DECLARE_EVENT_TYPE(PQWX_NoObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
@@ -37,6 +38,11 @@ END_DECLARE_EVENT_TYPES()
  * Event issued when asynchronous database work finishes
  */
 #define PQWX_OBJECT_BROWSER_WORK_FINISHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkFinished, fn)
+
+/**
+ * Event issued when asynchronous database work throws an exception
+ */
+#define PQWX_OBJECT_BROWSER_WORK_CRASHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkCrashed, fn)
 
 /**
  * Event issued when an object is selected in the object browser.
@@ -211,6 +217,7 @@ private:
   void OnGetTooltip(wxTreeEvent&);
   void OnItemRightClick(wxTreeEvent&);
   void OnWorkFinished(wxCommandEvent&);
+  void OnWorkCrashed(wxCommandEvent&);
   void OnServerMenuDisconnect(wxCommandEvent&);
   void OnServerMenuRefresh(wxCommandEvent&);
   void OnServerMenuProperties(wxCommandEvent&);

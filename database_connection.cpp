@@ -112,12 +112,14 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       work->conn = conn;
       try {
         (*work)();
+	work->NotifyFinished();
       } catch (std::exception &e) {
         wxLogDebug(_T("Exception thrown by database work: %s"), wxString(e.what(), wxConvUTF8).c_str());
+	work->NotifyCrashed(e);
       } catch (...) {
         wxLogDebug(_T("Unrecognisable exception thrown by database work"));
+	work->NotifyCrashed();
       }
-      work->NotifyFinished();
       delete work;
       SetState(DatabaseConnection::IDLE);
       db->workQueueMutex.Lock();

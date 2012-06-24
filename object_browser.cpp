@@ -638,7 +638,8 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 }
 
 void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, RelationModel *incoming, wxTreeItemId relationItem) {
-  RelationModel *relationModel = dynamic_cast<RelationModel*>(GetItemData(relationItem));
+  ModelReference *ref = static_cast<ModelReference*>(GetItemData(relationItem));
+  RelationModel *relationModel = objectBrowserModel->FindRelation(*ref);
   wxASSERT(relationModel != NULL);
 
   relationModel->columns = incoming->columns;

@@ -228,6 +228,7 @@ public:
     if (catalogueIndex != NULL)
       delete catalogueIndex;
   }
+  operator ObjectModelReference () const;
   Oid oid;
   bool isTemplate;
   bool allowConnections;
@@ -514,6 +515,11 @@ inline wxString DatabaseModel::Identification() const {
 
 inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
   return server->GetDatabaseConnection(name);
+}
+
+inline DatabaseModel::operator ObjectModelReference() const
+{
+  return ObjectModelReference(server->Identification(), oid);
 }
 
 #endif

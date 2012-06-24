@@ -312,7 +312,7 @@ void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *datab
 
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
   wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
-  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation, relationItem));
+  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation));
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
@@ -845,6 +845,13 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database)
     }
     childItem = GetNextChild(databaseItem, cookie);
   } while (1);
+}
+
+wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& databaseRef, Oid oid) const
+{
+  wxTreeItemId item = LookupSymbolItem(databaseRef, oid);
+  wxASSERT(item.IsOk());
+  return item;
 }
 
 void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {

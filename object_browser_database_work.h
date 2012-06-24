@@ -293,16 +293,14 @@ class LoadRelationWork : public ObjectBrowserWork {
 public:
   /**
    * @param relationModel Relation model to populate
-   * @param relationItem Relation tree item to populate
    */
-  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : database(*relationModel->database), relationType(relationModel->type), oid(relationModel->oid), relationItem(relationItem) {
+  LoadRelationWork(const RelationModel *relationModel) : database(*relationModel->database), relationType(relationModel->type), oid(relationModel->oid) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
   const ObjectModelReference database;
   const RelationModel::Type relationType;
   const Oid oid;
-  wxTreeItemId relationItem;
   RelationModel *detail;
   friend class ObjectBrowser;
 private:

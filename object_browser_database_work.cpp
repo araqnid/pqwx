@@ -418,6 +418,7 @@ void LoadRelationWork::ReadConstraints() {
 }
 
 void LoadRelationWork::LoadIntoView(ObjectBrowser *ob) {
+  wxTreeItemId relationItem = ob->FindRelationItem(database, oid);
   ob->FillInRelation(database, detail, relationItem);
   ob->Expand(relationItem);
 

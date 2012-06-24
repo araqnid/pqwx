@@ -20,7 +20,11 @@ void RefreshDatabaseListWork::operator()()
   ReadTablespaces();
 }
 
-void RefreshDatabaseListWork::LoadIntoView(ObjectBrowser *ob)
+void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel *model)
+{
+}
+
+void RefreshDatabaseListWork::UpdateView(ObjectBrowser *ob)
 {
   ob->UpdateServer(serverModel->Identification(), true);
 }
@@ -196,7 +200,12 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
   }
 }
 
-void LoadDatabaseSchemaWork::LoadIntoView(ObjectBrowser *ob) {
+void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
+{
+}
+
+void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
+{
   wxTreeItemId databaseItem = ob->FindDatabaseItem(databaseModel);
   ob->FillInDatabaseSchema(databaseModel, databaseItem);
   if (expandAfter) ob->Expand(databaseItem);
@@ -206,7 +215,8 @@ void LoadDatabaseSchemaWork::LoadIntoView(ObjectBrowser *ob) {
 /*
  * All database object descriptions.
  */
-void LoadDatabaseDescriptionsWork::operator()() {
+void LoadDatabaseDescriptionsWork::operator()()
+{
   QueryResults rs = Query(_T("Object Descriptions")).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
     unsigned long oid;
@@ -217,7 +227,12 @@ void LoadDatabaseDescriptionsWork::operator()() {
   }
 }
 
-void LoadDatabaseDescriptionsWork::LoadIntoView(ObjectBrowser *ob) {
+void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
+{
+}
+
+void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
+{
   int count = 0;
   for (std::vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
     std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
@@ -290,8 +305,13 @@ void IndexDatabaseSchemaWork::operator()() {
   catalogueIndex->Commit();
 }
 
-void IndexDatabaseSchemaWork::LoadIntoView(ObjectBrowser *ob) {
+void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
+{
   database->catalogueIndex = catalogueIndex;
+}
+
+void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
+{
   if (completion) {
     completion->Completed(ob, database, catalogueIndex);
     delete completion;
@@ -413,7 +433,12 @@ void LoadRelationWork::ReadConstraints() {
   }
 }
 
-void LoadRelationWork::LoadIntoView(ObjectBrowser *ob) {
+void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
+{
+}
+
+void LoadRelationWork::UpdateView(ObjectBrowser *ob)
+{
   wxTreeItemId relationItem = ob->FindRelationItem(database, oid);
   ob->FillInRelation(database, detail, relationItem);
   ob->Expand(relationItem);

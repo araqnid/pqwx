@@ -35,12 +35,18 @@ public:
    * executed on the database worker thread.
    */
   virtual void operator()() = 0;
-  /**
-   * Merge data obtained by work object into object browser.
+  /*
+   * Merge the data fetched into the object model.
    *
    * This method is executed on the GUI thread.
    */
-  virtual void LoadIntoView(ObjectBrowser *browser) = 0;
+  virtual void UpdateModel(ObjectBrowserModel *model) = 0;
+  /**
+   * Update the object browser view to display the data fetched by this work.
+   *
+   * This method is executed on the GUI thread.
+   */
+  virtual void UpdateView(ObjectBrowser *browser) = 0;
 
   /**
    * If the database work threw a fatal exception, this will retrieve the message.
@@ -171,10 +177,15 @@ private:
  */
 class SetupDatabaseConnectionWork : public ObjectBrowserWork {
 protected:
-  void operator()() {
+  void operator()()
+  {
     owner->DoCommand(_T("SetupObjectBrowserConnection"));
   }
-  void LoadIntoView(ObjectBrowser *ob) {
+  void UpdateModel(ObjectBrowserModel *model)
+  {
+  }
+  void UpdateView(ObjectBrowser *ob)
+  {
   }
 };
 
@@ -187,12 +198,14 @@ public:
    * Create work object
    * @param serverModel Server model to populate
    */
-  RefreshDatabaseListWork(ServerModel *serverModel) : serverModel(serverModel) {
+  RefreshDatabaseListWork(ServerModel *serverModel) : serverModel(serverModel)
+  {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
   void operator()();
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model);
+  void UpdateView(ObjectBrowser *ob);
 private:
   ServerModel *serverModel;
   wxString serverVersionString;
@@ -228,7 +241,8 @@ protected:
   void LoadTextSearchTemplates();
   void LoadTextSearchParsers();
   void LoadTextSearchConfigurations();
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model);
+  void UpdateView(ObjectBrowser *ob);
 private:
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
@@ -250,7 +264,8 @@ private:
   std::map<unsigned long, wxString> descriptions;
 protected:
   void operator()();
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model);
+  void UpdateView(ObjectBrowser *ob);
 };
 
 /**
@@ -283,7 +298,8 @@ private:
   static const std::map<wxString, CatalogueIndex::Type> typeMap;
 protected:
   void operator()();
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model);
+  void UpdateView(ObjectBrowser *ob);
 };
 
 /**
@@ -302,7 +318,6 @@ private:
   const RelationModel::Type relationType;
   const Oid oid;
   RelationModel *detail;
-  friend class ObjectBrowser;
 private:
   void operator()();
   void ReadColumns();
@@ -310,7 +325,8 @@ private:
   void ReadTriggers();
   void ReadSequences();
   void ReadConstraints();
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model);
+  void UpdateView(ObjectBrowser *ob);
   static std::vector<int> ParseInt2Vector(const wxString &str);
 };
 

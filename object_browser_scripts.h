@@ -50,7 +50,8 @@ private:
 
   wxString script;
 
-  void LoadIntoView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel *model) {}
+  void UpdateView(ObjectBrowser *ob);
   static const VersionedSql& GetSqlDictionary();
 
 public:

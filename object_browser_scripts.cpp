@@ -14,7 +14,7 @@
 #include "wx/regex.h"
 #include "wx/clipbrd.h"
 
-void ScriptWork::LoadIntoView(ObjectBrowser *ob)
+void ScriptWork::UpdateView(ObjectBrowser *ob)
 {
   switch (output) {
   case Window: {

@@ -246,7 +246,8 @@ void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
   wxLogDebug(_T("%p: work finished"), work);
-  work->LoadIntoView(this);
+  work->UpdateModel(objectBrowserModel);
+  work->UpdateView(this);
 
   delete work;
 }

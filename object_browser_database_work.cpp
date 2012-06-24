@@ -22,6 +22,7 @@ void RefreshDatabaseListWork::operator()()
 
 void RefreshDatabaseListWork::LoadIntoView(ObjectBrowser *ob)
 {
+  wxTreeItemId serverItem = ob->FindServerItem(serverModel);
   ob->FillInServer(serverModel, serverItem);
   ob->EnsureVisible(serverItem);
   ob->SelectItem(serverItem);

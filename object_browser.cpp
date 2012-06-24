@@ -227,7 +227,7 @@ void ObjectBrowser::Dispose()
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
   ServerModel *serverModel = objectBrowserModel->FindServer(*ref);
-  SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel, serverItem));
+  SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel));
 }
 
 void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work) {

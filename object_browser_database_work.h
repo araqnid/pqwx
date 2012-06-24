@@ -186,9 +186,8 @@ public:
   /**
    * Create work object
    * @param serverModel Server model to populate
-   * @param serverItem Server tree item to populate
    */
-  RefreshDatabaseListWork(ServerModel *serverModel, wxTreeItemId serverItem) : serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ServerModel *serverModel) : serverModel(serverModel) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -196,7 +195,6 @@ protected:
   void LoadIntoView(ObjectBrowser *ob);
 private:
   ServerModel *serverModel;
-  wxTreeItemId serverItem;
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;

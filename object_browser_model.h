@@ -11,6 +11,7 @@ class RelationModel;
 class DatabaseModel;
 class ServerModel;
 class ObjectBrowser;
+
 /**
  * Base class for models of all database objects.
  */
@@ -369,7 +370,7 @@ private:
 /**
  * The "top level" of the object browser model.
  */
-class ObjectBrowserModel {
+class ObjectBrowserModel : public wxEvtHandler {
 public:
   /**
    * Find an existing server matching some connection parameters.

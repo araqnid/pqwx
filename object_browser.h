@@ -65,9 +65,10 @@ public:
   /**
    * Create object browser.
    */
-  ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
+  ObjectBrowser(ObjectBrowserModel *model, wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
 
-  ~ObjectBrowser() {
+  ~ObjectBrowser()
+  {
     Dispose();
   }
 

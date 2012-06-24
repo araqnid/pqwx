@@ -161,7 +161,7 @@ private:
   std::vector<SchemaMemberModel*> division;
 };
 
-ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
+ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
@@ -193,7 +193,6 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_configuration.png")));
   AssignImageList(images);
   currentlySelected = false;
-  objectBrowserModel = new ObjectBrowserModel();
 }
 
 void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
@@ -223,7 +222,6 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
 
 void ObjectBrowser::Dispose()
 {
-  objectBrowserModel->Dispose();
 }
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {

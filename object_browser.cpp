@@ -380,7 +380,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
     else {
       roleItem = AppendItem(groupsItem, role->name);
     }
-    SetItemData(roleItem, role);
+    SetItemData(roleItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_ROLE, role->oid));
     SetItemImage(roleItem, img_role);
   }
 }

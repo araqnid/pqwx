@@ -302,7 +302,7 @@ public:
 /**
  * A server role.
  */
-class RoleModel : public ObjectModel, public wxTreeItemData {
+class RoleModel : public ObjectModel {
 public:
   Oid oid;
   bool superuser;

@@ -305,7 +305,7 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database, IndexSchemaCompletionCallback *indexCompletion) {
-  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, databaseItem, indexCompletion == NULL));
+  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, indexCompletion == NULL));
   SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database, indexCompletion));
   SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
 }

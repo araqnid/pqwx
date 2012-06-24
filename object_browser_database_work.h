@@ -212,16 +212,14 @@ public:
   /**
    * Create work object.
    * @param databaseModel Database model to populate
-   * @param databaseItem Database tree item to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem, bool expandAfter) : databaseModel(databaseModel), databaseItem(databaseItem), expandAfter(expandAfter) {
+  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, bool expandAfter) : databaseModel(databaseModel), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
   DatabaseModel *databaseModel;
-  wxTreeItemId databaseItem;
-  bool expandAfter;
+  const bool expandAfter;
 protected:
   void operator()();
   void LoadRelations();

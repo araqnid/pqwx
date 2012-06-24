@@ -201,6 +201,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
 }
 
 void LoadDatabaseSchemaWork::LoadIntoView(ObjectBrowser *ob) {
+  wxTreeItemId databaseItem = ob->FindDatabaseItem(databaseModel);
   ob->FillInDatabaseSchema(databaseModel, databaseItem);
   if (expandAfter) ob->Expand(databaseItem);
   ob->SetItemText(databaseItem, databaseModel->name); // remove loading message

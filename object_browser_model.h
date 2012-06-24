@@ -10,13 +10,83 @@
 #include <openssl/ssl.h>
 
 /**
+ * A "soft" reference into the object model.
+ */
+class ObjectModelReference {
+public:
+  ObjectModelReference(const wxString& serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(PG_DATABASE), oid(database), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
+  ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
+
+  wxString Identify() const
+  {
+    wxString buf;
+    buf << _T("Server#") << serverId;
+    if (database != InvalidOid) {
+      buf << _T("/") << database;
+      if (regclass != PG_DATABASE) {
+        buf << _T("/") << regclass << _T(":") << oid;
+        if (subid)
+          buf << _T(".") << subid;
+      }
+    }
+    return buf;
+  }
+
+  wxString GetServerId() const { return serverId; }
+  Oid GetDatabase() const { return database; }
+  Oid GetObjectClass() const { return regclass; }
+  Oid GetOid() const { return oid; }
+  int GetObjectSubid() const { return subid; }
+
+  bool operator<(const ObjectModelReference& other) const
+  {
+    if (serverId < other.serverId) return true;
+    if (regclass < other.regclass) return true;
+    if (database < other.database) return true;
+    if (regclass == PG_DATABASE) return false;
+    if (oid < other.oid) return true;
+    return subid < other.subid;
+  }
+
+  static const Oid PG_ATTRIBUTE = 1249;
+  static const Oid PG_CLASS = 1259;
+  static const Oid PG_CONSTRAINT = 2606;
+  static const Oid PG_DATABASE = 1262;
+  static const Oid PG_INDEX = 2610;
+  static const Oid PG_PROC = 1255;
+  static const Oid PG_ROLE = 1260;
+  static const Oid PG_TABLESPACE = 1213;
+  static const Oid PG_TRIGGER = 2620;
+  static const Oid PG_TS_CONFIG = 3602;
+  static const Oid PG_TS_DICT = 3600;
+  static const Oid PG_TS_PARSER = 3601;
+  static const Oid PG_TS_TEMPLATE = 3764;
+private:
+  wxString serverId;
+  Oid database;
+  Oid regclass;
+  Oid oid;
+  int subid;
+};
+
+class RelationModel;
+class DatabaseModel;
+class ServerModel;
+class ObjectBrowser;
+
+/**
  * Base class for models of all database objects.
  */
-class ObjectModel : public wxTreeItemData {
+class ObjectModel {
 public:
   wxString name;
   wxString description;
   virtual wxString FormatName() const { return name; }
+  static bool CollateByName(ObjectModel *o1, ObjectModel *o2) {
+    return o1->name < o2->name;
+  }
 };
 
 /**
@@ -43,6 +113,7 @@ public:
     wxString expression;
   };
   RelationModel *relation;
+  Oid oid;
   bool primaryKey;
   bool unique;
   bool exclusion;
@@ -57,6 +128,7 @@ public:
 class TriggerModel : public ObjectModel {
 public:
   RelationModel *relation;
+  Oid oid;
 };
 
 /**
@@ -66,6 +138,7 @@ class CheckConstraintModel : public ObjectModel {
 public:
   RelationModel *relation;
   wxString expression;
+  Oid oid;
 };
 
 
@@ -82,6 +155,13 @@ public:
   bool IsUser() const { return !IsSystemSchema(schema); }
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
+  }
+  static bool CollateByQualifiedName(SchemaMemberModel *r1, SchemaMemberModel *r2) {
+    if (r1->schema < r2->schema) return true;
+    if (r1->schema == r2->schema) {
+      return r1->name < r2->name;
+    }
+    return false;
   }
 };
 
@@ -160,6 +240,7 @@ public:
     if (catalogueIndex != NULL)
       delete catalogueIndex;
   }
+  operator ObjectModelReference () const;
   Oid oid;
   bool isTemplate;
   bool allowConnections;
@@ -173,7 +254,7 @@ public:
   bool IsSystem() const {
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
-  std::map<Oid, wxTreeItemId> symbolItemLookup;
+  ObjectModel *FindObject(const ObjectModelReference& ref) const;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
   std::vector<TextSearchDictionaryModel*> textSearchDictionaries;
@@ -226,7 +307,7 @@ public:
       members.push_back(*iter);
     }
 
-    sort(members.begin(), members.end(), CollateSchemaMembers);
+    sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
   
     Divisions result;
 
@@ -242,16 +323,6 @@ public:
 
     return result;
   }
-
-private:
-  static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
-    if (r1->schema < r2->schema) return true;
-    if (r1->schema == r2->schema) {
-      return r1->name < r2->name;
-    }
-    return false;
-  }
-
 };
 
 /**
@@ -273,7 +344,7 @@ public:
  * is closed, so we maintain only one connection to a server at a
  * time.
  */
-class ServerModel : public wxTreeItemData {
+class ServerModel : public ObjectModel {
 public:
   /**
    * Create server model.
@@ -344,6 +415,18 @@ public:
    */
   DatabaseModel *FindDatabase(const wxString &dbname) const;
   /**
+   * Find a database model on this server.
+   */
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_DATABASE);
+    return FindDatabaseByOid(ref.GetOid());
+  }
+  /**
+   * Find an arbitrary object on this server.
+   */
+  ObjectModel *FindObject(const ObjectModelReference &ref) const;
+  /**
    * Server connection details.
    */
   const ServerConnection conninfo;
@@ -367,7 +450,76 @@ private:
   wxString serverVersionString;
   wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
+  DatabaseModel *FindDatabaseByOid(Oid oid) const;
   friend class RefreshDatabaseListWork;
+};
+
+/**
+ * The "top level" of the object browser model.
+ */
+class ObjectBrowserModel : public wxEvtHandler {
+public:
+  /**
+   * Find an existing server matching some connection parameters.
+   */
+  ServerModel *FindServer(const ServerConnection &server) const { return FindServerById(server.Identification()); }
+  /**
+   * Find an existing server by reference.
+   */
+  ServerModel *FindServer(const ObjectModelReference &ref) const { return FindServerById(ref.GetServerId()); }
+
+  /**
+   * Find an existing database matching some connection parameters and database name.
+   */
+  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+  /**
+   * Find an existing database by reference.
+   */
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const;
+  /**
+   * Register a new server connection with the object browser.
+   */
+  ServerModel* AddServerConnection(const ServerConnection &conninfo, DatabaseConnection *db);
+  /**
+   * Close all server connections and delete all model data.
+   */
+  void Dispose();
+  /**
+   * Remove a server.
+   */
+  void RemoveServer(ServerModel *server);
+  void SetupDatabaseConnection(DatabaseConnection *db);
+
+  /**
+   * Find any object by reference.
+   */
+  ObjectModel *FindObject(const ObjectModelReference &ref) const;
+
+  /**
+   * Find a particular relation.
+   */
+  RelationModel *FindRelation(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_CLASS);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<RelationModel*>(obj);
+  }
+
+  /**
+   * Find a particular function.
+   */
+  FunctionModel *FindFunction(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_PROC);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<FunctionModel*>(obj);
+  }
+
+private:
+  ServerModel *FindServerById(const wxString&) const;
+  std::list<ServerModel*> servers;
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {
@@ -380,6 +532,11 @@ inline wxString DatabaseModel::Identification() const {
 
 inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
   return server->GetDatabaseConnection(name);
+}
+
+inline DatabaseModel::operator ObjectModelReference() const
+{
+  return ObjectModelReference(server->Identification(), oid);
 }
 
 #endif

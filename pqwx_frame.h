@@ -22,6 +22,10 @@ public:
    * Create frame, specifying initial title.
    */
   PqwxFrame(const wxString& title);
+  ~PqwxFrame()
+  {
+    objectBrowserModel->Dispose();
+  }
 
   /**
    * @return object browser in this frame
@@ -51,6 +55,7 @@ private:
 
   wxString titlePrefix;
 
+  ObjectBrowserModel *objectBrowserModel;
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;
 

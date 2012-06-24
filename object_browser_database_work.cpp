@@ -22,6 +22,7 @@ void RefreshDatabaseListWork::operator()()
 
 void RefreshDatabaseListWork::LoadIntoView(ObjectBrowser *ob)
 {
+  wxTreeItemId serverItem = ob->FindServerItem(serverModel);
   ob->FillInServer(serverModel, serverItem);
   ob->EnsureVisible(serverItem);
   ob->SelectItem(serverItem);
@@ -48,7 +49,7 @@ void RefreshDatabaseListWork::ReadDatabases()
     database->description = (*iter).ReadText(5);
     serverModel->databases.push_back(database);
   }
-  sort(serverModel->databases.begin(), serverModel->databases.end(), CollateDatabases);
+  sort(serverModel->databases.begin(), serverModel->databases.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadRoles()
@@ -63,7 +64,7 @@ void RefreshDatabaseListWork::ReadRoles()
     role->description = (*iter).ReadText(4);
     serverModel->roles.push_back(role);
   }
-  sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
+  sort(serverModel->roles.begin(), serverModel->roles.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadTablespaces()
@@ -200,6 +201,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
 }
 
 void LoadDatabaseSchemaWork::LoadIntoView(ObjectBrowser *ob) {
+  wxTreeItemId databaseItem = ob->FindDatabaseItem(databaseModel);
   ob->FillInDatabaseSchema(databaseModel, databaseItem);
   if (expandAfter) ob->Expand(databaseItem);
   ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
@@ -416,7 +418,8 @@ void LoadRelationWork::ReadConstraints() {
 }
 
 void LoadRelationWork::LoadIntoView(ObjectBrowser *ob) {
-  ob->FillInRelation(detail, relationItem);
+  wxTreeItemId relationItem = ob->FindRelationItem(database, oid);
+  ob->FillInRelation(database, detail, relationItem);
   ob->Expand(relationItem);
 
   // remove 'loading...' tag

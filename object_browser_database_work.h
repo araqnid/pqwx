@@ -186,9 +186,8 @@ public:
   /**
    * Create work object
    * @param serverModel Server model to populate
-   * @param serverItem Server tree item to populate
    */
-  RefreshDatabaseListWork(ServerModel *serverModel, wxTreeItemId serverItem) : serverModel(serverModel), serverItem(serverItem) {
+  RefreshDatabaseListWork(ServerModel *serverModel) : serverModel(serverModel) {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
@@ -196,7 +195,6 @@ protected:
   void LoadIntoView(ObjectBrowser *ob);
 private:
   ServerModel *serverModel;
-  wxTreeItemId serverItem;
   wxString serverVersionString;
   int serverVersion;
   bool usingSSL;
@@ -204,14 +202,6 @@ private:
   void ReadDatabases();
   void ReadRoles();
   void ReadTablespaces();
-
-  static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
-    return d1->name < d2->name;
-  }
-
-  static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
-    return r1->name < r2->name;
-  }
 };
 
 /**
@@ -222,16 +212,14 @@ public:
   /**
    * Create work object.
    * @param databaseModel Database model to populate
-   * @param databaseItem Database tree item to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, wxTreeItemId databaseItem, bool expandAfter) : databaseModel(databaseModel), databaseItem(databaseItem), expandAfter(expandAfter) {
+  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, bool expandAfter) : databaseModel(databaseModel), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
   DatabaseModel *databaseModel;
-  wxTreeItemId databaseItem;
-  bool expandAfter;
+  const bool expandAfter;
 protected:
   void operator()();
   void LoadRelations();
@@ -305,15 +293,14 @@ class LoadRelationWork : public ObjectBrowserWork {
 public:
   /**
    * @param relationModel Relation model to populate
-   * @param relationItem Relation tree item to populate
    */
-  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : relationType(relationModel->type), oid(relationModel->oid), relationItem(relationItem) {
+  LoadRelationWork(const RelationModel *relationModel) : database(*relationModel->database), relationType(relationModel->type), oid(relationModel->oid) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
+  const ObjectModelReference database;
   const RelationModel::Type relationType;
   const Oid oid;
-  wxTreeItemId relationItem;
   RelationModel *detail;
   friend class ObjectBrowser;
 private:

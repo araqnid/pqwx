@@ -15,16 +15,8 @@
 #include "catalogue_index.h"
 #include "lazy_loader.h"
 #include "database_event_type.h"
+#include "object_browser_model.h"
 
-class ServerModel;
-class DatabaseModel;
-class RoleModel;
-class RelationModel;
-class ColumnModel;
-class IndexModel;
-class TriggerModel;
-class FunctionModel;
-class SchemaMemberModel;
 class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
@@ -73,9 +65,10 @@ public:
   /**
    * Create object browser.
    */
-  ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
+  ObjectBrowser(ObjectBrowserModel *model, wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
 
-  ~ObjectBrowser() {
+  ~ObjectBrowser()
+  {
     Dispose();
   }
 
@@ -117,7 +110,7 @@ public:
   void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
 
   /**
-   * Close all server connections and delete all model data.
+   * Dispose of object browser view and model.
    */
   void Dispose();
 
@@ -147,7 +140,7 @@ public:
   /**
    * Fill in relation details after loading from the database.
    */
-  void FillInRelation(RelationModel *updated, wxTreeItemId relationItem);
+  void FillInRelation(const ObjectModelReference& databaseRef, RelationModel *updated, wxTreeItemId relationItem);
 
   /**
    * Append database items under the given parent.
@@ -166,16 +159,7 @@ public:
   /**
    * Append a set of schema members (all in the same schema) under the given parent.
    */
-  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
-
-  /**
-   * Find an existing server matching some connection parameters.
-   */
-  ServerModel *FindServer(const ServerConnection &server) const;
-  /**
-   * Find an existing database matching some connection parameters and database name.
-   */
-  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
   /**
    * Find the tree item for a server.
@@ -185,6 +169,10 @@ public:
    * Find the tree item for a database.
    */
   wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
+  /**
+   * Find the tree item for a relation.
+   */
+  wxTreeItemId FindRelationItem(const ObjectModelReference& databaseRef, Oid oid) const;
   /**
    * Find the tree item for the "system schemas" label in a database.
    */
@@ -209,7 +197,7 @@ public:
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
-  std::list<ServerModel*> servers;
+  ObjectBrowserModel *objectBrowserModel;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnItemSelected(wxTreeEvent&);
@@ -228,7 +216,6 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
-  void SetupDatabaseConnection(DatabaseConnection *db);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem);
@@ -299,6 +286,30 @@ private:
   static const int img_text_search_parser = img_text_search_template + 1;
   static const int img_text_search_dictionary = img_text_search_parser + 1;
   static const int img_text_search_configuration = img_text_search_dictionary + 1;
+
+  void RegisterSymbolItem(const ObjectModelReference& database, Oid oid, wxTreeItemId item) { symbolTables[database][oid] = item; }
+  wxTreeItemId LookupSymbolItem(const ObjectModelReference& database, Oid oid) const
+  {
+    std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > >::const_iterator tablePtr = symbolTables.find(database);
+    wxASSERT(tablePtr != symbolTables.end());
+    const std::map< Oid, wxTreeItemId >& symbolTable = (*tablePtr).second;
+
+    std::map< Oid, wxTreeItemId >::const_iterator itemPtr = symbolTable.find(oid);
+    if (itemPtr == symbolTable.end())
+      return wxTreeItemId();
+    else
+      return (*itemPtr).second;
+  }
+
+  class ModelReference : public wxTreeItemData, public ObjectModelReference {
+  public:
+    ModelReference(const wxString& serverId) : ObjectModelReference(serverId) {}
+    ModelReference(const wxString& serverId, Oid database) : ObjectModelReference(serverId, database) {}
+    ModelReference(const wxString& serverId, Oid regclass, Oid oid) : ObjectModelReference(serverId, regclass, oid) {}
+    ModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : ObjectModelReference(database, regclass, oid, subid) {}
+  };
+
+  std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > > symbolTables;
 };
 
 /**

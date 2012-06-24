@@ -161,7 +161,7 @@ private:
   std::vector<SchemaMemberModel*> division;
 };
 
-ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style) {
+ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
@@ -195,36 +195,8 @@ ObjectBrowser::ObjectBrowser(wxWindow *parent, wxWindowID id, const wxPoint& pos
   currentlySelected = false;
 }
 
-ServerModel *ObjectBrowser::FindServer(const ServerConnection &server) const
-{
-  wxString serverId = server.Identification();
-  for (std::list<ServerModel*>::const_iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *serverModel = *iter;
-    if (serverModel->Identification() == serverId) {
-      return serverModel;
-    }
-  }
-
-  return NULL;
-}
-
-inline DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const {
-  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter)->name == dbname)
-      return *iter;
-  }
-  return NULL;
-}
-
-DatabaseModel *ObjectBrowser::FindDatabase(const ServerConnection &server, const wxString &dbname) const
-{
-  ServerModel *serverModel = FindServer(server);
-  if (serverModel == NULL) return NULL;
-  return serverModel->FindDatabase(dbname);
-}
-
 void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
-  ServerModel *serverModel = FindServer(server);
+  ServerModel *serverModel = objectBrowserModel->FindServer(server);
   if (serverModel != NULL) {
     wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), server.Identification().c_str());
     if (db != NULL) {
@@ -234,120 +206,35 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
     return;
   }
 
-  if (db) {
-    serverModel = new ServerModel(server, db);
-    if (db->IsConnected()) {
-      SetupDatabaseConnection(db);
-    }
-  }
-  else {
-    serverModel = new ServerModel(server);
-  }
-  servers.push_back(serverModel);
+  serverModel = objectBrowserModel->AddServerConnection(server, db);
 
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
   wxLogDebug(_T("Connection added to object browser: %s"), server.Identification().c_str());
   wxTreeItemId serverItem = AppendItem(GetRootItem(), server.Identification());
   SetItemText(serverItem, server.Identification());
-  SetItemData(serverItem, serverModel);
+  SetItemData(serverItem, new ModelReference(server.Identification()));
   SetItemImage(serverItem, img_server);
   SetFocus();
 
   RefreshDatabaseList(serverItem);
 }
 
-DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname) {
-  std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(dbname);
-  if (iter != connections.end()) {
-    DatabaseConnection *db = iter->second;
-    if (db->IsAcceptingWork()) {
-      wxLogDebug(_T("Using existing connection %s"), db->Identification().c_str());
-      return db;
-    }
-    wxLogDebug(_T("Cleaning stale connection %s"), db->Identification().c_str());
-    db->Dispose();
-    delete db;
-    connections.erase(dbname);
-  }
-  DatabaseConnection *db = new DatabaseConnection(conninfo, dbname);
-  wxLogDebug(_T("Allocating connection to %s"), db->Identification().c_str());
-  for (std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    if (iter->second->IsConnected()) {
-      wxLogDebug(_T(" Closing existing connection to %s"), iter->second->Identification().c_str());
-      iter->second->BeginDisconnection();
-    }
-  }
-  connections[dbname] = db;
-  return db;
-}
-
-void ObjectBrowser::SetupDatabaseConnection(DatabaseConnection *db) {
-  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork()));
-}
-
-void ObjectBrowser::Dispose() {
-  wxLogDebug(_T("Disposing of ObjectBrowser- sending disconnection request to all server databases"));
-  std::vector<DatabaseConnection*> disconnecting;
-  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *server = *iter;
-    server->BeginDisconnectAll(disconnecting);
-  }
-  wxLogDebug(_T("Disposing of ObjectBrowser- waiting for %lu database connections to terminate"), disconnecting.size());
-  for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
-    DatabaseConnection *db = *iter;
-    wxLogDebug(_T(" Waiting for database connection %s to exit"), db->Identification().c_str());
-    db->WaitUntilClosed();
-  }
-  wxLogDebug(_T("Disposing of ObjectBrowser- disposing of servers"));
-  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *server = *iter;
-    server->Dispose();
-  }
-  wxLogDebug(_T("Disposing of ObjectBrowser- clearing server list"));
-  servers.clear();
-}
-
-void ServerModel::BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting) {
-  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    DatabaseConnection *db = iter->second;
-    if (db->BeginDisconnection()) {
-      wxLogDebug(_T(" Sent disconnect request to %s"), db->Identification().c_str());
-      disconnecting.push_back(db);
-    }
-    else {
-      wxLogDebug(_T(" Already disconnected from %s"), db->Identification().c_str());
-    }
-  }
-}
-
-void ServerModel::Dispose() {
-  wxLogDebug(_T("Disposing of server %s"), Identification().c_str());
-  std::vector<DatabaseConnection*> disconnecting;
-  BeginDisconnectAll(disconnecting);
-  for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
-    DatabaseConnection *db = *iter;
-    wxLogDebug(_T(" Waiting for database connection %s to exit"), db->Identification().c_str());
-    db->WaitUntilClosed();
-  }
-  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    DatabaseConnection *db = iter->second;
-    db->Dispose();
-    delete db;
-  }
-  connections.clear();
+void ObjectBrowser::Dispose()
+{
 }
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
-  ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
-  SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel, serverItem));
+  ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
+  ServerModel *serverModel = objectBrowserModel->FindServer(*ref);
+  SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel));
 }
 
 void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work) {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
-    SetupDatabaseConnection(db);
+    objectBrowserModel->SetupDatabaseConnection(db);
   }
   db->AddWork(new ObjectBrowserDatabaseWork(this, work));
 }
@@ -418,14 +305,14 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 }
 
 void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database, IndexSchemaCompletionCallback *indexCompletion) {
-  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, databaseItem, indexCompletion == NULL));
+  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, indexCompletion == NULL));
   SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database, indexCompletion));
   SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
 }
 
 void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
   wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
-  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation, relationItem));
+  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation));
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
@@ -474,7 +361,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
   for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
-    SetItemData(databaseItem, database);
+    SetItemData(databaseItem, new ModelReference(database->server->Identification(), database->oid));
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
       SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, database));
@@ -496,7 +383,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
     else {
       roleItem = AppendItem(groupsItem, role->name);
     }
-    SetItemData(roleItem, role);
+    SetItemData(roleItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_ROLE, role->oid));
     SetItemImage(roleItem, img_role);
   }
 }
@@ -519,7 +406,7 @@ void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId ser
     SetItemImage(folderItem, img_folder);
     for (std::vector<TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, *iter);
+      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);
     }
   }
@@ -529,13 +416,13 @@ void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId ser
     SetItemImage(folderItem, img_folder);
     for (std::vector<TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, *iter);
+      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);
     }
   }
 }
 
-void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members) {
+void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
     wxTreeItemId emptySchemaItem = AppendItem(parent, schemaName + _T("."));
     SetItemImage(emptySchemaItem, img_folder);
@@ -567,8 +454,8 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
     }
     ++relationsCount;
     wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
-    SetItemData(memberItem, relation);
-    relation->database->symbolItemLookup[relation->oid] = memberItem;
+    SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relation->oid));
+    RegisterSymbolItem(databaseRef, relation->oid, memberItem);
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
       SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
     switch (relation->type) {
@@ -605,8 +492,8 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       FunctionModel *function = dynamic_cast<FunctionModel*>(member);
       if (function == NULL) continue;
       wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
-      SetItemData(memberItem, function);
-      function->database->symbolItemLookup[function->oid] = memberItem;
+      SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_PROC, function->oid));
+      RegisterSymbolItem(databaseRef, function->oid, memberItem);
       // see images->Add calls in constructor
       switch (function->type) {
       case FunctionModel::SCALAR:
@@ -642,9 +529,9 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       TextSearchDictionaryModel *dict = dynamic_cast<TextSearchDictionaryModel*>(member);
       if (dict == NULL) continue;
       wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->name : dict->schema + _T(".") + dict->name);
-      SetItemData(memberItem, member);
+      SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_DICT, dict->oid));
       SetItemImage(memberItem, img_text_search_dictionary);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -664,9 +551,9 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       TextSearchParserModel *prs = dynamic_cast<TextSearchParserModel*>(member);
       if (prs == NULL) continue;
       wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->name : prs->schema + _T(".") + prs->name);
-      SetItemData(memberItem, member);
+      SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_PARSER, prs->oid));
       SetItemImage(memberItem, img_text_search_parser);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -686,9 +573,9 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       TextSearchTemplateModel *tmpl = dynamic_cast<TextSearchTemplateModel*>(member);
       if (tmpl == NULL) continue;
       wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->name : tmpl->schema + _T(".") + tmpl->name);
-      SetItemData(memberItem, member);
+      SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_TEMPLATE, tmpl->oid));
       SetItemImage(memberItem, img_text_search_template);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -708,9 +595,9 @@ void ObjectBrowser::AppendSchemaMembers(wxTreeItemId parent, bool createSchemaIt
       TextSearchConfigurationModel *cfg = dynamic_cast<TextSearchConfigurationModel*>(member);
       if (cfg == NULL) continue;
       wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->name : cfg->schema + _T(".") + cfg->name);
-      SetItemData(memberItem, member);
+      SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_CONFIG, cfg->oid));
       SetItemImage(memberItem, img_text_search_configuration);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 }
@@ -726,7 +613,7 @@ void ObjectBrowser::AppendDivision(DatabaseModel *databaseModel, std::vector<Sch
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
   for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
-    AppendSchemaMembers(parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
+    AppendSchemaMembers(*databaseModel, parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
   }
 }
 
@@ -753,8 +640,9 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relationItem) {
-  RelationModel *relationModel = dynamic_cast<RelationModel*>(GetItemData(relationItem));
+void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, RelationModel *incoming, wxTreeItemId relationItem) {
+  ModelReference *ref = static_cast<ModelReference*>(GetItemData(relationItem));
+  RelationModel *relationModel = objectBrowserModel->FindRelation(*ref);
   wxASSERT(relationModel != NULL);
 
   relationModel->columns = incoming->columns;
@@ -776,7 +664,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
     itemText += _T(")");
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
-    SetItemData(columnItem, column);
+    SetItemData(columnItem, new ModelReference(databaseRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column->attnum));
     SetItemImage(columnItem, img_column);
     columnItems[column->attnum] = columnItem;
 
@@ -785,7 +673,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
       if (sequence->owningColumn != column->attnum) continue;
 
       wxTreeItemId sequenceItem = AppendItem(columnItem, sequence->schema + _T(".") + sequence->name);
-      SetItemData(sequenceItem, sequence);
+      SetItemData(sequenceItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
       sequence->database = relationModel->database;
     }
@@ -797,7 +685,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
     SetItemImage(indicesItem, img_folder);
     for (std::vector<IndexModel*>::iterator iter = incoming->indices.begin(); iter != incoming->indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
-      SetItemData(indexItem, *iter);
+      SetItemData(indexItem, new ModelReference(databaseRef, ObjectModelReference::PG_INDEX, (*iter)->oid));
       if ((*iter)->primaryKey)
         SetItemImage(indexItem, img_index_pkey);
       else if ((*iter)->unique || (*iter)->exclusion)
@@ -826,7 +714,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
     SetItemImage(constraintsItem, img_folder);
     for (std::vector<CheckConstraintModel*>::iterator iter = incoming->checkConstraints.begin(); iter != incoming->checkConstraints.end(); iter++) {
       wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter)->name);
-      SetItemData(constraintItem, *iter);
+      SetItemData(constraintItem, new ModelReference(databaseRef, ObjectModelReference::PG_CONSTRAINT, (*iter)->oid));
     }
   }
 
@@ -836,7 +724,7 @@ void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relatio
     SetItemImage(triggersItem, img_folder);
     for (std::vector<TriggerModel*>::iterator iter = incoming->triggers.begin(); iter != incoming->triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
-      SetItemData(triggerItem, *iter);
+      SetItemData(triggerItem, new ModelReference(databaseRef, ObjectModelReference::PG_TRIGGER, (*iter)->oid));
     }
   }
 }
@@ -868,9 +756,8 @@ void ObjectBrowser::DisconnectSelected() {
   FindItemContext(selected, &server, &database);
   if (server != NULL) {
     wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
-    servers.remove(server);
-    server->Dispose(); // still does nasty synchronous disconnect for now
     Delete(FindServerItem(server));
+    objectBrowserModel->RemoveServer(server);
     UpdateSelectedDatabase();
   }
 }
@@ -896,7 +783,7 @@ protected:
 };
 
 void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &dbname) {
-  DatabaseModel *database = FindDatabase(server, dbname);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
@@ -919,27 +806,30 @@ void ObjectBrowser::FindObject(const DatabaseModel *database) {
   }
 }
 
-wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const {
+wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const
+{
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
     wxASSERT(childItem.IsOk());
-    ServerModel *itemServer = static_cast<ServerModel*>(GetItemData(childItem));
+    ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
+    ServerModel *itemServer = objectBrowserModel->FindServer(*ref);
     if (itemServer == server)
       return childItem;
     childItem = GetNextChild(GetRootItem(), cookie);
   } while (1);
 }
 
-wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const {
+wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const
+{
   wxTreeItemId serverItem = FindServerItem(database->server);
   wxASSERT(serverItem.IsOk());
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(serverItem, cookie);
   do {
     wxASSERT(childItem.IsOk());
-    DatabaseModel *itemDatabase = static_cast<DatabaseModel*>(GetItemData(childItem));
-    if (itemDatabase == database)
+    ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
+    if (ref->GetOid() == database->oid)
       return childItem;
     childItem = GetNextChild(serverItem, cookie);
   } while (1);
@@ -960,20 +850,27 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database)
   } while (1);
 }
 
+wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& databaseRef, Oid oid) const
+{
+  wxTreeItemId item = LookupSymbolItem(databaseRef, oid);
+  wxASSERT(item.IsOk());
+  return item;
+}
+
 void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
-  if (database->symbolItemLookup.count(entityId) == 0) {
-    wxTreeItemId item = FindSystemSchemasItem(database);
+  wxTreeItemId item = LookupSymbolItem(*database, entityId);
+  if (!item.IsOk()) {
+    item = FindSystemSchemasItem(database);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
     if (systemSchemasLoader != NULL) {
       wxBusyCursor wait;
       wxLogDebug(_T("Forcing load of system schemas"));
       systemSchemasLoader->load(item);
       DeleteLazyLoader(item);
+      item = LookupSymbolItem(*database, entityId);
     }
   }
-  std::map<Oid, wxTreeItemId>::const_iterator iter = database->symbolItemLookup.find(entityId);
-  wxASSERT(iter != database->symbolItemLookup.end());
-  wxTreeItemId item = iter->second;
+  wxASSERT(item.IsOk());
   EnsureVisible(item);
   SelectItem(item);
   Expand(item);
@@ -988,44 +885,47 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
     return;
   }
 
-  ServerModel *server = dynamic_cast<ServerModel*>(data);
-  if (server != NULL) {
-    contextMenuServer = server;
+  ModelReference *ref = dynamic_cast<ModelReference*>(data);
+  if (ref == NULL) return;
+
+  switch (ref->GetObjectClass()) {
+  case InvalidOid:
+    contextMenuServer = objectBrowserModel->FindServer(*ref);
     PopupMenu(serverMenu);
-    return;
-  }
+    break;
 
-  DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
-  if (database != NULL) {
-    contextMenuDatabase = database;
+  case ObjectModelReference::PG_DATABASE:
+    contextMenuDatabase = objectBrowserModel->FindDatabase(*ref);
     PopupMenu(databaseMenu);
-    return;
-  }
+    break;
 
-  RelationModel *relation = dynamic_cast<RelationModel*>(data);
-  if (relation != NULL) {
-    contextMenuDatabase = relation->database;
-    contextMenuRelation = relation;
-    switch (relation->type) {
-    case RelationModel::TABLE:
-      PopupMenu(tableMenu);
-      break;
-    case RelationModel::VIEW:
-      PopupMenu(viewMenu);
-      break;
-    case RelationModel::SEQUENCE:
-      PopupMenu(sequenceMenu);
-      break;
+  case ObjectModelReference::PG_CLASS:
+    {
+      RelationModel *relation = objectBrowserModel->FindRelation(*ref);
+      contextMenuDatabase = relation->database;
+      contextMenuRelation = relation;
+      switch (relation->type) {
+      case RelationModel::TABLE:
+        PopupMenu(tableMenu);
+        break;
+      case RelationModel::VIEW:
+        PopupMenu(viewMenu);
+        break;
+      case RelationModel::SEQUENCE:
+        PopupMenu(sequenceMenu);
+        break;
+      }
     }
-    return;
-  }
+    break;
 
-  FunctionModel *function = dynamic_cast<FunctionModel*>(data);
-  if (function != NULL) {
-    contextMenuDatabase = function->database;
-    contextMenuFunction = function;
-    PopupMenu(functionMenu);
-    return;
+  case ObjectModelReference::PG_PROC:
+    {
+      FunctionModel *function = objectBrowserModel->FindFunction(*ref);
+      contextMenuDatabase = function->database;
+      contextMenuFunction = function;
+      PopupMenu(functionMenu);
+    }
+    break;
   }
 }
 
@@ -1035,12 +935,13 @@ void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **serv
   *server = NULL;
   for (wxTreeItemId cursor = item; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
     wxTreeItemData *data = GetItemData(cursor);
-    if (data != NULL) {
-      if (*database == NULL)
-        *database = dynamic_cast<DatabaseModel*>(data);
-      if (*server == NULL)
-        *server = dynamic_cast<ServerModel*>(data);
-    }
+    if (data == NULL) continue;
+    ModelReference *ref = dynamic_cast<ModelReference*>(data);
+    if (ref == NULL) continue;
+    if (ref->GetOid() == InvalidOid)
+      *server = objectBrowserModel->FindServer(*ref);
+    else if (ref->GetObjectClass() == ObjectModelReference::PG_DATABASE)
+      *database = objectBrowserModel->FindDatabase(*ref);
   }
 }
 
@@ -1104,8 +1005,7 @@ void ObjectBrowser::UpdateSelectedDatabase() {
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
   wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->Identification().c_str());
-  servers.remove(contextMenuServer);
-  contextMenuServer->Dispose();
+  objectBrowserModel->RemoveServer(contextMenuServer);
   Delete(contextMenuItem);
 }
 
@@ -1132,19 +1032,20 @@ void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), 1259 /* pg_class */, (Oid) contextMenuRelation->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), ObjectModelReference::PG_CLASS, (Oid) contextMenuRelation->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), 1255 /* pg_proc */, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), ObjectModelReference::PG_PROC, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

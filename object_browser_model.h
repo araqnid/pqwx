@@ -394,12 +394,10 @@ public:
   }
   void UpdateTablespaces(const std::vector<TablespaceModel>& incoming)
   {
-    for (std::vector<TablespaceModel*>::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
-      delete (*iter);
-    }
     tablespaces.clear();
+    tablespaces.reserve(incoming.size());
     for (std::vector<TablespaceModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      tablespaces.push_back(new TablespaceModel(*iter));
+      tablespaces.push_back(*iter);
     }
   }
 
@@ -474,10 +472,10 @@ public:
   /**
    * @return The tablespaces on this server
    */
-  const std::vector<TablespaceModel*>& GetTablespaces() const { return tablespaces; }
+  const std::vector<TablespaceModel>& GetTablespaces() const { return tablespaces; }
 private:
   std::vector<DatabaseModel*> databases;
-  std::vector<TablespaceModel*> tablespaces;
+  std::vector<TablespaceModel> tablespaces;
   std::vector<RoleModel*> roles;
   int serverVersion;
   wxString serverVersionString;

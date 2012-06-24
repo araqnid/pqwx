@@ -408,21 +408,21 @@ void ObjectBrowser::FillInRoles(const ServerModel *serverModel, wxTreeItemId ser
 
 void ObjectBrowser::FillInTablespaces(const ServerModel *serverModel, wxTreeItemId serverItem)
 {
-  const std::vector<TablespaceModel*> &tablespaces = serverModel->GetTablespaces();
-  std::vector<TablespaceModel*> userTablespaces;
-  std::vector<TablespaceModel*> systemTablespaces;
+  const std::vector<TablespaceModel>& tablespaces = serverModel->GetTablespaces();
+  std::vector<const TablespaceModel*> userTablespaces;
+  std::vector<const TablespaceModel*> systemTablespaces;
 
-  for (std::vector<TablespaceModel*>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
-    if ((*iter)->IsSystem())
-      systemTablespaces.push_back(*iter);
+  for (std::vector<TablespaceModel>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+    if ((*iter).IsSystem())
+      systemTablespaces.push_back(&(*iter));
     else
-      userTablespaces.push_back(*iter);
+      userTablespaces.push_back(&(*iter));
   }
 
   if (!userTablespaces.empty()) {
     wxTreeItemId folderItem = AppendItem(serverItem, _("Tablespaces"));
     SetItemImage(folderItem, img_folder);
-    for (std::vector<TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
+    for (std::vector<const TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
       SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);
@@ -432,7 +432,7 @@ void ObjectBrowser::FillInTablespaces(const ServerModel *serverModel, wxTreeItem
   if (!systemTablespaces.empty()) {
     wxTreeItemId folderItem = AppendItem(serverItem, _("System Tablespaces"));
     SetItemImage(folderItem, img_folder);
-    for (std::vector<TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
+    for (std::vector<const TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
       SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);

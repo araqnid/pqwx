@@ -416,7 +416,7 @@ void LoadRelationWork::ReadConstraints() {
 }
 
 void LoadRelationWork::LoadIntoView(ObjectBrowser *ob) {
-  ob->FillInRelation(detail, relationItem);
+  ob->FillInRelation(ObjectModelReference(database->server->Identification(), database->oid), detail, relationItem);
   ob->Expand(relationItem);
 
   // remove 'loading...' tag

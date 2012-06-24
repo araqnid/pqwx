@@ -299,10 +299,11 @@ public:
    * @param relationModel Relation model to populate
    * @param relationItem Relation tree item to populate
    */
-  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : relationType(relationModel->type), oid(relationModel->oid), relationItem(relationItem) {
+  LoadRelationWork(const RelationModel *relationModel, wxTreeItemId relationItem) : database(relationModel->database), relationType(relationModel->type), oid(relationModel->oid), relationItem(relationItem) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
+  const DatabaseModel *database;
   const RelationModel::Type relationType;
   const Oid oid;
   wxTreeItemId relationItem;

@@ -140,7 +140,7 @@ public:
   /**
    * Fill in relation details after loading from the database.
    */
-  void FillInRelation(RelationModel *updated, wxTreeItemId relationItem);
+  void FillInRelation(const ObjectModelReference& databaseRef, RelationModel *updated, wxTreeItemId relationItem);
 
   /**
    * Append database items under the given parent.

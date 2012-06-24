@@ -637,8 +637,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
 }
 
-void ObjectBrowser::FillInRelation(RelationModel *incoming, wxTreeItemId relationItem) {
-  ObjectModelReference databaseRef(incoming->database->server->Identification(), incoming->database->oid);
+void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, RelationModel *incoming, wxTreeItemId relationItem) {
   RelationModel *relationModel = dynamic_cast<RelationModel*>(GetItemData(relationItem));
   wxASSERT(relationModel != NULL);
 

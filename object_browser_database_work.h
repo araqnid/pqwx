@@ -198,7 +198,7 @@ public:
    * Create work object
    * @param serverModel Server model to populate
    */
-  RefreshDatabaseListWork(ServerModel *serverModel) : serverModel(serverModel)
+  RefreshDatabaseListWork(const wxString& serverId) : serverId(serverId)
   {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
@@ -207,10 +207,13 @@ protected:
   void UpdateModel(ObjectBrowserModel *model);
   void UpdateView(ObjectBrowser *ob);
 private:
-  ServerModel *serverModel;
+  const wxString serverId;
   wxString serverVersionString;
   int serverVersion;
-  bool usingSSL;
+  SSL *ssl;
+  std::vector<DatabaseModel> databases;
+  std::vector<RoleModel> roles;
+  std::vector<TablespaceModel> tablespaces;
   void ReadServer();
   void ReadDatabases();
   void ReadRoles();

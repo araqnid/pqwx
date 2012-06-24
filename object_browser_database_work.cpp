@@ -20,63 +20,68 @@ void RefreshDatabaseListWork::operator()()
   ReadTablespaces();
 }
 
-void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel *model)
-{
-}
-
-void RefreshDatabaseListWork::UpdateView(ObjectBrowser *ob)
-{
-  ob->UpdateServer(serverModel->Identification(), true);
-}
-
 void RefreshDatabaseListWork::ReadServer()
 {
-  serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), (SSL*) PQgetssl(conn));
+  serverVersionString = wxString(PQparameterStatus(conn, "server_version"), wxConvUTF8);
+  serverVersion = PQserverVersion(conn);
+  ssl = (SSL*) PQgetssl(conn);
 }
 
 void RefreshDatabaseListWork::ReadDatabases()
 {
   QueryResults databaseRows = Query(_T("Databases")).List();
   for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
-    DatabaseModel *database = new DatabaseModel();
-    database->server = serverModel;
-    database->loaded = false;
-    database->oid = (*iter).ReadOid(0);
-    database->name = (*iter).ReadText(1);
-    database->isTemplate = (*iter).ReadBool(2);
-    database->allowConnections = (*iter).ReadBool(3);
-    database->havePrivsToConnect = (*iter).ReadBool(4);
-    database->description = (*iter).ReadText(5);
-    serverModel->databases.push_back(database);
+    DatabaseModel database;
+    database.oid = (*iter).ReadOid(0);
+    database.name = (*iter).ReadText(1);
+    database.isTemplate = (*iter).ReadBool(2);
+    database.allowConnections = (*iter).ReadBool(3);
+    database.havePrivsToConnect = (*iter).ReadBool(4);
+    database.description = (*iter).ReadText(5);
+    databases.push_back(database);
   }
-  sort(serverModel->databases.begin(), serverModel->databases.end(), ObjectModel::CollateByName);
+  sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadRoles()
 {
   QueryResults roleRows = Query(_T("Roles")).List();
   for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
-    RoleModel *role = new RoleModel();
-    role->oid = (*iter).ReadOid(0);
-    role->name = (*iter).ReadText(1);
-    role->canLogin = (*iter).ReadBool(2);
-    role->superuser = (*iter).ReadBool(3);
-    role->description = (*iter).ReadText(4);
-    serverModel->roles.push_back(role);
+    RoleModel role;
+    role.oid = (*iter).ReadOid(0);
+    role.name = (*iter).ReadText(1);
+    role.canLogin = (*iter).ReadBool(2);
+    role.superuser = (*iter).ReadBool(3);
+    role.description = (*iter).ReadText(4);
+    roles.push_back(role);
   }
-  sort(serverModel->roles.begin(), serverModel->roles.end(), ObjectModel::CollateByName);
+  sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadTablespaces()
 {
   QueryResults rows = Query(_T("Tablespaces")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TablespaceModel *spc = new TablespaceModel();
-    spc->oid = (*iter).ReadOid(0);
-    spc->name = (*iter).ReadText(1);
-    spc->location = (*iter).ReadText(2);
-    serverModel->tablespaces.push_back(spc);
+    TablespaceModel spc;
+    spc.oid = (*iter).ReadOid(0);
+    spc.name = (*iter).ReadText(1);
+    spc.location = (*iter).ReadText(2);
+    tablespaces.push_back(spc);
   }
+}
+
+void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel *model)
+{
+  ServerModel *server = model->FindServer(serverId);
+  server->UpdateServerParameters(serverVersionString, serverVersion, ssl);
+  server->UpdateDatabases(databases);
+  server->UpdateRoles(roles);
+  server->UpdateTablespaces(tablespaces);
+}
+
+void RefreshDatabaseListWork::UpdateView(ObjectBrowser *ob)
+{
+  ob->UpdateServer(serverId, true);
 }
 
 /*

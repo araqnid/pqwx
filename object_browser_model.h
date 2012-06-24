@@ -84,8 +84,8 @@ public:
   wxString name;
   wxString description;
   virtual wxString FormatName() const { return name; }
-  static bool CollateByName(ObjectModel *o1, ObjectModel *o2) {
-    return o1->name < o2->name;
+  static bool CollateByName(const ObjectModel& o1, const ObjectModel& o2) {
+    return o1.name < o2.name;
   }
 };
 
@@ -359,17 +359,50 @@ public:
   /**
    * Initialise some server parameters.
    *
-   * @param serverVersionRaw Server version as string such as "9.1.1"
+   * @param serverVersionString_ Server version as string such as "9.1.1"
    * @param serverVersion_ Server version as an integer such as 90101
    * @param ssl SSL object (NULL if not SSL)
    */
-  void ReadServerParameters(const char *serverVersionRaw, int serverVersion_, SSL *ssl) {
+  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSL *ssl) {
+    serverVersionString = serverVersionString_;
     serverVersion = serverVersion_;
-    serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
     if (ssl != NULL) {
       sslCipher = wxString(SSL_get_cipher(ssl), wxConvUTF8);
     }
   }
+  void UpdateDatabases(const std::vector<DatabaseModel>& incoming)
+  {
+    for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+      delete (*iter);
+    }
+    databases.clear();
+    for (std::vector<DatabaseModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
+      DatabaseModel *database = new DatabaseModel(*iter);
+      database->server = this;
+      databases.push_back(database);
+    }
+  }
+  void UpdateRoles(const std::vector<RoleModel>& incoming)
+  {
+    for (std::vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
+      delete (*iter);
+    }
+    roles.clear();
+    for (std::vector<RoleModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
+      roles.push_back(new RoleModel(*iter));
+    }
+  }
+  void UpdateTablespaces(const std::vector<TablespaceModel>& incoming)
+  {
+    for (std::vector<TablespaceModel*>::iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+      delete (*iter);
+    }
+    tablespaces.clear();
+    for (std::vector<TablespaceModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
+      tablespaces.push_back(new TablespaceModel(*iter));
+    }
+  }
+
   /**
    * Close all connections associated with this server.
    */

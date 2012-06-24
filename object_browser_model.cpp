@@ -22,6 +22,15 @@ ServerModel *ObjectBrowserModel::FindServerById(const wxString &serverId) const
   return NULL;
 }
 
+ObjectModel* ObjectBrowserModel::FindObject(const ObjectModelReference& ref) const
+{
+  ServerModel *server = FindServerById(ref.GetServerId());
+  if (ref.GetObjectClass() == InvalidOid)
+    return server;
+  else
+    return server->FindObject(ref);
+}
+
 ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &server, DatabaseConnection *db)
 {
   ServerModel *serverModel;
@@ -155,13 +164,55 @@ DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const
   return NULL;
 }
 
-DatabaseModel *ServerModel::FindDatabase(const ObjectModelReference& ref) const
+DatabaseModel *ServerModel::FindDatabaseByOid(Oid oid) const
 {
   for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter)->oid == ref.GetOid())
+    if ((*iter)->oid == oid)
       return *iter;
   }
   return NULL;
+}
+
+ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref) const
+{
+  DatabaseModel *database = FindDatabaseByOid(ref.GetDatabase());
+  if (database == NULL) return NULL;
+  if (ref.GetObjectClass() == ObjectModelReference::PG_DATABASE)
+    return database;
+  else
+    return database->FindObject(ref);
+}
+
+template <typename T>
+ObjectModel *SearchContents(std::vector<T*> const& container, Oid key)
+{
+  for (typename std::vector<T*>::const_iterator iter = container.begin(); iter != container.end(); iter++) {
+    if ((*iter)->oid == key)
+      return *iter;
+  }
+  return NULL;
+}
+
+ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref) const
+{
+  wxLogDebug(_T("Searching database %s:%s for %s"), server->Identification().c_str(), name.c_str(), ref.Identify().c_str());
+
+  switch (ref.GetObjectClass()) {
+  case ObjectModelReference::PG_CLASS:
+    return SearchContents(relations, ref.GetOid());
+  case ObjectModelReference::PG_PROC:
+    return SearchContents(functions, ref.GetOid());
+  case ObjectModelReference::PG_TS_CONFIG:
+    return SearchContents(textSearchConfigurations, ref.GetOid());
+  case ObjectModelReference::PG_TS_DICT:
+    return SearchContents(textSearchDictionaries, ref.GetOid());
+  case ObjectModelReference::PG_TS_PARSER:
+    return SearchContents(textSearchParsers, ref.GetOid());
+  case ObjectModelReference::PG_TS_TEMPLATE:
+    return SearchContents(textSearchTemplates, ref.GetOid());
+  default:
+    return NULL;
+  }
 }
 
 // Local Variables:

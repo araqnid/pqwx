@@ -159,7 +159,7 @@ public:
   /**
    * Append a set of schema members (all in the same schema) under the given parent.
    */
-  void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
+  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
   /**
    * Find the tree item for a server.

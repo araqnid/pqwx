@@ -38,9 +38,19 @@ public:
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
+  static const Oid PG_ATTRIBUTE = 1249;
+  static const Oid PG_CLASS = 1259;
+  static const Oid PG_CONSTRAINT = 2606;
   static const Oid PG_DATABASE = 1262;
+  static const Oid PG_INDEX = 2610;
+  static const Oid PG_PROC = 1255;
   static const Oid PG_ROLE = 1260;
   static const Oid PG_TABLESPACE = 1213;
+  static const Oid PG_TRIGGER = 2620;
+  static const Oid PG_TS_CONFIG = 3602;
+  static const Oid PG_TS_DICT = 3600;
+  static const Oid PG_TS_PARSER = 3601;
+  static const Oid PG_TS_TEMPLATE = 3764;
 private:
   wxString serverId;
   Oid database;
@@ -70,7 +80,7 @@ public:
 /**
  * A relation column.
  */
-class ColumnModel : public ObjectModel, public wxTreeItemData {
+class ColumnModel : public ObjectModel {
 public:
   RelationModel *relation;
   wxString type;
@@ -82,7 +92,7 @@ public:
 /**
  * An index associated with a table.
  */
-class IndexModel : public ObjectModel, public wxTreeItemData {
+class IndexModel : public ObjectModel {
 public:
   class Column {
   public:
@@ -91,6 +101,7 @@ public:
     wxString expression;
   };
   RelationModel *relation;
+  Oid oid;
   bool primaryKey;
   bool unique;
   bool exclusion;
@@ -102,25 +113,27 @@ public:
 /**
  * A trigger associated with a table.
  */
-class TriggerModel : public ObjectModel, public wxTreeItemData {
+class TriggerModel : public ObjectModel {
 public:
   RelationModel *relation;
+  Oid oid;
 };
 
 /**
  * A check constraint associated with a table.
  */
-class CheckConstraintModel : public ObjectModel, public wxTreeItemData {
+class CheckConstraintModel : public ObjectModel {
 public:
   RelationModel *relation;
   wxString expression;
+  Oid oid;
 };
 
 
 /**
  * A schema member - function or relation.
  */
-class SchemaMemberModel : public ObjectModel, public wxTreeItemData {
+class SchemaMemberModel : public ObjectModel {
 public:
   DatabaseModel *database;
   Oid oid;
@@ -228,6 +241,7 @@ public:
   bool IsSystem() const {
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
+  ObjectModel *FindObject(const ObjectModelReference& ref) const;
   std::map<Oid, wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
@@ -318,7 +332,7 @@ public:
  * is closed, so we maintain only one connection to a server at a
  * time.
  */
-class ServerModel {
+class ServerModel : public ObjectModel {
 public:
   /**
    * Create server model.
@@ -385,7 +399,15 @@ public:
   /**
    * Find a database model on this server.
    */
-  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const;
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_DATABASE);
+    return FindDatabaseByOid(ref.GetOid());
+  }
+  /**
+   * Find an arbitrary object on this server.
+   */
+  ObjectModel *FindObject(const ObjectModelReference &ref) const;
   /**
    * Server connection details.
    */
@@ -410,6 +432,7 @@ private:
   wxString serverVersionString;
   bool usingSSL;
   std::map<wxString, DatabaseConnection*> connections;
+  DatabaseModel *FindDatabaseByOid(Oid oid) const;
   friend class RefreshDatabaseListWork;
 };
 
@@ -448,6 +471,34 @@ public:
    */
   void RemoveServer(ServerModel *server);
   void SetupDatabaseConnection(DatabaseConnection *db);
+
+  /**
+   * Find any object by reference.
+   */
+  ObjectModel *FindObject(const ObjectModelReference &ref) const;
+
+  /**
+   * Find a particular relation.
+   */
+  RelationModel *FindRelation(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_CLASS);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<RelationModel*>(obj);
+  }
+
+  /**
+   * Find a particular function.
+   */
+  FunctionModel *FindFunction(const ObjectModelReference &ref) const
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_PROC);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<FunctionModel*>(obj);
+  }
+
 private:
   ServerModel *FindServerById(const wxString&) const;
   std::list<ServerModel*> servers;

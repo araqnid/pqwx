@@ -413,9 +413,9 @@ inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
  */
 class ObjectModelReference {
 public:
-  ObjectModelReference(unsigned serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
-  ObjectModelReference(unsigned serverId, Oid database) : serverId(serverId), database(database), regclass(1262), oid(database), subid(0) {}
-  ObjectModelReference(unsigned serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
+  ObjectModelReference(const wxString& serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(1262), oid(database), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
   ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
 
   wxString Identify() const
@@ -433,14 +433,14 @@ public:
     return buf;
   }
 
-  unsigned GetServerId() const { return serverId; }
+  wxString GetServerId() const { return serverId; }
   Oid GetDatabase() const { return database; }
   Oid GetObjectClass() const { return regclass; }
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
 private:
-  unsigned serverId;
+  wxString serverId;
   Oid database;
   Oid regclass;
   Oid oid;

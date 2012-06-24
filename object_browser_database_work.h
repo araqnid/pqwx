@@ -204,14 +204,6 @@ private:
   void ReadDatabases();
   void ReadRoles();
   void ReadTablespaces();
-
-  static bool CollateDatabases(DatabaseModel *d1, DatabaseModel *d2) {
-    return d1->name < d2->name;
-  }
-
-  static bool CollateRoles(RoleModel *r1, RoleModel *r2) {
-    return r1->name < r2->name;
-  }
 };
 
 /**

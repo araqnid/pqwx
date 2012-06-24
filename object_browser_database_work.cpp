@@ -48,7 +48,7 @@ void RefreshDatabaseListWork::ReadDatabases()
     database->description = (*iter).ReadText(5);
     serverModel->databases.push_back(database);
   }
-  sort(serverModel->databases.begin(), serverModel->databases.end(), CollateDatabases);
+  sort(serverModel->databases.begin(), serverModel->databases.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadRoles()
@@ -63,7 +63,7 @@ void RefreshDatabaseListWork::ReadRoles()
     role->description = (*iter).ReadText(4);
     serverModel->roles.push_back(role);
   }
-  sort(serverModel->roles.begin(), serverModel->roles.end(), CollateRoles);
+  sort(serverModel->roles.begin(), serverModel->roles.end(), ObjectModel::CollateByName);
 }
 
 void RefreshDatabaseListWork::ReadTablespaces()

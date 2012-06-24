@@ -59,6 +59,9 @@ public:
   wxString name;
   wxString description;
   virtual wxString FormatName() const { return name; }
+  static bool CollateByName(ObjectModel *o1, ObjectModel *o2) {
+    return o1->name < o2->name;
+  }
 };
 
 /**

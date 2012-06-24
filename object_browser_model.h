@@ -315,7 +315,7 @@ public:
  * is closed, so we maintain only one connection to a server at a
  * time.
  */
-class ServerModel : public wxTreeItemData {
+class ServerModel {
 public:
   /**
    * Create server model.
@@ -414,7 +414,12 @@ public:
   /**
    * Find an existing server matching some connection parameters.
    */
-  ServerModel *FindServer(const ServerConnection &server) const;
+  ServerModel *FindServer(const ServerConnection &server) const { return FindServerById(server.Identification()); }
+  /**
+   * Find an existing server by reference.
+   */
+  ServerModel *FindServer(const ObjectModelReference &ref) const { return FindServerById(ref.GetServerId()); }
+
   /**
    * Find an existing database matching some connection parameters and database name.
    */
@@ -433,6 +438,7 @@ public:
   void RemoveServer(ServerModel *server);
   void SetupDatabaseConnection(DatabaseConnection *db);
 private:
+  ServerModel *FindServerById(const wxString&) const;
   std::list<ServerModel*> servers;
 };
 

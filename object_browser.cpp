@@ -213,7 +213,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
   wxLogDebug(_T("Connection added to object browser: %s"), server.Identification().c_str());
   wxTreeItemId serverItem = AppendItem(GetRootItem(), server.Identification());
   SetItemText(serverItem, server.Identification());
-  SetItemData(serverItem, serverModel);
+  SetItemData(serverItem, new ModelReference(server.Identification()));
   SetItemImage(serverItem, img_server);
   SetFocus();
 
@@ -225,7 +225,8 @@ void ObjectBrowser::Dispose()
 }
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
-  ServerModel *serverModel = dynamic_cast<ServerModel*>(GetItemData(serverItem));
+  ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
+  ServerModel *serverModel = objectBrowserModel->FindServer(*ref);
   SubmitServerWork(serverModel, new RefreshDatabaseListWork(serverModel, serverItem));
 }
 
@@ -751,8 +752,8 @@ void ObjectBrowser::DisconnectSelected() {
   FindItemContext(selected, &server, &database);
   if (server != NULL) {
     wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
-    objectBrowserModel->RemoveServer(server);
     Delete(FindServerItem(server));
+    objectBrowserModel->RemoveServer(server);
     UpdateSelectedDatabase();
   }
 }
@@ -806,7 +807,8 @@ wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const {
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
     wxASSERT(childItem.IsOk());
-    ServerModel *itemServer = static_cast<ServerModel*>(GetItemData(childItem));
+    ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
+    ServerModel *itemServer = objectBrowserModel->FindServer(*ref);
     if (itemServer == server)
       return childItem;
     childItem = GetNextChild(GetRootItem(), cookie);
@@ -870,10 +872,12 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
     return;
   }
 
-  ServerModel *server = dynamic_cast<ServerModel*>(data);
-  if (server != NULL) {
-    contextMenuServer = server;
-    PopupMenu(serverMenu);
+  ModelReference *ref = dynamic_cast<ModelReference*>(data);
+  if (ref != NULL) {
+    if (ref->GetOid() == InvalidOid) {
+      contextMenuServer = objectBrowserModel->FindServer(*ref);
+      PopupMenu(serverMenu);
+    }
     return;
   }
 
@@ -918,10 +922,13 @@ void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **serv
   for (wxTreeItemId cursor = item; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
     wxTreeItemData *data = GetItemData(cursor);
     if (data != NULL) {
-      if (*database == NULL)
+      ModelReference *ref = dynamic_cast<ModelReference*>(data);
+      if (ref != NULL) {
+        if (ref->GetOid() == InvalidOid)
+          *server = objectBrowserModel->FindServer(*ref);
+      }
+      else if (*database == NULL)
         *database = dynamic_cast<DatabaseModel*>(data);
-      if (*server == NULL)
-        *server = dynamic_cast<ServerModel*>(data);
     }
   }
 }

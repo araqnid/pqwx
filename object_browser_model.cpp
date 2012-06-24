@@ -10,9 +10,8 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 
-ServerModel *ObjectBrowserModel::FindServer(const ServerConnection &server) const
+ServerModel *ObjectBrowserModel::FindServerById(const wxString &serverId) const
 {
-  wxString serverId = server.Identification();
   for (std::list<ServerModel*>::const_iterator iter = servers.begin(); iter != servers.end(); iter++) {
     ServerModel *serverModel = *iter;
     if (serverModel->Identification() == serverId) {

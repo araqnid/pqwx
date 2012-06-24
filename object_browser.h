@@ -282,6 +282,11 @@ private:
   static const int img_text_search_parser = img_text_search_template + 1;
   static const int img_text_search_dictionary = img_text_search_parser + 1;
   static const int img_text_search_configuration = img_text_search_dictionary + 1;
+
+  class ModelReference : public wxTreeItemData, public ObjectModelReference {
+  public:
+    ModelReference(const wxString& serverId) : ObjectModelReference(serverId) {}
+  };
 };
 
 /**

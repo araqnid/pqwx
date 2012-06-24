@@ -7,6 +7,8 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
+#include <openssl/ssl.h>
+
 /**
  * Base class for models of all database objects.
  */
@@ -290,10 +292,12 @@ public:
    * @param serverVersion_ Server version as an integer such as 90101
    * @param ssl SSL object (NULL if not SSL)
    */
-  void ReadServerParameters(const char *serverVersionRaw, int serverVersion_, void *ssl) {
+  void ReadServerParameters(const char *serverVersionRaw, int serverVersion_, SSL *ssl) {
     serverVersion = serverVersion_;
     serverVersionString = wxString(serverVersionRaw, wxConvUTF8);
-    usingSSL = (ssl != NULL);
+    if (ssl != NULL) {
+      sslCipher = wxString(SSL_get_cipher(ssl), wxConvUTF8);
+    }
   }
   /**
    * Close all connections associated with this server.
@@ -318,7 +322,11 @@ public:
   /**
    * @return True if server is using SSL (based on the initial connection)
    */
-  bool IsUsingSSL() const { return usingSSL; }
+  bool IsUsingSSL() const { return !sslCipher.empty(); }
+  /**
+   * @return The name of the SSL cipher in use, if applicable
+   */
+  const wxString& GetSSLCipher() const { return sslCipher; }
   /**
    * Gets a connection to some database.
    *
@@ -357,7 +365,7 @@ private:
   std::vector<RoleModel*> roles;
   int serverVersion;
   wxString serverVersionString;
-  bool usingSSL;
+  wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
   friend class RefreshDatabaseListWork;
 };

@@ -429,7 +429,10 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
-  SetItemText(serverItem, serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")") + (serverModel->IsUsingSSL() ? _T(" [SSL]") : wxEmptyString));
+  wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
+  if (serverModel->IsUsingSSL())
+    serverItemText += _T(" [") + serverModel->GetSSLCipher() + _T("]");
+  SetItemText(serverItem, serverItemText);
   FillInDatabases(serverModel, serverItem);
   FillInRoles(serverModel, serverItem);
   FillInTablespaces(serverModel, serverItem);

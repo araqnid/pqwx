@@ -30,7 +30,7 @@ void RefreshDatabaseListWork::LoadIntoView(ObjectBrowser *ob)
 
 void RefreshDatabaseListWork::ReadServer()
 {
-  serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), PQgetssl(conn));
+  serverModel->ReadServerParameters(PQparameterStatus(conn, "server_version"), PQserverVersion(conn), (SSL*) PQgetssl(conn));
 }
 
 void RefreshDatabaseListWork::ReadDatabases()

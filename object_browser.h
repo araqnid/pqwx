@@ -15,16 +15,8 @@
 #include "catalogue_index.h"
 #include "lazy_loader.h"
 #include "database_event_type.h"
+#include "object_browser_model.h"
 
-class ServerModel;
-class DatabaseModel;
-class RoleModel;
-class RelationModel;
-class ColumnModel;
-class IndexModel;
-class TriggerModel;
-class FunctionModel;
-class SchemaMemberModel;
 class ObjectBrowserWork;
 
 BEGIN_DECLARE_EVENT_TYPES()
@@ -117,7 +109,7 @@ public:
   void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
 
   /**
-   * Close all server connections and delete all model data.
+   * Dispose of object browser view and model.
    */
   void Dispose();
 
@@ -169,15 +161,6 @@ public:
   void AppendSchemaMembers(wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
 
   /**
-   * Find an existing server matching some connection parameters.
-   */
-  ServerModel *FindServer(const ServerConnection &server) const;
-  /**
-   * Find an existing database matching some connection parameters and database name.
-   */
-  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
-
-  /**
    * Find the tree item for a server.
    */
   wxTreeItemId FindServerItem(const ServerModel *server) const;
@@ -209,7 +192,7 @@ public:
   static const VersionedSql& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
-  std::list<ServerModel*> servers;
+  ObjectBrowserModel *objectBrowserModel;
   void RefreshDatabaseList(wxTreeItemId serverItem);
   void BeforeExpand(wxTreeEvent&);
   void OnItemSelected(wxTreeEvent&);
@@ -228,7 +211,6 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
-  void SetupDatabaseConnection(DatabaseConnection *db);
   void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
   void FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem);

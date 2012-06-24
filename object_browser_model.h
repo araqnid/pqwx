@@ -7,6 +7,10 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
+class RelationModel;
+class DatabaseModel;
+class ServerModel;
+class ObjectBrowser;
 /**
  * Base class for models of all database objects.
  */
@@ -360,6 +364,36 @@ private:
   bool usingSSL;
   std::map<wxString, DatabaseConnection*> connections;
   friend class RefreshDatabaseListWork;
+};
+
+/**
+ * The "top level" of the object browser model.
+ */
+class ObjectBrowserModel {
+public:
+  /**
+   * Find an existing server matching some connection parameters.
+   */
+  ServerModel *FindServer(const ServerConnection &server) const;
+  /**
+   * Find an existing database matching some connection parameters and database name.
+   */
+  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+  /**
+   * Register a new server connection with the object browser.
+   */
+  ServerModel* AddServerConnection(const ServerConnection &conninfo, DatabaseConnection *db);
+  /**
+   * Close all server connections and delete all model data.
+   */
+  void Dispose();
+  /**
+   * Remove a server.
+   */
+  void RemoveServer(ServerModel *server);
+  void SetupDatabaseConnection(DatabaseConnection *db);
+private:
+  std::list<ServerModel*> servers;
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

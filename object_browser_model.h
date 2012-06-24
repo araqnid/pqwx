@@ -128,6 +128,13 @@ public:
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
   }
+  static bool CollateByQualifiedName(SchemaMemberModel *r1, SchemaMemberModel *r2) {
+    if (r1->schema < r2->schema) return true;
+    if (r1->schema == r2->schema) {
+      return r1->name < r2->name;
+    }
+    return false;
+  }
 };
 
 /**
@@ -271,7 +278,7 @@ public:
       members.push_back(*iter);
     }
 
-    sort(members.begin(), members.end(), CollateSchemaMembers);
+    sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
   
     Divisions result;
 
@@ -287,16 +294,6 @@ public:
 
     return result;
   }
-
-private:
-  static bool CollateSchemaMembers(SchemaMemberModel *r1, SchemaMemberModel *r2) {
-    if (r1->schema < r2->schema) return true;
-    if (r1->schema == r2->schema) {
-      return r1->name < r2->name;
-    }
-    return false;
-  }
-
 };
 
 /**

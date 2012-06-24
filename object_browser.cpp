@@ -857,7 +857,7 @@ wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& databas
 void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
   wxTreeItemId item = LookupSymbolItem(*database, entityId);
   if (!item.IsOk()) {
-    wxTreeItemId item = FindSystemSchemasItem(database);
+    item = FindSystemSchemasItem(database);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
     if (systemSchemasLoader != NULL) {
       wxBusyCursor wait;

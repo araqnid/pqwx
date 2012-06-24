@@ -452,7 +452,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
     ++relationsCount;
     wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
     SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relation->oid));
-    relation->database->symbolItemLookup[relation->oid] = memberItem;
+    RegisterSymbolItem(databaseRef, relation->oid, memberItem);
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
       SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
     switch (relation->type) {
@@ -490,7 +490,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (function == NULL) continue;
       wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_PROC, function->oid));
-      function->database->symbolItemLookup[function->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, function->oid, memberItem);
       // see images->Add calls in constructor
       switch (function->type) {
       case FunctionModel::SCALAR:
@@ -528,7 +528,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->name : dict->schema + _T(".") + dict->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_DICT, dict->oid));
       SetItemImage(memberItem, img_text_search_dictionary);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -550,7 +550,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->name : prs->schema + _T(".") + prs->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_PARSER, prs->oid));
       SetItemImage(memberItem, img_text_search_parser);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -572,7 +572,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->name : tmpl->schema + _T(".") + tmpl->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_TEMPLATE, tmpl->oid));
       SetItemImage(memberItem, img_text_search_template);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 
@@ -594,7 +594,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->name : cfg->schema + _T(".") + cfg->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_CONFIG, cfg->oid));
       SetItemImage(memberItem, img_text_search_configuration);
-      member->database->symbolItemLookup[member->oid] = memberItem;
+      RegisterSymbolItem(databaseRef, member->oid, memberItem);
     }
   }
 }
@@ -848,7 +848,8 @@ wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database)
 }
 
 void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
-  if (database->symbolItemLookup.count(entityId) == 0) {
+  wxTreeItemId item = LookupSymbolItem(*database, entityId);
+  if (!item.IsOk()) {
     wxTreeItemId item = FindSystemSchemasItem(database);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
     if (systemSchemasLoader != NULL) {
@@ -856,11 +857,10 @@ void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityI
       wxLogDebug(_T("Forcing load of system schemas"));
       systemSchemasLoader->load(item);
       DeleteLazyLoader(item);
+      item = LookupSymbolItem(*database, entityId);
     }
   }
-  std::map<Oid, wxTreeItemId>::const_iterator iter = database->symbolItemLookup.find(entityId);
-  wxASSERT(iter != database->symbolItemLookup.end());
-  wxTreeItemId item = iter->second;
+  wxASSERT(item.IsOk());
   EnsureVisible(item);
   SelectItem(item);
   Expand(item);
@@ -1035,6 +1035,7 @@ void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
   DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), ObjectModelReference::PG_PROC, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

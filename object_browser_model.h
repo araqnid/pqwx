@@ -38,6 +38,16 @@ public:
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
+  bool operator<(const ObjectModelReference& other) const
+  {
+    if (serverId < other.serverId) return true;
+    if (regclass < other.regclass) return true;
+    if (database < other.database) return true;
+    if (regclass == PG_DATABASE) return false;
+    if (oid < other.oid) return true;
+    return subid < other.subid;
+  }
+
   static const Oid PG_ATTRIBUTE = 1249;
   static const Oid PG_CLASS = 1259;
   static const Oid PG_CONSTRAINT = 2606;
@@ -243,7 +253,6 @@ public:
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
   ObjectModel *FindObject(const ObjectModelReference& ref) const;
-  std::map<Oid, wxTreeItemId> symbolItemLookup;
   std::vector<RelationModel*> relations;
   std::vector<FunctionModel*> functions;
   std::vector<TextSearchDictionaryModel*> textSearchDictionaries;

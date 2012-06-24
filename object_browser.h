@@ -283,6 +283,14 @@ private:
   static const int img_text_search_dictionary = img_text_search_parser + 1;
   static const int img_text_search_configuration = img_text_search_dictionary + 1;
 
+  void RegisterSymbolItem(const ObjectModelReference& database, Oid oid, wxTreeItemId item) { symbolTables[database][oid] = item; }
+  wxTreeItemId LookupSymbolItem(const ObjectModelReference& database, Oid oid)
+  {
+    if (symbolTables[database].count(oid) == 0)
+      return wxTreeItemId();
+    return symbolTables[database][oid];
+  }
+
   class ModelReference : public wxTreeItemData, public ObjectModelReference {
   public:
     ModelReference(const wxString& serverId) : ObjectModelReference(serverId) {}
@@ -290,6 +298,8 @@ private:
     ModelReference(const wxString& serverId, Oid regclass, Oid oid) : ObjectModelReference(serverId, regclass, oid) {}
     ModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : ObjectModelReference(database, regclass, oid, subid) {}
   };
+
+  std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > > symbolTables;
 };
 
 /**

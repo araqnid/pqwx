@@ -44,8 +44,10 @@ SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) object_browser_sql.o dependencies_view_sql.o object_browser_scripts_sql.o
 ifneq (,$(findstring MINGW,$(host_system)))
 PQWX_OBJS += pqwx_rc.o
+PQWX_SOURCES += pqwx_rc.cpp
 else
 PQWX_OBJS += database_notification_monitor.o
+PQWX_SOURCES += database_notification_monitor.cpp
 endif
 
 wx_flavour.h build_settings: FORCE

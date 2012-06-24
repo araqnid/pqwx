@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <set>
 #include "wx/imaglist.h"
+#include "wx/wupdlock.h"
 #include "pqwx.h"
 #include "object_browser.h"
 #include "object_finder.h"
@@ -151,6 +152,7 @@ public:
   SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, std::vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
 
   bool load(wxTreeItemId parent) {
+    wxWindowUpdateLocker noUpdates(ob);
     ob->AppendDivision(db, division, parent);
     return false;
   }
@@ -317,6 +319,7 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 }
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
+  wxWindowUpdateLocker noUpdates(this);
   wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
   if (serverModel->IsUsingSSL()) {
     serverItemText += _T(" [") + serverModel->GetSSLCipher() + _T("]");
@@ -621,6 +624,7 @@ void ObjectBrowser::AppendDivision(DatabaseModel *databaseModel, std::vector<Sch
 }
 
 void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem) {
+  wxWindowUpdateLocker noUpdates(this);
   databaseModel->loaded = true;
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
@@ -644,6 +648,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
 }
 
 void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, RelationModel *incoming, wxTreeItemId relationItem) {
+  wxWindowUpdateLocker noUpdates(this);
   ModelReference *ref = static_cast<ModelReference*>(GetItemData(relationItem));
   RelationModel *relationModel = objectBrowserModel->FindRelation(*ref);
   wxASSERT(relationModel != NULL);

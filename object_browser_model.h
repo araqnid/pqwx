@@ -7,6 +7,45 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
+/**
+ * A "soft" reference into the object model.
+ */
+class ObjectModelReference {
+public:
+  ObjectModelReference(const wxString& serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(1262), oid(database), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
+  ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
+
+  wxString Identify() const
+  {
+    wxString buf;
+    buf << _T("Server#") << serverId;
+    if (database != InvalidOid) {
+      buf << _T("/") << database;
+      if (regclass != 1262) {
+        buf << _T("/") << regclass << _T(":") << oid;
+        if (subid)
+          buf << _T(".") << subid;
+      }
+    }
+    return buf;
+  }
+
+  wxString GetServerId() const { return serverId; }
+  Oid GetDatabase() const { return database; }
+  Oid GetObjectClass() const { return regclass; }
+  Oid GetOid() const { return oid; }
+  int GetObjectSubid() const { return subid; }
+
+private:
+  wxString serverId;
+  Oid database;
+  Oid regclass;
+  Oid oid;
+  int subid;
+};
+
 class RelationModel;
 class DatabaseModel;
 class ServerModel;
@@ -408,45 +447,6 @@ inline wxString DatabaseModel::Identification() const {
 inline DatabaseConnection *DatabaseModel::GetDatabaseConnection() {
   return server->GetDatabaseConnection(name);
 }
-
-/**
- * A "soft" reference into the object model.
- */
-class ObjectModelReference {
-public:
-  ObjectModelReference(const wxString& serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
-  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(1262), oid(database), subid(0) {}
-  ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
-  ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
-
-  wxString Identify() const
-  {
-    wxString buf;
-    buf << _T("Server#") << serverId;
-    if (database != InvalidOid) {
-      buf << _T("/") << database;
-      if (regclass != 1262) {
-        buf << _T("/") << regclass << _T(":") << oid;
-        if (subid)
-          buf << _T(".") << subid;
-      }
-    }
-    return buf;
-  }
-
-  wxString GetServerId() const { return serverId; }
-  Oid GetDatabase() const { return database; }
-  Oid GetObjectClass() const { return regclass; }
-  Oid GetOid() const { return oid; }
-  int GetObjectSubid() const { return subid; }
-
-private:
-  wxString serverId;
-  Oid database;
-  Oid regclass;
-  Oid oid;
-  int subid;
-};
 
 #endif
 

@@ -384,12 +384,10 @@ public:
   }
   void UpdateRoles(const std::vector<RoleModel>& incoming)
   {
-    for (std::vector<RoleModel*>::iterator iter = roles.begin(); iter != roles.end(); iter++) {
-      delete (*iter);
-    }
     roles.clear();
+    roles.reserve(incoming.size());
     for (std::vector<RoleModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      roles.push_back(new RoleModel(*iter));
+      roles.push_back(*iter);
     }
   }
   void UpdateTablespaces(const std::vector<TablespaceModel>& incoming)
@@ -468,7 +466,7 @@ public:
   /**
    * @return The roles on this server
    */
-  const std::vector<RoleModel*>& GetRoles() const { return roles; }
+  const std::vector<RoleModel>& GetRoles() const { return roles; }
   /**
    * @return The tablespaces on this server
    */
@@ -476,7 +474,7 @@ public:
 private:
   std::vector<DatabaseModel*> databases;
   std::vector<TablespaceModel> tablespaces;
-  std::vector<RoleModel*> roles;
+  std::vector<RoleModel> roles;
   int serverVersion;
   wxString serverVersionString;
   wxString sslCipher;

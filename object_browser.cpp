@@ -387,21 +387,21 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
 }
 
 void ObjectBrowser::FillInRoles(const ServerModel *serverModel, wxTreeItemId serverItem) {
-  const std::vector<RoleModel*> &roles = serverModel->GetRoles();
+  const std::vector<RoleModel>& roles = serverModel->GetRoles();
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   SetItemImage(usersItem, img_folder);
   wxTreeItemId groupsItem = AppendItem(serverItem, _("Groups"));
   SetItemImage(groupsItem, img_folder);
-  for (std::vector<RoleModel*>::const_iterator iter = roles.begin(); iter != roles.end(); iter++) {
-    RoleModel *role = *iter;
+  for (std::vector<RoleModel>::const_iterator iter = roles.begin(); iter != roles.end(); iter++) {
+    const RoleModel& role = *iter;
     wxTreeItemId roleItem;
-    if (role->canLogin) {
-      roleItem = AppendItem(usersItem, role->name);
+    if (role.canLogin) {
+      roleItem = AppendItem(usersItem, role.name);
     }
     else {
-      roleItem = AppendItem(groupsItem, role->name);
+      roleItem = AppendItem(groupsItem, role.name);
     }
-    SetItemData(roleItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_ROLE, role->oid));
+    SetItemData(roleItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_ROLE, role.oid));
     SetItemImage(roleItem, img_role);
   }
 }

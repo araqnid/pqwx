@@ -880,7 +880,7 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
       contextMenuServer = objectBrowserModel->FindServer(*ref);
       PopupMenu(serverMenu);
     }
-    else if (ref->GetObjectClass() == 1262) { // pg_database
+    else if (ref->GetObjectClass() == ObjectModelReference::PG_DATABASE) {
       contextMenuDatabase = objectBrowserModel->FindDatabase(*ref);
       PopupMenu(databaseMenu);
     }
@@ -925,7 +925,7 @@ void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **serv
     if (ref == NULL) continue;
     if (ref->GetOid() == InvalidOid)
       *server = objectBrowserModel->FindServer(*ref);
-    else if (ref->GetObjectClass() == 1262)
+    else if (ref->GetObjectClass() == ObjectModelReference::PG_DATABASE)
       *database = objectBrowserModel->FindDatabase(*ref);
   }
 }
@@ -1017,7 +1017,7 @@ void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), 1262 /* pg_database */, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
   dialog->Show();
 }
 

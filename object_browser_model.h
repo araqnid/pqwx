@@ -13,7 +13,7 @@
 class ObjectModelReference {
 public:
   ObjectModelReference(const wxString& serverId) : serverId(serverId), database(InvalidOid), regclass(InvalidOid), oid(InvalidOid), subid(0) {}
-  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(1262), oid(database), subid(0) {}
+  ObjectModelReference(const wxString& serverId, Oid database) : serverId(serverId), database(database), regclass(PG_DATABASE), oid(database), subid(0) {}
   ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
   ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
 
@@ -23,7 +23,7 @@ public:
     buf << _T("Server#") << serverId;
     if (database != InvalidOid) {
       buf << _T("/") << database;
-      if (regclass != 1262) {
+      if (regclass != PG_DATABASE) {
         buf << _T("/") << regclass << _T(":") << oid;
         if (subid)
           buf << _T(".") << subid;
@@ -38,6 +38,9 @@ public:
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
+  static const Oid PG_DATABASE = 1262;
+  static const Oid PG_ROLE = 1260;
+  static const Oid PG_TABLESPACE = 1213;
 private:
   wxString serverId;
   Oid database;

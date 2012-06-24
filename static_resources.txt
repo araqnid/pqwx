@@ -1,6 +1,7 @@
 #filename			path
 icon_folder.png			ObjectBrowser
 icon_server.png			ObjectBrowser
+icon_server_encrypted.png	ObjectBrowser
 icon_database.png		ObjectBrowser
 icon_index.png			ObjectBrowser
 icon_index_pkey.png		ObjectBrowser

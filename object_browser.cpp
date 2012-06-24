@@ -172,6 +172,7 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server_encrypted.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_unlogged_table.png")));
@@ -317,8 +318,10 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
 
 void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
   wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
-  if (serverModel->IsUsingSSL())
+  if (serverModel->IsUsingSSL()) {
     serverItemText += _T(" [") + serverModel->GetSSLCipher() + _T("]");
+    SetItemImage(serverItem, img_server_encrypted);
+  }
   SetItemText(serverItem, serverItemText);
   FillInDatabases(serverModel, serverItem);
   FillInRoles(serverModel, serverItem);

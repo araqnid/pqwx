@@ -403,7 +403,7 @@ void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId ser
     SetItemImage(folderItem, img_folder);
     for (std::vector<TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, *iter);
+      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);
     }
   }
@@ -413,7 +413,7 @@ void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId ser
     SetItemImage(folderItem, img_folder);
     for (std::vector<TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
       wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, *iter);
+      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
       SetItemImage(spcItem, img_database);
     }
   }

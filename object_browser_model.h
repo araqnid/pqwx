@@ -196,7 +196,7 @@ public:
 /**
  * A tablespace.
  */
-class TablespaceModel : public ObjectModel, public wxTreeItemData {
+class TablespaceModel : public ObjectModel {
 public:
   Oid oid;
   wxString location;

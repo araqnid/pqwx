@@ -81,6 +81,13 @@ DatabaseModel *ObjectBrowserModel::FindDatabase(const ServerConnection &server, 
   return serverModel->FindDatabase(dbname);
 }
 
+DatabaseModel *ObjectBrowserModel::FindDatabase(const ObjectModelReference &ref) const
+{
+  ServerModel *serverModel = FindServer(ref);
+  if (serverModel == NULL) return NULL;
+  return serverModel->FindDatabase(ref);
+}
+
 DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname)
 {
   std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(dbname);
@@ -139,10 +146,19 @@ void ServerModel::Dispose()
   connections.clear();
 }
 
-inline DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const
+DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const
 {
   for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
     if ((*iter)->name == dbname)
+      return *iter;
+  }
+  return NULL;
+}
+
+DatabaseModel *ServerModel::FindDatabase(const ObjectModelReference& ref) const
+{
+  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    if ((*iter)->oid == ref.GetOid())
       return *iter;
   }
   return NULL;

@@ -286,6 +286,9 @@ private:
   class ModelReference : public wxTreeItemData, public ObjectModelReference {
   public:
     ModelReference(const wxString& serverId) : ObjectModelReference(serverId) {}
+    ModelReference(const wxString& serverId, Oid database) : ObjectModelReference(serverId, database) {}
+    ModelReference(const wxString& serverId, Oid regclass, Oid oid) : ObjectModelReference(serverId, regclass, oid) {}
+    ModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : ObjectModelReference(database, regclass, oid, subid) {}
   };
 };
 

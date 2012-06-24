@@ -54,7 +54,7 @@ class ObjectBrowser;
 /**
  * Base class for models of all database objects.
  */
-class ObjectModel : public wxTreeItemData {
+class ObjectModel {
 public:
   wxString name;
   wxString description;
@@ -67,7 +67,7 @@ public:
 /**
  * A relation column.
  */
-class ColumnModel : public ObjectModel {
+class ColumnModel : public ObjectModel, public wxTreeItemData {
 public:
   RelationModel *relation;
   wxString type;
@@ -79,7 +79,7 @@ public:
 /**
  * An index associated with a table.
  */
-class IndexModel : public ObjectModel {
+class IndexModel : public ObjectModel, public wxTreeItemData {
 public:
   class Column {
   public:
@@ -99,7 +99,7 @@ public:
 /**
  * A trigger associated with a table.
  */
-class TriggerModel : public ObjectModel {
+class TriggerModel : public ObjectModel, public wxTreeItemData {
 public:
   RelationModel *relation;
 };
@@ -107,7 +107,7 @@ public:
 /**
  * A check constraint associated with a table.
  */
-class CheckConstraintModel : public ObjectModel {
+class CheckConstraintModel : public ObjectModel, public wxTreeItemData {
 public:
   RelationModel *relation;
   wxString expression;
@@ -117,7 +117,7 @@ public:
 /**
  * A schema member - function or relation.
  */
-class SchemaMemberModel : public ObjectModel {
+class SchemaMemberModel : public ObjectModel, public wxTreeItemData {
 public:
   DatabaseModel *database;
   Oid oid;
@@ -193,7 +193,7 @@ public:
 /**
  * A tablespace.
  */
-class TablespaceModel : public ObjectModel {
+class TablespaceModel : public ObjectModel, public wxTreeItemData {
 public:
   Oid oid;
   wxString location;
@@ -299,7 +299,7 @@ public:
 /**
  * A server role.
  */
-class RoleModel : public ObjectModel {
+class RoleModel : public ObjectModel, public wxTreeItemData {
 public:
   Oid oid;
   bool superuser;
@@ -380,6 +380,10 @@ public:
    */
   DatabaseModel *FindDatabase(const wxString &dbname) const;
   /**
+   * Find a database model on this server.
+   */
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const;
+  /**
    * Server connection details.
    */
   const ServerConnection conninfo;
@@ -424,6 +428,10 @@ public:
    * Find an existing database matching some connection parameters and database name.
    */
   DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+  /**
+   * Find an existing database by reference.
+   */
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const;
   /**
    * Register a new server connection with the object browser.
    */

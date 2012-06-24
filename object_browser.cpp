@@ -358,7 +358,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
   for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
-    SetItemData(databaseItem, database);
+    SetItemData(databaseItem, new ModelReference(database->server->Identification(), database->oid));
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
       SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, database));
@@ -802,7 +802,8 @@ void ObjectBrowser::FindObject(const DatabaseModel *database) {
   }
 }
 
-wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const {
+wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const
+{
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
@@ -815,15 +816,16 @@ wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const {
   } while (1);
 }
 
-wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const {
+wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const
+{
   wxTreeItemId serverItem = FindServerItem(database->server);
   wxASSERT(serverItem.IsOk());
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(serverItem, cookie);
   do {
     wxASSERT(childItem.IsOk());
-    DatabaseModel *itemDatabase = static_cast<DatabaseModel*>(GetItemData(childItem));
-    if (itemDatabase == database)
+    ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
+    if (ref->GetOid() == database->oid)
       return childItem;
     childItem = GetNextChild(serverItem, cookie);
   } while (1);
@@ -878,13 +880,10 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
       contextMenuServer = objectBrowserModel->FindServer(*ref);
       PopupMenu(serverMenu);
     }
-    return;
-  }
-
-  DatabaseModel *database = dynamic_cast<DatabaseModel*>(data);
-  if (database != NULL) {
-    contextMenuDatabase = database;
-    PopupMenu(databaseMenu);
+    else if (ref->GetObjectClass() == 1262) { // pg_database
+      contextMenuDatabase = objectBrowserModel->FindDatabase(*ref);
+      PopupMenu(databaseMenu);
+    }
     return;
   }
 
@@ -921,15 +920,13 @@ void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **serv
   *server = NULL;
   for (wxTreeItemId cursor = item; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
     wxTreeItemData *data = GetItemData(cursor);
-    if (data != NULL) {
-      ModelReference *ref = dynamic_cast<ModelReference*>(data);
-      if (ref != NULL) {
-        if (ref->GetOid() == InvalidOid)
-          *server = objectBrowserModel->FindServer(*ref);
-      }
-      else if (*database == NULL)
-        *database = dynamic_cast<DatabaseModel*>(data);
-    }
+    if (data == NULL) continue;
+    ModelReference *ref = dynamic_cast<ModelReference*>(data);
+    if (ref == NULL) continue;
+    if (ref->GetOid() == InvalidOid)
+      *server = objectBrowserModel->FindServer(*ref);
+    else if (ref->GetObjectClass() == 1262)
+      *database = objectBrowserModel->FindDatabase(*ref);
   }
 }
 

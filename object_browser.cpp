@@ -610,7 +610,7 @@ void ObjectBrowser::AppendDivision(DatabaseModel *databaseModel, std::vector<Sch
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
   for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
-    AppendSchemaMembers(ObjectModelReference(databaseModel->server->Identification(), databaseModel->oid), parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
+    AppendSchemaMembers(*databaseModel, parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
   }
 }
 

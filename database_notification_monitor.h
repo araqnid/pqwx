@@ -68,7 +68,11 @@ private:
     }
     int MaxFd() const
     {
+#ifdef HAVE_EVENTFD
+      int max = controlFD;
+#else
       int max = workerControlEndpoint;
+#endif
       for (std::list<Client>::const_iterator iter = clients.begin(); iter != clients.end(); iter++) {
         int clientFd = (*iter).GetFD();
         if (clientFd > max) max = clientFd;
@@ -79,7 +83,11 @@ private:
     bool quit;
     mutable wxCriticalSection guardState;
     std::list<Client> clients;
+#ifdef HAVE_EVENTFD
+    int controlFD;
+#else
     int workerControlEndpoint;
+#endif
     std::deque<Work*> workQueue;
     wxCriticalSection guardWorkQueue;
     Work *ShiftWork()
@@ -154,7 +162,9 @@ private:
   };
 
   WorkerThread worker;
+#ifndef HAVE_EVENTFD
   int clientControlEndpoint;
+#endif
 
   void EnsureRunning();
   void EnsureStopped();

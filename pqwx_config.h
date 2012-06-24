@@ -11,6 +11,11 @@
 // select/pipe trickery not ported to Windows yet...
 #else
 #define PQWX_NOTIFICATION_MONITOR 1
+
+#ifdef __linux__
+#define HAVE_EVENTFD 1
+#endif
+
 #endif
 
 #endif

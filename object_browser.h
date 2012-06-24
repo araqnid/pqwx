@@ -130,9 +130,9 @@ public:
   void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 
   /**
-   * Fill in server details after loading from the database.
+   * Update server details tree after loading from the database.
    */
-  void FillInServer(ServerModel *serverModel, wxTreeItemId serverItem);
+  void UpdateServer(const wxString& serverId, bool expandAfter);
   /**
    * Fill in database schema after loading from the database.
    */
@@ -164,7 +164,7 @@ public:
   /**
    * Find the tree item for a server.
    */
-  wxTreeItemId FindServerItem(const ServerModel *server) const;
+  wxTreeItemId FindServerItem(const wxString& serverId) const;
   /**
    * Find the tree item for a database.
    */
@@ -216,9 +216,9 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
-  void FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem);
-  void FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem);
-  void FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem);
+  void FillInDatabases(const ServerModel *serverModel, wxTreeItemId serverItem);
+  void FillInRoles(const ServerModel *serverModel, wxTreeItemId serverItem);
+  void FillInTablespaces(const ServerModel *serverModel, wxTreeItemId serverItem);
 
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);

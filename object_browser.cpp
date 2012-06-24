@@ -318,8 +318,13 @@ void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relat
   SubmitDatabaseWork(relation->database, new LoadRelationWork(relation));
 }
 
-void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverItem) {
+void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
   wxWindowUpdateLocker noUpdates(this);
+  const ServerModel *serverModel = objectBrowserModel->FindServer(serverId);
+  wxASSERT(serverModel != NULL);
+  wxTreeItemId serverItem = FindServerItem(serverId);
+  wxASSERT(serverItem.IsOk());
+
   wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
   if (serverModel->IsUsingSSL()) {
     serverItemText += _T(" [") + serverModel->GetSSLCipher() + _T("]");
@@ -329,9 +334,15 @@ void ObjectBrowser::FillInServer(ServerModel *serverModel, wxTreeItemId serverIt
   FillInDatabases(serverModel, serverItem);
   FillInRoles(serverModel, serverItem);
   FillInTablespaces(serverModel, serverItem);
+
+  if (expandAfter) {
+    EnsureVisible(serverItem);
+    SelectItem(serverItem);
+    Expand(serverItem);
+  }
 }
 
-void ObjectBrowser::FillInDatabases(ServerModel *serverModel, wxTreeItemId serverItem) {
+void ObjectBrowser::FillInDatabases(const ServerModel *serverModel, wxTreeItemId serverItem) {
   const std::vector<DatabaseModel*> &databases = serverModel->GetDatabases();
   std::vector<DatabaseModel*> systemDatabases;
   std::vector<DatabaseModel*> templateDatabases;
@@ -374,7 +385,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<Dat
   }
 }
 
-void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverItem) {
+void ObjectBrowser::FillInRoles(const ServerModel *serverModel, wxTreeItemId serverItem) {
   const std::vector<RoleModel*> &roles = serverModel->GetRoles();
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   SetItemImage(usersItem, img_folder);
@@ -394,7 +405,7 @@ void ObjectBrowser::FillInRoles(ServerModel *serverModel, wxTreeItemId serverIte
   }
 }
 
-void ObjectBrowser::FillInTablespaces(ServerModel *serverModel, wxTreeItemId serverItem)
+void ObjectBrowser::FillInTablespaces(const ServerModel *serverModel, wxTreeItemId serverItem)
 {
   const std::vector<TablespaceModel*> &tablespaces = serverModel->GetTablespaces();
   std::vector<TablespaceModel*> userTablespaces;
@@ -764,7 +775,7 @@ void ObjectBrowser::DisconnectSelected() {
   FindItemContext(selected, &server, &database);
   if (server != NULL) {
     wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
-    Delete(FindServerItem(server));
+    Delete(FindServerItem(server->Identification()));
     objectBrowserModel->RemoveServer(server);
     UpdateSelectedDatabase();
   }
@@ -814,15 +825,14 @@ void ObjectBrowser::FindObject(const DatabaseModel *database) {
   }
 }
 
-wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const
+wxTreeItemId ObjectBrowser::FindServerItem(const wxString& serverId) const
 {
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(GetRootItem(), cookie);
   do {
     wxASSERT(childItem.IsOk());
     ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
-    ServerModel *itemServer = objectBrowserModel->FindServer(*ref);
-    if (itemServer == server)
+    if (ref->GetServerId() == serverId)
       return childItem;
     childItem = GetNextChild(GetRootItem(), cookie);
   } while (1);
@@ -830,7 +840,7 @@ wxTreeItemId ObjectBrowser::FindServerItem(const ServerModel *server) const
 
 wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const
 {
-  wxTreeItemId serverItem = FindServerItem(database->server);
+  wxTreeItemId serverItem = FindServerItem(database->server->Identification());
   wxASSERT(serverItem.IsOk());
   wxTreeItemIdValue cookie;
   wxTreeItemId childItem = GetFirstChild(serverItem, cookie);

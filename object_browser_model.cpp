@@ -21,6 +21,11 @@ void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
   wxLogDebug(_T("%p: work finished (received by model)"), work);
   work->UpdateModel(this);
 
+  for (std::list<ObjectBrowser*>::iterator iter = views.begin(); iter != views.end(); iter++) {
+    wxLogDebug(_T("%p: updating view %p"), work, *iter);
+    work->UpdateView(*iter);
+  }
+
   delete work;
 }
 

@@ -467,9 +467,28 @@ public:
     return static_cast<FunctionModel*>(obj);
   }
 
+  /**
+   * Register a view with the model.
+   *
+   * The view will receive update notifications as the model updates.
+   */
+  void RegisterView(ObjectBrowser *view)
+  {
+    views.push_back(view);
+  }
+
+  /**
+   * Unregister a view with the model.
+   */
+  void UnregisterView(ObjectBrowser *view)
+  {
+    views.remove(view);
+  }
+
 private:
   ServerModel *FindServerById(const wxString&);
   std::list<ServerModel> servers;
+  std::list<ObjectBrowser*> views;
   DECLARE_EVENT_TABLE();
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);

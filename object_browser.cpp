@@ -198,6 +198,7 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_configuration.png")));
   AssignImageList(images);
   currentlySelected = false;
+  objectBrowserModel->RegisterView(this);
 }
 
 void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
@@ -227,6 +228,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
 
 void ObjectBrowser::Dispose()
 {
+  objectBrowserModel->UnregisterView(this);
 }
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {

@@ -320,7 +320,7 @@ public:
 private:
   const RelationModel::Type relationType;
   const ObjectModelReference relationRef;
-  RelationModel *detail;
+  RelationModel incoming;
 private:
   void operator()();
   void ReadColumns();

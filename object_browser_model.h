@@ -170,11 +170,11 @@ public:
   enum Type { TABLE, VIEW, SEQUENCE } type;
   int owningColumn; // for sequences that are attached to a column
   bool unlogged;
-  std::vector<ColumnModel*> columns;
-  std::vector<IndexModel*> indices;
-  std::vector<TriggerModel*> triggers;
-  std::vector<RelationModel*> sequences;
-  std::vector<CheckConstraintModel*> checkConstraints;
+  std::vector<ColumnModel> columns;
+  std::vector<IndexModel> indices;
+  std::vector<TriggerModel> triggers;
+  std::vector<RelationModel> sequences;
+  std::vector<CheckConstraintModel> checkConstraints;
 };
 
 /**

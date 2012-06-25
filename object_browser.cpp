@@ -674,31 +674,31 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
   wxWindowUpdateLocker noUpdates(this);
 
   std::map<int,wxTreeItemId> columnItems;
-  for (std::vector<ColumnModel*>::const_iterator iter = relationModel->columns.begin(); iter != relationModel->columns.end(); iter++) {
-    const ColumnModel *column = *iter;
-    wxString itemText = column->name + _T(" (") + column->type;
+  for (std::vector<ColumnModel>::const_iterator iter = relationModel->columns.begin(); iter != relationModel->columns.end(); iter++) {
+    const ColumnModel& column = *iter;
+    wxString itemText = column.name + _T(" (") + column.type;
 
     if (relationModel->type == RelationModel::TABLE) {
-      if (column->nullable)
+      if (column.nullable)
         itemText += _(", null");
       else
         itemText += _(", not null");
-      if (column->hasDefault)
+      if (column.hasDefault)
         itemText += _(", default");
     }
 
     itemText += _T(")");
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
-    SetItemData(columnItem, new ModelReference(relationRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column->attnum));
+    SetItemData(columnItem, new ModelReference(relationRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column.attnum));
     SetItemImage(columnItem, img_column);
-    columnItems[column->attnum] = columnItem;
+    columnItems[column.attnum] = columnItem;
 
-    for (std::vector<RelationModel*>::const_iterator seqIter = relationModel->sequences.begin(); seqIter != relationModel->sequences.end(); seqIter++) {
-      RelationModel *sequence = *seqIter;
-      if (sequence->owningColumn != column->attnum) continue;
+    for (std::vector<RelationModel>::const_iterator seqIter = relationModel->sequences.begin(); seqIter != relationModel->sequences.end(); seqIter++) {
+      const RelationModel& sequence = *seqIter;
+      if (sequence.owningColumn != column.attnum) continue;
 
-      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence->schema + _T(".") + sequence->name);
+      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence.schema + _T(".") + sequence.name);
       SetItemData(sequenceItem, new ModelReference(relationRef, ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
     }
@@ -707,21 +707,21 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
   if (!relationModel->indices.empty()) {
     wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
     SetItemImage(indicesItem, img_folder);
-    for (std::vector<IndexModel*>::const_iterator iter = relationModel->indices.begin(); iter != relationModel->indices.end(); iter++) {
-      wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
-      SetItemData(indexItem, new ModelReference(relationRef, ObjectModelReference::PG_INDEX, (*iter)->oid));
-      if ((*iter)->primaryKey)
+    for (std::vector<IndexModel>::const_iterator iter = relationModel->indices.begin(); iter != relationModel->indices.end(); iter++) {
+      wxTreeItemId indexItem = AppendItem(indicesItem, (*iter).name);
+      SetItemData(indexItem, new ModelReference(relationRef, ObjectModelReference::PG_INDEX, (*iter).oid));
+      if ((*iter).primaryKey)
         SetItemImage(indexItem, img_index_pkey);
-      else if ((*iter)->unique || (*iter)->exclusion)
+      else if ((*iter).unique || (*iter).exclusion)
         SetItemImage(indexItem, img_index_uniq);
       else
         SetItemImage(indexItem, img_index);
-      for (std::vector<IndexModel::Column>::const_iterator colIter = (*iter)->columns.begin(); colIter != (*iter)->columns.end(); colIter++) {
+      for (std::vector<IndexModel::Column>::const_iterator colIter = (*iter).columns.begin(); colIter != (*iter).columns.end(); colIter++) {
         wxTreeItemId indexColumnItem = AppendItem(indexItem, (*colIter).expression);
         if ((*colIter).column > 0) {
           SetItemImage(indexColumnItem, img_column);
           wxTreeItemId columnItem = columnItems[(*colIter).column];
-          if ((*iter)->primaryKey) {
+          if ((*iter).primaryKey) {
             SetItemImage(columnItem, img_column_pkey);
           }
         }
@@ -735,18 +735,18 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
   if (!relationModel->checkConstraints.empty()) {
     wxTreeItemId constraintsItem = AppendItem(relationItem, _("Constraints"));
     SetItemImage(constraintsItem, img_folder);
-    for (std::vector<CheckConstraintModel*>::const_iterator iter = relationModel->checkConstraints.begin(); iter != relationModel->checkConstraints.end(); iter++) {
-      wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter)->name);
-      SetItemData(constraintItem, new ModelReference(relationRef, ObjectModelReference::PG_CONSTRAINT, (*iter)->oid));
+    for (std::vector<CheckConstraintModel>::const_iterator iter = relationModel->checkConstraints.begin(); iter != relationModel->checkConstraints.end(); iter++) {
+      wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter).name);
+      SetItemData(constraintItem, new ModelReference(relationRef, ObjectModelReference::PG_CONSTRAINT, (*iter).oid));
     }
   }
 
   if (!relationModel->triggers.empty()) {
     wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
     SetItemImage(triggersItem, img_folder);
-    for (std::vector<TriggerModel*>::const_iterator iter = relationModel->triggers.begin(); iter != relationModel->triggers.end(); iter++) {
-      wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
-      SetItemData(triggerItem, new ModelReference(relationRef, ObjectModelReference::PG_TRIGGER, (*iter)->oid));
+    for (std::vector<TriggerModel>::const_iterator iter = relationModel->triggers.begin(); iter != relationModel->triggers.end(); iter++) {
+      wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter).name);
+      SetItemData(triggerItem, new ModelReference(relationRef, ObjectModelReference::PG_TRIGGER, (*iter).oid));
     }
   }
 

@@ -326,7 +326,6 @@ void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
  * Load a relation's details.
  */
 void LoadRelationWork::operator()() {
-  detail = new RelationModel();
   ReadColumns();
   if (relationType == RelationModel::TABLE) {
     ReadIndices();
@@ -338,43 +337,41 @@ void LoadRelationWork::operator()() {
 
 void LoadRelationWork::ReadColumns() {
   QueryResults attributeRows = Query(_T("Columns")).OidParam(relationRef.GetOid()).List();
+  incoming.columns.reserve(attributeRows.size());
   for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
-    ColumnModel *column = new ColumnModel();
-    column->name = (*iter).ReadText(0);
-    column->type = (*iter).ReadText(1);
-    column->nullable = (*iter).ReadBool(2);
-    column->hasDefault = (*iter).ReadBool(3);
-    column->description = (*iter).ReadText(4);
-    column->attnum = (*iter).ReadInt4(5);
-    detail->columns.push_back(column);
+    ColumnModel column;
+    column.name = (*iter).ReadText(0);
+    column.type = (*iter).ReadText(1);
+    column.nullable = (*iter).ReadBool(2);
+    column.hasDefault = (*iter).ReadBool(3);
+    column.description = (*iter).ReadText(4);
+    column.attnum = (*iter).ReadInt4(5);
+    incoming.columns.push_back(column);
   }
 }
 
 void LoadRelationWork::ReadIndices() {
   QueryResults indexRows = Query(_T("Indices")).OidParam(relationRef.GetOid()).List();
+  incoming.indices.reserve(indexRows.size());
   IndexModel *lastIndex = NULL;
   std::vector<int> indexColumns;
   std::vector<int>::const_iterator indexColumnsIter;
   for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
-    IndexModel *index;
     wxString indexName = (*iter)[_T("relname")];
     if (lastIndex == NULL || lastIndex->name != indexName) {
-      index = new IndexModel();
-      index->name = indexName;
-      index->primaryKey = (*iter).ReadBool(_T("indisprimary"));
-      index->unique = (*iter).ReadBool(_T("indisunique"));
-      index->exclusion = (*iter).ReadBool(_T("indisexclusion"));
-      index->clustered = (*iter).ReadBool(_T("indisclustered"));
+      IndexModel index;
+      index.name = indexName;
+      index.primaryKey = (*iter).ReadBool(_T("indisprimary"));
+      index.unique = (*iter).ReadBool(_T("indisunique"));
+      index.exclusion = (*iter).ReadBool(_T("indisexclusion"));
+      index.clustered = (*iter).ReadBool(_T("indisclustered"));
       indexColumns = ParseInt2Vector((*iter)[_T("indkey")]);
       indexColumnsIter = indexColumns.begin();
-      lastIndex = index;
-      detail->indices.push_back(index);
-    }
-    else {
-      index = lastIndex;
+      incoming.indices.push_back(index);
+      lastIndex = &(incoming.indices.back());
     }
     wxString expression = (*iter)[_T("indexattdef")];
-    index->columns.push_back(IndexModel::Column(*indexColumnsIter++, expression));
+    lastIndex->columns.push_back(IndexModel::Column(*indexColumnsIter++, expression));
   }
 }
 
@@ -404,23 +401,25 @@ std::vector<int> LoadRelationWork::ParseInt2Vector(const wxString &str)
 
 void LoadRelationWork::ReadTriggers() {
   QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationRef.GetOid()).List();
+  incoming.triggers.reserve(triggerRows.size());
   for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
-    TriggerModel *trigger = new TriggerModel();
-    trigger->name = (*iter).ReadText(0);
-    detail->triggers.push_back(trigger);
+    TriggerModel trigger;
+    trigger.name = (*iter).ReadText(0);
+    incoming.triggers.push_back(trigger);
   }
 }
 
 void LoadRelationWork::ReadSequences() {
   QueryResults sequenceRows = Query(_T("Sequences")).OidParam(relationRef.GetOid()).List();
+  incoming.sequences.reserve(sequenceRows.size());
   for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
-    RelationModel *sequence = new RelationModel();
-    sequence->type = RelationModel::SEQUENCE;
-    sequence->oid = (*iter).ReadOid(0);
-    sequence->schema = (*iter).ReadText(1);
-    sequence->name = (*iter).ReadText(2);
-    sequence->owningColumn = (*iter).ReadInt4(3);
-    detail->sequences.push_back(sequence);
+    RelationModel sequence;
+    sequence.type = RelationModel::SEQUENCE;
+    sequence.oid = (*iter).ReadOid(0);
+    sequence.schema = (*iter).ReadText(1);
+    sequence.name = (*iter).ReadText(2);
+    sequence.owningColumn = (*iter).ReadInt4(3);
+    incoming.sequences.push_back(sequence);
   }
 }
 
@@ -429,10 +428,10 @@ void LoadRelationWork::ReadConstraints() {
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     wxString typeCode = (*iter).ReadText(1);
     if (typeCode == _T("c")) {
-      CheckConstraintModel *constraint = new CheckConstraintModel();
-      constraint->name = (*iter).ReadText(0);
-      constraint->expression = (*iter).ReadText(2);
-      detail->checkConstraints.push_back(constraint);
+      CheckConstraintModel constraint;
+      constraint.name = (*iter).ReadText(0);
+      constraint.expression = (*iter).ReadText(2);
+      incoming.checkConstraints.push_back(constraint);
     }
   }
 }
@@ -440,10 +439,10 @@ void LoadRelationWork::ReadConstraints() {
 void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
 {
   RelationModel *relationModel = model->FindRelation(relationRef);
-  relationModel->columns = detail->columns;
-  relationModel->indices = detail->indices;
-  relationModel->checkConstraints = detail->checkConstraints;
-  relationModel->triggers = detail->triggers;
+  relationModel->columns = incoming.columns;
+  relationModel->indices = incoming.indices;
+  relationModel->checkConstraints = incoming.checkConstraints;
+  relationModel->triggers = incoming.triggers;
 }
 
 void LoadRelationWork::UpdateView(ObjectBrowser *ob)

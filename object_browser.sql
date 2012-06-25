@@ -215,23 +215,59 @@ FROM pg_class seq
 WHERE pg_depend.refobjid = $1
       AND seq.relkind = 'S'
 
+-- SQL :: Text search dictionaries :: 9.1
+SELECT pg_ts_dict.oid, nspname, dictname, extname
+FROM pg_ts_dict
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_dict'::regclass
+                         AND pg_depend.objid = pg_ts_dict.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+
 -- SQL :: Text search dictionaries
-SELECT pg_ts_dict.oid, nspname, dictname
+SELECT pg_ts_dict.oid, nspname, dictname, null AS extname
 FROM pg_ts_dict
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
 
+-- SQL :: Text search parsers :: 9.1
+SELECT pg_ts_parser.oid, nspname, prsname, extname
+FROM pg_ts_parser
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_parser'::regclass
+                         AND pg_depend.objid = pg_ts_parser.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+
 -- SQL :: Text search parsers
-SELECT pg_ts_parser.oid, nspname, prsname
+SELECT pg_ts_parser.oid, nspname, prsname, null AS extname
 FROM pg_ts_parser
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
 
+-- SQL :: Text search templates :: 9.1
+SELECT pg_ts_template.oid, nspname, tmplname, extname
+FROM pg_ts_template
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_template'::regclass
+                         AND pg_depend.objid = pg_ts_template.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+
 -- SQL :: Text search templates
-SELECT pg_ts_template.oid, nspname, tmplname
+SELECT pg_ts_template.oid, nspname, tmplname, null AS extname
 FROM pg_ts_template
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
 
+-- SQL :: Text search configurations :: 9.1
+SELECT pg_ts_config.oid, nspname, cfgname, null AS extname
+FROM pg_ts_config
+     JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_config'::regclass
+                         AND pg_depend.objid = pg_ts_config.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+
 -- SQL :: Text search configurations
-SELECT pg_ts_config.oid, nspname, cfgname
+SELECT pg_ts_config.oid, nspname, cfgname, null AS extname
 FROM pg_ts_config
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
 

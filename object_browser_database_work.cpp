@@ -164,6 +164,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
     dict.oid = (*iter).ReadOid(0);
     dict.schema = (*iter).ReadText(1);
     dict.name = (*iter).ReadText(2);
+    dict.extension = (*iter).ReadText(3);
     incoming.textSearchDictionaries.push_back(dict);
   }
 }
@@ -176,6 +177,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchParsers()
     prs.oid = (*iter).ReadOid(0);
     prs.schema = (*iter).ReadText(1);
     prs.name = (*iter).ReadText(2);
+    prs.extension = (*iter).ReadText(3);
     incoming.textSearchParsers.push_back(prs);
   }
 }
@@ -188,6 +190,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
     tmpl.oid = (*iter).ReadOid(0);
     tmpl.schema = (*iter).ReadText(1);
     tmpl.name = (*iter).ReadText(2);
+    tmpl.extension = (*iter).ReadText(3);
     incoming.textSearchTemplates.push_back(tmpl);
   }
 }
@@ -200,6 +203,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
     cfg.oid = (*iter).ReadOid(0);
     cfg.schema = (*iter).ReadText(1);
     cfg.name = (*iter).ReadText(2);
+    cfg.extension = (*iter).ReadText(3);
     incoming.textSearchConfigurations.push_back(cfg);
   }
 }

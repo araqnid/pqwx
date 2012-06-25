@@ -239,8 +239,6 @@ private:
   DECLARE_SCRIPT_HANDLERS(Function, Drop);
   DECLARE_SCRIPT_HANDLERS(Function, Select);
 
-  void FindItemContext(const wxTreeItemId &item, ServerModel **server, DatabaseModel **database) const;
-
   // context menus
   wxMenu *serverMenu;
   wxMenu *databaseMenu;
@@ -296,6 +294,8 @@ private:
     ModelReference(const wxString& serverId, Oid regclass, Oid oid) : ObjectModelReference(serverId, regclass, oid) {}
     ModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : ObjectModelReference(database, regclass, oid, subid) {}
   };
+
+  ModelReference FindItemContext(const wxTreeItemId &item) const;
 
   std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > > symbolTables;
   std::map< ObjectModelReference, wxTreeItemId > databaseItems;

@@ -740,10 +740,7 @@ void ObjectBrowser::OnGetTooltip(wxTreeEvent &event) {
 }
 
 bool ObjectBrowser::IsServerSelected() const {
-  ServerModel *server;
-  DatabaseModel *database;
-  FindItemContext(GetSelection(), &server, &database);
-  return server != NULL;
+  return !FindItemContext(GetSelection()).GetServerId().empty();
 }
 
 void ObjectBrowser::DisconnectSelected() {
@@ -752,13 +749,11 @@ void ObjectBrowser::DisconnectSelected() {
     wxLogDebug(_T("selected item was not ok -- nothing is selected?"));
     return;
   }
-  ServerModel *server;
-  DatabaseModel *database;
-  FindItemContext(selected, &server, &database);
-  if (server != NULL) {
-    wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
-    Delete(FindServerItem(server->Identification()));
-    objectBrowserModel->RemoveServer(server->Identification());
+  ModelReference ref = FindItemContext(selected);
+  if (!ref.GetServerId().empty()) {
+    wxLogDebug(_T("Disconnect: %s (menubar)"), ref.GetServerId().c_str());
+    Delete(FindServerItem(ref.GetServerId()));
+    objectBrowserModel->RemoveServer(ref.GetServerId());
     UpdateSelectedDatabase();
   }
 }
@@ -930,20 +925,17 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
   }
 }
 
-void ObjectBrowser::FindItemContext(const wxTreeItemId &item, ServerModel **server, DatabaseModel **database) const
+ObjectBrowser::ModelReference ObjectBrowser::FindItemContext(const wxTreeItemId &item) const
 {
-  *database = NULL;
-  *server = NULL;
   for (wxTreeItemId cursor = item; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
     wxTreeItemData *data = GetItemData(cursor);
     if (data == NULL) continue;
     ModelReference *ref = dynamic_cast<ModelReference*>(data);
     if (ref == NULL) continue;
-    if (ref->GetOid() == InvalidOid)
-      *server = objectBrowserModel->FindServer(*ref);
-    else if (ref->GetObjectClass() == ObjectModelReference::PG_DATABASE)
-      *database = objectBrowserModel->FindDatabase(*ref);
+    return *ref;
   }
+
+  return ModelReference(wxEmptyString);
 }
 
 void ObjectBrowser::OnItemSelected(wxTreeEvent &event)
@@ -959,8 +951,6 @@ void ObjectBrowser::OnSetFocus(wxFocusEvent &event)
 
 void ObjectBrowser::UpdateSelectedDatabase() {
   wxTreeItemId selected = GetSelection();
-  DatabaseModel *database = NULL;
-  ServerModel *server = NULL;
 
   if (!selected.IsOk()) {
     wxCommandEvent event(PQWX_NoObjectSelected);
@@ -968,9 +958,9 @@ void ObjectBrowser::UpdateSelectedDatabase() {
     return;
   }
 
-  FindItemContext(selected, &server, &database);
+  ModelReference ref = FindItemContext(selected);
 
-  if (server == NULL) {
+  if (ref.GetServerId().empty()) {
     if (currentlySelected) {
       currentlySelected = false;
       selectedServer = NULL;
@@ -978,6 +968,13 @@ void ObjectBrowser::UpdateSelectedDatabase() {
     }
     return;
   }
+
+  ServerModel *server = objectBrowserModel->FindServer(ref.GetServerId());
+  DatabaseModel *database;
+  if (ref.GetObjectClass() == InvalidOid)
+    database = NULL;
+  else
+    database = objectBrowserModel->FindDatabase(ref.DatabaseRef());
 
   bool changed;
   if (!currentlySelected)

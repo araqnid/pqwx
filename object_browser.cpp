@@ -355,6 +355,7 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<con
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
       SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, *database));
+    databaseItems[*database] = databaseItem;
   }
 }
 
@@ -821,17 +822,9 @@ wxTreeItemId ObjectBrowser::FindServerItem(const wxString& serverId) const
 
 wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const
 {
-  wxTreeItemId serverItem = FindServerItem(database->server->Identification());
-  wxASSERT(serverItem.IsOk());
-  wxTreeItemIdValue cookie;
-  wxTreeItemId childItem = GetFirstChild(serverItem, cookie);
-  do {
-    wxASSERT(childItem.IsOk());
-    ModelReference *ref = static_cast<ModelReference*>(GetItemData(childItem));
-    if (ref->GetOid() == database->oid)
-      return childItem;
-    childItem = GetNextChild(serverItem, cookie);
-  } while (1);
+  std::map< ObjectModelReference, wxTreeItemId >::const_iterator itemPtr = databaseItems.find(*database);
+  wxASSERT(itemPtr != databaseItems.end());
+  return (*itemPtr).second;
 }
 
 wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database) const {

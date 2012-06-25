@@ -54,19 +54,18 @@ wxString ObjectModelReference::Identify() const
   return buf;
 }
 
-ServerModel *ObjectBrowserModel::FindServerById(const wxString &serverId) const
+ServerModel *ObjectBrowserModel::FindServerById(const wxString &serverId)
 {
-  for (std::list<ServerModel*>::const_iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *serverModel = *iter;
-    if (serverModel->Identification() == serverId) {
-      return serverModel;
+  for (std::list<ServerModel>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    if ((*iter).Identification() == serverId) {
+      return &(*iter);
     }
   }
 
   return NULL;
 }
 
-ObjectModel* ObjectBrowserModel::FindObject(const ObjectModelReference& ref) const
+ObjectModel* ObjectBrowserModel::FindObject(const ObjectModelReference& ref)
 {
   ServerModel *server = FindServerById(ref.GetServerId());
   if (ref.GetObjectClass() == InvalidOid)
@@ -77,20 +76,17 @@ ObjectModel* ObjectBrowserModel::FindObject(const ObjectModelReference& ref) con
 
 ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &server, DatabaseConnection *db)
 {
-  ServerModel *serverModel;
   if (db) {
-    serverModel = new ServerModel(server, db);
+    servers.push_back(ServerModel(server, db));
     if (db->IsConnected()) {
       SetupDatabaseConnection(db);
     }
   }
   else {
-    serverModel = new ServerModel(server);
+    servers.push_back(ServerModel(server));
   }
 
-  servers.push_back(serverModel);
-
-  return serverModel;
+  return &(servers.back());
 }
 
 void ObjectBrowserModel::SetupDatabaseConnection(DatabaseConnection *db)
@@ -102,9 +98,8 @@ void ObjectBrowserModel::Dispose()
 {
   wxLogDebug(_T("Disposing of ObjectBrowser- sending disconnection request to all server databases"));
   std::vector<DatabaseConnection*> disconnecting;
-  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *server = *iter;
-    server->BeginDisconnectAll(disconnecting);
+  for (std::list<ServerModel>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    (*iter).BeginDisconnectAll(disconnecting);
   }
   wxLogDebug(_T("Disposing of ObjectBrowser- waiting for %lu database connections to terminate"), disconnecting.size());
   for (std::vector<DatabaseConnection*>::const_iterator iter = disconnecting.begin(); iter != disconnecting.end(); iter++) {
@@ -113,28 +108,32 @@ void ObjectBrowserModel::Dispose()
     db->WaitUntilClosed();
   }
   wxLogDebug(_T("Disposing of ObjectBrowser- disposing of servers"));
-  for (std::list<ServerModel*>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    ServerModel *server = *iter;
-    server->Dispose();
+  for (std::list<ServerModel>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    (*iter).Dispose();
   }
   wxLogDebug(_T("Disposing of ObjectBrowser- clearing server list"));
   servers.clear();
 }
 
-void ObjectBrowserModel::RemoveServer(ServerModel *server)
+void ObjectBrowserModel::RemoveServer(const wxString& serverId)
 {
-  servers.remove(server);
-  server->Dispose(); // still does nasty synchronous disconnect for now
+  for (std::list<ServerModel>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
+    if ((*iter).Identification() == serverId) {
+      (*iter).Dispose(); // still does nasty synchronous disconnect for now
+      servers.erase(iter);
+      return;
+    }
+  }
 }
 
-DatabaseModel *ObjectBrowserModel::FindDatabase(const ServerConnection &server, const wxString &dbname) const
+DatabaseModel *ObjectBrowserModel::FindDatabase(const ServerConnection &server, const wxString &dbname)
 {
   ServerModel *serverModel = FindServer(server);
   if (serverModel == NULL) return NULL;
   return serverModel->FindDatabase(dbname);
 }
 
-DatabaseModel *ObjectBrowserModel::FindDatabase(const ObjectModelReference &ref) const
+DatabaseModel *ObjectBrowserModel::FindDatabase(const ObjectModelReference &ref)
 {
   ServerModel *serverModel = FindServer(ref);
   if (serverModel == NULL) return NULL;

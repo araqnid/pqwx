@@ -789,7 +789,7 @@ void ObjectBrowser::DisconnectSelected() {
   if (server != NULL) {
     wxLogDebug(_T("Disconnect: %s (menubar)"), server->Identification().c_str());
     Delete(FindServerItem(server->Identification()));
-    objectBrowserModel->RemoveServer(server);
+    objectBrowserModel->RemoveServer(server->Identification());
     UpdateSelectedDatabase();
   }
 }
@@ -1045,7 +1045,7 @@ void ObjectBrowser::UpdateSelectedDatabase() {
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
   wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->Identification().c_str());
-  objectBrowserModel->RemoveServer(contextMenuServer);
+  objectBrowserModel->RemoveServer(contextMenuServer->Identification());
   Delete(contextMenuItem);
 }
 

@@ -412,20 +412,20 @@ public:
   /**
    * Find an existing server matching some connection parameters.
    */
-  ServerModel *FindServer(const ServerConnection &server) const { return FindServerById(server.Identification()); }
+  ServerModel *FindServer(const ServerConnection &server) { return FindServerById(server.Identification()); }
   /**
    * Find an existing server by reference.
    */
-  ServerModel *FindServer(const ObjectModelReference &ref) const { return FindServerById(ref.GetServerId()); }
+  ServerModel *FindServer(const ObjectModelReference &ref) { return FindServerById(ref.GetServerId()); }
 
   /**
    * Find an existing database matching some connection parameters and database name.
    */
-  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname) const;
+  DatabaseModel *FindDatabase(const ServerConnection &server, const wxString &dbname);
   /**
    * Find an existing database by reference.
    */
-  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const;
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref);
   /**
    * Register a new server connection with the object browser.
    */
@@ -437,18 +437,18 @@ public:
   /**
    * Remove a server.
    */
-  void RemoveServer(ServerModel *server);
+  void RemoveServer(const wxString& serverId);
   void SetupDatabaseConnection(DatabaseConnection *db);
 
   /**
    * Find any object by reference.
    */
-  ObjectModel *FindObject(const ObjectModelReference &ref) const;
+  ObjectModel *FindObject(const ObjectModelReference &ref);
 
   /**
    * Find a particular relation.
    */
-  RelationModel *FindRelation(const ObjectModelReference &ref) const
+  RelationModel *FindRelation(const ObjectModelReference &ref)
   {
     wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_CLASS);
     ObjectModel *obj = FindObject(ref);
@@ -459,7 +459,7 @@ public:
   /**
    * Find a particular function.
    */
-  FunctionModel *FindFunction(const ObjectModelReference &ref) const
+  FunctionModel *FindFunction(const ObjectModelReference &ref)
   {
     wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_PROC);
     ObjectModel *obj = FindObject(ref);
@@ -468,8 +468,8 @@ public:
   }
 
 private:
-  ServerModel *FindServerById(const wxString&) const;
-  std::list<ServerModel*> servers;
+  ServerModel *FindServerById(const wxString&);
+  std::list<ServerModel> servers;
   DECLARE_EVENT_TABLE();
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);

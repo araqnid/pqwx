@@ -1086,6 +1086,20 @@ void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
   dialog->Show();
 }
 
+wxTreeItemId ObjectBrowser::LookupSymbolItem(const ObjectModelReference& database, Oid oid) const
+{
+  wxASSERT(database.GetObjectClass() == ObjectModelReference::PG_DATABASE);
+  std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > >::const_iterator tablePtr = symbolTables.find(database);
+  wxASSERT(tablePtr != symbolTables.end());
+  const std::map< Oid, wxTreeItemId >& symbolTable = (*tablePtr).second;
+
+  std::map< Oid, wxTreeItemId >::const_iterator itemPtr = symbolTable.find(oid);
+  if (itemPtr == symbolTable.end())
+    return wxTreeItemId();
+  else
+    return (*itemPtr).second;
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

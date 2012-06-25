@@ -19,20 +19,7 @@ public:
   ObjectModelReference(const wxString& serverId, Oid regclass, Oid oid) : serverId(serverId), database(InvalidOid), regclass(regclass), oid(oid), subid(0) {}
   ObjectModelReference(const ObjectModelReference& database, Oid regclass, Oid oid, int subid = 0) : serverId(database.serverId), database(database.oid), regclass(regclass), oid(oid), subid(subid) {}
 
-  wxString Identify() const
-  {
-    wxString buf;
-    buf << _T("Server#") << serverId;
-    if (database != InvalidOid) {
-      buf << _T("/") << database;
-      if (regclass != PG_DATABASE) {
-        buf << _T("/") << regclass << _T(":") << oid;
-        if (subid)
-          buf << _T(".") << subid;
-      }
-    }
-    return buf;
-  }
+  wxString Identify() const;
 
   wxString GetServerId() const { return serverId; }
   Oid GetDatabase() const { return database; }
@@ -284,43 +271,7 @@ public:
   /**
    * Divide the schema members up into user, system and extension members.
    */
-  Divisions DivideSchemaMembers() const {
-    std::vector<const SchemaMemberModel*> members;
-    for (std::vector<RelationModel>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-    for (std::vector<FunctionModel>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-    for (std::vector<TextSearchDictionaryModel>::const_iterator iter = textSearchDictionaries.begin(); iter != textSearchDictionaries.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-    for (std::vector<TextSearchParserModel>::const_iterator iter = textSearchParsers.begin(); iter != textSearchParsers.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-    for (std::vector<TextSearchTemplateModel>::const_iterator iter = textSearchTemplates.begin(); iter != textSearchTemplates.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-    for (std::vector<TextSearchConfigurationModel>::const_iterator iter = textSearchConfigurations.begin(); iter != textSearchConfigurations.end(); iter++) {
-      members.push_back(&(*iter));
-    }
-
-    sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
-  
-    Divisions result;
-
-    for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
-      const SchemaMemberModel *member = *iter;
-      if (!member->extension.IsEmpty())
-        result.extensionDivisions[member->extension].push_back(member);
-      else if (!member->IsUser())
-        result.systemDivision.push_back(member);
-      else
-        result.userDivision.push_back(member);
-    }
-
-    return result;
-  }
+  Divisions DivideSchemaMembers() const;
 };
 
 /**
@@ -361,52 +312,13 @@ public:
    * @param serverVersion_ Server version as an integer such as 90101
    * @param ssl SSL object (NULL if not SSL)
    */
-  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSL *ssl) {
-    serverVersionString = serverVersionString_;
-    serverVersion = serverVersion_;
-    if (ssl != NULL) {
-      sslCipher = wxString(SSL_get_cipher(ssl), wxConvUTF8);
-    }
-  }
-  void UpdateDatabases(const std::vector<DatabaseModel>& incoming)
-  {
-    databases.clear();
-    databases.reserve(incoming.size());
-    for (std::vector<DatabaseModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      databases.push_back(*iter);
-      databases.back().server = this;
-    }
-  }
-  void UpdateDatabase(const DatabaseModel& incoming)
-  {
-    for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-      if ((*iter).oid == incoming.oid) {
-        wxString dbname = (*iter).name;
-        *iter = incoming;
-        (*iter).server = this;
-        (*iter).name = dbname;
-        (*iter).loaded = true;
-        return;
-      }
-    }
-    wxASSERT(false);
-  }
-  void UpdateRoles(const std::vector<RoleModel>& incoming)
-  {
-    roles.clear();
-    roles.reserve(incoming.size());
-    for (std::vector<RoleModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      roles.push_back(*iter);
-    }
-  }
-  void UpdateTablespaces(const std::vector<TablespaceModel>& incoming)
-  {
-    tablespaces.clear();
-    tablespaces.reserve(incoming.size());
-    for (std::vector<TablespaceModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      tablespaces.push_back(*iter);
-    }
-  }
+  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSL *ssl);
+
+  void UpdateDatabases(const std::vector<DatabaseModel>& incoming);
+  void UpdateRoles(const std::vector<RoleModel>& incoming);
+  void UpdateTablespaces(const std::vector<TablespaceModel>& incoming);
+
+  void UpdateDatabase(const DatabaseModel& incoming);
 
   /**
    * Close all connections associated with this server.

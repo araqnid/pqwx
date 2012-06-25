@@ -96,7 +96,6 @@ public:
  */
 class ColumnModel : public ObjectModel {
 public:
-  RelationModel *relation;
   wxString type;
   bool nullable;
   bool hasDefault;
@@ -114,7 +113,6 @@ public:
     int column;
     wxString expression;
   };
-  RelationModel *relation;
   Oid oid;
   bool primaryKey;
   bool unique;
@@ -129,7 +127,6 @@ public:
  */
 class TriggerModel : public ObjectModel {
 public:
-  RelationModel *relation;
   Oid oid;
 };
 
@@ -138,7 +135,6 @@ public:
  */
 class CheckConstraintModel : public ObjectModel {
 public:
-  RelationModel *relation;
   wxString expression;
   Oid oid;
 };

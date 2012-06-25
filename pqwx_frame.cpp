@@ -90,6 +90,12 @@ PqwxFrame::PqwxFrame(const wxString& title)
   mainSplitter->SetSashPosition(GetSize().GetWidth()/4);
 }
 
+PqwxFrame::~PqwxFrame()
+{
+  objectBrowserModel->Dispose();
+  PopEventHandler(true);
+}
+
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
   Close(false);

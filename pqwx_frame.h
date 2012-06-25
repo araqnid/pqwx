@@ -22,10 +22,7 @@ public:
    * Create frame, specifying initial title.
    */
   PqwxFrame(const wxString& title);
-  ~PqwxFrame()
-  {
-    objectBrowserModel->Dispose();
-  }
+  virtual ~PqwxFrame();
 
   /**
    * @return object browser in this frame

@@ -219,7 +219,7 @@ public:
  */
 class DatabaseModel : public ObjectModel {
 public:
-  DatabaseModel() : catalogueIndex(NULL){}
+  DatabaseModel() : loaded(false), server(NULL), catalogueIndex(NULL) {}
   virtual ~DatabaseModel() {
     if (catalogueIndex != NULL)
       delete catalogueIndex;

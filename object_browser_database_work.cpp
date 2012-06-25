@@ -125,16 +125,16 @@ void LoadDatabaseSchemaWork::operator()() {
 void LoadDatabaseSchemaWork::LoadRelations() {
   QueryResults relationRows = Query(_T("Relations")).List();
   for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
-    RelationModel *relation = new RelationModel();
-    relation->schema = (*iter).ReadText(1);
+    RelationModel relation;
+    relation.schema = (*iter).ReadText(1);
     if (!(*iter)[0].IsEmpty()) {
-      relation->oid = (*iter).ReadOid(0);
-      relation->name = (*iter).ReadText(2);
+      relation.oid = (*iter).ReadOid(0);
+      relation.name = (*iter).ReadText(2);
       wxString relkind((*iter).ReadText(3));
-      relation->extension = (*iter).ReadText(4);
-      relation->unlogged = (*iter).ReadBool(5);
+      relation.extension = (*iter).ReadText(4);
+      relation.unlogged = (*iter).ReadBool(5);
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
-      relation->type = relationTypeMap.find(relkind)->second;
+      relation.type = relationTypeMap.find(relkind)->second;
     }
     incoming.relations.push_back(relation);
   }
@@ -143,15 +143,15 @@ void LoadDatabaseSchemaWork::LoadRelations() {
 void LoadDatabaseSchemaWork::LoadFunctions() {
   QueryResults functionRows = Query(_T("Functions")).List();
   for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
-    FunctionModel *func = new FunctionModel();
-    func->oid = (*iter).ReadOid(0);
-    func->schema = (*iter).ReadText(1);
-    func->name = (*iter).ReadText(2);
-    func->arguments = (*iter).ReadText(3);
+    FunctionModel func;
+    func.oid = (*iter).ReadOid(0);
+    func.schema = (*iter).ReadText(1);
+    func.name = (*iter).ReadText(2);
+    func.arguments = (*iter).ReadText(3);
     wxString type((*iter).ReadText(4));
-    func->extension = (*iter).ReadText(5);
+    func.extension = (*iter).ReadText(5);
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
-    func->type = functionTypeMap.find(type)->second;
+    func.type = functionTypeMap.find(type)->second;
     incoming.functions.push_back(func);
   }
 }
@@ -160,10 +160,10 @@ void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
 {
   QueryResults rows = Query(_T("Text search dictionaries")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchDictionaryModel *dict = new TextSearchDictionaryModel();
-    dict->oid = (*iter).ReadOid(0);
-    dict->schema = (*iter).ReadText(1);
-    dict->name = (*iter).ReadText(2);
+    TextSearchDictionaryModel dict;
+    dict.oid = (*iter).ReadOid(0);
+    dict.schema = (*iter).ReadText(1);
+    dict.name = (*iter).ReadText(2);
     incoming.textSearchDictionaries.push_back(dict);
   }
 }
@@ -172,10 +172,10 @@ void LoadDatabaseSchemaWork::LoadTextSearchParsers()
 {
   QueryResults rows = Query(_T("Text search parsers")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchParserModel *prs = new TextSearchParserModel();
-    prs->oid = (*iter).ReadOid(0);
-    prs->schema = (*iter).ReadText(1);
-    prs->name = (*iter).ReadText(2);
+    TextSearchParserModel prs;
+    prs.oid = (*iter).ReadOid(0);
+    prs.schema = (*iter).ReadText(1);
+    prs.name = (*iter).ReadText(2);
     incoming.textSearchParsers.push_back(prs);
   }
 }
@@ -184,10 +184,10 @@ void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
 {
   QueryResults rows = Query(_T("Text search templates")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchTemplateModel *tmpl = new TextSearchTemplateModel();
-    tmpl->oid = (*iter).ReadOid(0);
-    tmpl->schema = (*iter).ReadText(1);
-    tmpl->name = (*iter).ReadText(2);
+    TextSearchTemplateModel tmpl;
+    tmpl.oid = (*iter).ReadOid(0);
+    tmpl.schema = (*iter).ReadText(1);
+    tmpl.name = (*iter).ReadText(2);
     incoming.textSearchTemplates.push_back(tmpl);
   }
 }
@@ -196,10 +196,10 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
 {
   QueryResults rows = Query(_T("Text search configurations")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchConfigurationModel *cfg = new TextSearchConfigurationModel();
-    cfg->oid = (*iter).ReadOid(0);
-    cfg->schema = (*iter).ReadText(1);
-    cfg->name = (*iter).ReadText(2);
+    TextSearchConfigurationModel cfg;
+    cfg.oid = (*iter).ReadOid(0);
+    cfg.schema = (*iter).ReadText(1);
+    cfg.name = (*iter).ReadText(2);
     incoming.textSearchConfigurations.push_back(cfg);
   }
 }
@@ -238,17 +238,17 @@ void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
 void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
 {
   int count = 0;
-  for (std::vector<RelationModel*>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
-    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+  for (std::vector<RelationModel>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
+    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
     if (ptr != descriptions.end()) {
-      (*iter)->description = (*ptr).second;
+      (*iter).description = (*ptr).second;
       ++count;
     }
   }
-  for (std::vector<FunctionModel*>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
-    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter)->oid);
+  for (std::vector<FunctionModel>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
+    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
     if (ptr != descriptions.end()) {
-      (*iter)->description = (*ptr).second;
+      (*iter).description = (*ptr).second;
       ++count;
     }
   }

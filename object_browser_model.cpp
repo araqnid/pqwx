@@ -184,16 +184,16 @@ ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref)
 }
 
 template <typename T>
-ObjectModel *SearchContents(std::vector<T*> const& container, Oid key)
+ObjectModel *SearchContents(std::vector<T>& container, Oid key)
 {
-  for (typename std::vector<T*>::const_iterator iter = container.begin(); iter != container.end(); iter++) {
-    if ((*iter)->oid == key)
-      return *iter;
+  for (typename std::vector<T>::iterator iter = container.begin(); iter != container.end(); iter++) {
+    if ((*iter).oid == key)
+      return &(*iter);
   }
   return NULL;
 }
 
-ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref) const
+ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)
 {
   wxLogDebug(_T("Searching database %s:%s for %s"), server->Identification().c_str(), name.c_str(), ref.Identify().c_str());
 

@@ -153,7 +153,7 @@ public:
   static inline bool IsSystemSchema(wxString schema) {
     return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
   }
-  static bool CollateByQualifiedName(SchemaMemberModel *r1, SchemaMemberModel *r2) {
+  static bool CollateByQualifiedName(const SchemaMemberModel *r1, const SchemaMemberModel *r2) {
     if (r1->schema < r2->schema) return true;
     if (r1->schema == r2->schema) {
       return r1->name < r2->name;
@@ -251,13 +251,13 @@ public:
   bool IsSystem() const {
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
-  ObjectModel *FindObject(const ObjectModelReference& ref) const;
-  std::vector<RelationModel*> relations;
-  std::vector<FunctionModel*> functions;
-  std::vector<TextSearchDictionaryModel*> textSearchDictionaries;
-  std::vector<TextSearchParserModel*> textSearchParsers;
-  std::vector<TextSearchTemplateModel*> textSearchTemplates;
-  std::vector<TextSearchConfigurationModel*> textSearchConfigurations;
+  ObjectModel *FindObject(const ObjectModelReference& ref);
+  std::vector<RelationModel> relations;
+  std::vector<FunctionModel> functions;
+  std::vector<TextSearchDictionaryModel> textSearchDictionaries;
+  std::vector<TextSearchParserModel> textSearchParsers;
+  std::vector<TextSearchTemplateModel> textSearchTemplates;
+  std::vector<TextSearchConfigurationModel> textSearchConfigurations;
 
   /**
    * @return A string identifying this database, such as "[local] postgres"
@@ -285,32 +285,32 @@ public:
    * Divide the schema members up into user, system and extension members.
    */
   Divisions DivideSchemaMembers() const {
-    std::vector<SchemaMemberModel*> members;
-    for (std::vector<RelationModel*>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
-      members.push_back(*iter);
+    std::vector<const SchemaMemberModel*> members;
+    for (std::vector<RelationModel>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
+      members.push_back(&(*iter));
     }
-    for (std::vector<FunctionModel*>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
-      members.push_back(*iter);
+    for (std::vector<FunctionModel>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
+      members.push_back(&(*iter));
     }
-    for (std::vector<TextSearchDictionaryModel*>::const_iterator iter = textSearchDictionaries.begin(); iter != textSearchDictionaries.end(); iter++) {
-      members.push_back(*iter);
+    for (std::vector<TextSearchDictionaryModel>::const_iterator iter = textSearchDictionaries.begin(); iter != textSearchDictionaries.end(); iter++) {
+      members.push_back(&(*iter));
     }
-    for (std::vector<TextSearchParserModel*>::const_iterator iter = textSearchParsers.begin(); iter != textSearchParsers.end(); iter++) {
-      members.push_back(*iter);
+    for (std::vector<TextSearchParserModel>::const_iterator iter = textSearchParsers.begin(); iter != textSearchParsers.end(); iter++) {
+      members.push_back(&(*iter));
     }
-    for (std::vector<TextSearchTemplateModel*>::const_iterator iter = textSearchTemplates.begin(); iter != textSearchTemplates.end(); iter++) {
-      members.push_back(*iter);
+    for (std::vector<TextSearchTemplateModel>::const_iterator iter = textSearchTemplates.begin(); iter != textSearchTemplates.end(); iter++) {
+      members.push_back(&(*iter));
     }
-    for (std::vector<TextSearchConfigurationModel*>::const_iterator iter = textSearchConfigurations.begin(); iter != textSearchConfigurations.end(); iter++) {
-      members.push_back(*iter);
+    for (std::vector<TextSearchConfigurationModel>::const_iterator iter = textSearchConfigurations.begin(); iter != textSearchConfigurations.end(); iter++) {
+      members.push_back(&(*iter));
     }
 
     sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
   
     Divisions result;
 
-    for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (!member->extension.IsEmpty())
         result.extensionDivisions[member->extension].push_back(member);
       else if (!member->IsUser())

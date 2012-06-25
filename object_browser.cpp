@@ -247,7 +247,7 @@ void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork 
 void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
-  wxLogDebug(_T("%p: work finished"), work);
+  wxLogDebug(_T("%p: work finished (received by view)"), work);
   work->UpdateModel(objectBrowserModel);
   work->UpdateView(this);
 
@@ -258,7 +258,7 @@ void ObjectBrowser::OnWorkCrashed(wxCommandEvent &e)
 {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
-  wxLogDebug(_T("%p: work crashed"), work);
+  wxLogDebug(_T("%p: work crashed (received by view)"), work);
   if (!work->GetCrashMessage().empty()) {
     wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());
   }

@@ -10,6 +10,35 @@
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
 
+BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
+  PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowserModel::OnWorkFinished)
+  PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowserModel::OnWorkCrashed)
+END_EVENT_TABLE()
+
+void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
+  ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
+
+  wxLogDebug(_T("%p: work finished (received by model)"), work);
+  work->UpdateModel(this);
+
+  delete work;
+}
+
+void ObjectBrowserModel::OnWorkCrashed(wxCommandEvent &e)
+{
+  ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
+
+  wxLogDebug(_T("%p: work crashed (received by model)"), work);
+  if (!work->GetCrashMessage().empty()) {
+    wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());
+  }
+  else {
+    wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
+  }
+
+  delete work;
+}
+
 wxString ObjectModelReference::Identify() const
 {
   wxString buf;
@@ -66,7 +95,7 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
 
 void ObjectBrowserModel::SetupDatabaseConnection(DatabaseConnection *db)
 {
-  db->AddWork(new ObjectBrowserDatabaseWork(wxTheApp, new SetupDatabaseConnectionWork()));
+  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork()));
 }
 
 void ObjectBrowserModel::Dispose()

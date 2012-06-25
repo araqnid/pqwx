@@ -77,6 +77,8 @@ PqwxFrame::PqwxFrame(const wxString& title)
   wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
 
   objectBrowserModel = new ObjectBrowserModel();
+  PushEventHandler(objectBrowserModel);
+
   objectBrowser = new ObjectBrowser(objectBrowserModel, mainSplitter, Pqwx_ObjectBrowser);
   documentsBook = new DocumentsNotebook(mainSplitter, Pqwx_DocumentsNotebook);
   mainSplitter->SplitVertically(objectBrowser, documentsBook);

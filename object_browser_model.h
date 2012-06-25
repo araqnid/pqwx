@@ -470,6 +470,9 @@ public:
 private:
   ServerModel *FindServerById(const wxString&) const;
   std::list<ServerModel*> servers;
+  DECLARE_EVENT_TABLE();
+  void OnWorkFinished(wxCommandEvent&);
+  void OnWorkCrashed(wxCommandEvent&);
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

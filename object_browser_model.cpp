@@ -155,25 +155,25 @@ void ServerModel::Dispose()
   connections.clear();
 }
 
-DatabaseModel *ServerModel::FindDatabase(const wxString &dbname) const
+DatabaseModel *ServerModel::FindDatabase(const wxString &dbname)
 {
-  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter)->name == dbname)
-      return *iter;
+  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    if ((*iter).name == dbname)
+      return &(*iter);
   }
   return NULL;
 }
 
-DatabaseModel *ServerModel::FindDatabaseByOid(Oid oid) const
+DatabaseModel *ServerModel::FindDatabaseByOid(Oid oid)
 {
-  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter)->oid == oid)
-      return *iter;
+  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    if ((*iter).oid == oid)
+      return &(*iter);
   }
   return NULL;
 }
 
-ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref) const
+ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref)
 {
   DatabaseModel *database = FindDatabaseByOid(ref.GetDatabase());
   if (database == NULL) return NULL;

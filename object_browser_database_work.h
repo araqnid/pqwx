@@ -230,12 +230,13 @@ public:
    * @param databaseModel Database model to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseSchemaWork(DatabaseModel *databaseModel, bool expandAfter) : databaseModel(databaseModel), expandAfter(expandAfter) {
+  LoadDatabaseSchemaWork(const ObjectModelReference& databaseRef, bool expandAfter) : databaseRef(databaseRef), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
-  DatabaseModel *databaseModel;
+  const ObjectModelReference databaseRef;
   const bool expandAfter;
+  DatabaseModel incoming;
 protected:
   void operator()();
   void LoadRelations();
@@ -313,13 +314,12 @@ public:
   /**
    * @param relationModel Relation model to populate
    */
-  LoadRelationWork(const RelationModel *relationModel) : database(*relationModel->database), relationType(relationModel->type), oid(relationModel->oid) {
+  LoadRelationWork(RelationModel::Type relationType, const ObjectModelReference& relationRef) : relationType(relationType), relationRef(relationRef) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:
-  const ObjectModelReference database;
   const RelationModel::Type relationType;
-  const Oid oid;
+  const ObjectModelReference relationRef;
   RelationModel *detail;
 private:
   void operator()();

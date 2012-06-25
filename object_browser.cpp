@@ -91,23 +91,23 @@ void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { 
 IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase, contextMenuDatabase->oid)
 IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuDatabase, contextMenuDatabase->oid)
 IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuDatabase, contextMenuDatabase->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRelation->database, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuFunction->database, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuFunction->database, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuFunction->database, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuFunction->database, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuDatabase, contextMenuRelation->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuDatabase, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuDatabase, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuDatabase, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuDatabase, contextMenuFunction->oid)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
@@ -118,40 +118,42 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed)
 
 class DatabaseLoader : public LazyLoader {
 public:
-  DatabaseLoader(ObjectBrowser *ob, DatabaseModel *db) : db(db), ob(ob) {}
+  DatabaseLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
 
   bool load(wxTreeItemId parent) {
+    DatabaseModel *db = ob->Model()->FindDatabase(databaseRef);
     if (!db->loaded) {
-      ob->LoadDatabase(parent, db);
+      ob->LoadDatabase(databaseRef);
       return true;
     }
     return false;
   }
   
 private:
-  DatabaseModel *db;
   ObjectBrowser *ob;
+  const ObjectModelReference databaseRef;
 };
 
 class RelationLoader : public LazyLoader {
 public:
-  RelationLoader(ObjectBrowser *ob, RelationModel *rel) : rel(rel), ob(ob) {}
+  RelationLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, Oid oid) : ob(ob), relationRef(databaseRef, ObjectModelReference::PG_CLASS, oid) {}
 
   bool load(wxTreeItemId parent) {
-    ob->LoadRelation(parent, rel);
+    ob->LoadRelation(relationRef);
     return true;
   }
   
 private:
-  RelationModel *rel;
   ObjectBrowser *ob;
+  const ObjectModelReference relationRef;
 };
 
 class SystemSchemasLoader : public LazyLoader {
 public:
-  SystemSchemasLoader(ObjectBrowser *ob, DatabaseModel *db, std::vector<SchemaMemberModel*> division) : ob(ob), db(db), division(division) {}
+  SystemSchemasLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, std::vector<const SchemaMemberModel*> division) : ob(ob), databaseRef(databaseRef), division(division) {}
 
   bool load(wxTreeItemId parent) {
+    DatabaseModel *db = ob->Model()->FindDatabase(databaseRef);
     wxWindowUpdateLocker noUpdates(ob);
     ob->AppendDivision(db, division, parent);
     return false;
@@ -159,8 +161,8 @@ public:
 
 private:
   ObjectBrowser *ob;
-  DatabaseModel *db;
-  std::vector<SchemaMemberModel*> division;
+  const ObjectModelReference databaseRef;
+  std::vector<const SchemaMemberModel*> division;
 };
 
 ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel) {
@@ -308,15 +310,17 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
   }
 }
 
-void ObjectBrowser::LoadDatabase(wxTreeItemId databaseItem, DatabaseModel *database, IndexSchemaCompletionCallback *indexCompletion) {
-  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(database, indexCompletion == NULL));
+void ObjectBrowser::LoadDatabase(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) {
+  DatabaseModel *database = objectBrowserModel->FindDatabase(databaseRef);
+  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(databaseRef, indexCompletion == NULL));
   SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database, indexCompletion));
   SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
 }
 
-void ObjectBrowser::LoadRelation(wxTreeItemId relationItem, RelationModel *relation) {
-  wxLogDebug(_T("Load data for relation %s.%s"), relation->schema.c_str(), relation->name.c_str());
-  SubmitDatabaseWork(relation->database, new LoadRelationWork(relation));
+void ObjectBrowser::LoadRelation(const ObjectModelReference& relationRef) {
+  DatabaseModel *database = objectBrowserModel->FindDatabase(relationRef.DatabaseRef());
+  RelationModel *relation = objectBrowserModel->FindRelation(relationRef);
+  SubmitDatabaseWork(database, new LoadRelationWork(relation->type, relationRef));
 }
 
 void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
@@ -344,20 +348,20 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
 }
 
 void ObjectBrowser::FillInDatabases(const ServerModel *serverModel, wxTreeItemId serverItem) {
-  const std::vector<DatabaseModel*> &databases = serverModel->GetDatabases();
-  std::vector<DatabaseModel*> systemDatabases;
-  std::vector<DatabaseModel*> templateDatabases;
-  std::vector<DatabaseModel*> userDatabases;
-  for (std::vector<DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    DatabaseModel *database = *iter;
-    if (database->IsSystem()) {
-      systemDatabases.push_back(database);
+  const std::vector<DatabaseModel> &databases = serverModel->GetDatabases();
+  std::vector<const DatabaseModel*> systemDatabases;
+  std::vector<const DatabaseModel*> templateDatabases;
+  std::vector<const DatabaseModel*> userDatabases;
+  for (std::vector<DatabaseModel>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    const DatabaseModel& database = *iter;
+    if (database.IsSystem()) {
+      systemDatabases.push_back(&database);
     }
-    else if (database->isTemplate) {
-      templateDatabases.push_back(database);
+    else if (database.isTemplate) {
+      templateDatabases.push_back(&database);
     }
     else {
-      userDatabases.push_back(database);
+      userDatabases.push_back(&database);
     }
   }
   if (!userDatabases.empty()) {
@@ -375,14 +379,14 @@ void ObjectBrowser::FillInDatabases(const ServerModel *serverModel, wxTreeItemId
   }
 }
 
-void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<DatabaseModel*> &databases) {
-  for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    DatabaseModel *database = *iter;
+void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<const DatabaseModel*> &databases) {
+  for (std::vector<const DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    const DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
     SetItemData(databaseItem, new ModelReference(database->server->Identification(), database->oid));
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
-      SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, database));
+      SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, *database));
   }
 }
 
@@ -440,7 +444,7 @@ void ObjectBrowser::FillInTablespaces(const ServerModel *serverModel, wxTreeItem
   }
 }
 
-void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members) {
+void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
     wxTreeItemId emptySchemaItem = AppendItem(parent, schemaName + _T("."));
     SetItemImage(emptySchemaItem, img_folder);
@@ -458,16 +462,16 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
   int textSearchParsersCount = 0;
   int textSearchTemplatesCount = 0;
   int textSearchConfigurationsCount = 0;
-  for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-    SchemaMemberModel *member = *iter;
+  for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+    const SchemaMemberModel *member = *iter;
     if (member->name.IsEmpty()) continue;
-    RelationModel *relation = dynamic_cast<RelationModel*>(member);
+    const RelationModel *relation = dynamic_cast<const RelationModel*>(member);
     if (relation == NULL) {
-      if ((dynamic_cast<FunctionModel*>(member)) != NULL) ++functionsCount;
-      else if ((dynamic_cast<TextSearchDictionaryModel*>(member)) != NULL) ++textSearchDictionariesCount;
-      else if ((dynamic_cast<TextSearchParserModel*>(member)) != NULL) ++textSearchParsersCount;
-      else if ((dynamic_cast<TextSearchTemplateModel*>(member)) != NULL) ++textSearchTemplatesCount;
-      else if ((dynamic_cast<TextSearchConfigurationModel*>(member)) != NULL) ++textSearchConfigurationsCount;
+      if ((dynamic_cast<const FunctionModel*>(member)) != NULL) ++functionsCount;
+      else if ((dynamic_cast<const TextSearchDictionaryModel*>(member)) != NULL) ++textSearchDictionariesCount;
+      else if ((dynamic_cast<const TextSearchParserModel*>(member)) != NULL) ++textSearchParsersCount;
+      else if ((dynamic_cast<const TextSearchTemplateModel*>(member)) != NULL) ++textSearchTemplatesCount;
+      else if ((dynamic_cast<const TextSearchConfigurationModel*>(member)) != NULL) ++textSearchConfigurationsCount;
       continue;
     }
     ++relationsCount;
@@ -475,7 +479,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
     SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relation->oid));
     RegisterSymbolItem(databaseRef, relation->oid, memberItem);
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
-      SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, relation));
+      SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, databaseRef, relation->oid));
     switch (relation->type) {
     case RelationModel::TABLE:
       if (relation->unlogged)
@@ -504,10 +508,10 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       functionsItem = parent;
     }
 
-    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (member->name.IsEmpty()) continue;
-      FunctionModel *function = dynamic_cast<FunctionModel*>(member);
+      const FunctionModel *function = dynamic_cast<const FunctionModel*>(member);
       if (function == NULL) continue;
       wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_PROC, function->oid));
@@ -541,10 +545,10 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       dictionariesItem = parent;
     }
 
-    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (member->name.empty()) continue;
-      TextSearchDictionaryModel *dict = dynamic_cast<TextSearchDictionaryModel*>(member);
+      const TextSearchDictionaryModel *dict = dynamic_cast<const TextSearchDictionaryModel*>(member);
       if (dict == NULL) continue;
       wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->name : dict->schema + _T(".") + dict->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_DICT, dict->oid));
@@ -563,10 +567,10 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       parsersItem = parent;
     }
 
-    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (member->name.empty()) continue;
-      TextSearchParserModel *prs = dynamic_cast<TextSearchParserModel*>(member);
+      const TextSearchParserModel *prs = dynamic_cast<const TextSearchParserModel*>(member);
       if (prs == NULL) continue;
       wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->name : prs->schema + _T(".") + prs->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_PARSER, prs->oid));
@@ -585,10 +589,10 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       templatesItem = parent;
     }
 
-    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (member->name.empty()) continue;
-      TextSearchTemplateModel *tmpl = dynamic_cast<TextSearchTemplateModel*>(member);
+      const TextSearchTemplateModel *tmpl = dynamic_cast<const TextSearchTemplateModel*>(member);
       if (tmpl == NULL) continue;
       wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->name : tmpl->schema + _T(".") + tmpl->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_TEMPLATE, tmpl->oid));
@@ -607,10 +611,10 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       configurationsItem = parent;
     }
 
-    for (std::vector<SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
-      SchemaMemberModel *member = *iter;
+    for (std::vector<const SchemaMemberModel*>::const_iterator iter = members.begin(); iter != members.end(); iter++) {
+      const SchemaMemberModel *member = *iter;
       if (member->name.empty()) continue;
-      TextSearchConfigurationModel *cfg = dynamic_cast<TextSearchConfigurationModel*>(member);
+      const TextSearchConfigurationModel *cfg = dynamic_cast<const TextSearchConfigurationModel*>(member);
       if (cfg == NULL) continue;
       wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->name : cfg->schema + _T(".") + cfg->name);
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_CONFIG, cfg->oid));
@@ -620,24 +624,25 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
   }
 }
 
-void ObjectBrowser::AppendDivision(DatabaseModel *databaseModel, std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem) {
-  std::map<wxString, std::vector<SchemaMemberModel*> > schemas;
+void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem) {
+  std::map<wxString, std::vector<const SchemaMemberModel*> > schemas;
 
-  for (std::vector<SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
-    SchemaMemberModel *member = *iter;
+  for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
+    const SchemaMemberModel *member = *iter;
     schemas[member->schema].push_back(member);
-    member->database = databaseModel;
   }
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
-  for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
+  for (std::map<wxString, std::vector<const SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
     AppendSchemaMembers(*databaseModel, parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
   }
 }
 
-void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeItemId databaseItem) {
+void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool expandAfter)
+{
+  const DatabaseModel *databaseModel = objectBrowserModel->FindDatabase(databaseRef);
+  wxTreeItemId databaseItem = FindDatabaseItem(databaseModel);
   wxWindowUpdateLocker noUpdates(this);
-  databaseModel->loaded = true;
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
 
@@ -646,7 +651,7 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
     SetItemImage(extensionsItem, img_folder);
-    for (std::map<wxString, std::vector<SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
+    for (std::map<wxString, std::vector<const SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
       wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
       SetItemImage(extensionItem, img_folder);
       AppendDivision(databaseModel, iter->second, extensionItem);
@@ -656,20 +661,21 @@ void ObjectBrowser::FillInDatabaseSchema(DatabaseModel *databaseModel, wxTreeIte
   wxTreeItemId systemDivisionItem = AppendItem(databaseItem, _("System schemas"));
   SetItemImage(systemDivisionItem, img_folder);
   wxTreeItemId systemDivisionLoaderItem = AppendItem(systemDivisionItem, _T("Loading..."));
-  SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, databaseModel, divisions.systemDivision));
+  SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, *databaseModel, divisions.systemDivision));
+  if (expandAfter) Expand(databaseItem);
+  SetItemText(databaseItem, databaseModel->name); // remove loading message
 }
 
-void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, RelationModel *incoming, wxTreeItemId relationItem) {
-  wxWindowUpdateLocker noUpdates(this);
-  ModelReference *ref = static_cast<ModelReference*>(GetItemData(relationItem));
-  RelationModel *relationModel = objectBrowserModel->FindRelation(*ref);
+void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
+{
+  const RelationModel *relationModel = objectBrowserModel->FindRelation(relationRef);
   wxASSERT(relationModel != NULL);
+  wxTreeItemId relationItem = FindRelationItem(relationRef);
+  wxWindowUpdateLocker noUpdates(this);
 
-  relationModel->columns = incoming->columns;
   std::map<int,wxTreeItemId> columnItems;
-  for (std::vector<ColumnModel*>::iterator iter = incoming->columns.begin(); iter != incoming->columns.end(); iter++) {
-    ColumnModel *column = *iter;
-    column->relation = relationModel;
+  for (std::vector<ColumnModel*>::const_iterator iter = relationModel->columns.begin(); iter != relationModel->columns.end(); iter++) {
+    const ColumnModel *column = *iter;
     wxString itemText = column->name + _T(" (") + column->type;
 
     if (relationModel->type == RelationModel::TABLE) {
@@ -684,28 +690,26 @@ void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, Rela
     itemText += _T(")");
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
-    SetItemData(columnItem, new ModelReference(databaseRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column->attnum));
+    SetItemData(columnItem, new ModelReference(relationRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column->attnum));
     SetItemImage(columnItem, img_column);
     columnItems[column->attnum] = columnItem;
 
-    for (std::vector<RelationModel*>::iterator seqIter = incoming->sequences.begin(); seqIter != incoming->sequences.end(); seqIter++) {
+    for (std::vector<RelationModel*>::const_iterator seqIter = relationModel->sequences.begin(); seqIter != relationModel->sequences.end(); seqIter++) {
       RelationModel *sequence = *seqIter;
       if (sequence->owningColumn != column->attnum) continue;
 
       wxTreeItemId sequenceItem = AppendItem(columnItem, sequence->schema + _T(".") + sequence->name);
-      SetItemData(sequenceItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relationModel->oid));
+      SetItemData(sequenceItem, new ModelReference(relationRef, ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
-      sequence->database = relationModel->database;
     }
   }
 
-  relationModel->indices = incoming->indices;
-  if (!incoming->indices.empty()) {
+  if (!relationModel->indices.empty()) {
     wxTreeItemId indicesItem = AppendItem(relationItem, _("Indices"));
     SetItemImage(indicesItem, img_folder);
-    for (std::vector<IndexModel*>::iterator iter = incoming->indices.begin(); iter != incoming->indices.end(); iter++) {
+    for (std::vector<IndexModel*>::const_iterator iter = relationModel->indices.begin(); iter != relationModel->indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter)->name);
-      SetItemData(indexItem, new ModelReference(databaseRef, ObjectModelReference::PG_INDEX, (*iter)->oid));
+      SetItemData(indexItem, new ModelReference(relationRef, ObjectModelReference::PG_INDEX, (*iter)->oid));
       if ((*iter)->primaryKey)
         SetItemImage(indexItem, img_index_pkey);
       else if ((*iter)->unique || (*iter)->exclusion)
@@ -728,24 +732,32 @@ void ObjectBrowser::FillInRelation(const ObjectModelReference& databaseRef, Rela
     }
   }
 
-  relationModel->checkConstraints = incoming->checkConstraints;
-  if (!incoming->checkConstraints.empty()) {
+  if (!relationModel->checkConstraints.empty()) {
     wxTreeItemId constraintsItem = AppendItem(relationItem, _("Constraints"));
     SetItemImage(constraintsItem, img_folder);
-    for (std::vector<CheckConstraintModel*>::iterator iter = incoming->checkConstraints.begin(); iter != incoming->checkConstraints.end(); iter++) {
+    for (std::vector<CheckConstraintModel*>::const_iterator iter = relationModel->checkConstraints.begin(); iter != relationModel->checkConstraints.end(); iter++) {
       wxTreeItemId constraintItem = AppendItem(constraintsItem, (*iter)->name);
-      SetItemData(constraintItem, new ModelReference(databaseRef, ObjectModelReference::PG_CONSTRAINT, (*iter)->oid));
+      SetItemData(constraintItem, new ModelReference(relationRef, ObjectModelReference::PG_CONSTRAINT, (*iter)->oid));
     }
   }
 
-  relationModel->triggers = incoming->triggers;
-  if (!incoming->triggers.empty()) {
+  if (!relationModel->triggers.empty()) {
     wxTreeItemId triggersItem = AppendItem(relationItem, _("Triggers"));
     SetItemImage(triggersItem, img_folder);
-    for (std::vector<TriggerModel*>::iterator iter = incoming->triggers.begin(); iter != incoming->triggers.end(); iter++) {
+    for (std::vector<TriggerModel*>::const_iterator iter = relationModel->triggers.begin(); iter != relationModel->triggers.end(); iter++) {
       wxTreeItemId triggerItem = AppendItem(triggersItem, (*iter)->name);
-      SetItemData(triggerItem, new ModelReference(databaseRef, ObjectModelReference::PG_TRIGGER, (*iter)->oid));
+      SetItemData(triggerItem, new ModelReference(relationRef, ObjectModelReference::PG_TRIGGER, (*iter)->oid));
     }
+  }
+
+
+  Expand(relationItem);
+
+  // remove 'loading...' tag
+  wxString itemText = GetItemText(relationItem);
+  int space = itemText.Find(_T(' '));
+  if (space != wxNOT_FOUND) {
+    SetItemText(relationItem, itemText.Left(space));
   }
 }
 
@@ -807,7 +819,7 @@ void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &d
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
-    LoadDatabase(FindDatabaseItem(database), database, new OpenObjectFinderOnIndexSchemaCompletion());
+    LoadDatabase(*database, new OpenObjectFinderOnIndexSchemaCompletion());
     return;
   }
 
@@ -876,6 +888,13 @@ wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& databas
   return item;
 }
 
+wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& relationRef) const
+{
+  wxTreeItemId item = LookupSymbolItem(relationRef.DatabaseRef(), relationRef.GetOid());
+  wxASSERT(item.IsOk());
+  return item;
+}
+
 void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
   wxTreeItemId item = LookupSymbolItem(*database, entityId);
   if (!item.IsOk()) {
@@ -920,8 +939,9 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
 
   case ObjectModelReference::PG_CLASS:
     {
+      DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
       RelationModel *relation = objectBrowserModel->FindRelation(*ref);
-      contextMenuDatabase = relation->database;
+      contextMenuDatabase = database;
       contextMenuRelation = relation;
       switch (relation->type) {
       case RelationModel::TABLE:
@@ -939,8 +959,9 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
 
   case ObjectModelReference::PG_PROC:
     {
+      DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
       FunctionModel *function = objectBrowserModel->FindFunction(*ref);
-      contextMenuDatabase = function->database;
+      contextMenuDatabase = database;
       contextMenuFunction = function;
       PopupMenu(functionMenu);
     }

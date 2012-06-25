@@ -79,11 +79,11 @@ public:
   /**
    * Load the schema for a specified database.
    */
-  void LoadDatabase(wxTreeItemId parent, DatabaseModel *db, IndexSchemaCompletionCallback *indexCompletion = NULL);
+  void LoadDatabase(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion = NULL);
   /**
    * Load the detail for a specified relation.
    */
-  void LoadRelation(wxTreeItemId parent, RelationModel *rel);
+  void LoadRelation(const ObjectModelReference& relationRef);
   /**
    * Test if some server is selected, so disconnecting is valid.
    */
@@ -136,30 +136,30 @@ public:
   /**
    * Fill in database schema after loading from the database.
    */
-  void FillInDatabaseSchema(DatabaseModel *database, wxTreeItemId databaseItem);
+  void UpdateDatabase(const ObjectModelReference& databaseRef, bool expandAfter);
   /**
    * Fill in relation details after loading from the database.
    */
-  void FillInRelation(const ObjectModelReference& databaseRef, RelationModel *updated, wxTreeItemId relationItem);
+  void UpdateRelation(const ObjectModelReference& relationRef);
 
   /**
    * Append database items under the given parent.
    * The parent is typically the server itself, or "System Databases".
    */
-  void AppendDatabaseItems(wxTreeItemId parent, std::vector<DatabaseModel*> &database);
+  void AppendDatabaseItems(wxTreeItemId parent, std::vector<const DatabaseModel*> &database);
   /**
    * Append a division of schema members under the given parent.
    * The parent is typically the database itself, or "System schemas".
    */
-  void AppendDivision(DatabaseModel *db, std::vector<SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem);
   /**
    * Divide up schema members into user, extension and system "divisions".
    */
-  void DivideSchemaMembers(std::vector<SchemaMemberModel*> &members, std::vector<SchemaMemberModel*> &userDivision, std::vector<SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<SchemaMemberModel*> > &extensionDivisions);
+  void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
   /**
    * Append a set of schema members (all in the same schema) under the given parent.
    */
-  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<SchemaMemberModel*> &members);
+  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members);
 
   /**
    * Find the tree item for a server.
@@ -169,6 +169,10 @@ public:
    * Find the tree item for a database.
    */
   wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
+  /**
+   * Find the tree item for a relation.
+   */
+  wxTreeItemId FindRelationItem(const ObjectModelReference& relationRef) const;
   /**
    * Find the tree item for a relation.
    */
@@ -190,6 +194,8 @@ public:
    * Consider no object to be "currently selected".
    */
   void UnmarkSelected() { currentlySelected = false; }
+
+  ObjectBrowserModel* Model() const { return objectBrowserModel; }
 
   /**
    * Gets the SQL dictionary for the object browser.
@@ -291,6 +297,7 @@ private:
   void RegisterSymbolItem(const ObjectModelReference& database, Oid oid, wxTreeItemId item) { symbolTables[database][oid] = item; }
   wxTreeItemId LookupSymbolItem(const ObjectModelReference& database, Oid oid) const
   {
+    wxASSERT(database.GetObjectClass() == ObjectModelReference::PG_DATABASE);
     std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > >::const_iterator tablePtr = symbolTables.find(database);
     wxASSERT(tablePtr != symbolTables.end());
     const std::map< Oid, wxTreeItemId >& symbolTable = (*tablePtr).second;

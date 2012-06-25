@@ -40,6 +40,8 @@ public:
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
+  ObjectModelReference DatabaseRef() const { return ObjectModelReference(serverId, database); }
+
   bool operator<(const ObjectModelReference& other) const
   {
     if (serverId < other.serverId) return true;
@@ -147,7 +149,6 @@ public:
  */
 class SchemaMemberModel : public ObjectModel {
 public:
-  DatabaseModel *database;
   Oid oid;
   wxString schema;
   wxString extension;
@@ -266,6 +267,7 @@ public:
    * @return A string identifying this database, such as "[local] postgres"
    */
   wxString Identification() const;
+
   /**
    * Get a connection to this database.
    *
@@ -278,9 +280,9 @@ public:
    */
   class Divisions {
   public:
-    std::vector<SchemaMemberModel*> userDivision;
-    std::vector<SchemaMemberModel*> systemDivision;
-    std::map<wxString, std::vector<SchemaMemberModel*> > extensionDivisions;
+    std::vector<const SchemaMemberModel*> userDivision;
+    std::vector<const SchemaMemberModel*> systemDivision;
+    std::map<wxString, std::vector<const SchemaMemberModel*> > extensionDivisions;
   };
 
   /**
@@ -372,15 +374,26 @@ public:
   }
   void UpdateDatabases(const std::vector<DatabaseModel>& incoming)
   {
-    for (std::vector<DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-      delete (*iter);
-    }
     databases.clear();
+    databases.reserve(incoming.size());
     for (std::vector<DatabaseModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-      DatabaseModel *database = new DatabaseModel(*iter);
-      database->server = this;
-      databases.push_back(database);
+      databases.push_back(*iter);
+      databases.back().server = this;
     }
+  }
+  void UpdateDatabase(const DatabaseModel& incoming)
+  {
+    for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+      if ((*iter).oid == incoming.oid) {
+        wxString dbname = (*iter).name;
+        *iter = incoming;
+        (*iter).server = this;
+        (*iter).name = dbname;
+        (*iter).loaded = true;
+        return;
+      }
+    }
+    wxASSERT(false);
   }
   void UpdateRoles(const std::vector<RoleModel>& incoming)
   {
@@ -442,11 +455,11 @@ public:
   /**
    * Find a named database model on this server.
    */
-  DatabaseModel *FindDatabase(const wxString &dbname) const;
+  DatabaseModel *FindDatabase(const wxString &dbname);
   /**
    * Find a database model on this server.
    */
-  DatabaseModel *FindDatabase(const ObjectModelReference &ref) const
+  DatabaseModel *FindDatabase(const ObjectModelReference &ref)
   {
     wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_DATABASE);
     return FindDatabaseByOid(ref.GetOid());
@@ -454,7 +467,7 @@ public:
   /**
    * Find an arbitrary object on this server.
    */
-  ObjectModel *FindObject(const ObjectModelReference &ref) const;
+  ObjectModel *FindObject(const ObjectModelReference &ref);
   /**
    * Server connection details.
    */
@@ -462,7 +475,7 @@ public:
   /**
    * @return The databases on this server
    */
-  const std::vector<DatabaseModel*>& GetDatabases() const { return databases; }
+  const std::vector<DatabaseModel>& GetDatabases() const { return databases; }
   /**
    * @return The roles on this server
    */
@@ -472,14 +485,14 @@ public:
    */
   const std::vector<TablespaceModel>& GetTablespaces() const { return tablespaces; }
 private:
-  std::vector<DatabaseModel*> databases;
+  std::vector<DatabaseModel> databases;
   std::vector<TablespaceModel> tablespaces;
   std::vector<RoleModel> roles;
   int serverVersion;
   wxString serverVersionString;
   wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
-  DatabaseModel *FindDatabaseByOid(Oid oid) const;
+  DatabaseModel *FindDatabaseByOid(Oid oid);
   friend class RefreshDatabaseListWork;
 };
 

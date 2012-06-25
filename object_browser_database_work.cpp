@@ -113,6 +113,7 @@ static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
 const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
 
 void LoadDatabaseSchemaWork::operator()() {
+  incoming.oid = databaseRef.GetOid();
   LoadRelations();
   LoadFunctions();
   LoadTextSearchParsers();
@@ -125,7 +126,6 @@ void LoadDatabaseSchemaWork::LoadRelations() {
   QueryResults relationRows = Query(_T("Relations")).List();
   for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
     RelationModel *relation = new RelationModel();
-    relation->database = databaseModel;
     relation->schema = (*iter).ReadText(1);
     if (!(*iter)[0].IsEmpty()) {
       relation->oid = (*iter).ReadOid(0);
@@ -136,7 +136,7 @@ void LoadDatabaseSchemaWork::LoadRelations() {
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
       relation->type = relationTypeMap.find(relkind)->second;
     }
-    databaseModel->relations.push_back(relation);
+    incoming.relations.push_back(relation);
   }
 }
 
@@ -144,7 +144,6 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
   QueryResults functionRows = Query(_T("Functions")).List();
   for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
     FunctionModel *func = new FunctionModel();
-    func->database = databaseModel;
     func->oid = (*iter).ReadOid(0);
     func->schema = (*iter).ReadText(1);
     func->name = (*iter).ReadText(2);
@@ -153,7 +152,7 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
     func->extension = (*iter).ReadText(5);
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
     func->type = functionTypeMap.find(type)->second;
-    databaseModel->functions.push_back(func);
+    incoming.functions.push_back(func);
   }
 }
 
@@ -165,7 +164,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
     dict->oid = (*iter).ReadOid(0);
     dict->schema = (*iter).ReadText(1);
     dict->name = (*iter).ReadText(2);
-    databaseModel->textSearchDictionaries.push_back(dict);
+    incoming.textSearchDictionaries.push_back(dict);
   }
 }
 
@@ -177,7 +176,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchParsers()
     prs->oid = (*iter).ReadOid(0);
     prs->schema = (*iter).ReadText(1);
     prs->name = (*iter).ReadText(2);
-    databaseModel->textSearchParsers.push_back(prs);
+    incoming.textSearchParsers.push_back(prs);
   }
 }
 
@@ -189,7 +188,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
     tmpl->oid = (*iter).ReadOid(0);
     tmpl->schema = (*iter).ReadText(1);
     tmpl->name = (*iter).ReadText(2);
-    databaseModel->textSearchTemplates.push_back(tmpl);
+    incoming.textSearchTemplates.push_back(tmpl);
   }
 }
 
@@ -201,20 +200,20 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
     cfg->oid = (*iter).ReadOid(0);
     cfg->schema = (*iter).ReadText(1);
     cfg->name = (*iter).ReadText(2);
-    databaseModel->textSearchConfigurations.push_back(cfg);
+    incoming.textSearchConfigurations.push_back(cfg);
   }
 }
 
 void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
 {
+  ServerModel *server = model->FindServer(databaseRef);
+  wxASSERT(server != NULL);
+  server->UpdateDatabase(incoming);
 }
 
 void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
 {
-  wxTreeItemId databaseItem = ob->FindDatabaseItem(databaseModel);
-  ob->FillInDatabaseSchema(databaseModel, databaseItem);
-  if (expandAfter) ob->Expand(databaseItem);
-  ob->SetItemText(databaseItem, databaseModel->name); // remove loading message
+  ob->UpdateDatabase(databaseRef, expandAfter);
 }
 
 /*
@@ -338,7 +337,7 @@ void LoadRelationWork::operator()() {
 }
 
 void LoadRelationWork::ReadColumns() {
-  QueryResults attributeRows = Query(_T("Columns")).OidParam(oid).List();
+  QueryResults attributeRows = Query(_T("Columns")).OidParam(relationRef.GetOid()).List();
   for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
     ColumnModel *column = new ColumnModel();
     column->name = (*iter).ReadText(0);
@@ -352,7 +351,7 @@ void LoadRelationWork::ReadColumns() {
 }
 
 void LoadRelationWork::ReadIndices() {
-  QueryResults indexRows = Query(_T("Indices")).OidParam(oid).List();
+  QueryResults indexRows = Query(_T("Indices")).OidParam(relationRef.GetOid()).List();
   IndexModel *lastIndex = NULL;
   std::vector<int> indexColumns;
   std::vector<int>::const_iterator indexColumnsIter;
@@ -404,7 +403,7 @@ std::vector<int> LoadRelationWork::ParseInt2Vector(const wxString &str)
 }
 
 void LoadRelationWork::ReadTriggers() {
-  QueryResults triggerRows = Query(_T("Triggers")).OidParam(oid).List();
+  QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationRef.GetOid()).List();
   for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
     TriggerModel *trigger = new TriggerModel();
     trigger->name = (*iter).ReadText(0);
@@ -413,7 +412,7 @@ void LoadRelationWork::ReadTriggers() {
 }
 
 void LoadRelationWork::ReadSequences() {
-  QueryResults sequenceRows = Query(_T("Sequences")).OidParam(oid).List();
+  QueryResults sequenceRows = Query(_T("Sequences")).OidParam(relationRef.GetOid()).List();
   for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
     RelationModel *sequence = new RelationModel();
     sequence->type = RelationModel::SEQUENCE;
@@ -426,7 +425,7 @@ void LoadRelationWork::ReadSequences() {
 }
 
 void LoadRelationWork::ReadConstraints() {
-  QueryResults rows = Query(_T("Constraints")).OidParam(oid).List();
+  QueryResults rows = Query(_T("Constraints")).OidParam(relationRef.GetOid()).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     wxString typeCode = (*iter).ReadText(1);
     if (typeCode == _T("c")) {
@@ -440,21 +439,18 @@ void LoadRelationWork::ReadConstraints() {
 
 void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
 {
+  RelationModel *relationModel = model->FindRelation(relationRef);
+  relationModel->columns = detail->columns;
+  relationModel->indices = detail->indices;
+  relationModel->checkConstraints = detail->checkConstraints;
+  relationModel->triggers = detail->triggers;
 }
 
 void LoadRelationWork::UpdateView(ObjectBrowser *ob)
 {
-  wxTreeItemId relationItem = ob->FindRelationItem(database, oid);
-  ob->FillInRelation(database, detail, relationItem);
-  ob->Expand(relationItem);
-
-  // remove 'loading...' tag
-  wxString itemText = ob->GetItemText(relationItem);
-  int space = itemText.Find(_T(' '));
-  if (space != wxNOT_FOUND) {
-    ob->SetItemText(relationItem, itemText.Left(space));
-  }
+  ob->UpdateRelation(relationRef);
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

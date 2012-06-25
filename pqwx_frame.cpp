@@ -76,10 +76,9 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
   wxSplitterWindow *mainSplitter = new wxSplitterWindow(this, wxID_ANY);
 
-  objectBrowserModel = new ObjectBrowserModel();
-  PushEventHandler(objectBrowserModel);
+  PushEventHandler(&(::wxGetApp().GetObjectBrowserModel()));
 
-  objectBrowser = new ObjectBrowser(objectBrowserModel, mainSplitter, Pqwx_ObjectBrowser);
+  objectBrowser = new ObjectBrowser(&(::wxGetApp().GetObjectBrowserModel()), mainSplitter, Pqwx_ObjectBrowser);
   documentsBook = new DocumentsNotebook(mainSplitter, Pqwx_DocumentsNotebook);
   mainSplitter->SplitVertically(objectBrowser, documentsBook);
   mainSplitter->SetSashGravity(0.2);
@@ -92,8 +91,7 @@ PqwxFrame::PqwxFrame(const wxString& title)
 
 PqwxFrame::~PqwxFrame()
 {
-  objectBrowserModel->Dispose();
-  PopEventHandler(true);
+  PopEventHandler(false);
 }
 
 void PqwxFrame::OnQuit(wxCommandEvent& WXUNUSED(event))

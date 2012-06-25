@@ -52,7 +52,6 @@ private:
 
   wxString titlePrefix;
 
-  ObjectBrowserModel *objectBrowserModel;
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;
 

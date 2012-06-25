@@ -49,6 +49,8 @@ bool PQWXApp::OnInit()
 
   toolsRegistry.BeginFindInstallations();
 
+  objectBrowserModel = new ObjectBrowserModel();
+
   PqwxFrame *frame = new PqwxFrame(_T("PQWX"));
   frame->Show(true);
 
@@ -78,6 +80,9 @@ int PQWXApp::OnExit()
 #ifdef PQWX_NOTIFICATION_MONITOR
   if (monitor) delete monitor;
 #endif
+
+  objectBrowserModel->Dispose();
+  delete objectBrowserModel;
 
   return rc;
 }

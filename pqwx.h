@@ -31,6 +31,8 @@ enum {
   Pqwx_ObjectFinderResults,
 };
 
+class ObjectBrowserModel;
+
 /**
  * The wxApp implementation for PQWX.
  *
@@ -39,11 +41,12 @@ enum {
 class PQWXApp : public wxApp {
 public:
 #ifdef PQWX_NOTIFICATION_MONITOR
-  PQWXApp() : monitor(NULL) {}
+  PQWXApp() : monitor(NULL), objectBrowserModel(NULL) {}
   DatabaseNotificationMonitor& GetNotificationMonitor();
 #else
-  PQWXApp() {}
+  PQWXApp() : objectBrowserModel(NULL) {}
 #endif
+  ObjectBrowserModel& GetObjectBrowserModel() { return *objectBrowserModel; }
   PgToolsRegistry& GetToolsRegistry() { return toolsRegistry; }
 private:
   bool haveInitial;
@@ -55,6 +58,7 @@ private:
 #ifdef PQWX_NOTIFICATION_MONITOR
   DatabaseNotificationMonitor *monitor;
 #endif
+  ObjectBrowserModel *objectBrowserModel;
   PgToolsRegistry toolsRegistry;
   bool OnInit();
   int OnExit();

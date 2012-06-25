@@ -404,6 +404,8 @@ private:
   friend class RefreshDatabaseListWork;
 };
 
+class ObjectBrowserWork;
+
 /**
  * The "top level" of the object browser model.
  */
@@ -485,6 +487,8 @@ public:
     views.remove(view);
   }
 
+  void SubmitServerWork(const wxString& serverId, ObjectBrowserWork*);
+  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork*);
 private:
   ServerModel *FindServerById(const wxString&);
   std::list<ServerModel> servers;
@@ -492,6 +496,7 @@ private:
   DECLARE_EVENT_TABLE();
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
+  void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

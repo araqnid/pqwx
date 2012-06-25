@@ -22,12 +22,14 @@
 #include "dependencies_view.h"
 #include "static_resources.h"
 
-inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work) {
-  ConnectAndAddWork(server->GetServerAdminConnection(), work);
+inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work)
+{
+  objectBrowserModel->SubmitServerWork(server->Identification(), work);
 }
 
-inline void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work) {
-  ConnectAndAddWork(database->GetDatabaseConnection(), work);
+inline void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work)
+{
+  objectBrowserModel->SubmitDatabaseWork(*database, work);
 }
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
@@ -41,8 +43,6 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_ITEM_RIGHT_CLICK(Pqwx_ObjectBrowser, ObjectBrowser::OnItemRightClick)
   EVT_TREE_SEL_CHANGED(Pqwx_ObjectBrowser, ObjectBrowser::OnItemSelected)
   EVT_SET_FOCUS(ObjectBrowser::OnSetFocus)
-  PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowser::OnWorkFinished)
-  PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowser::OnWorkCrashed)
 
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
   EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
@@ -235,40 +235,6 @@ void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
   ServerModel *serverModel = objectBrowserModel->FindServer(*ref);
   SubmitServerWork(serverModel, new RefreshDatabaseListWork(ref->GetServerId()));
-}
-
-void ObjectBrowser::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work) {
-  // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
-  if (!db->IsConnected()) {
-    db->Connect();
-    objectBrowserModel->SetupDatabaseConnection(db);
-  }
-  db->AddWork(new ObjectBrowserDatabaseWork(this, work));
-}
-
-void ObjectBrowser::OnWorkFinished(wxCommandEvent &e) {
-  ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
-
-  wxLogDebug(_T("%p: work finished (received by view)"), work);
-  work->UpdateModel(objectBrowserModel);
-  work->UpdateView(this);
-
-  delete work;
-}
-
-void ObjectBrowser::OnWorkCrashed(wxCommandEvent &e)
-{
-  ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
-
-  wxLogDebug(_T("%p: work crashed (received by view)"), work);
-  if (!work->GetCrashMessage().empty()) {
-    wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());
-  }
-  else {
-    wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
-  }
-
-  delete work;
 }
 
 LazyLoader *ObjectBrowser::GetLazyLoader(wxTreeItemId item) const {

@@ -122,12 +122,6 @@ public:
    * Submit some work to a particular database.
    */
   void SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work);
-  /**
-   * Add work to some database connection.
-   *
-   * If the connection is still unconnected, initiate the connection.
-   */
-  void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 
   /**
    * Update server details tree after loading from the database.
@@ -210,8 +204,6 @@ private:
   void OnSetFocus(wxFocusEvent&);
   void OnGetTooltip(wxTreeEvent&);
   void OnItemRightClick(wxTreeEvent&);
-  void OnWorkFinished(wxCommandEvent&);
-  void OnWorkCrashed(wxCommandEvent&);
   void OnServerMenuDisconnect(wxCommandEvent&);
   void OnServerMenuRefresh(wxCommandEvent&);
   void OnServerMenuProperties(wxCommandEvent&);

@@ -15,6 +15,30 @@ BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowserModel::OnWorkCrashed)
 END_EVENT_TABLE()
 
+void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowserWork *work)
+{
+  ServerModel *server = FindServerById(serverId);
+  wxASSERT(server != NULL);
+  ConnectAndAddWork(server->GetServerAdminConnection(), work);
+}
+
+void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork *work)
+{
+  DatabaseModel *database = FindDatabase(databaseRef);
+  wxASSERT(database != NULL);
+  ConnectAndAddWork(database->GetDatabaseConnection(), work);
+}
+
+void ObjectBrowserModel::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work)
+{
+  // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
+  if (!db->IsConnected()) {
+    db->Connect();
+    SetupDatabaseConnection(db);
+  }
+  db->AddWork(new ObjectBrowserDatabaseWork(this, work));
+}
+
 void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 

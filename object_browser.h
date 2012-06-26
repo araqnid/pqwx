@@ -299,6 +299,8 @@ private:
 
   std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > > symbolTables;
   std::map< ObjectModelReference, wxTreeItemId > databaseItems;
+
+  wxString GetToolTipText(const wxTreeItemId& itemId) const;
 };
 
 /**

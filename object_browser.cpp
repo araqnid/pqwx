@@ -730,13 +730,28 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
   }
 }
 
-void ObjectBrowser::OnGetTooltip(wxTreeEvent &event) {
+void ObjectBrowser::OnGetTooltip(wxTreeEvent &event)
+{
   wxTreeItemId item = event.GetItem();
-  wxTreeItemData *itemData = GetItemData(item);
-  if (itemData == NULL) return;
-  ObjectModel *object = dynamic_cast<ObjectModel*>(itemData);
-  if (object == NULL) return;
-  event.SetToolTip(object->description);
+  wxString text = GetToolTipText(item);
+  if (text.empty())
+    event.Skip(true);
+  else
+    event.SetToolTip(text);
+}
+
+wxString ObjectBrowser::GetToolTipText(const wxTreeItemId& itemId) const
+{
+  wxTreeItemData *itemData = GetItemData(itemId);
+  if (itemData == NULL) return wxEmptyString;
+  ObjectModelReference *ref = dynamic_cast<ObjectModelReference*>(itemData);
+  if (ref == NULL) return wxEmptyString;
+  const ObjectModel *object = objectBrowserModel->FindObject(*ref);
+  if (object == NULL) return wxEmptyString;
+  if (object->description.empty())
+    return object->FormatName();
+  else
+    return object->description;
 }
 
 bool ObjectBrowser::IsServerSelected() const {

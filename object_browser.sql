@@ -71,9 +71,6 @@ FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
                            AND deptype = 'a')
                )
      ) pg_class
-     LEFT JOIN pg_description ON pg_description.classoid = 'pg_class'::regclass
-                                 AND pg_description.objoid = pg_class.oid
-                                 AND pg_description.objsubid = 0
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
                          AND pg_depend.objid = pg_class.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
@@ -141,7 +138,7 @@ FROM pg_proc
 -- SQL :: Object Descriptions
 SELECT objoid, description
 FROM pg_description
-WHERE classoid IN ('pg_class'::regclass, 'pg_proc'::regclass)
+WHERE classoid IN ('pg_class'::regclass, 'pg_proc'::regclass, 'pg_ts_config'::regclass, 'pg_ts_parser'::regclass, 'pg_ts_template'::regclass, 'pg_ts_config'::regclass)
 AND objsubid = 0
 
 -- SQL :: Columns

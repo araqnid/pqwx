@@ -235,24 +235,28 @@ void LoadDatabaseDescriptionsWork::operator()()
   }
 }
 
+template<typename T>
+void PutDescriptions(const std::map<unsigned long, wxString>& descriptions, std::vector<T>& objects, int& count)
+{
+  for (typename std::vector<T>::iterator iter = objects.begin(); iter != objects.end(); iter++) {
+    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
+    if (ptr != descriptions.end()) {
+      (*iter).description = (*ptr).second;
+      ++count;
+    }
+  }
+}
+
 void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
 {
   DatabaseModel *databaseModel = model->FindDatabase(databaseRef);
   int count = 0;
-  for (std::vector<RelationModel>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
-    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
-    if (ptr != descriptions.end()) {
-      (*iter).description = (*ptr).second;
-      ++count;
-    }
-  }
-  for (std::vector<FunctionModel>::iterator iter = databaseModel->functions.begin(); iter != databaseModel->functions.end(); iter++) {
-    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
-    if (ptr != descriptions.end()) {
-      (*iter).description = (*ptr).second;
-      ++count;
-    }
-  }
+  PutDescriptions(descriptions, databaseModel->relations, count);
+  PutDescriptions(descriptions, databaseModel->functions, count);
+  PutDescriptions(descriptions, databaseModel->textSearchDictionaries, count);
+  PutDescriptions(descriptions, databaseModel->textSearchParsers, count);
+  PutDescriptions(descriptions, databaseModel->textSearchTemplates, count);
+  PutDescriptions(descriptions, databaseModel->textSearchConfigurations, count);
   wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
 }
 

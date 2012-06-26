@@ -32,10 +32,13 @@ public:
   bool operator<(const ObjectModelReference& other) const
   {
     if (serverId < other.serverId) return true;
+    else if (serverId > other.serverId) return false;
     if (regclass < other.regclass) return true;
+    else if (regclass > other.regclass) return false;
     if (database < other.database) return true;
-    if (regclass == PG_DATABASE) return false;
+    else if (database > other.database) return false;
     if (oid < other.oid) return true;
+    else if (oid > other.oid) return false;
     return subid < other.subid;
   }
 

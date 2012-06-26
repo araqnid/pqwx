@@ -304,18 +304,7 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
     SetItemImage(serverItem, img_server_encrypted);
   }
   SetItemText(serverItem, serverItemText);
-  FillInDatabases(serverModel, serverItem);
-  FillInRoles(serverModel, serverItem);
-  FillInTablespaces(serverModel, serverItem);
 
-  if (expandAfter) {
-    EnsureVisible(serverItem);
-    SelectItem(serverItem);
-    Expand(serverItem);
-  }
-}
-
-void ObjectBrowser::FillInDatabases(const ServerModel *serverModel, wxTreeItemId serverItem) {
   const std::vector<DatabaseModel> &databases = serverModel->GetDatabases();
   std::vector<const DatabaseModel*> systemDatabases;
   std::vector<const DatabaseModel*> templateDatabases;
@@ -332,26 +321,61 @@ void ObjectBrowser::FillInDatabases(const ServerModel *serverModel, wxTreeItemId
       userDatabases.push_back(&database);
     }
   }
-  if (!userDatabases.empty()) {
-    AppendDatabaseItems(serverItem, userDatabases);
+
+  const std::vector<TablespaceModel>& tablespaces = serverModel->GetTablespaces();
+  std::vector<const TablespaceModel*> userTablespaces;
+  std::vector<const TablespaceModel*> systemTablespaces;
+
+  for (std::vector<TablespaceModel>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+    if ((*iter).IsSystem())
+      systemTablespaces.push_back(&(*iter));
+    else
+      userTablespaces.push_back(&(*iter));
   }
+
+  if (!userDatabases.empty()) {
+    AppendDatabaseItems(serverModel, serverItem, userDatabases);
+  }
+
   if (!templateDatabases.empty()) {
     wxTreeItemId templateDatabasesItem = AppendItem(serverItem, _("Template Databases"));
     SetItemImage(templateDatabasesItem, img_folder);
-    AppendDatabaseItems(templateDatabasesItem, templateDatabases);
+    AppendDatabaseItems(serverModel, templateDatabasesItem, templateDatabases);
   }
+
+  AppendRoleItems(serverModel, serverItem);
+
+  if (!userTablespaces.empty()) {
+    wxTreeItemId folderItem = AppendItem(serverItem, _("Tablespaces"));
+    SetItemImage(folderItem, img_folder);
+    AppendTablespaceItems(serverModel, folderItem, userTablespaces);
+  }
+
   if (!systemDatabases.empty()) {
     wxTreeItemId systemDatabasesItem = AppendItem(serverItem, _("System Databases"));
     SetItemImage(systemDatabasesItem, img_folder);
-    AppendDatabaseItems(systemDatabasesItem, systemDatabases);
+    AppendDatabaseItems(serverModel, systemDatabasesItem, systemDatabases);
+  }
+
+  if (!systemTablespaces.empty()) {
+    wxTreeItemId folderItem = AppendItem(serverItem, _("System Tablespaces"));
+    SetItemImage(folderItem, img_folder);
+    AppendTablespaceItems(serverModel, folderItem, systemTablespaces);
+  }
+
+  if (expandAfter) {
+    EnsureVisible(serverItem);
+    SelectItem(serverItem);
+    Expand(serverItem);
   }
 }
 
-void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<const DatabaseModel*> &databases) {
-  for (std::vector<const DatabaseModel*>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+void ObjectBrowser::AppendDatabaseItems(const ServerModel *server, wxTreeItemId parentItem, const std::vector<const DatabaseModel*> &databases)
+{
+  for (std::vector<const DatabaseModel*>::const_iterator iter = databases.begin(); iter != databases.end(); iter++) {
     const DatabaseModel *database = *iter;
     wxTreeItemId databaseItem = AppendItem(parentItem, database->name);
-    SetItemData(databaseItem, new ModelReference(database->server->Identification(), database->oid));
+    SetItemData(databaseItem, new ModelReference(server->Identification(), database->oid));
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
       SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, *database));
@@ -359,7 +383,18 @@ void ObjectBrowser::AppendDatabaseItems(wxTreeItemId parentItem, std::vector<con
   }
 }
 
-void ObjectBrowser::FillInRoles(const ServerModel *serverModel, wxTreeItemId serverItem) {
+void ObjectBrowser::AppendTablespaceItems(const ServerModel *server, wxTreeItemId parentItem, const std::vector<const TablespaceModel*> &tablespaces)
+{
+  for (std::vector<const TablespaceModel*>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
+    const TablespaceModel *tablespace = *iter;
+    wxTreeItemId spcItem = AppendItem(parentItem, tablespace->FormatName());
+    SetItemData(spcItem, new ModelReference(server->Identification(), ObjectModelReference::PG_TABLESPACE, tablespace->oid));
+    SetItemImage(spcItem, img_database);
+  }
+}
+
+void ObjectBrowser::AppendRoleItems(const ServerModel *serverModel, wxTreeItemId serverItem)
+{
   const std::vector<RoleModel>& roles = serverModel->GetRoles();
   wxTreeItemId usersItem = AppendItem(serverItem, _("Users"));
   SetItemImage(usersItem, img_folder);
@@ -376,40 +411,6 @@ void ObjectBrowser::FillInRoles(const ServerModel *serverModel, wxTreeItemId ser
     }
     SetItemData(roleItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_ROLE, role.oid));
     SetItemImage(roleItem, img_role);
-  }
-}
-
-void ObjectBrowser::FillInTablespaces(const ServerModel *serverModel, wxTreeItemId serverItem)
-{
-  const std::vector<TablespaceModel>& tablespaces = serverModel->GetTablespaces();
-  std::vector<const TablespaceModel*> userTablespaces;
-  std::vector<const TablespaceModel*> systemTablespaces;
-
-  for (std::vector<TablespaceModel>::const_iterator iter = tablespaces.begin(); iter != tablespaces.end(); iter++) {
-    if ((*iter).IsSystem())
-      systemTablespaces.push_back(&(*iter));
-    else
-      userTablespaces.push_back(&(*iter));
-  }
-
-  if (!userTablespaces.empty()) {
-    wxTreeItemId folderItem = AppendItem(serverItem, _("Tablespaces"));
-    SetItemImage(folderItem, img_folder);
-    for (std::vector<const TablespaceModel*>::const_iterator iter = userTablespaces.begin(); iter != userTablespaces.end(); iter++) {
-      wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
-      SetItemImage(spcItem, img_database);
-    }
-  }
-
-  if (!systemTablespaces.empty()) {
-    wxTreeItemId folderItem = AppendItem(serverItem, _("System Tablespaces"));
-    SetItemImage(folderItem, img_folder);
-    for (std::vector<const TablespaceModel*>::const_iterator iter = systemTablespaces.begin(); iter != systemTablespaces.end(); iter++) {
-      wxTreeItemId spcItem = AppendItem(folderItem, (*iter)->FormatName());
-      SetItemData(spcItem, new ModelReference(serverModel->Identification(), ObjectModelReference::PG_TABLESPACE, (*iter)->oid));
-      SetItemImage(spcItem, img_database);
-    }
   }
 }
 

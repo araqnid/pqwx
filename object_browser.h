@@ -137,25 +137,6 @@ public:
   void UpdateRelation(const ObjectModelReference& relationRef);
 
   /**
-   * Append database items under the given parent.
-   * The parent is typically the server itself, or "System Databases".
-   */
-  void AppendDatabaseItems(wxTreeItemId parent, std::vector<const DatabaseModel*> &database);
-  /**
-   * Append a division of schema members under the given parent.
-   * The parent is typically the database itself, or "System schemas".
-   */
-  void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem);
-  /**
-   * Divide up schema members into user, extension and system "divisions".
-   */
-  void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
-  /**
-   * Append a set of schema members (all in the same schema) under the given parent.
-   */
-  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members);
-
-  /**
    * Find the tree item for a server.
    */
   wxTreeItemId FindServerItem(const wxString& serverId) const;
@@ -214,9 +195,16 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
-  void FillInDatabases(const ServerModel *serverModel, wxTreeItemId serverItem);
-  void FillInRoles(const ServerModel *serverModel, wxTreeItemId serverItem);
-  void FillInTablespaces(const ServerModel *serverModel, wxTreeItemId serverItem);
+  void AppendRoleItems(const ServerModel *serverModel, wxTreeItemId serverItem);
+  void AppendDatabaseItems(const ServerModel*, wxTreeItemId parent, const std::vector<const DatabaseModel*> &database);
+  void AppendTablespaceItems(const ServerModel*, wxTreeItemId parent, const std::vector<const TablespaceModel*> &database);
+
+  void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem);
+  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members);
+
+  void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
+
+  friend class SystemSchemasLoader;
 
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);

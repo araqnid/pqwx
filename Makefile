@@ -37,11 +37,11 @@ WXRC := $(shell $(WX_CONFIG) --utility=wxrc)
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --libs $(WX_MODULES))
-XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc
-PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp static_resources_txt.cpp dependencies_view.cpp database_work.cpp object_browser_scripts.cpp documents_notebook.cpp results_notebook.cpp script_editor.cpp execution_lexer.cpp script_editor_pane.cpp script_editor_wordlists.cpp script_query_work.cpp script_execution.cpp pg_tools_registry.cpp object_browser_database_work.cpp object_browser_model.cpp object_browser_scripts_database.cpp object_browser_scripts_table.cpp object_browser_scripts_function.cpp object_browser_scripts_sequence.cpp object_browser_scripts_view.cpp object_browser_scripts_schema.cpp object_browser_scripts_index.cpp object_browser_scripts_ts_dict.cpp object_browser_scripts_ts_parser.cpp object_browser_scripts_ts_tmpl.cpp object_browser_scripts_ts_config.cpp object_browser_scripts_tablespace.cpp object_browser_scripts_role.cpp
-PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h sql_dictionary.h documents_notebook.h results_notebook.h script_editor.h script_events.h execution_lexer.h script_query_work.h pg_error.h database_event_type.h script_editor_pane.h static_resources.h script_query_work.h script_execution.h pg_tools_registry.h object_browser_scripts.h pqwx_util.h
+XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc rc/create_database.xrc
+PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp static_resources_txt.cpp dependencies_view.cpp database_work.cpp object_browser_scripts.cpp documents_notebook.cpp results_notebook.cpp script_editor.cpp execution_lexer.cpp script_editor_pane.cpp script_editor_wordlists.cpp script_query_work.cpp script_execution.cpp pg_tools_registry.cpp object_browser_database_work.cpp object_browser_model.cpp object_browser_scripts_database.cpp object_browser_scripts_table.cpp object_browser_scripts_function.cpp object_browser_scripts_sequence.cpp object_browser_scripts_view.cpp object_browser_scripts_schema.cpp object_browser_scripts_index.cpp object_browser_scripts_ts_dict.cpp object_browser_scripts_ts_parser.cpp object_browser_scripts_ts_tmpl.cpp object_browser_scripts_ts_config.cpp object_browser_scripts_tablespace.cpp object_browser_scripts_role.cpp create_database_dialogue.cpp
+PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h sql_dictionary.h documents_notebook.h results_notebook.h script_editor.h script_events.h execution_lexer.h script_query_work.h pg_error.h database_event_type.h script_editor_pane.h static_resources.h script_query_work.h script_execution.h pg_tools_registry.h object_browser_scripts.h pqwx_util.h create_database_dialogue.h action_dialogue_work.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
-PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) object_browser_sql.o dependencies_view_sql.o object_browser_scripts_sql.o
+PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) object_browser_sql.o dependencies_view_sql.o object_browser_scripts_sql.o create_database_dialogue_sql.o
 ifneq (,$(findstring MINGW,$(host_system)))
 PQWX_OBJS += pqwx_rc.o
 PQWX_SOURCES += pqwx_rc.cpp
@@ -91,6 +91,9 @@ object_browser_scripts_sql.cpp: object_browser_scripts.sql format_sql_header
 
 dependencies_view_sql.cpp: dependencies_view.sql format_sql_header
 	./format_sql_header -c DependenciesViewSql  -f 'DependenciesView::GetSqlDictionary' -h dependencies_view.h dependencies_view.sql $@
+
+create_database_dialogue_sql.cpp: create_database_dialogue.sql format_sql_header
+	./format_sql_header -c CreateDatabaseDialogueSql  -f 'CreateDatabaseDialogue::GetSqlDictionary' -h create_database_dialogue.h create_database_dialogue.sql $@
 
 static_resources_txt.cpp: static_resources.txt static_resources.h
 	./format_static_resources -f 'StaticResources::RegisterMemoryResources' -h static_resources.h -o $@ -d static_resources.d static_resources.txt

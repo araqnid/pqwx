@@ -195,6 +195,7 @@ private:
   void OnSetFocus(wxFocusEvent&);
   void OnGetTooltip(wxTreeEvent&);
   void OnItemRightClick(wxTreeEvent&);
+  void OnServerMenuNewDatabase(wxCommandEvent&);
   void OnServerMenuDisconnect(wxCommandEvent&);
   void OnServerMenuRefresh(wxCommandEvent&);
   void OnServerMenuProperties(wxCommandEvent&);
@@ -220,6 +221,7 @@ private:
 
   friend class SystemSchemasLoader;
   friend class ScriptWork;
+  friend class AfterDatabaseCreated;
 
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);

@@ -30,8 +30,8 @@ public:
   wxString QuoteIdent(const wxString &str) const;
   wxString QuoteLiteral(const wxString &str) const;
 
-  bool DoCommand(const wxString &sql) const { return DoCommand((const char*) sql.utf8_str()); }
-  bool DoCommand(const char *sql) const;
+  void DoCommand(const wxString &sql) const { return DoCommand((const char*) sql.utf8_str()); }
+  void DoCommand(const char *sql) const;
 
   QueryResults DoQuery(const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const;
   QueryResults DoQuery(const char *sql, std::vector<Oid> const& paramTypes, std::vector<wxString> const& paramValues) const;
@@ -111,7 +111,7 @@ public:
   /**
    * Execute named command.
    */
-  bool DoCommand(const wxString &name) const { return DatabaseWork::DoCommand(GetSql(name)); }
+  void DoCommand(const wxString &name) const { DatabaseWork::DoCommand(GetSql(name)); }
   /**
    * Execute named query with array parameters.
    */

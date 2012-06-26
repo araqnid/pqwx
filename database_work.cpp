@@ -72,7 +72,7 @@ wxString DatabaseWork::QuoteLiteral(const wxString &str) const {
   return result;
 }
 
-bool DatabaseWork::DoCommand(const char *sql) const {
+void DatabaseWork::DoCommand(const char *sql) const {
   db->LogSql(sql);
 
   PGresult *rs = PQexec(conn, sql);
@@ -85,14 +85,11 @@ bool DatabaseWork::DoCommand(const char *sql) const {
   }
   else if (status != PGRES_COMMAND_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    throw PgInvalidQuery(sql, PgError(rs));
+    throw PgInvalidQuery(sql, _T("unexpected status"));
   }
 
   PQclear(rs);
-
-  return true;
 }
-
 QueryResults DatabaseWork::DoQuery(const char *sql, int paramCount, const Oid *paramTypes, const char **paramValues) const
 {
   db->LogSql(sql);

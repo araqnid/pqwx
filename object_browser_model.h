@@ -476,6 +476,7 @@ private:
 };
 
 class ObjectBrowserWork;
+class ActionDialogueWork;
 
 /**
  * The "top level" of the object browser model.
@@ -564,6 +565,8 @@ public:
 
   void SubmitServerWork(const wxString& serverId, ObjectBrowserWork*);
   void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork*);
+  void SubmitServerWork(const wxString& serverId, ActionDialogueWork*, wxEvtHandler*);
+  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ActionDialogueWork*, wxEvtHandler*);
 
   /**
    * Clean up expired and stale database connections.
@@ -580,7 +583,7 @@ private:
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
   void OnTimerTick(wxTimerEvent&);
-  void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
+  void ConnectAndAddWork(DatabaseConnection *db, DatabaseWork *work);
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

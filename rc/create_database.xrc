@@ -1,0 +1,197 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxDialog" name="create_database">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxNotebook" name="tabs">
+          <object class="notebookpage">
+            <object class="wxPanel">
+              <object class="wxFlexGridSizer">
+                <rows>2</rows>
+                <cols>2</cols>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Database &amp;name:</label>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxTextCtrl" name="database_name"/>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>&amp;Owner:</label>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="owner"/>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+              </object>
+            </object>
+            <label>General</label>
+          </object>
+          <object class="notebookpage">
+            <object class="wxPanel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <rows>2</rows>
+                    <cols>2</cols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Character encoding:</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxComboBox" name="encoding">
+                        <content>
+                          <item>UTF8</item>
+                          <item>LATIN1</item>
+                          <item>KOI8-R</item>
+                        </content>
+                        <selection>0</selection>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>&amp;Locale:</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxComboBox" name="locale">
+                        <content>
+                          <item>C</item>
+                          <item>en_GB</item>
+                          <item>en_US</item>
+                          <item>ru_RU</item>
+                        </content>
+                        <selection>0</selection>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                  </object>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticBoxSizer">
+                    <object class="sizeritem">
+                      <object class="wxFlexGridSizer">
+                        <object class="sizeritem">
+                          <object class="wxCheckBox" name="collation_override">
+                            <label>Collate as:</label>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxComboBox" name="collation">
+                            <content>
+                              <item>C</item>
+                              <item>en_US</item>
+                              <item>en_GB</item>
+                              <item>ru_RU</item>
+                            </content>
+                          </object>
+                        </object>
+                        <cols>2</cols>
+                        <rows>2</rows>
+                        <object class="sizeritem">
+                          <object class="wxCheckBox" name="ctype_override">
+                            <label>Identify characters as:</label>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxComboBox" name="ctype">
+                            <content>
+                              <item>C</item>
+                              <item>en_GB</item>
+                              <item>en_US</item>
+                              <item>ru_RU</item>
+                            </content>
+                          </object>
+                        </object>
+                      </object>
+                    </object>
+                    <label>Locale Properties</label>
+                    <orient>wxVERTICAL</orient>
+                  </object>
+                </object>
+              </object>
+            </object>
+            <label>i18n</label>
+          </object>
+          <object class="notebookpage">
+            <object class="wxPanel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxTextCtrl" name="script">
+                    <style>wxTE_MULTILINE</style>
+                  </object>
+                  <option>1</option>
+                  <flag>wxALL|wxEXPAND</flag>
+                  <border>2</border>
+                </object>
+              </object>
+            </object>
+            <label>Script</label>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND|wxGROW</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="spacer">
+            <size>20</size>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Mode</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxChoice" name="mode">
+              <content>
+                <item>Execute immediately</item>
+                <item>Script to new window</item>
+                <item>Script to file</item>
+                <item>Script to clipboard</item>
+              </content>
+              <selection>0</selection>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <orient>wxHORIZONTAL</orient>
+        </object>
+        <option>0</option>
+        <flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
+        <border>2</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK"/>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL"/>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_HELP"/>
+          </object>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
+        <border>2</border>
+      </object>
+    </object>
+    <title>New Database</title>
+    <centered>1</centered>
+    <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</style>
+  </object>
+</resource>

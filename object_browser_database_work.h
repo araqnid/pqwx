@@ -15,6 +15,77 @@
 #include "script_events.h"
 
 /**
+ * Unit of work that is managed by the object browser model.
+ *
+ * This might be triggered the object browser itself, or may be
+ * executed by the object browser model on behalf of some dialogue.
+ */
+class ObjectBrowserManagedWork {
+public:
+  /**
+   * Mode for wrapping a transaction around the work.
+   */
+  enum TxMode {
+    /**
+     * Work is performed in a read-only serializable snapshot.
+     */
+    READ_ONLY,
+    /**
+     * Work is performed in a single read-committed transaction.
+     */
+    TRANSACTIONAL,
+    /**
+     * No transaction wrapping.
+     */
+    NO_TRANSACTION
+  };
+
+  ObjectBrowserManagedWork(TxMode txMode) : txMode(txMode) {}
+  virtual ~ObjectBrowserManagedWork() {}
+
+  /**
+   * Execute work.
+   *
+   * Similar to the same-named method in DatabaseWork. This method is
+   * executed on the database worker thread.
+   */
+  virtual void operator()() = 0;
+  /**
+   * If the database work threw a fatal exception, this will retrieve the message.
+   */
+  const wxString& GetCrashMessage() const { return crashMessage; }
+
+  /**
+   * Quote an identified for use in a generated SQL statement.
+   */
+  wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
+  /**
+   * Quote an literal string for use in a generated SQL statement.
+   */
+  wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
+protected:
+  DatabaseWorkWithDictionary::NamedQueryExecutor Query(const wxString &name)
+  {
+    return owner->Query(name);
+  }
+
+  /**
+   * The actual libpq connection object.
+   */
+  PGconn *conn;
+  /**
+   * The actual database work object wrapping this.
+   */
+  DatabaseWorkWithDictionary *owner;
+
+private:
+  TxMode txMode;
+  wxString crashMessage;
+  friend class ObjectBrowserDatabaseWork;
+  friend class ObjectBrowserModel;
+};
+
+/**
  * Unit of work to be performed on a database connection for the
  * object browser.
  *
@@ -24,18 +95,11 @@
  * browser as part of a "work finished" event so that is is available
  * in the GUI thread.
  */
-class ObjectBrowserWork {
+class ObjectBrowserWork : public ObjectBrowserManagedWork {
 public:
-  ObjectBrowserWork(const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : sqlDictionary(sqlDictionary) {}
+  ObjectBrowserWork(const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY), sqlDictionary(sqlDictionary) {}
   virtual ~ObjectBrowserWork() {}
 
-  /**
-   * Execute work.
-   *
-   * Similar to the same-named method in DatabaseWork. This method is
-   * executed on the database worker thread.
-   */
-  virtual void operator()() = 0;
   /*
    * Merge the data fetched into the object model.
    *
@@ -49,126 +113,9 @@ public:
    */
   virtual void UpdateView(ObjectBrowser *browser) = 0;
 
-  /**
-   * If the database work threw a fatal exception, this will retrieve the message.
-   */
-  const wxString& GetCrashMessage() const { return crashMessage; }
-protected:
-  DatabaseWorkWithDictionary::NamedQueryExecutor Query(const wxString &name)
-  {
-    return owner->Query(name);
-  }
-
-  /**
-   * The actual libpq connection object.
-   */
-  PGconn *conn;
-public:
-  /**
-   * Quote an identified for use in a generated SQL statement.
-   */
-  wxString QuoteIdent(const wxString &value) { return owner->QuoteIdent(value); }
-  /**
-   * Quote an literal string for use in a generated SQL statement.
-   */
-  wxString QuoteLiteral(const wxString &value) { return owner->QuoteLiteral(value); }
-  /**
-   * The actual database work object wrapping this.
-   */
-  DatabaseWorkWithDictionary *owner;
-
 private:
   const SqlDictionary& sqlDictionary;
-  wxString crashMessage;
-
-  friend class ObjectBrowserDatabaseWork;
-};
-
-/**
- * Implementation of DatabaseWork that deals with passing results back to the GUI thread.
- */
-class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
-public:
-  /**
-   * Create work object.
-   */
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), work(work) {}
-  void operator()() {
-    TransactionBoundary txn(this);
-    work->owner = this;
-    work->conn = conn;
-    (*work)();
-  }
-  void NotifyFinished() {
-    wxLogDebug(_T("%p: object browser work finished, notifying GUI thread"), work);
-    wxCommandEvent event(PQWX_ObjectBrowserWorkFinished);
-    event.SetClientData(work);
-    dest->AddPendingEvent(event);
-  }
-  void NotifyCrashed() {
-    wxLogDebug(_T("%p: object browser work crashed with no known exception, notifying GUI thread"), work);
-    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
-    event.SetClientData(work);
-    dest->AddPendingEvent(event);
-  }
-  void NotifyCrashed(const std::exception& e) {
-    wxLogDebug(_T("%p: object browser work crashed with some exception, notifying GUI thread"), work);
-
-    const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
-    if (query != NULL) {
-      if (query->IsFromNamedQuery())
-        work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n");
-      else
-        work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n");
-      const PgQueryFailure* queryError = dynamic_cast<const PgQueryFailure*>(&e);
-      if (queryError != NULL) {
-        const PgError& details = queryError->GetDetails();
-        work->crashMessage += details.GetSeverity() + _T(": ") + details.GetPrimary();
-        if (!details.GetDetail().empty())
-          work->crashMessage += _T("\nDETAIL: ") + details.GetDetail();
-        if (!details.GetHint().empty())
-          work->crashMessage += _T("\bHINT: ") + details.GetDetail();
-        for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
-          work->crashMessage += _T("\nCONTEXT: ") + *iter;
-        }
-      }
-      else
-        work->crashMessage += wxString(e.what(), wxConvUTF8);
-    }
-    else {
-        work->crashMessage = wxString(e.what(), wxConvUTF8);
-    }
-
-    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
-    event.SetClientData(work);
-    dest->AddPendingEvent(event);
-  }
-
-private:
-  wxEvtHandler *dest;
-  ObjectBrowserWork *work;
-
-  class TransactionBoundary {
-  public:
-    TransactionBoundary(DatabaseWork *work) : work(work), began(FALSE)
-    {
-      work->DoCommand("BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY");
-      began = TRUE;
-    }
-    ~TransactionBoundary()
-    {
-      if (began) {
-        try {
-          work->DoCommand("END");
-        } catch (...) {
-          // ignore exceptions trying to end transaction
-        }
-      }
-    }
-  private:
-    DatabaseWork *work;
-    bool began;
-  };
+  friend class ObjectBrowserModel;
 };
 
 /**

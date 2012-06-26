@@ -21,6 +21,7 @@
 #include "object_browser_scripts.h"
 #include "dependencies_view.h"
 #include "static_resources.h"
+#include "create_database_dialogue.h"
 
 inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work)
 {
@@ -44,6 +45,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_TREE_SEL_CHANGED(Pqwx_ObjectBrowser, ObjectBrowser::OnItemSelected)
   EVT_SET_FOCUS(ObjectBrowser::OnSetFocus)
 
+  EVT_MENU(XRCID("ServerMenu_NewDatabase"), ObjectBrowser::OnServerMenuNewDatabase)
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
   EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
   EVT_MENU(XRCID("ServerMenu_Refresh"), ObjectBrowser::OnServerMenuRefresh)
@@ -214,6 +216,49 @@ private:
   ObjectBrowser *ob;
   const ObjectModelReference databaseRef;
   std::vector<const SchemaMemberModel*> division;
+};
+
+class ServerWorkLauncher : public WorkLauncher {
+public:
+  ServerWorkLauncher(ObjectBrowserModel *objectBrowserModel, const wxString& serverId) : objectBrowserModel(objectBrowserModel), serverId(serverId) {}
+
+  void DoWork(ActionDialogueWork *work, wxEvtHandler *dest)
+  {
+    objectBrowserModel->SubmitServerWork(serverId, work, dest);
+  }
+
+  ServerConnection GetServerConnection() const
+  {
+    return GetServerModel().conninfo;
+  }
+
+  wxString GetDatabaseName() const
+  {
+    return GetServerModel().GlobalDbName();
+  }
+private:
+  ServerModel& GetServerModel() const
+  {
+    ServerModel *server = objectBrowserModel->FindServer(serverId);
+    wxASSERT(server != NULL);
+    return *server;
+  }
+  ObjectBrowserModel *objectBrowserModel;
+  wxString serverId;
+};
+
+class AfterDatabaseCreated : public CreateDatabaseDialogue::ExecutionCallback {
+public:
+  AfterDatabaseCreated(ObjectModelReference server, ObjectBrowser *ob) : server(server), ob(ob) {}
+
+  void ActionPerformed()
+  {
+    ob->LoadServer(server);
+  }
+
+private:
+  const ObjectModelReference server;
+  ObjectBrowser * const ob;
 };
 
 ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel), contextMenuRef(wxEmptyString), selectedRef(wxEmptyString) {
@@ -1143,6 +1188,14 @@ void ObjectBrowser::UpdateSelectedDatabase()
     ProcessEvent(evt);
     selectedRef = ref;
   }
+}
+
+void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
+{
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
+  wxASSERT(server != NULL);
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, contextMenuRef.GetServerId()), new AfterDatabaseCreated(contextMenuRef, this));
+  dbox->Show();
 }
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {

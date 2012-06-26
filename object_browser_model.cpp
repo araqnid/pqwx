@@ -9,6 +9,98 @@
 #include "object_browser.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
+#include "action_dialogue_work.h"
+
+/**
+ * Implementation of DatabaseWork that deals with passing results back to the GUI thread.
+ */
+class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
+public:
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserManagedWork *work, const SqlDictionary& sqlDictionary) : DatabaseWorkWithDictionary(sqlDictionary), dest(dest), work(work) {}
+  void operator()() {
+    TransactionBoundary txn(work->txMode, this);
+    work->owner = this;
+    work->conn = conn;
+    (*work)();
+  }
+  void NotifyFinished() {
+    wxLogDebug(_T("%p: object browser work finished, notifying GUI thread"), work);
+    wxCommandEvent event(PQWX_ObjectBrowserWorkFinished);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
+  void NotifyCrashed() {
+    wxLogDebug(_T("%p: object browser work crashed with no known exception, notifying GUI thread"), work);
+    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
+  void NotifyCrashed(const std::exception& e) {
+    wxLogDebug(_T("%p: object browser work crashed with some exception, notifying GUI thread"), work);
+
+    const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
+    if (query != NULL) {
+      if (query->IsFromNamedQuery())
+        work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n");
+      else
+        work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n");
+      const PgQueryFailure* queryError = dynamic_cast<const PgQueryFailure*>(&e);
+      if (queryError != NULL) {
+        const PgError& details = queryError->GetDetails();
+        work->crashMessage += details.GetSeverity() + _T(": ") + details.GetPrimary();
+        if (!details.GetDetail().empty())
+          work->crashMessage += _T("\nDETAIL: ") + details.GetDetail();
+        if (!details.GetHint().empty())
+          work->crashMessage += _T("\bHINT: ") + details.GetDetail();
+        for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
+          work->crashMessage += _T("\nCONTEXT: ") + *iter;
+        }
+      }
+      else
+        work->crashMessage += wxString(e.what(), wxConvUTF8);
+    }
+    else {
+      work->crashMessage = wxString(e.what(), wxConvUTF8);
+    }
+
+    wxCommandEvent event(PQWX_ObjectBrowserWorkCrashed);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
+
+private:
+  wxEvtHandler *dest;
+  ObjectBrowserManagedWork *work;
+
+  class TransactionBoundary {
+  public:
+    TransactionBoundary(ObjectBrowserManagedWork::TxMode mode, DatabaseWork *work) : mode(mode), work(work), began(FALSE)
+    {
+      if (mode != ObjectBrowserManagedWork::NO_TRANSACTION) {
+        if (mode == ObjectBrowserManagedWork::READ_ONLY)
+          work->DoCommand("BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY");
+        else
+          work->DoCommand("BEGIN");
+        began = TRUE;
+      }
+    }
+    ~TransactionBoundary()
+    {
+      if (began) {
+        try {
+          work->DoCommand("END");
+        } catch (...) {
+          // ignore exceptions trying to end transaction
+        }
+      }
+    }
+  private:
+    ObjectBrowserManagedWork::TxMode mode;
+    DatabaseWork *work;
+    bool began;
+  };
+
+};
 
 BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowserModel::OnWorkFinished)
@@ -20,24 +112,38 @@ void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowse
 {
   ServerModel *server = FindServerById(serverId);
   wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminConnection(), work);
+  ConnectAndAddWork(server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
+}
+
+void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ActionDialogueWork *work, wxEvtHandler *dest)
+{
+  ServerModel *server = FindServerById(serverId);
+  wxASSERT(server != NULL);
+  ConnectAndAddWork(server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
 }
 
 void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork *work)
 {
   DatabaseModel *database = FindDatabase(databaseRef);
   wxASSERT(database != NULL);
-  ConnectAndAddWork(database->GetDatabaseConnection(), work);
+  ConnectAndAddWork(database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
 }
 
-void ObjectBrowserModel::ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work)
+void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ActionDialogueWork *work, wxEvtHandler *dest)
+{
+  DatabaseModel *database = FindDatabase(databaseRef);
+  wxASSERT(database != NULL);
+  ConnectAndAddWork(database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
+}
+
+void ObjectBrowserModel::ConnectAndAddWork(DatabaseConnection *db, DatabaseWork *work)
 {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
     SetupDatabaseConnection(db);
   }
-  db->AddWork(new ObjectBrowserDatabaseWork(this, work));
+  db->AddWork(work);
 }
 
 void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
@@ -133,7 +239,7 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
 
 void ObjectBrowserModel::SetupDatabaseConnection(DatabaseConnection *db)
 {
-  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork()));
+  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(), ObjectBrowser::GetSqlDictionary()));
 }
 
 void ObjectBrowserModel::Dispose()

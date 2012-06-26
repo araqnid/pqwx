@@ -1,6 +1,10 @@
 <?xml version="1.0" ?>
 <resource>
   <object class="wxMenu" name="ServerMenu">
+    <object class="wxMenuItem" name="ServerMenu_NewDatabase">
+      <label>&amp;New Database...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="ServerMenu_Disconnect">
       <label>&amp;Disconnect</label>
     </object>
@@ -13,9 +17,7 @@
     <label>Server</label>
   </object>
   <object class="wxMenu" name="DatabaseMenu">
-    <object class="wxMenuItem" name="DatabaseMenu_New">
-      <label>&amp;New Database...</label>
-    </object>
+    
     <object class="wxMenuItem" name="DatabaseMenu_Query">
       <label>New &amp;Query</label>
     </object>

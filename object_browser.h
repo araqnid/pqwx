@@ -99,15 +99,15 @@ public:
   /**
    * Open the object finder for the specified database.
    */
-  void FindObject(const DatabaseModel*);
+  void FindObject(const ObjectModelReference& databaseRef);
   /**
    * Zoom to a particular object as a result of the object finder.
    */
-  void ZoomToFoundObject(const DatabaseModel *database, const CatalogueIndex::Document *document) { ZoomToFoundObject(database, document->entityId); }
+  void ZoomToFoundObject(const ObjectModelReference& databaseRef, const CatalogueIndex::Document *document) { ZoomToFoundObject(databaseRef, document->entityId); }
   /**
    * Zoom to a particular database object.
    */
-  void ZoomToFoundObject(const DatabaseModel *database, Oid entityId);
+  void ZoomToFoundObject(const ObjectModelReference& databaseRef, Oid entityId);
 
   /**
    * Dispose of object browser view and model.
@@ -162,7 +162,7 @@ public:
   /**
    * Find the tree item for a database.
    */
-  wxTreeItemId FindDatabaseItem(const DatabaseModel *db) const;
+  wxTreeItemId FindDatabaseItem(const ObjectModelReference& databaseRef) const;
   /**
    * Find the tree item for a relation.
    */
@@ -174,7 +174,7 @@ public:
   /**
    * Find the tree item for the "system schemas" label in a database.
    */
-  wxTreeItemId FindSystemSchemasItem(const DatabaseModel *db) const;
+  wxTreeItemId FindSystemSchemasItem(const ObjectModelReference& databaseRef) const;
   /**
    * Get the lazy loader under a tree item, if any.
    */

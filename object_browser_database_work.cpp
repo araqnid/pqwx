@@ -237,10 +237,7 @@ void LoadDatabaseDescriptionsWork::operator()()
 
 void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
 {
-}
-
-void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
-{
+  DatabaseModel *databaseModel = model->FindDatabase(databaseRef);
   int count = 0;
   for (std::vector<RelationModel>::iterator iter = databaseModel->relations.begin(); iter != databaseModel->relations.end(); iter++) {
     std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
@@ -257,6 +254,10 @@ void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
     }
   }
   wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
+}
+
+void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
+{
 }
 
 /**
@@ -315,13 +316,15 @@ void IndexDatabaseSchemaWork::operator()() {
 
 void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
 {
+  DatabaseModel *database = model->FindDatabase(databaseRef);
+  wxASSERT(database != NULL);
   database->catalogueIndex = catalogueIndex;
 }
 
 void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
 {
   if (completion) {
-    completion->Completed(ob, database, catalogueIndex);
+    completion->Completed(ob, databaseRef, catalogueIndex);
     delete completion;
   }
 }

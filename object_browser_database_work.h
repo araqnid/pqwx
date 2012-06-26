@@ -260,11 +260,11 @@ public:
   /**
    * @param databaseModel Database model to populate
    */
-  LoadDatabaseDescriptionsWork(DatabaseModel *databaseModel) : databaseModel(databaseModel) {
+  LoadDatabaseDescriptionsWork(const ObjectModelReference& databaseRef) : databaseRef(databaseRef) {
     wxLogDebug(_T("%p: work to load schema object descriptions"), this);
   }
 private:
-  DatabaseModel *databaseModel;
+  const ObjectModelReference databaseRef;
   std::map<unsigned long, wxString> descriptions;
 protected:
   void operator()();
@@ -280,7 +280,7 @@ public:
   /**
    * Called when schema index completed.
    */
-  virtual void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *index) = 0;
+  virtual void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *index) = 0;
 };
 
 /**
@@ -292,11 +292,11 @@ public:
    * @param database Database being indexed
    * @param completion Additional callback to notify when indexing completed
    */
-  IndexDatabaseSchemaWork(DatabaseModel *database, IndexSchemaCompletionCallback *completion = NULL) : database(database), completion(completion) {
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *completion = NULL) : databaseRef(databaseRef), completion(completion) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
-  DatabaseModel *database;
+  const ObjectModelReference databaseRef;
   IndexSchemaCompletionCallback *completion;
   CatalogueIndex *catalogueIndex;
   static const std::map<wxString, CatalogueIndex::Type> typeMap;

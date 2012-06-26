@@ -281,8 +281,8 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 void ObjectBrowser::LoadDatabase(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) {
   DatabaseModel *database = objectBrowserModel->FindDatabase(databaseRef);
   SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(databaseRef, indexCompletion == NULL));
-  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(database, indexCompletion));
-  SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(database));
+  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(databaseRef, indexCompletion));
+  SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(databaseRef));
 }
 
 void ObjectBrowser::LoadRelation(const ObjectModelReference& relationRef) {
@@ -610,7 +610,7 @@ void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vect
 void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool expandAfter)
 {
   const DatabaseModel *databaseModel = objectBrowserModel->FindDatabase(databaseRef);
-  wxTreeItemId databaseItem = FindDatabaseItem(databaseModel);
+  wxTreeItemId databaseItem = FindDatabaseItem(databaseRef);
   wxWindowUpdateLocker noUpdates(this);
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
@@ -760,26 +760,26 @@ void ObjectBrowser::DisconnectSelected() {
 
 class ZoomToFoundObjectOnCompletion : public ObjectFinder::Completion {
 public:
-  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, DatabaseModel *database) : database(database), ob(ob) {}
+  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, const ObjectModelReference& databaseRef) : databaseRef(databaseRef), ob(ob) {}
   void OnObjectChosen(const CatalogueIndex::Document *document) {
-    ob->ZoomToFoundObject(database, document);
+    ob->ZoomToFoundObject(databaseRef, document);
   }
   void OnCancelled() {
   }
 private:
-  DatabaseModel *database;
+  ObjectModelReference databaseRef;
   ObjectBrowser *ob;
 };
 
 class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
 protected:
-  void Completed(ObjectBrowser *ob, DatabaseModel *db, const CatalogueIndex *catalogue) {
-    ob->FindObject(db);
+  void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *catalogue) {
+    ob->FindObject(databaseRef);
   }
 };
 
 void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &dbname) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
+  const DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
@@ -787,10 +787,11 @@ void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &d
     return;
   }
 
-  FindObject(database);
+  FindObject(*database);
 }
 
-void ObjectBrowser::FindObject(const DatabaseModel *database) {
+void ObjectBrowser::FindObject(const ObjectModelReference& databaseRef) {
+  const DatabaseModel *database = objectBrowserModel->FindDatabase(databaseRef);
   wxASSERT(database->loaded);
   wxASSERT(database->catalogueIndex != NULL);
 
@@ -798,7 +799,7 @@ void ObjectBrowser::FindObject(const DatabaseModel *database) {
   finder->SetFocus();
   Oid entityId = finder->ShowModal();
   if (entityId > 0) {
-    ZoomToFoundObject(database, entityId);
+    ZoomToFoundObject(databaseRef, entityId);
   }
 }
 
@@ -815,14 +816,14 @@ wxTreeItemId ObjectBrowser::FindServerItem(const wxString& serverId) const
   } while (1);
 }
 
-wxTreeItemId ObjectBrowser::FindDatabaseItem(const DatabaseModel *database) const
+wxTreeItemId ObjectBrowser::FindDatabaseItem(const ObjectModelReference& databaseRef) const
 {
-  std::map< ObjectModelReference, wxTreeItemId >::const_iterator itemPtr = databaseItems.find(*database);
+  std::map< ObjectModelReference, wxTreeItemId >::const_iterator itemPtr = databaseItems.find(databaseRef);
   wxASSERT(itemPtr != databaseItems.end());
   return (*itemPtr).second;
 }
 
-wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const DatabaseModel *database) const {
+wxTreeItemId ObjectBrowser::FindSystemSchemasItem(const ObjectModelReference& database) const {
   wxTreeItemId databaseItem = FindDatabaseItem(database);
   wxASSERT(databaseItem.IsOk());
   wxTreeItemIdValue cookie;
@@ -851,17 +852,17 @@ wxTreeItemId ObjectBrowser::FindRelationItem(const ObjectModelReference& relatio
   return item;
 }
 
-void ObjectBrowser::ZoomToFoundObject(const DatabaseModel *database, Oid entityId) {
-  wxTreeItemId item = LookupSymbolItem(*database, entityId);
+void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, Oid entityId) {
+  wxTreeItemId item = LookupSymbolItem(databaseRef, entityId);
   if (!item.IsOk()) {
-    item = FindSystemSchemasItem(database);
+    item = FindSystemSchemasItem(databaseRef);
     LazyLoader *systemSchemasLoader = GetLazyLoader(item);
     if (systemSchemasLoader != NULL) {
       wxBusyCursor wait;
       wxLogDebug(_T("Forcing load of system schemas"));
       systemSchemasLoader->load(item);
       DeleteLazyLoader(item);
-      item = LookupSymbolItem(*database, entityId);
+      item = LookupSymbolItem(databaseRef, entityId);
     }
   }
   wxASSERT(item.IsOk());

@@ -177,7 +177,7 @@ DatabaseModel *ObjectBrowserModel::FindDatabase(const ServerConnection &server, 
 
 DatabaseModel *ObjectBrowserModel::FindDatabase(const ObjectModelReference &ref)
 {
-  ServerModel *serverModel = FindServer(ref);
+  ServerModel *serverModel = FindServer(ref.ServerRef());
   if (serverModel == NULL) return NULL;
   return serverModel->FindDatabase(ref);
 }

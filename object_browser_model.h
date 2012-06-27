@@ -27,6 +27,7 @@ public:
   Oid GetOid() const { return oid; }
   int GetObjectSubid() const { return subid; }
 
+  ObjectModelReference ServerRef() const { return ObjectModelReference(serverId); }
   ObjectModelReference DatabaseRef() const { return ObjectModelReference(serverId, database); }
 
   bool operator<(const ObjectModelReference& other) const
@@ -448,7 +449,7 @@ public:
   /**
    * Find an existing server by reference.
    */
-  ServerModel *FindServer(const ObjectModelReference &ref) { return FindServerById(ref.GetServerId()); }
+  ServerModel *FindServer(const ObjectModelReference &ref) { wxASSERT(ref.GetOid() == InvalidOid); return FindServerById(ref.GetServerId()); }
 
   /**
    * Find an existing database matching some connection parameters and database name.

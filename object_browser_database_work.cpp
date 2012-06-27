@@ -210,7 +210,7 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
 
 void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
 {
-  ServerModel *server = model->FindServer(databaseRef);
+  ServerModel *server = model->FindServer(databaseRef.ServerRef());
   wxASSERT(server != NULL);
   server->UpdateDatabase(incoming);
 }

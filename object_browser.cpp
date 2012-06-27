@@ -236,7 +236,7 @@ void ObjectBrowser::Dispose()
 
 void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
   ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
-  ServerModel *serverModel = objectBrowserModel->FindServer(*ref);
+  ServerModel *serverModel = objectBrowserModel->FindServer(ref->ServerRef());
   SubmitServerWork(serverModel, new RefreshDatabaseListWork(ref->GetServerId()));
 }
 
@@ -988,7 +988,7 @@ void ObjectBrowser::UpdateSelectedDatabase()
 
   if (ref != selectedRef) {
     DatabaseModel *database = objectBrowserModel->FindDatabase(ref.DatabaseRef());
-    ServerModel *server = objectBrowserModel->FindServer(ref);
+    ServerModel *server = objectBrowserModel->FindServer(ref.ServerRef());
     wxString dbname;
     if (database) dbname = database->name;
     PQWXDatabaseEvent evt(server->conninfo, dbname, PQWX_ObjectSelected);

@@ -42,6 +42,28 @@ public:
     return subid < other.subid;
   }
 
+  bool operator==(const ObjectModelReference& other) const
+  {
+    if (&other == this) return true;
+    if (serverId != other.serverId) return false;
+    if (database != other.database) return false;
+    if (regclass != other.regclass) return false;
+    if (oid != other.oid) return false;
+    if (subid != other.subid) return false;
+    return true;
+  }
+
+  bool operator!=(const ObjectModelReference& other) const
+  {
+    if (&other == this) return false;
+    if (serverId != other.serverId) return true;
+    if (database != other.database) return true;
+    if (regclass != other.regclass) return true;
+    if (oid != other.oid) return true;
+    if (subid != other.subid) return true;
+    return false;
+  }
+
   static const Oid PG_ATTRIBUTE = 1249;
   static const Oid PG_CLASS = 1259;
   static const Oid PG_CONSTRAINT = 2606;

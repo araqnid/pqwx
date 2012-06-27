@@ -167,9 +167,17 @@ public:
   void DeleteLazyLoader(wxTreeItemId item);
 
   /**
+   * @return True if some object is "currently selected".
+   */
+  bool IsObjectSelected() const { return !selectedRef.GetServerId().empty(); }
+  /**
    * Consider no object to be "currently selected".
    */
-  void UnmarkSelected() { currentlySelected = false; }
+  void UnmarkSelected() { selectedRef = ObjectModelReference(wxEmptyString); }
+  /*
+   * @return Reference to the "currently selected" object.
+   */
+  ObjectModelReference GetSelected() const { return selectedRef; }
 
   ObjectBrowserModel* Model() const { return objectBrowserModel; }
 
@@ -244,9 +252,7 @@ private:
   wxTreeItemId contextMenuItem;
 
   // remember which server/database was last mentioned in an object-selected event
-  ServerModel *selectedServer;
-  DatabaseModel *selectedDatabase;
-  bool currentlySelected;
+  ObjectModelReference selectedRef;
   void UpdateSelectedDatabase();
 
   // see constructor implementation for the image list initialisation these correspond to

@@ -169,7 +169,7 @@ private:
   std::vector<const SchemaMemberModel*> division;
 };
 
-ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel), contextMenuRef(wxEmptyString) {
+ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel), contextMenuRef(wxEmptyString), selectedRef(wxEmptyString) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
@@ -201,7 +201,6 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_dictionary.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_configuration.png")));
   AssignImageList(images);
-  currentlySelected = false;
   objectBrowserModel->RegisterView(this);
 }
 
@@ -965,10 +964,14 @@ void ObjectBrowser::OnSetFocus(wxFocusEvent &event)
   UpdateSelectedDatabase();
 }
 
-void ObjectBrowser::UpdateSelectedDatabase() {
+void ObjectBrowser::UpdateSelectedDatabase()
+{
   wxTreeItemId selected = GetSelection();
 
   if (!selected.IsOk()) {
+    if (!IsObjectSelected())
+      return;
+    UnmarkSelected();
     wxCommandEvent event(PQWX_NoObjectSelected);
     ProcessEvent(event);
     return;
@@ -977,33 +980,15 @@ void ObjectBrowser::UpdateSelectedDatabase() {
   ModelReference ref = FindItemContext(selected);
 
   if (ref.GetServerId().empty()) {
-    if (currentlySelected) {
-      currentlySelected = false;
-      selectedServer = NULL;
-      selectedDatabase = NULL;
-    }
+    UnmarkSelected();
+    wxCommandEvent event(PQWX_NoObjectSelected);
+    ProcessEvent(event);
     return;
   }
 
-  ServerModel *server = objectBrowserModel->FindServer(ref.GetServerId());
-  DatabaseModel *database;
-  if (ref.GetObjectClass() == InvalidOid)
-    database = NULL;
-  else
-    database = objectBrowserModel->FindDatabase(ref.DatabaseRef());
-
-  bool changed;
-  if (!currentlySelected)
-    changed = true;
-  else if (database == NULL)
-    changed = selectedDatabase != NULL || selectedServer != server;
-  else
-    changed = selectedDatabase != database;
-
-  if (changed) {
-    selectedServer = server;
-    selectedDatabase = database;
-    currentlySelected = true;
+  if (ref != selectedRef) {
+    DatabaseModel *database = objectBrowserModel->FindDatabase(ref.DatabaseRef());
+    ServerModel *server = objectBrowserModel->FindServer(ref);
     wxString dbname;
     if (database) dbname = database->name;
     PQWXDatabaseEvent evt(server->conninfo, dbname, PQWX_ObjectSelected);
@@ -1014,6 +999,7 @@ void ObjectBrowser::UpdateSelectedDatabase() {
       evt.SetString(server->Identification());
     }
     ProcessEvent(evt);
+    selectedRef = ref;
   }
 }
 

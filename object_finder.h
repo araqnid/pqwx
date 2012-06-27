@@ -28,6 +28,7 @@ public:
    */
   class Completion {
   public:
+    virtual ~Completion() { }
     /**
      * Object chosen in dialogue box.
      */

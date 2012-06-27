@@ -37,6 +37,7 @@ public:
    */
   class CompletionCallback {
   public:
+    virtual ~CompletionCallback() { }
     /**
      * Connection established.
      *
@@ -95,6 +96,7 @@ private:
   class ConnectionWork : public ConnectionCallback {
   public:
     ConnectionWork(ConnectDialogue *owner, const ServerConnection &server, DatabaseConnection *db) : owner(owner), server(server), db(db) { }
+    virtual ~ConnectionWork() { }
     void OnConnection(bool usedPassword_) {
       state = CONNECTED;
       usedPassword = usedPassword_;

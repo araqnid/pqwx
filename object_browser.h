@@ -205,6 +205,7 @@ private:
   void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
 
   friend class SystemSchemasLoader;
+  friend class ScriptWork;
 
   DECLARE_SCRIPT_HANDLERS(Database, Create);
   DECLARE_SCRIPT_HANDLERS(Database, Alter);
@@ -236,10 +237,7 @@ private:
   wxMenu *functionMenu;
 
   // remember what was the context for a context menu
-  ServerModel *contextMenuServer;
-  DatabaseModel *contextMenuDatabase;
-  RelationModel *contextMenuRelation;
-  FunctionModel *contextMenuFunction;
+  ObjectModelReference contextMenuRef;
   wxTreeItemId contextMenuItem;
 
   // remember which server/database was last mentioned in an object-selected event

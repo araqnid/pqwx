@@ -18,7 +18,8 @@ void ScriptWork::UpdateView(ObjectBrowser *ob)
 {
   switch (output) {
   case Window: {
-    PQWXDatabaseEvent evt(server, dbname, PQWX_ScriptToWindow);
+    const DatabaseModel *database = ob->objectBrowserModel->FindDatabase(databaseRef);
+    PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
     evt.SetString(script);
     ob->ProcessEvent(evt);
     return;

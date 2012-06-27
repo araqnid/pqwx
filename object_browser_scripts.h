@@ -29,15 +29,14 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(const ServerConnection &server, const wxString &dbname, Mode mode, Output output) : ObjectBrowserWork(ScriptWork::GetSqlDictionary()), server(server), dbname(dbname), mode(mode), output(output) {}
+  ScriptWork(const ObjectModelReference& databaseRef, Mode mode, Output output) : ObjectBrowserWork(ScriptWork::GetSqlDictionary()), databaseRef(databaseRef), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;
 
   virtual void GenerateScript(OutputIterator output) = 0;
 
-  const ServerConnection& server;
-  wxString dbname;
+  const ObjectModelReference databaseRef;
   const Mode mode;
 
   static std::map<wxChar, wxString> PrivilegeMap(const wxString &spec);
@@ -147,14 +146,14 @@ private:
  */
 class DatabaseScriptWork : public ScriptWork {
 public:
-  DatabaseScriptWork(const ServerConnection& server, const wxString &dbname, Oid dboid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), dboid(dboid)
+  DatabaseScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), dboid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate database script"), this);
   }
 protected:
   void GenerateScript(OutputIterator output);
 private:
-  Oid dboid;
+  const Oid dboid;
   static std::map<wxChar, wxString> privilegeMap;
 };
 
@@ -163,12 +162,12 @@ private:
  */
 class TableScriptWork : public ScriptWork {
 public:
-  TableScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  TableScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate table script"), this);
   }
 private:
-  Oid reloid;
+  const Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
   void GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow);
 protected:
@@ -180,12 +179,12 @@ protected:
  */
 class ViewScriptWork : public ScriptWork {
 public:
-  ViewScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  ViewScriptWork(const ObjectModelReference& viewRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(viewRef.DatabaseRef(), mode, output), reloid(viewRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate view script"), this);
   }
 private:
-  Oid reloid;
+  const Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);
@@ -196,12 +195,12 @@ protected:
  */
 class SequenceScriptWork : public ScriptWork {
 public:
-  SequenceScriptWork(const ServerConnection& server, const wxString &dbname, Oid reloid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), reloid(reloid)
+  SequenceScriptWork(const ObjectModelReference& sequenceRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequenceRef.DatabaseRef(), mode, output), reloid(sequenceRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate sequence script"), this);
   }
 private:
-  Oid reloid;
+  const Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);
@@ -212,7 +211,7 @@ protected:
  */
 class FunctionScriptWork : public ScriptWork {
 public:
-  FunctionScriptWork(const ServerConnection& server, const wxString &dbname, Oid procoid, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(server, dbname, mode, output), procoid(procoid)
+  FunctionScriptWork(const ObjectModelReference& functionRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(functionRef.DatabaseRef(), mode, output), procoid(functionRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate function script"), this);
   }

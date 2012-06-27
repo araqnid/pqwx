@@ -78,36 +78,36 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Function, Select)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, output)        \
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output)        \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(contextMenuDatabase, new menu##ScriptWork(database->server->conninfo, database->name, oid, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef()), new menu##ScriptWork(contextMenuRef, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, database, oid)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Window)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, File)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, database, oid, Clipboard)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode)        \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window)        \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File)        \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard)
 
-IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuDatabase, contextMenuDatabase->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuDatabase, contextMenuDatabase->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuDatabase, contextMenuDatabase->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuDatabase, contextMenuRelation->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuDatabase, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuDatabase, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuDatabase, contextMenuFunction->oid)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuDatabase, contextMenuFunction->oid)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Alter)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Select)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Insert)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Update)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Delete)
+IMPLEMENT_SCRIPT_HANDLERS(View, Create)
+IMPLEMENT_SCRIPT_HANDLERS(View, Alter)
+IMPLEMENT_SCRIPT_HANDLERS(View, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(View, Select)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Alter)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Select)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
@@ -165,7 +165,7 @@ private:
   std::vector<const SchemaMemberModel*> division;
 };
 
-ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel) {
+ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel), contextMenuRef(wxEmptyString) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
@@ -899,23 +899,20 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
   ModelReference *ref = dynamic_cast<ModelReference*>(data);
   if (ref == NULL) return;
 
+  contextMenuRef = *ref;
+
   switch (ref->GetObjectClass()) {
   case InvalidOid:
-    contextMenuServer = objectBrowserModel->FindServer(*ref);
     PopupMenu(serverMenu);
     break;
 
   case ObjectModelReference::PG_DATABASE:
-    contextMenuDatabase = objectBrowserModel->FindDatabase(*ref);
     PopupMenu(databaseMenu);
     break;
 
   case ObjectModelReference::PG_CLASS:
     {
-      DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
-      RelationModel *relation = objectBrowserModel->FindRelation(*ref);
-      contextMenuDatabase = database;
-      contextMenuRelation = relation;
+      const RelationModel *relation = objectBrowserModel->FindRelation(*ref);
       switch (relation->type) {
       case RelationModel::TABLE:
         PopupMenu(tableMenu);
@@ -931,13 +928,7 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
     break;
 
   case ObjectModelReference::PG_PROC:
-    {
-      DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
-      FunctionModel *function = objectBrowserModel->FindFunction(*ref);
-      contextMenuDatabase = database;
-      contextMenuFunction = function;
-      PopupMenu(functionMenu);
-    }
+    PopupMenu(functionMenu);
     break;
   }
 }
@@ -1019,45 +1010,67 @@ void ObjectBrowser::UpdateSelectedDatabase() {
 }
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
-  wxLogDebug(_T("Disconnect: %s (context menu)"), contextMenuServer->Identification().c_str());
-  objectBrowserModel->RemoveServer(contextMenuServer->Identification());
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  wxASSERT(server != NULL);
+  wxLogDebug(_T("Disconnect: %s (context menu)"), server->Identification().c_str());
+  objectBrowserModel->RemoveServer(server->Identification());
   Delete(contextMenuItem);
 }
 
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Refresh server: ") + contextMenuServer->Identification());
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  wxASSERT(server != NULL);
+  wxMessageBox(_T("TODO Refresh server: ") + server->Identification());
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Show server properties: ") + contextMenuServer->Identification());
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  wxASSERT(server != NULL);
+  wxMessageBox(_T("TODO Show server properties: ") + server->Identification());
 }
 
 void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
 {
-  PQWXDatabaseEvent evt(contextMenuDatabase->server->conninfo, contextMenuDatabase->name, PQWX_ScriptNew);
+  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  wxASSERT(database != NULL);
+  PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptNew);
   ProcessEvent(evt);
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Refresh database: ") + contextMenuDatabase->server->Identification() + _T(" ") + contextMenuDatabase->name);
+  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  wxASSERT(database != NULL);
+  wxMessageBox(_T("TODO Refresh database: ") + database->server->Identification() + _T(" ") + database->name);
 }
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
-  wxMessageBox(_T("TODO Show database properties: ") + contextMenuDatabase->server->Identification() + _T(" ") + contextMenuDatabase->name);
+  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  wxASSERT(database != NULL);
+  wxMessageBox(_T("TODO Show database properties: ") + database->server->Identification() + _T(" ") + database->name);
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuDatabase->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) contextMenuDatabase->oid, (Oid) contextMenuDatabase->oid);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  wxASSERT(database != NULL);
+  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), database->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) database->oid, (Oid) database->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), ObjectModelReference::PG_CLASS, (Oid) contextMenuRelation->oid, (Oid) contextMenuDatabase->oid);
+  RelationModel *relation = objectBrowserModel->FindRelation(contextMenuRef);
+  wxASSERT(relation != NULL);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef());
+  wxASSERT(database != NULL);
+  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), relation->FormatName(), ObjectModelReference::PG_CLASS, (Oid) relation->oid, (Oid) database->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
-  DependenciesView *dialog = new DependenciesView(NULL, contextMenuDatabase->GetDatabaseConnection(), contextMenuRelation->FormatName(), ObjectModelReference::PG_PROC, (Oid) contextMenuFunction->oid, (Oid) contextMenuDatabase->oid);
+  FunctionModel *function = objectBrowserModel->FindFunction(contextMenuRef);
+  wxASSERT(function != NULL);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef());
+  wxASSERT(database != NULL);
+  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), function->FormatName(), ObjectModelReference::PG_PROC, (Oid) function->oid, (Oid) database->oid);
   dialog->Show();
 }
 

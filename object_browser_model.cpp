@@ -13,6 +13,7 @@
 BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowserModel::OnWorkFinished)
   PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowserModel::OnWorkCrashed)
+  EVT_TIMER(ObjectBrowserModel::TIMER_MAINTAIN, ObjectBrowserModel::OnTimerTick)
 END_EVENT_TABLE()
 
 void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowserWork *work)
@@ -66,6 +67,18 @@ void ObjectBrowserModel::OnWorkCrashed(wxCommandEvent &e)
   }
 
   delete work;
+}
+
+void ObjectBrowserModel::OnTimerTick(wxTimerEvent &e)
+{
+  Maintain();
+}
+
+void ObjectBrowserModel::Maintain()
+{
+  for (std::list<ServerModel>::iterator serverIter = servers.begin(); serverIter != servers.end(); serverIter++) {
+    (*serverIter).Maintain();
+  }
 }
 
 wxString ObjectModelReference::Identify() const
@@ -193,6 +206,19 @@ DatabaseConnection* ServerModel::GetDatabaseConnection(const wxString &dbname)
   }
   connections[dbname] = db;
   return db;
+}
+
+void ServerModel::Maintain()
+{
+  for (std::map<wxString, DatabaseConnection*>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    DatabaseConnection *db = iter->second;
+    if (!db->IsAcceptingWork()) {
+      wxLogDebug(_T("Cleaning stale connection %s"), db->Identification().c_str());
+      db->Dispose();
+      delete db;
+      connections.erase(iter->first);
+    }
+  }
 }
 
 void ServerModel::BeginDisconnectAll(std::vector<DatabaseConnection*> &disconnecting)

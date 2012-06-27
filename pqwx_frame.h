@@ -54,6 +54,7 @@ private:
 
   ObjectBrowser *objectBrowser;
   DocumentsNotebook *documentsBook;
+  wxTimer *objectBrowserModelTimer;
 
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);

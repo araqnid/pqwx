@@ -9,6 +9,7 @@
 #include <vector>
 #include <list>
 #include "wx/treectrl.h"
+#include "wx/timer.h"
 #include "server_connection.h"
 #include "database_connection.h"
 #include "versioned_sql.h"

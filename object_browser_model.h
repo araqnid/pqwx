@@ -395,6 +395,11 @@ public:
    * @return The tablespaces on this server
    */
   const std::vector<TablespaceModel>& GetTablespaces() const { return tablespaces; }
+
+  /**
+   * Clean up expired and stale database connections.
+   */
+  void Maintain();
 private:
   std::vector<DatabaseModel> databases;
   std::vector<TablespaceModel> tablespaces;
@@ -492,6 +497,13 @@ public:
 
   void SubmitServerWork(const wxString& serverId, ObjectBrowserWork*);
   void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork*);
+
+  /**
+   * Clean up expired and stale database connections.
+   */
+  void Maintain();
+
+  static const int TIMER_MAINTAIN = 20000;
 private:
   ServerModel *FindServerById(const wxString&);
   std::list<ServerModel> servers;
@@ -499,6 +511,7 @@ private:
   DECLARE_EVENT_TABLE();
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
+  void OnTimerTick(wxTimerEvent&);
   void ConnectAndAddWork(DatabaseConnection *db, ObjectBrowserWork *work);
 };
 

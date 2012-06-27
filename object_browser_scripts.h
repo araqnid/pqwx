@@ -175,6 +175,22 @@ protected:
 };
 
 /**
+ * Produce schema scripts.
+ */
+class TableSchemaScriptWork : public ScriptWork {
+public:
+  TableSchemaScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate schema script"), this);
+  }
+private:
+  const Oid reloid;
+  static std::map<wxChar, wxString> privilegeMap;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
  * Produce view scripts.
  */
 class ViewScriptWork : public ScriptWork {

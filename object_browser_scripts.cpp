@@ -487,6 +487,32 @@ void TableScriptWork::GenerateForeignKey(OutputIterator output, const wxString& 
 
 std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=INSERT r=SELECT w=UPDATE d=DELETE D=TRUNCATE x=REFERENCES t=TRIGGER"));
 
+void TableSchemaScriptWork::GenerateScript(OutputIterator output)
+{
+  QueryResults::Row schemaDetail = Query(_T("Schema Detail")).OidParam(reloid).UniqueResult();
+  wxString schemaName = QuoteIdent(schemaDetail[0]);
+  switch (mode) {
+  case Create: {
+    wxString sql;
+    sql << _T("CREATE SCHEMA ") << schemaName << _T(" AUTHORIZATION ") << QuoteIdent(schemaDetail[1]);
+    *output++ = sql;
+
+    PgAcl(schemaDetail[2]).GenerateGrantStatements(output, schemaDetail[1], schemaName, privilegeMap);
+  }
+    break;
+
+  case Drop: {
+    *output++ = _T("DROP SCHEMA IF EXISTS ") + schemaName;
+  }
+    break;
+
+  default:
+    wxASSERT(false);
+  }
+}
+
+std::map<wxChar, wxString> TableSchemaScriptWork::privilegeMap = PrivilegeMap(_T("C=CREATE U=USAGE"));
+
 void ViewScriptWork::GenerateScript(OutputIterator output)
 {
   QueryResults::Row viewDetail = Query(_T("View Detail")).OidParam(reloid).UniqueResult();

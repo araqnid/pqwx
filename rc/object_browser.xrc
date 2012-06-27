@@ -156,7 +156,52 @@
         </object>
         <label>D&amp;ELETE to</label>
       </object>
-      <label>&amp;Script table as</label>
+      <label>&amp;Script Table As</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenu" name="TableMenu_Schema">
+      <label>Schema '$$'</label>
+      <object class="wxMenuItem" name="TableSchemaMenu_New">
+        <label>&amp;New Schema...</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenu">
+        <object class="wxMenu">
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateWindow">
+            <label>&amp;New query window</label>
+          </object>
+          <object class="separator"/>
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateFile">
+            <label>&amp;File...</label>
+          </object>
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateClipboard">
+            <label>&amp;Clipboard</label>
+          </object>
+          <label>&amp;CREATE to</label>
+        </object>
+        <object class="wxMenu">
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropWindow">
+            <label>&amp;New query window</label>
+          </object>
+          <object class="separator"/>
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropFile">
+            <label>&amp;File...</label>
+          </object>
+          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropClipboard">
+            <label>&amp;Clipboard</label>
+          </object>
+          <label>&amp;DROP to</label>
+        </object>
+        <label>&amp;Script Schema As</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="TableSchemaMenu_ViewDependencies">
+        <label>View &amp;Dependencies...</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="TableSchemaMenu_Properties">
+        <label>P&amp;roperties</label>
+      </object>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="TableMenu_ViewDependencies">
@@ -369,6 +414,11 @@
       <label>Re&amp;fresh</label>
     </object>
     <object class="wxMenuItem" name="FunctionMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="SchemaMenu">
+    <object class="wxMenuItem" name="SchemaMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
   </object>

@@ -291,13 +291,6 @@ private:
   wxString GetToolTipText(const wxTreeItemId& itemId) const;
 };
 
-/**
- * Event ID for database work finishing.
- *
- * Should refactor this to make a proper event type.
- */
-const int EVENT_WORK_FINISHED = 10000;
-
 #endif
 
 // Local Variables:

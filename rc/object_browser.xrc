@@ -365,9 +365,7 @@
       <label>&amp;Script Function as</label>
     </object>
     <object class="separator"/>
-    <object class="wxMenuItem" name="FunctionMenu_ViewDependencies">
-      <label>View &amp;Dependencies...</label>
-    </object>
+    <object_ref name="FunctionMenu_Schema" ref="SchemaMenu"/>
     <object class="separator"/>
     <object class="wxMenuItem" name="FunctionMenu_ViewDependencies">
       <label>View &amp;Dependencies...</label>

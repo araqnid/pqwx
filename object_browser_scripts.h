@@ -177,9 +177,9 @@ protected:
 /**
  * Produce schema scripts.
  */
-class TableSchemaScriptWork : public ScriptWork {
+class SchemaScriptWork : public ScriptWork {
 public:
-  TableSchemaScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
+  SchemaScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate schema script"), this);
   }

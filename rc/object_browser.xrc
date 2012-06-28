@@ -159,50 +159,8 @@
       <label>&amp;Script Table As</label>
     </object>
     <object class="separator"/>
-    <object class="wxMenu" name="TableMenu_Schema">
-      <label>Schema '$$'</label>
-      <object class="wxMenuItem" name="TableSchemaMenu_New">
-        <label>&amp;New Schema...</label>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenu">
-        <object class="wxMenu">
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateWindow">
-            <label>&amp;New query window</label>
-          </object>
-          <object class="separator"/>
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateFile">
-            <label>&amp;File...</label>
-          </object>
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptCreateClipboard">
-            <label>&amp;Clipboard</label>
-          </object>
-          <label>&amp;CREATE to</label>
-        </object>
-        <object class="wxMenu">
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropWindow">
-            <label>&amp;New query window</label>
-          </object>
-          <object class="separator"/>
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropFile">
-            <label>&amp;File...</label>
-          </object>
-          <object class="wxMenuItem" name="TableSchemaMenu_ScriptDropClipboard">
-            <label>&amp;Clipboard</label>
-          </object>
-          <label>&amp;DROP to</label>
-        </object>
-        <label>&amp;Script Schema As</label>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="TableSchemaMenu_ViewDependencies">
-        <label>View &amp;Dependencies...</label>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="TableSchemaMenu_Properties">
-        <label>P&amp;roperties</label>
-      </object>
-    </object>
+    <object_ref name="TableMenu_Schema" ref="SchemaMenu"/>
+    
     <object class="separator"/>
     <object class="wxMenuItem" name="TableMenu_ViewDependencies">
       <label>View &amp;Dependencies...</label>
@@ -276,6 +234,8 @@
       <label>&amp;Script view as</label>
     </object>
     <object class="separator"/>
+    <object_ref name="ViewMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
     <object class="wxMenuItem" name="ViewMenu_ViewDependencies">
       <label>View &amp;Dependencies...</label>
     </object>
@@ -334,9 +294,8 @@
       <label>&amp;Script sequence as</label>
     </object>
     <object class="separator"/>
-    <object class="wxMenuItem" name="SequenceMenu_ViewDependencies">
-      <label>View &amp;Dependencies...</label>
-    </object>
+    <object_ref name="SequenceMenu_Schema" ref="SchemaMenu"/>
+    
     <object class="separator"/>
     <object class="wxMenuItem" name="SequenceMenu_Refresh">
       <label>Re&amp;fresh</label>
@@ -410,6 +369,10 @@
       <label>View &amp;Dependencies...</label>
     </object>
     <object class="separator"/>
+    <object class="wxMenuItem" name="FunctionMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="FunctionMenu_Refresh">
       <label>Re&amp;fresh</label>
     </object>
@@ -418,6 +381,45 @@
     </object>
   </object>
   <object class="wxMenu" name="SchemaMenu">
+    <label>Schema '$$'</label>
+    <object class="wxMenuItem" name="SchemaMenu_New">
+      <label>&amp;New Schema...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenu">
+      <object class="wxMenu">
+        <object class="wxMenuItem" name="SchemaMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="SchemaMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="SchemaMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;CREATE to</label>
+      </object>
+      <object class="wxMenu">
+        <object class="wxMenuItem" name="SchemaMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="SchemaMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="SchemaMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Schema As</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="SchemaMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="SchemaMenu_Properties">
       <label>P&amp;roperties</label>
     </object>

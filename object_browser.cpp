@@ -65,8 +65,8 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Table, Insert)
   BIND_SCRIPT_HANDLERS(Table, Update)
   BIND_SCRIPT_HANDLERS(Table, Delete)
-  BIND_SCRIPT_HANDLERS(TableSchema, Create)
-  BIND_SCRIPT_HANDLERS(TableSchema, Drop)
+  BIND_SCRIPT_HANDLERS(Schema, Create)
+  BIND_SCRIPT_HANDLERS(Schema, Drop)
   BIND_SCRIPT_HANDLERS(View, Create)
   BIND_SCRIPT_HANDLERS(View, Alter)
   BIND_SCRIPT_HANDLERS(View, Drop)
@@ -99,8 +99,8 @@ IMPLEMENT_SCRIPT_HANDLERS(Table, Select)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Insert)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Update)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Delete)
-IMPLEMENT_SCRIPT_HANDLERS(TableSchema, Create)
-IMPLEMENT_SCRIPT_HANDLERS(TableSchema, Drop)
+IMPLEMENT_SCRIPT_HANDLERS(Schema, Create)
+IMPLEMENT_SCRIPT_HANDLERS(Schema, Drop)
 IMPLEMENT_SCRIPT_HANDLERS(View, Create)
 IMPLEMENT_SCRIPT_HANDLERS(View, Alter)
 IMPLEMENT_SCRIPT_HANDLERS(View, Drop)
@@ -890,7 +890,16 @@ void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, O
   Expand(item);
 }
 
-void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
+void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const SchemaMemberModel *member)
+{
+  wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
+  wxASSERT(schemaItem != NULL);
+  schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.c_str()));
+  PopupMenu(menu);
+}
+
+void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
+{
   contextMenuItem = event.GetItem();
 
   wxTreeItemData *data = GetItemData(contextMenuItem);
@@ -916,26 +925,22 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event) {
   case ObjectModelReference::PG_CLASS:
     {
       const RelationModel *relation = objectBrowserModel->FindRelation(*ref);
-      wxMenuItem *schemaItem;
       switch (relation->type) {
       case RelationModel::TABLE:
-        schemaItem = tableMenu->FindItem(XRCID("TableMenu_Schema"), NULL);
-        wxASSERT(schemaItem != NULL);
-        schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), relation->schema.c_str()));
-        PopupMenu(tableMenu);
+        OpenSchemaMemberMenu(tableMenu, XRCID("TableMenu_Schema"), relation);
         break;
       case RelationModel::VIEW:
-        PopupMenu(viewMenu);
+        OpenSchemaMemberMenu(viewMenu, XRCID("ViewMenu_Schema"), relation);
         break;
       case RelationModel::SEQUENCE:
-        PopupMenu(sequenceMenu);
+        OpenSchemaMemberMenu(sequenceMenu, XRCID("SequenceMenu_Schema"), relation);
         break;
       }
     }
     break;
 
   case ObjectModelReference::PG_PROC:
-    PopupMenu(functionMenu);
+    OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), objectBrowserModel->FindFunction(*ref));
     break;
   }
 }

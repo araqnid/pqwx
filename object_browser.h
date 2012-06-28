@@ -204,6 +204,8 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
+  void OpenSchemaMemberMenu(wxMenu*, int schemaItemId, const SchemaMemberModel*);
+
   void AppendRoleItems(const ServerModel *serverModel, wxTreeItemId serverItem);
   void AppendDatabaseItems(const ServerModel*, wxTreeItemId parent, const std::vector<const DatabaseModel*> &database);
   void AppendTablespaceItems(const ServerModel*, wxTreeItemId parent, const std::vector<const TablespaceModel*> &database);
@@ -225,8 +227,8 @@ private:
   DECLARE_SCRIPT_HANDLERS(Table, Insert);
   DECLARE_SCRIPT_HANDLERS(Table, Update);
   DECLARE_SCRIPT_HANDLERS(Table, Delete);
-  DECLARE_SCRIPT_HANDLERS(TableSchema, Create);
-  DECLARE_SCRIPT_HANDLERS(TableSchema, Drop);
+  DECLARE_SCRIPT_HANDLERS(Schema, Create);
+  DECLARE_SCRIPT_HANDLERS(Schema, Drop);
   DECLARE_SCRIPT_HANDLERS(View, Create);
   DECLARE_SCRIPT_HANDLERS(View, Alter);
   DECLARE_SCRIPT_HANDLERS(View, Drop);

@@ -19,7 +19,6 @@
       <label>New &amp;Query</label>
     </object>
     <object class="wxMenu" name="DatabaseMenu_Script">
-      <label>&amp;Script database as</label>
       <object class="wxMenu" name="DatabaseMenu_ScriptCreate">
         <label>&amp;CREATE to</label>
         <object class="wxMenuItem" name="DatabaseMenu_ScriptCreateWindow">
@@ -59,6 +58,7 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
+      <label>&amp;Script Database as</label>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="DatabaseMenu_ViewDependencies">
@@ -156,7 +156,7 @@
         </object>
         <label>D&amp;ELETE to</label>
       </object>
-      <label>&amp;Script Table As</label>
+      <label>&amp;Script Table as</label>
     </object>
     <object class="separator"/>
     <object_ref name="TableMenu_Schema" ref="SchemaMenu"/>
@@ -175,7 +175,7 @@
   </object>
   <object class="wxMenu" name="ViewMenu">
     <object class="wxMenuItem" name="ViewMenu_New">
-      <label>&amp;New view...</label>
+      <label>&amp;New View...</label>
     </object>
     <object class="wxMenu" name="ViewMenu_Script">
       <object class="wxMenu" name="ViewMenu_ScriptCreate">
@@ -231,7 +231,7 @@
         </object>
         <label>&amp;SELECT to</label>
       </object>
-      <label>&amp;Script view as</label>
+      <label>&amp;Script View as</label>
     </object>
     <object class="separator"/>
     <object_ref name="ViewMenu_Schema" ref="SchemaMenu"/>
@@ -249,7 +249,7 @@
   </object>
   <object class="wxMenu" name="SequenceMenu">
     <object class="wxMenuItem" name="SequenceMenu_New">
-      <label>&amp;New sequence...</label>
+      <label>&amp;New Sequence...</label>
     </object>
     <object class="wxMenu" name="SequenceMenu_Script">
       <object class="wxMenu" name="SequenceMenu_ScriptCreate">
@@ -291,7 +291,7 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
-      <label>&amp;Script sequence as</label>
+      <label>&amp;Script Sequence as</label>
     </object>
     <object class="separator"/>
     <object_ref name="SequenceMenu_Schema" ref="SchemaMenu"/>
@@ -306,7 +306,7 @@
   </object>
   <object class="wxMenu" name="FunctionMenu">
     <object class="wxMenuItem" name="FunctionMenu_New">
-      <label>&amp;New function...</label>
+      <label>&amp;New Function...</label>
     </object>
     <object class="wxMenu" name="FunctionMenu_Script">
       <object class="wxMenu" name="FunctionMenu_ScriptCreate">
@@ -362,7 +362,7 @@
         </object>
         <label>&amp;SELECT to</label>
       </object>
-      <label>&amp;Script function as</label>
+      <label>&amp;Script Function as</label>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="FunctionMenu_ViewDependencies">
@@ -413,7 +413,7 @@
         </object>
         <label>&amp;DROP to</label>
       </object>
-      <label>&amp;Script Schema As</label>
+      <label>&amp;Script Schema as</label>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="SchemaMenu_ViewDependencies">

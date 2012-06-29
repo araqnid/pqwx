@@ -13,8 +13,15 @@
 #include "object_browser_scripts.h"
 #include "object_browser_scripts_util.h"
 #include "script_events.h"
+#include "sql_dictionary_file.h"
 
 #include "wx/clipbrd.h"
+
+const SqlDictionary& ScriptWork::GetSqlDictionary()
+{
+  static SqlDictionaryFile sqlDictionary(_T("memory:ObjectBrowser/object_browser_scripts.sql"));
+  return sqlDictionary;
+}
 
 void ScriptWork::OnCompletion()
 {

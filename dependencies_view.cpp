@@ -12,8 +12,15 @@
 #include "dependencies_view.h"
 #include "database_work.h"
 #include "lazy_loader.h"
+#include "sql_dictionary_file.h"
 
 static const Oid paramTypes[] = { 26 /* oid (pg_class) */, 26 /* oid */, 23 /* int4 */};
+
+const SqlDictionary& DependenciesView::GetSqlDictionary()
+{
+  static SqlDictionaryFile sqlDictionary(_T("memory:DependenciesView/dependencies_view.sql"));
+  return sqlDictionary;
+}
 
 class LoadDependenciesLazyLoader : public LazyLoader {
 public:

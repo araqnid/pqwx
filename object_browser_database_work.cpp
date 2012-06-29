@@ -8,6 +8,13 @@
 
 #include "object_browser_database_work_impl.h"
 #include "object_browser.h"
+#include "sql_dictionary_file.h"
+
+const SqlDictionary& ObjectBrowserWork::GetSqlDictionary()
+{
+  static SqlDictionaryFile sqlDictionary(_T("memory:ObjectBrowser/object_browser.sql"));
+  return sqlDictionary;
+}
 
 /*
  * Database list, and other server globals.

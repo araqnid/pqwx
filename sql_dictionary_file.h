@@ -55,9 +55,4 @@ private:
   };
 };
 
-extern const SqlDictionary& GetObjectBrowserSqlFile();
-extern const SqlDictionary& GetObjectBrowserScriptsSqlFile();
-extern const SqlDictionary& GetDependenciesViewFile();
-extern const SqlDictionary& GetCreateDatabaseDialogueFile();
-
 #endif

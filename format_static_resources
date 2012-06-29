@@ -21,6 +21,7 @@ sub guess_mime_type {
   my $filename = shift;
   return "image/png" if ($filename =~ /.png$/i);
   return "image/jpeg" if ($filename =~ /.jpg$/i);
+  return "text/plain" if ($filename =~ /.sql$/i);
   die "Unable to guess MIME type for $filename";
 }
 

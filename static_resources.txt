@@ -25,3 +25,6 @@ pqwx-appicon-32.png		PqwxFrame
 pqwx-appicon-48.png		PqwxFrame
 pqwx-appicon-64.png		PqwxFrame
 pqwx-appicon-16.png		PqwxFrame
+object_browser.sql		ObjectBrowser
+object_browser_scripts.sql	ObjectBrowser
+dependencies_view.sql		DependenciesView

@@ -54,7 +54,7 @@ SqlDictionaryFile::SqlDictionaryFile(const wxString& filename)
 
 wxString SqlDictionaryFile::CollapseSql(const wxString& sql)
 {
-  static wxRegEx commentsRx(_T("-- (.+)"));
+  static wxRegEx commentsRx(_T("-- (.+)"), wxRE_NEWLINE);
   wxString buf(sql);
   commentsRx.ReplaceAll(&buf, _T("/* \\1 */"));
   wxString out;
@@ -87,30 +87,6 @@ wxString SqlDictionaryFile::ReadLine(wxInputStream* stream)
   } while (pos < sizeof(buf));
   if (pos > 0 && buf[pos] == '\r') --pos;
   return wxString(buf, wxConvUTF8, pos);
-}
-
-const SqlDictionary& GetObjectBrowserSqlFile()
-{
-  static SqlDictionaryFile sqlDictionary(_T("object_browser.sql"));
-  return sqlDictionary;
-}
-
-const SqlDictionary& GetObjectBrowserScriptsSqlFile()
-{
-  static SqlDictionaryFile sqlDictionary(_T("object_browser_scripts.sql"));
-  return sqlDictionary;
-}
-
-const SqlDictionary& GetDependenciesViewFile()
-{
-  static SqlDictionaryFile sqlDictionary(_T("dependencies_view.sql"));
-  return sqlDictionary;
-}
-
-const SqlDictionary& GetCreateDatabaseDialogueFile()
-{
-  static SqlDictionaryFile sqlDictionary(_T("create_database_dialogue.sql"));
-  return sqlDictionary;
 }
 
 // Local Variables:

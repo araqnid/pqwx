@@ -15,14 +15,18 @@ IMPLEMENT_APP(TestSqlDictionaryFileApp)
 
 int TestSqlDictionaryFileApp::OnRun()
 {
-  ShowSql(GetObjectBrowserSqlFile(), _T("Tablespaces"), 80412);
-  ShowSql(GetObjectBrowserSqlFile(), _T("Tablespaces"), 90200);
+  SqlDictionaryFile objectBrowserSql(_T("object_browser.sql"));
+  SqlDictionaryFile objectBrowserScriptsSql(_T("object_browser_scripts.sql"));
+  SqlDictionaryFile dependenciesViewSql(_T("dependencies_view.sql"));
 
-  ShowSql(GetObjectBrowserSqlFile(), _T("Relations"), 90200);
+  ShowSql(objectBrowserSql, _T("Tablespaces"), 80412);
+  ShowSql(objectBrowserSql, _T("Tablespaces"), 90200);
 
-  ShowSql(GetObjectBrowserScriptsSqlFile(), _T("Database Detail"), 80412);
+  ShowSql(objectBrowserSql, _T("Relations"), 90200);
 
-  ShowSql(GetDependenciesViewFile(), _T("Dependents"), 80412);
+  ShowSql(objectBrowserScriptsSql, _T("Database Detail"), 80412);
+
+  ShowSql(dependenciesViewSql, _T("Dependents"), 80412);
 
   return 0;
 }

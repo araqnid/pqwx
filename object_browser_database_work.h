@@ -26,7 +26,7 @@
  */
 class ObjectBrowserWork {
 public:
-  ObjectBrowserWork(const VersionedSql &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : sqlDictionary(sqlDictionary) {}
+  ObjectBrowserWork(const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : sqlDictionary(sqlDictionary) {}
   virtual ~ObjectBrowserWork() {}
 
   /**
@@ -78,7 +78,7 @@ public:
   DatabaseWorkWithDictionary *owner;
 
 private:
-  const VersionedSql& sqlDictionary;
+  const SqlDictionary& sqlDictionary;
   wxString crashMessage;
 
   friend class ObjectBrowserDatabaseWork;

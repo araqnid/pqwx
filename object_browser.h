@@ -12,7 +12,7 @@
 #include "wx/timer.h"
 #include "server_connection.h"
 #include "database_connection.h"
-#include "versioned_sql.h"
+#include "sql_dictionary.h"
 #include "catalogue_index.h"
 #include "lazy_loader.h"
 #include "database_event_type.h"
@@ -184,7 +184,7 @@ public:
   /**
    * Gets the SQL dictionary for the object browser.
    */
-  static const VersionedSql& GetSqlDictionary();
+  static const SqlDictionary& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
   ObjectBrowserModel *objectBrowserModel;

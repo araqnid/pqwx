@@ -51,7 +51,7 @@ private:
 
   void UpdateModel(ObjectBrowserModel *model) {}
   void UpdateView(ObjectBrowser *ob);
-  static const VersionedSql& GetSqlDictionary();
+  static const SqlDictionary& GetSqlDictionary();
 
 public:
   static std::vector<Oid> ParseOidVector(const wxString &str);

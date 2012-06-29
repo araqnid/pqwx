@@ -109,15 +109,15 @@ else {
 }
 
 __DATA__
-#include "versioned_sql.h"
+#include "sql_dictionary.h"
 {{includes}}
-class {{classname}} : public VersionedSql {
+class {{classname}} : public SqlDictionary {
 public:
-    {{classname}}() : VersionedSql() {
+    {{classname}}() {
 {{content}}
     }
 };
-const VersionedSql& {{functionname}}() {
+const SqlDictionary& {{functionname}}() {
   static {{classname}} obj;
   return obj;
 }

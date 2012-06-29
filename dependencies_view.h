@@ -8,7 +8,7 @@
 
 #include "libpq-fe.h"
 #include "database_connection.h"
-#include "versioned_sql.h"
+#include "sql_dictionary.h"
 #include "wx/dialog.h"
 #include "wx/treectrl.h"
 #include "wx/radiobox.h"
@@ -37,7 +37,7 @@ public:
   void OnSelectionChanged(wxTreeEvent &event);
   void OnOk(wxCommandEvent &event) { Destroy(); }
 
-  static const VersionedSql& GetSqlDictionary();
+  static const SqlDictionary& GetSqlDictionary();
 
 private:
   DECLARE_EVENT_TABLE();

@@ -2,9 +2,9 @@
 #include "wx/cmdline.h"
 #include "libpq-fe.h"
 #include "object_browser.h"
-#include "versioned_sql.h"
+#include "sql_dictionary.h"
 
-extern VersionedSql *GetObjectBrowserSql();
+extern SqlDictionary *GetObjectBrowserSql();
 
 class DumpCatalogueApp : public wxAppConsole {
 public:
@@ -13,7 +13,7 @@ public:
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
 private:
-  const VersionedSql *sqlDictionary;
+  const SqlDictionary *sqlDictionary;
   wxString dbname;
 };
 

@@ -3,8 +3,8 @@
  * @author Steve Haslam <araqnid@googlemail.com>
  */
 
-#ifndef __versioned_sql_h
-#define __versioned_sql_h
+#ifndef __sql_dictionary_h
+#define __sql_dictionary_h
 
 #include <map>
 #include <set>
@@ -14,18 +14,16 @@
 /**
  * Associates name strings with SQL statements, with variations based on server version.
  *
- * Generally referred to everywhere else as a "SQL dictionary", another misnomer.
- *
  * This class has no public constructors. Typically, subclasses are
  * generated from input files that populate themselves in a public
  * no-arg constructor.
  */
-class VersionedSql {
+class SqlDictionary {
 protected:
   /**
    * Create an empty dictionary.
    */
-  VersionedSql() {}
+  SqlDictionary() {}
   /**
    * Add a SQL statement requiring a particular minimum server version.
    */

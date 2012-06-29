@@ -11,7 +11,7 @@
 #include "wx/string.h"
 #include "wx/thread.h"
 #include "query_results.h"
-#include "versioned_sql.h"
+#include "sql_dictionary.h"
 #include "database_connection.h"
 
 /**
@@ -106,7 +106,7 @@ protected:
  */
 class DatabaseWorkWithDictionary : public DatabaseWork {
 public:
-  DatabaseWorkWithDictionary(const VersionedSql &sqlDictionary) : sqlDictionary(sqlDictionary) {}
+  DatabaseWorkWithDictionary(const SqlDictionary &sqlDictionary) : sqlDictionary(sqlDictionary) {}
 
   /**
    * Execute named command.
@@ -192,7 +192,7 @@ public:
   }
 
 private:
-  const VersionedSql& sqlDictionary;
+  const SqlDictionary& sqlDictionary;
 };
 
 #endif

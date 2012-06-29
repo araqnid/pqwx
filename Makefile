@@ -74,7 +74,8 @@ PQWX_SOURCES = \
 	script_editor.cpp \
 	script_editor_pane.cpp \
 	script_execution.cpp \
-	script_query_work.cpp
+	script_query_work.cpp \
+	sql_dictionary_file.cpp
 PQWX_HEADERS = \
 	catalogue_index.h \
 	connect_dialogue.h \
@@ -106,15 +107,15 @@ PQWX_HEADERS = \
 	script_query_work.h \
 	server_connection.h \
 	sql_dictionary.h \
+	sql_dictionary_file.h \
 	sql_logger.h \
 	static_resources.h \
 	work_launcher.h
-SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
-SQL_DICTIONARIES = object_browser.sql dependencies_view.sql object_browser_scripts.sql create_database_dialogue.sql
-GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp resources.cpp
+SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp test_sql_dictionary_file.cpp
+GENERATED_SOURCES = static_resources_txt.cpp script_editor_wordlists.cpp resources.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) $(GENERATED_SOURCES:.cpp=.o)
 ifneq (,$(findstring MINGW,$(host_system)))
-PQWX_OBJS += pqwx_rc.o
+PQWX_OBJS += pqwx_rc.on
 PQWX_SOURCES += pqwx_rc.cpp
 else
 PQWX_OBJS += database_notification_monitor.o
@@ -136,6 +137,9 @@ test_catalogue$(dotEXE): catalogue_index.o test_catalogue.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 dump_catalogue$(dotEXE): dump_catalogue.o object_browser_sql.o
+	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
+
+test_sql_dictionary_file$(dotEXE): sql_dictionary_file.o test_sql_dictionary_file.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 -include $(SOURCES:.cpp=.d)

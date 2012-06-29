@@ -27,6 +27,7 @@
 class ObjectBrowserWork {
 public:
   ObjectBrowserWork(const VersionedSql &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : sqlDictionary(sqlDictionary) {}
+  virtual ~ObjectBrowserWork() {}
 
   /**
    * Execute work.
@@ -277,6 +278,7 @@ protected:
  */
 class IndexSchemaCompletionCallback {
 public:
+  virtual ~IndexSchemaCompletionCallback() {}
   /**
    * Called when schema index completed.
    */

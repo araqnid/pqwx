@@ -425,12 +425,14 @@ void ObjectBrowser::AppendRoleItems(const ServerModel *serverModel, wxTreeItemId
 void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
     wxTreeItemId emptySchemaItem = AppendItem(parent, schemaName + _T("."));
+    SetItemData(emptySchemaItem, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, members[0]->schema.oid));
     SetItemImage(emptySchemaItem, img_folder);
     return;
   }
 
   if (createSchemaItem) {
     parent = AppendItem(parent, schemaName + _T("."));
+    SetItemData(parent, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, members[0]->schema.oid));
     SetItemImage(parent, img_folder);
   }
 

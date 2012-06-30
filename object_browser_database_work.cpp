@@ -459,8 +459,9 @@ void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
   RelationModel *relationModel = model->FindRelation(relationRef);
   relationModel->columns = incoming.columns;
   relationModel->indices = incoming.indices;
-  relationModel->checkConstraints = incoming.checkConstraints;
   relationModel->triggers = incoming.triggers;
+  relationModel->sequences = incoming.sequences;
+  relationModel->checkConstraints = incoming.checkConstraints;
 }
 
 void LoadRelationWork::UpdateView(ObjectBrowser *ob)

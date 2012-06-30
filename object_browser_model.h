@@ -152,6 +152,17 @@ public:
   Oid oid;
 };
 
+/**
+ * A namespace within the database.
+ */
+class SchemaModel : public ObjectModel {
+public:
+  Oid oid;
+  bool IsSystem() const
+  {
+    return name.StartsWith(_T("pg_")) || name == _T("information_schema");
+  }
+};
 
 /**
  * A schema member - function or relation.
@@ -159,16 +170,16 @@ public:
 class SchemaMemberModel : public ObjectModel {
 public:
   Oid oid;
-  wxString schema;
+  SchemaModel schema;
   wxString extension;
-  wxString FormatName() const { return schema + _T('.') + name; }
-  bool IsUser() const { return !IsSystemSchema(schema); }
-  static inline bool IsSystemSchema(wxString schema) {
-    return schema.StartsWith(_T("pg_")) || schema == _T("information_schema");
-  }
+  wxString FormatName() const { return QualifiedName(); }
+  wxString QualifiedName() const { return schema.name + _T('.') + name; }
+  wxString UnqualifiedName() const { return name; }
+  bool IsSystem() const { return schema.IsSystem(); }
+  bool IsUser() const { return !schema.IsSystem(); }
   static bool CollateByQualifiedName(const SchemaMemberModel *r1, const SchemaMemberModel *r2) {
-    if (r1->schema < r2->schema) return true;
-    if (r1->schema == r2->schema) {
+    if (r1->schema.name < r2->schema.name) return true;
+    if (r1->schema.name == r2->schema.name) {
       return r1->name < r2->name;
     }
     return false;
@@ -197,7 +208,7 @@ class FunctionModel : public SchemaMemberModel {
 public:
   wxString arguments;
   enum Type { SCALAR, RECORDSET, TRIGGER, AGGREGATE, WINDOW } type;
-  wxString FormatName() const { return schema + _T('.') + name + _T('(') + arguments + _T(')'); }
+  wxString FormatName() const { return schema.name + _T('.') + name + _T('(') + arguments + _T(')'); }
 };
 
 /**

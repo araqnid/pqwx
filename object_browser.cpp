@@ -448,7 +448,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       continue;
     }
     ++relationsCount;
-    wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->name : relation->schema + _T(".") + relation->name);
+    wxTreeItemId memberItem = AppendItem(parent, createSchemaItem ? relation->UnqualifiedName() : relation->QualifiedName());
     SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relation->oid));
     RegisterSymbolItem(databaseRef, relation->oid, memberItem);
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
@@ -486,7 +486,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (member->name.IsEmpty()) continue;
       const FunctionModel *function = dynamic_cast<const FunctionModel*>(member);
       if (function == NULL) continue;
-      wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->name + _T("(") + function->arguments + _T(")") : function->schema + _T(".") + function->name + _T("(") + function->arguments + _T(")"));
+      wxTreeItemId memberItem = AppendItem(functionsItem, createSchemaItem ? function->UnqualifiedName() + _T("(") + function->arguments + _T(")") : function->QualifiedName() + _T("(") + function->arguments + _T(")"));
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_PROC, function->oid));
       RegisterSymbolItem(databaseRef, function->oid, memberItem);
       // see images->Add calls in constructor
@@ -523,7 +523,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (member->name.empty()) continue;
       const TextSearchDictionaryModel *dict = dynamic_cast<const TextSearchDictionaryModel*>(member);
       if (dict == NULL) continue;
-      wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->name : dict->schema + _T(".") + dict->name);
+      wxTreeItemId memberItem = AppendItem(dictionariesItem, createSchemaItem ? dict->UnqualifiedName() : dict->QualifiedName());
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_DICT, dict->oid));
       SetItemImage(memberItem, img_text_search_dictionary);
       RegisterSymbolItem(databaseRef, member->oid, memberItem);
@@ -545,7 +545,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (member->name.empty()) continue;
       const TextSearchParserModel *prs = dynamic_cast<const TextSearchParserModel*>(member);
       if (prs == NULL) continue;
-      wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->name : prs->schema + _T(".") + prs->name);
+      wxTreeItemId memberItem = AppendItem(parsersItem, createSchemaItem ? prs->UnqualifiedName() : prs->QualifiedName());
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_PARSER, prs->oid));
       SetItemImage(memberItem, img_text_search_parser);
       RegisterSymbolItem(databaseRef, member->oid, memberItem);
@@ -567,7 +567,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (member->name.empty()) continue;
       const TextSearchTemplateModel *tmpl = dynamic_cast<const TextSearchTemplateModel*>(member);
       if (tmpl == NULL) continue;
-      wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->name : tmpl->schema + _T(".") + tmpl->name);
+      wxTreeItemId memberItem = AppendItem(templatesItem, createSchemaItem ? tmpl->UnqualifiedName() : tmpl->QualifiedName());
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_TEMPLATE, tmpl->oid));
       SetItemImage(memberItem, img_text_search_template);
       RegisterSymbolItem(databaseRef, member->oid, memberItem);
@@ -589,7 +589,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
       if (member->name.empty()) continue;
       const TextSearchConfigurationModel *cfg = dynamic_cast<const TextSearchConfigurationModel*>(member);
       if (cfg == NULL) continue;
-      wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->name : cfg->schema + _T(".") + cfg->name);
+      wxTreeItemId memberItem = AppendItem(configurationsItem, createSchemaItem ? cfg->UnqualifiedName() : cfg->QualifiedName());
       SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_TS_CONFIG, cfg->oid));
       SetItemImage(memberItem, img_text_search_configuration);
       RegisterSymbolItem(databaseRef, member->oid, memberItem);
@@ -602,7 +602,7 @@ void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vect
 
   for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     const SchemaMemberModel *member = *iter;
-    schemas[member->schema].push_back(member);
+    schemas[member->schema.name].push_back(member);
   }
 
   bool foldSchemas = members.size() > 50 && schemas.size() > 1;
@@ -671,7 +671,7 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
       const RelationModel& sequence = *seqIter;
       if (sequence.owningColumn != column.attnum) continue;
 
-      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence.schema + _T(".") + sequence.name);
+      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence.QualifiedName());
       SetItemData(sequenceItem, new ModelReference(relationRef, ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
     }
@@ -894,7 +894,7 @@ void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const S
 {
   wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
   wxASSERT(schemaItem != NULL);
-  schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.c_str()));
+  schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.name.c_str()));
   PopupMenu(menu);
 }
 

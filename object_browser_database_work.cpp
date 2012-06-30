@@ -126,13 +126,14 @@ void LoadDatabaseSchemaWork::LoadRelations() {
   QueryResults relationRows = Query(_T("Relations")).List();
   for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
     RelationModel relation;
-    relation.schema = (*iter).ReadText(1);
-    if (!(*iter)[0].IsEmpty()) {
-      relation.oid = (*iter).ReadOid(0);
-      relation.name = (*iter).ReadText(2);
-      wxString relkind((*iter).ReadText(3));
-      relation.extension = (*iter).ReadText(4);
-      relation.unlogged = (*iter).ReadBool(5);
+    relation.schema.oid = (*iter).ReadOid(0);
+    relation.schema.name = (*iter).ReadText(1);
+    if (!(*iter)[2].IsEmpty()) {
+      relation.oid = (*iter).ReadOid(2);
+      relation.name = (*iter).ReadText(3);
+      wxString relkind((*iter).ReadText(4));
+      relation.extension = (*iter).ReadText(5);
+      relation.unlogged = (*iter).ReadBool(6);
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
       relation.type = relationTypeMap.find(relkind)->second;
     }
@@ -144,12 +145,13 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
   QueryResults functionRows = Query(_T("Functions")).List();
   for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
     FunctionModel func;
-    func.oid = (*iter).ReadOid(0);
-    func.schema = (*iter).ReadText(1);
-    func.name = (*iter).ReadText(2);
-    func.arguments = (*iter).ReadText(3);
-    wxString type((*iter).ReadText(4));
-    func.extension = (*iter).ReadText(5);
+    func.schema.oid = (*iter).ReadOid(0);
+    func.schema.name = (*iter).ReadText(1);
+    func.oid = (*iter).ReadOid(2);
+    func.name = (*iter).ReadText(3);
+    func.arguments = (*iter).ReadText(4);
+    wxString type((*iter).ReadText(5));
+    func.extension = (*iter).ReadText(6);
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
     func.type = functionTypeMap.find(type)->second;
     incoming.functions.push_back(func);
@@ -161,10 +163,11 @@ void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
   QueryResults rows = Query(_T("Text search dictionaries")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     TextSearchDictionaryModel dict;
-    dict.oid = (*iter).ReadOid(0);
-    dict.schema = (*iter).ReadText(1);
-    dict.name = (*iter).ReadText(2);
-    dict.extension = (*iter).ReadText(3);
+    dict.schema.oid = (*iter).ReadOid(0);
+    dict.schema.name = (*iter).ReadText(1);
+    dict.oid = (*iter).ReadOid(2);
+    dict.name = (*iter).ReadText(3);
+    dict.extension = (*iter).ReadText(4);
     incoming.textSearchDictionaries.push_back(dict);
   }
 }
@@ -174,10 +177,11 @@ void LoadDatabaseSchemaWork::LoadTextSearchParsers()
   QueryResults rows = Query(_T("Text search parsers")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     TextSearchParserModel prs;
-    prs.oid = (*iter).ReadOid(0);
-    prs.schema = (*iter).ReadText(1);
-    prs.name = (*iter).ReadText(2);
-    prs.extension = (*iter).ReadText(3);
+    prs.schema.oid = (*iter).ReadOid(0);
+    prs.schema.name = (*iter).ReadText(1);
+    prs.oid = (*iter).ReadOid(2);
+    prs.name = (*iter).ReadText(3);
+    prs.extension = (*iter).ReadText(4);
     incoming.textSearchParsers.push_back(prs);
   }
 }
@@ -187,10 +191,11 @@ void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
   QueryResults rows = Query(_T("Text search templates")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     TextSearchTemplateModel tmpl;
-    tmpl.oid = (*iter).ReadOid(0);
-    tmpl.schema = (*iter).ReadText(1);
-    tmpl.name = (*iter).ReadText(2);
-    tmpl.extension = (*iter).ReadText(3);
+    tmpl.schema.oid = (*iter).ReadOid(0);
+    tmpl.schema.name = (*iter).ReadText(1);
+    tmpl.oid = (*iter).ReadOid(2);
+    tmpl.name = (*iter).ReadText(3);
+    tmpl.extension = (*iter).ReadText(4);
     incoming.textSearchTemplates.push_back(tmpl);
   }
 }
@@ -200,10 +205,11 @@ void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
   QueryResults rows = Query(_T("Text search configurations")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     TextSearchConfigurationModel cfg;
-    cfg.oid = (*iter).ReadOid(0);
-    cfg.schema = (*iter).ReadText(1);
-    cfg.name = (*iter).ReadText(2);
-    cfg.extension = (*iter).ReadText(3);
+    cfg.schema.oid = (*iter).ReadOid(0);
+    cfg.schema.name = (*iter).ReadText(1);
+    cfg.oid = (*iter).ReadOid(2);
+    cfg.name = (*iter).ReadText(3);
+    cfg.extension = (*iter).ReadText(4);
     incoming.textSearchConfigurations.push_back(cfg);
   }
 }
@@ -426,10 +432,11 @@ void LoadRelationWork::ReadSequences() {
   for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
     RelationModel sequence;
     sequence.type = RelationModel::SEQUENCE;
-    sequence.oid = (*iter).ReadOid(0);
-    sequence.schema = (*iter).ReadText(1);
-    sequence.name = (*iter).ReadText(2);
-    sequence.owningColumn = (*iter).ReadInt4(3);
+    sequence.schema.oid = (*iter).ReadOid(0);
+    sequence.schema.name = (*iter).ReadText(1);
+    sequence.oid = (*iter).ReadOid(2);
+    sequence.name = (*iter).ReadText(3);
+    sequence.owningColumn = (*iter).ReadInt4(4);
     incoming.sequences.push_back(sequence);
   }
 }

@@ -489,7 +489,7 @@ std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=IN
 
 void SchemaScriptWork::GenerateScript(OutputIterator output)
 {
-  QueryResults::Row schemaDetail = Query(_T("Schema Detail")).OidParam(reloid).UniqueResult();
+  QueryResults::Row schemaDetail = Query(_T("Schema Detail")).OidParam(nspoid).UniqueResult();
   wxString schemaName = QuoteIdent(schemaDetail[0]);
   switch (mode) {
   case Create: {

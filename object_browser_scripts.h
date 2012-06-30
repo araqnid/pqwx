@@ -179,12 +179,12 @@ protected:
  */
 class SchemaScriptWork : public ScriptWork {
 public:
-  SchemaScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
+  SchemaScriptWork(const ObjectModelReference& schemaRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(schemaRef.DatabaseRef(), mode, output), nspoid(schemaRef.GetOid())
   {
     wxLogDebug(_T("%p: work to generate schema script"), this);
   }
 private:
-  const Oid reloid;
+  const Oid nspoid;
   static std::map<wxChar, wxString> privilegeMap;
 protected:
   void GenerateScript(OutputIterator output);

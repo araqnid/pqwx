@@ -57,6 +57,7 @@ END_DECLARE_EVENT_TYPES()
 
 class IndexSchemaCompletionCallback;
 class LoadRelationWork;
+class ScriptWork;
 
 /**
  * The object browser tree control.
@@ -252,6 +253,7 @@ private:
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;
   wxTreeItemId contextMenuItem;
+  ObjectModelReference FindContextSchema();
 
   // remember which server/database was last mentioned in an object-selected event
   ObjectModelReference selectedRef;

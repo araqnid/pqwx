@@ -60,9 +60,8 @@ SELECT nspname,
        owner.rolname,
        nspacl
 FROM pg_namespace
-     JOIN pg_class ON pg_class.relnamespace = pg_namespace.oid
      JOIN pg_roles owner ON owner.oid = pg_namespace.nspowner
-WHERE pg_class.oid = $1
+WHERE pg_namespace.oid = $1
 
 -- SQL :: Relation Column Detail :: 9.1
 SELECT attname,

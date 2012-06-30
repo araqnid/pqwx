@@ -70,6 +70,7 @@ public:
   static const Oid PG_CONSTRAINT = 2606;
   static const Oid PG_DATABASE = 1262;
   static const Oid PG_INDEX = 2610;
+  static const Oid PG_NAMESPACE = 2615;
   static const Oid PG_PROC = 1255;
   static const Oid PG_ROLE = 1260;
   static const Oid PG_TABLESPACE = 1213;

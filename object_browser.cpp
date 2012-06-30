@@ -80,15 +80,20 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Function, Select)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output)        \
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, ref)                   \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef()), new menu##ScriptWork(contextMenuRef, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(objectBrowserModel->FindDatabase(ref.DatabaseRef()), new menu##ScriptWork(ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File)        \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode)                     \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    contextMenuRef) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      contextMenuRef) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, contextMenuRef)
+
+#define IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(menu, mode)                   \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    FindContextSchema()) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      FindContextSchema()) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, FindContextSchema())
 
 IMPLEMENT_SCRIPT_HANDLERS(Database, Create)
 IMPLEMENT_SCRIPT_HANDLERS(Database, Alter)
@@ -99,8 +104,8 @@ IMPLEMENT_SCRIPT_HANDLERS(Table, Select)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Insert)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Update)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Delete)
-IMPLEMENT_SCRIPT_HANDLERS(Schema, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Schema, Drop)
+IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(Schema, Create)
+IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(Schema, Drop)
 IMPLEMENT_SCRIPT_HANDLERS(View, Create)
 IMPLEMENT_SCRIPT_HANDLERS(View, Alter)
 IMPLEMENT_SCRIPT_HANDLERS(View, Drop)
@@ -1085,6 +1090,15 @@ wxTreeItemId ObjectBrowser::LookupSymbolItem(const ObjectModelReference& databas
     return wxTreeItemId();
   else
     return (*itemPtr).second;
+}
+
+ObjectModelReference ObjectBrowser::FindContextSchema()
+{
+  const ObjectModel *object = objectBrowserModel->FindObject(contextMenuRef);
+  wxASSERT(object != NULL);
+  const SchemaMemberModel *schemaMember = dynamic_cast<const SchemaMemberModel*>(object);
+  wxASSERT(schemaMember != NULL);
+  return ObjectModelReference(contextMenuRef.DatabaseRef(), ObjectModelReference::PG_NAMESPACE, schemaMember->schema.oid);
 }
 
 // Local Variables:

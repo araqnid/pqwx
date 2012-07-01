@@ -22,6 +22,8 @@ public:
     Installation(const wxString &path, const wxString &version) : pathname(path), version(version), versionNumber(ParseVersion(version)) {}
 
     wxString GetCommandPath(const wxString &command) const;
+    wxString Version() const { return version; }
+    int VersionNumber() const { return versionNumber; }
 
     void AddCommand(const wxString &command) { commands.insert(command); }
   private:

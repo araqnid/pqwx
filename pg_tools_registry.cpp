@@ -41,14 +41,27 @@ const std::vector<wxString>& PgToolsRegistry::ScannerThread::GetInterestingComma
 
 int PgToolsRegistry::Installation::ParseVersion(const wxString& version)
 {
-  wxStringTokenizer tkz(version, _T("."));
-  int versionNumber = 0;
-  while (tkz.HasMoreTokens()) {
-    long nextNumber;
-    tkz.GetNextToken().ToLong(&nextNumber);
-    versionNumber = versionNumber * 100 + (int) nextNumber;
+  static wxRegEx tripletPattern(_T("^([0-9]+)\\.([0-9]+)\\.([0-9]+)$"));
+  static wxRegEx dupletPattern(_T("^([0-9]+)\\.([0-9]+)(beta[0-9]+|devel)$"));
+  if (tripletPattern.Matches(version)) {
+    long majorVersion;
+    long minorVersion;
+    long patchVersion;
+    tripletPattern.GetMatch(version, 1).ToLong(&majorVersion);
+    tripletPattern.GetMatch(version, 2).ToLong(&minorVersion);
+    tripletPattern.GetMatch(version, 3).ToLong(&patchVersion);
+    return majorVersion * 10000 + minorVersion * 100 + patchVersion;
   }
-  return versionNumber;
+  else if (dupletPattern.Matches(version)) {
+    long majorVersion;
+    long minorVersion;
+    dupletPattern.GetMatch(version, 1).ToLong(&majorVersion);
+    dupletPattern.GetMatch(version, 2).ToLong(&minorVersion);
+    return majorVersion * 10000 + minorVersion * 100;
+  }
+  else {
+    return -1;
+  }
 }
 
 template <typename T>
@@ -98,6 +111,7 @@ void PgToolsRegistry::ScannerThread::ScanExecutionPath()
 
   Installation installation(wxEmptyString, version);
   installation.AddCommand(_T("psql"));
+  wxLogDebug(_T(" Registered installation version %s (%u)"), installation.Version().c_str(), installation.VersionNumber());
 
   const std::vector<wxString>& interestingCommands = GetInterestingCommands();
 
@@ -125,6 +139,7 @@ void PgToolsRegistry::ScannerThread::AddInstallation(const wxString &dirname)
 
   Installation installation(dirname, version);
   installation.AddCommand(_T("psql"));
+  wxLogDebug(_T(" Registered installation version %s (%u)"), installation.Version().c_str(), installation.VersionNumber());
 
   const std::vector<wxString>& interestingCommands = GetInterestingCommands();
 
@@ -232,7 +247,7 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
       return wxEmptyString;
     }
     else {
-      static wxRegEx pattern(_T("^([^ ]+) .+ ([0-9]+\\.[0-9]+\\.[0-9]+)$"), wxRE_NEWLINE);
+      static wxRegEx pattern(_T("^([^ ]+) .+ ([0-9]+\\.[0-9]+(\\.[0-9]+|beta[0-9]+|devel))$"), wxRE_NEWLINE);
       if (pattern.Matches(output)) {
         wxString toolname = pattern.GetMatch(output, 1);
         wxString version = pattern.GetMatch(output, 2);

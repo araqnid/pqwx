@@ -66,10 +66,28 @@ public:
     Row(const PGresult *rs, const QueryResults *owner, int rowNum) : owner(owner) {
       int colCount = PQnfields(rs);
       data.reserve(colCount);
+      int nullsCapacity = (colCount + 63)/64;
+      nulls.reserve(nullsCapacity);
+      for (int i = 0; i < nullsCapacity; i++)
+        nulls.push_back(0);
       for (int colNum = 0; colNum < colCount; colNum++) {
-        const char *value = PQgetvalue(rs, rowNum, colNum);
-        data.push_back(wxString(value, wxConvUTF8));
+        if (PQgetisnull(rs, rowNum, colNum) > 0) {
+          nulls[colNum / 64] |= 1 << (colNum % 64);
+          data.push_back(wxEmptyString);
+        }
+        else {
+          const char *value = PQgetvalue(rs, rowNum, colNum);
+          data.push_back(wxString(value, wxConvUTF8));
+        }
       }
+    }
+
+    /**
+     * Tests if a field is null
+     */
+    bool IsNull(unsigned index) const
+    {
+      return (nulls[index / 64] & (1 << (index % 64))) > 0;
     }
 
     /**
@@ -93,6 +111,7 @@ public:
      */
     Oid ReadOid(unsigned index) const {
       wxASSERT(index < data.size());
+      if (IsNull(index)) return InvalidOid;
       long value;
       wxCHECK(data[index].ToLong(&value), 0);
       return value;
@@ -144,6 +163,7 @@ public:
 
   private:
     std::vector<wxString> data;
+    std::vector<wxUint64> nulls;
     const QueryResults *owner;
   };
 

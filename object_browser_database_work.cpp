@@ -116,10 +116,10 @@ void LoadDatabaseSchemaWork::operator()() {
   incoming.oid = databaseRef.GetOid();
   LoadRelations();
   LoadFunctions();
-  LoadTextSearchParsers();
-  LoadTextSearchDictionaries();
-  LoadTextSearchTemplates();
-  LoadTextSearchConfigurations();
+  LoadSimpleSchemaMembers(_T("Text search dictionaries"), incoming.textSearchDictionaries);
+  LoadSimpleSchemaMembers(_T("Text search parsers"), incoming.textSearchParsers);
+  LoadSimpleSchemaMembers(_T("Text search templates"), incoming.textSearchTemplates);
+  LoadSimpleSchemaMembers(_T("Text search configurations"), incoming.textSearchConfigurations);
 }
 
 void LoadDatabaseSchemaWork::LoadRelations() {
@@ -161,8 +161,9 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
 }
 
 template<typename T>
-void LoadTextSearchObjects(const QueryResults &rows, typename std::vector<T>& vec)
+void LoadDatabaseSchemaWork::LoadSimpleSchemaMembers(const wxString &queryName, typename std::vector<T>& vec)
 {
+  const QueryResults rows = Query(queryName).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     T obj;
     obj.schema.oid = (*iter).ReadOid(0);
@@ -173,30 +174,6 @@ void LoadTextSearchObjects(const QueryResults &rows, typename std::vector<T>& ve
     obj.name = (*iter).ReadText(5);
     vec.push_back(obj);
   }
-}
-
-void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
-{
-  LoadTextSearchObjects(Query(_T("Text search dictionaries")).List(),
-                        incoming.textSearchDictionaries);
-}
-
-void LoadDatabaseSchemaWork::LoadTextSearchParsers()
-{
-  LoadTextSearchObjects(Query(_T("Text search parsers")).List(),
-                        incoming.textSearchParsers);
-}
-
-void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
-{
-  LoadTextSearchObjects(Query(_T("Text search templates")).List(),
-                        incoming.textSearchTemplates);
-}
-
-void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
-{
-  LoadTextSearchObjects(Query(_T("Text search configurations")).List(),
-                        incoming.textSearchConfigurations);
 }
 
 void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)

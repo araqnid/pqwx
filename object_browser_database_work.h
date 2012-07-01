@@ -242,10 +242,8 @@ protected:
   void operator()();
   void LoadRelations();
   void LoadFunctions();
-  void LoadTextSearchDictionaries();
-  void LoadTextSearchTemplates();
-  void LoadTextSearchParsers();
-  void LoadTextSearchConfigurations();
+  template<typename T>
+  void LoadSimpleSchemaMembers(const wxString &queryName, typename std::vector<T>& vec);
   void UpdateModel(ObjectBrowserModel *model);
   void UpdateView(ObjectBrowser *ob);
 private:

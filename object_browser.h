@@ -250,6 +250,7 @@ private:
   wxMenu *sequenceMenu;
   wxMenu *functionMenu;
   wxMenu *schemaMenu;
+  wxMenu *extensionMenu;
 
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;

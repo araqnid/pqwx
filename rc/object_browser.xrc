@@ -160,7 +160,6 @@
     </object>
     <object class="separator"/>
     <object_ref name="TableMenu_Schema" ref="SchemaMenu"/>
-    
     <object class="separator"/>
     <object class="wxMenuItem" name="TableMenu_ViewDependencies">
       <label>View &amp;Dependencies...</label>
@@ -295,7 +294,6 @@
     </object>
     <object class="separator"/>
     <object_ref name="SequenceMenu_Schema" ref="SchemaMenu"/>
-    
     <object class="separator"/>
     <object class="wxMenuItem" name="SequenceMenu_Refresh">
       <label>Re&amp;fresh</label>
@@ -375,6 +373,64 @@
       <label>Re&amp;fresh</label>
     </object>
     <object class="wxMenuItem" name="FunctionMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="ExtensionMenu">
+    <object class="wxMenuItem" name="ExtensionMenu_New">
+      <label>&amp;New Extension...</label>
+    </object>
+    <object class="wxMenu" name="ExtensionMenu_Script">
+      <object class="wxMenu" name="ExtensionMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="ExtensionMenu_ScriptAlter">
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="ExtensionMenu_ScriptDrop">
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="ExtensionMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Extension as</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="ExtensionMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="ExtensionMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="ExtensionMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
   </object>

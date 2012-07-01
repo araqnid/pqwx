@@ -69,6 +69,7 @@ public:
   static const Oid PG_CLASS = 1259;
   static const Oid PG_CONSTRAINT = 2606;
   static const Oid PG_DATABASE = 1262;
+  static const Oid PG_EXTENSION = 3079;
   static const Oid PG_INDEX = 2610;
   static const Oid PG_NAMESPACE = 2615;
   static const Oid PG_PROC = 1255;
@@ -171,6 +172,10 @@ public:
 class ExtensionModel : public ObjectModel {
 public:
   Oid oid;
+  bool operator<(const ExtensionModel& other) const
+  {
+    return oid < other.oid;
+  }
 };
 
 /**
@@ -311,7 +316,7 @@ public:
   public:
     std::vector<const SchemaMemberModel*> userDivision;
     std::vector<const SchemaMemberModel*> systemDivision;
-    std::map<wxString, std::vector<const SchemaMemberModel*> > extensionDivisions;
+    std::map<const ExtensionModel, std::vector<const SchemaMemberModel*> > extensionDivisions;
   };
 
   /**

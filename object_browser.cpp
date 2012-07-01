@@ -631,9 +631,10 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
     SetItemImage(extensionsItem, img_folder);
-    for (std::map<wxString, std::vector<const SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
-      wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first);
+    for (std::map<const ExtensionModel, std::vector<const SchemaMemberModel*> >::iterator iter = divisions.extensionDivisions.begin(); iter != divisions.extensionDivisions.end(); iter++) {
+      wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first.name);
       SetItemImage(extensionItem, img_folder);
+      SetItemData(extensionItem, new ModelReference(databaseRef, ObjectModelReference::PG_EXTENSION, iter->first.oid));
       AppendDivision(databaseModel, iter->second, extensionItem);
     }
   }

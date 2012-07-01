@@ -166,13 +166,21 @@ public:
 };
 
 /**
+ * An extension within the database.
+ */
+class ExtensionModel : public ObjectModel {
+public:
+  Oid oid;
+};
+
+/**
  * A schema member - function or relation.
  */
 class SchemaMemberModel : public ObjectModel {
 public:
   Oid oid;
   SchemaModel schema;
-  wxString extension;
+  ExtensionModel extension;
   wxString FormatName() const { return QualifiedName(); }
   wxString QualifiedName() const { return schema.name + _T('.') + name; }
   wxString UnqualifiedName() const { return name; }

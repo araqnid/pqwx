@@ -128,12 +128,13 @@ void LoadDatabaseSchemaWork::LoadRelations() {
     RelationModel relation;
     relation.schema.oid = (*iter).ReadOid(0);
     relation.schema.name = (*iter).ReadText(1);
-    if (!(*iter)[2].IsEmpty()) {
-      relation.oid = (*iter).ReadOid(2);
-      relation.name = (*iter).ReadText(3);
-      wxString relkind((*iter).ReadText(4));
-      relation.extension = (*iter).ReadText(5);
-      relation.unlogged = (*iter).ReadBool(6);
+    relation.extension.oid = (*iter).ReadOid(2);
+    relation.extension.name = (*iter).ReadText(3);
+    if (!(*iter)[4].IsEmpty()) {
+      relation.oid = (*iter).ReadOid(4);
+      relation.name = (*iter).ReadText(5);
+      wxString relkind((*iter).ReadText(6));
+      relation.unlogged = (*iter).ReadBool(7);
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
       relation.type = relationTypeMap.find(relkind)->second;
     }
@@ -147,71 +148,55 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
     FunctionModel func;
     func.schema.oid = (*iter).ReadOid(0);
     func.schema.name = (*iter).ReadText(1);
-    func.oid = (*iter).ReadOid(2);
-    func.name = (*iter).ReadText(3);
-    func.arguments = (*iter).ReadText(4);
-    wxString type((*iter).ReadText(5));
-    func.extension = (*iter).ReadText(6);
+    func.extension.oid = (*iter).ReadOid(2);
+    func.extension.name = (*iter).ReadText(3);
+    func.oid = (*iter).ReadOid(4);
+    func.name = (*iter).ReadText(5);
+    func.arguments = (*iter).ReadText(6);
+    wxString type((*iter).ReadText(7));
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
     func.type = functionTypeMap.find(type)->second;
     incoming.functions.push_back(func);
   }
 }
 
+template<typename T>
+void LoadTextSearchObjects(const QueryResults &rows, typename std::vector<T>& vec)
+{
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    T obj;
+    obj.schema.oid = (*iter).ReadOid(0);
+    obj.schema.name = (*iter).ReadText(1);
+    obj.extension.oid = (*iter).ReadOid(2);
+    obj.extension.name = (*iter).ReadText(3);
+    obj.oid = (*iter).ReadOid(4);
+    obj.name = (*iter).ReadText(5);
+    vec.push_back(obj);
+  }
+}
+
 void LoadDatabaseSchemaWork::LoadTextSearchDictionaries()
 {
-  QueryResults rows = Query(_T("Text search dictionaries")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchDictionaryModel dict;
-    dict.schema.oid = (*iter).ReadOid(0);
-    dict.schema.name = (*iter).ReadText(1);
-    dict.oid = (*iter).ReadOid(2);
-    dict.name = (*iter).ReadText(3);
-    dict.extension = (*iter).ReadText(4);
-    incoming.textSearchDictionaries.push_back(dict);
-  }
+  LoadTextSearchObjects(Query(_T("Text search dictionaries")).List(),
+                        incoming.textSearchDictionaries);
 }
 
 void LoadDatabaseSchemaWork::LoadTextSearchParsers()
 {
-  QueryResults rows = Query(_T("Text search parsers")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchParserModel prs;
-    prs.schema.oid = (*iter).ReadOid(0);
-    prs.schema.name = (*iter).ReadText(1);
-    prs.oid = (*iter).ReadOid(2);
-    prs.name = (*iter).ReadText(3);
-    prs.extension = (*iter).ReadText(4);
-    incoming.textSearchParsers.push_back(prs);
-  }
+  LoadTextSearchObjects(Query(_T("Text search parsers")).List(),
+                        incoming.textSearchParsers);
 }
 
 void LoadDatabaseSchemaWork::LoadTextSearchTemplates()
 {
-  QueryResults rows = Query(_T("Text search templates")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchTemplateModel tmpl;
-    tmpl.schema.oid = (*iter).ReadOid(0);
-    tmpl.schema.name = (*iter).ReadText(1);
-    tmpl.oid = (*iter).ReadOid(2);
-    tmpl.name = (*iter).ReadText(3);
-    tmpl.extension = (*iter).ReadText(4);
-    incoming.textSearchTemplates.push_back(tmpl);
-  }
+  LoadTextSearchObjects(Query(_T("Text search templates")).List(),
+                        incoming.textSearchTemplates);
 }
 
 void LoadDatabaseSchemaWork::LoadTextSearchConfigurations()
 {
-  QueryResults rows = Query(_T("Text search configurations")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TextSearchConfigurationModel cfg;
-    cfg.schema.oid = (*iter).ReadOid(0);
-    cfg.schema.name = (*iter).ReadText(1);
-    cfg.oid = (*iter).ReadOid(2);
-    cfg.name = (*iter).ReadText(3);
-    cfg.extension = (*iter).ReadText(4);
-    incoming.textSearchConfigurations.push_back(cfg);
-  }
+  LoadTextSearchObjects(Query(_T("Text search configurations")).List(),
+                        incoming.textSearchConfigurations);
 }
 
 void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)

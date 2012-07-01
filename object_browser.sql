@@ -56,8 +56,9 @@ FROM pg_group
 
 -- SQL :: Relations :: 9.1
 SELECT pg_namespace.oid, nspname,
+       pg_extension.oid, extname,
        pg_class.oid, relname, relkind,
-       pg_extension.extname, relpersistence = 'u' AS is_unlogged
+       relpersistence = 'u' AS is_unlogged
 FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
       FROM pg_class
       WHERE relkind IN ('r','v')
@@ -80,8 +81,9 @@ FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
 
 -- SQL :: Relations
 SELECT pg_namespace.oid, nspname,
+       NULL, NULL,
        pg_class.oid, relname, relkind,
-       NULL AS extname, false AS is_unlogged
+       false AS is_unlogged
 FROM (SELECT oid, relname, relkind, relnamespace
       FROM pg_class
       WHERE relkind IN ('r','v')
@@ -100,13 +102,13 @@ FROM (SELECT oid, relname, relkind, relnamespace
 
 -- SQL :: Functions :: 9.1
 SELECT pg_namespace.oid, nspname,
+       pg_extension.oid, extname,
        pg_proc.oid, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
             WHEN proiswindow THEN 'fw'
-            ELSE 'f' END,
-       extname
+            ELSE 'f' END
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_proc'::regclass
@@ -116,20 +118,21 @@ FROM pg_proc
 
 -- SQL :: Functions :: 8.4
 SELECT pg_namespace.oid, nspname,
+       NULL, NULL,
        pg_proc.oid, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
             WHEN proisagg THEN 'fa'
             WHEN proiswindow THEN 'fw'
-            ELSE 'f' END,
-       NULL AS extname
+            ELSE 'f' END
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 
 -- SQL :: Functions
 SELECT nspoid, nspname,
+       NULL, NULL,
        oid, proname, substr(longname, position('(' in longname) + 1, length(longname) - position('(' in longname) - 1),
-       type, NULL as extname
+       type
 FROM (
 SELECT pg_proc.oid, pg_namespace.oid as nspoid, nspname, proname, pg_proc.oid::regprocedure::text as longname,
        CASE WHEN proretset THEN 'fs'
@@ -205,8 +208,27 @@ WHERE tgrelid = $1
                      AND c.contype = 'f')
           )
 
+-- SQL :: Sequences :: 9.1
+SELECT pg_namespace.oid, nspname,
+       pg_extension.oid, extname,
+       seq.oid, seq.relname, pg_depend.refobjsubid
+FROM pg_class seq
+     JOIN pg_namespace ON pg_namespace.oid = seq.relnamespace
+     JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
+                       AND pg_depend.objid = seq.oid
+                       AND pg_depend.deptype = 'a'
+                       AND pg_depend.refclassid = 'pg_class'::regclass
+                       AND pg_depend.refobjsubid > 0
+     LEFT JOIN pg_depend pg_depend_ext ON pg_depend_ext.classid = 'pg_class'::regclass
+                         AND pg_depend_ext.objid = seq.oid
+                         AND pg_depend_ext.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend_ext.refobjid
+WHERE pg_depend.refobjid = $1
+      AND seq.relkind = 'S'
+
 -- SQL :: Sequences
 SELECT pg_namespace.oid, nspname,
+       NULL, NULL,
        seq.oid, seq.relname, pg_depend.refobjsubid
 FROM pg_class seq
      JOIN pg_namespace ON pg_namespace.oid = seq.relnamespace
@@ -220,7 +242,8 @@ WHERE pg_depend.refobjid = $1
 
 -- SQL :: Text search dictionaries :: 9.1
 SELECT pg_namespace.oid, nspname,
-       pg_ts_dict.oid, dictname, extname
+       pg_extension.oid, extname,
+       pg_ts_dict.oid, dictname
 FROM pg_ts_dict
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_dict'::regclass
@@ -230,13 +253,15 @@ FROM pg_ts_dict
 
 -- SQL :: Text search dictionaries
 SELECT pg_namespace.oid, nspname,
-       pg_ts_dict.oid, dictname, null AS extname
+       NULL, NULL,
+       pg_ts_dict.oid, dictname,
 FROM pg_ts_dict
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
 
 -- SQL :: Text search parsers :: 9.1
 SELECT pg_namespace.oid, nspname,
-       pg_ts_parser.oid, prsname, extname
+       pg_extension.oid, extname,
+       pg_ts_parser.oid, prsname
 FROM pg_ts_parser
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_parser'::regclass
@@ -252,7 +277,8 @@ FROM pg_ts_parser
 
 -- SQL :: Text search templates :: 9.1
 SELECT pg_namespace.oid, nspname,
-       pg_ts_template.oid, tmplname, extname
+       pg_extension.oid, extname,
+       pg_ts_template.oid, tmplname
 FROM pg_ts_template
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_template'::regclass
@@ -262,13 +288,15 @@ FROM pg_ts_template
 
 -- SQL :: Text search templates
 SELECT pg_namespace.oid, nspname,
-       pg_ts_template.oid, tmplname, null AS extname
+       NULL, NULL,
+       pg_ts_template.oid, tmplname
 FROM pg_ts_template
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
 
 -- SQL :: Text search configurations :: 9.1
 SELECT pg_namespace.oid, nspname,
-       pg_ts_config.oid, cfgname, null AS extname
+       pg_extension.oid, extname,
+       pg_ts_config.oid, cfgname
 FROM pg_ts_config
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_config'::regclass
@@ -278,7 +306,8 @@ FROM pg_ts_config
 
 -- SQL :: Text search configurations
 SELECT pg_namespace.oid, nspname,
-       pg_ts_config.oid, cfgname, null AS extname
+       NULL, NULL,
+       pg_ts_config.oid, cfgname
 FROM pg_ts_config
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
 

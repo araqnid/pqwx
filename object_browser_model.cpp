@@ -391,8 +391,8 @@ DatabaseModel::Divisions DatabaseModel::DivideSchemaMembers() const
 
   for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     const SchemaMemberModel *member = *iter;
-    if (!member->extension.IsEmpty())
-      result.extensionDivisions[member->extension].push_back(member);
+    if (member->extension.oid != InvalidOid)
+      result.extensionDivisions[member->extension.name].push_back(member);
     else if (!member->IsUser())
       result.systemDivision.push_back(member);
     else

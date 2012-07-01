@@ -254,7 +254,7 @@ FROM pg_ts_dict
 -- SQL :: Text search dictionaries
 SELECT pg_namespace.oid, nspname,
        NULL, NULL,
-       pg_ts_dict.oid, dictname,
+       pg_ts_dict.oid, dictname
 FROM pg_ts_dict
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
 
@@ -271,7 +271,8 @@ FROM pg_ts_parser
 
 -- SQL :: Text search parsers
 SELECT pg_namespace.oid, nspname,
-       pg_ts_parser.oid, nspname, prsname, null AS extname
+       NULL, NULL,
+       pg_ts_parser.oid, nspname, prsname
 FROM pg_ts_parser
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
 

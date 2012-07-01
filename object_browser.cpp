@@ -182,6 +182,7 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   viewMenu = wxXmlResource::Get()->LoadMenu(_T("ViewMenu"));
   sequenceMenu = wxXmlResource::Get()->LoadMenu(_T("SequenceMenu"));
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
+  schemaMenu = wxXmlResource::Get()->LoadMenu(_T("SchemaMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
@@ -949,6 +950,10 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
 
   case ObjectModelReference::PG_PROC:
     OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), objectBrowserModel->FindFunction(*ref));
+    break;
+
+  case ObjectModelReference::PG_NAMESPACE:
+    PopupMenu(schemaMenu);
     break;
   }
 }

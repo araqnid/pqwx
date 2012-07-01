@@ -255,6 +255,69 @@ private:
   static std::vector<bool> ReadIOModeArray(const QueryResults::Row &row, unsigned index);
 };
 
+/**
+ * Produce text search dictionary scripts.
+ */
+class TextSearchDictionaryScriptWork : public ScriptWork {
+public:
+  TextSearchDictionaryScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), dictoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate text search dictionary script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid dictoid;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce text search parser scripts.
+ */
+class TextSearchParserScriptWork : public ScriptWork {
+public:
+  TextSearchParserScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), prsoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate text search parser script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid prsoid;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce text search template scripts.
+ */
+class TextSearchTemplateScriptWork : public ScriptWork {
+public:
+  TextSearchTemplateScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), tmploid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate text search template script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid tmploid;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce text search configuration scripts.
+ */
+class TextSearchConfigurationScriptWork : public ScriptWork {
+public:
+  TextSearchConfigurationScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), cfgoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate text search configuration script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid cfgoid;
+protected:
+  void GenerateScript(OutputIterator output);
+  void GenerateMappings(OutputIterator output);
+  wxString qualifiedName;
+  static const std::vector<wxString> tokenTypeAliases;
+};
+
 #endif
 
 // Local Variables:

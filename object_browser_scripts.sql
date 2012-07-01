@@ -207,3 +207,45 @@ WHERE conrelid = $1
       AND g BETWEEN array_lower(conkey, 1)
       AND array_upper(conkey, 1)
 ORDER BY pg_constraint.oid, g
+
+-- SQL :: Text Search Dictionary Detail
+SELECT dictname, dict_namespace.nspname, owner.rolname AS owner,
+       tmplname, tmpl_namespace.nspname,
+       dictinitoption
+FROM pg_ts_dict
+     JOIN pg_namespace dict_namespace ON dict_namespace.oid = pg_ts_dict.dictnamespace
+     JOIN pg_roles owner ON owner.oid = pg_ts_dict.dictowner
+     JOIN pg_ts_template ON pg_ts_template.oid = pg_ts_dict.dicttemplate
+     JOIN pg_namespace tmpl_namespace ON tmpl_namespace.oid = pg_ts_template.tmplnamespace
+WHERE pg_ts_dict.oid = $1
+
+-- SQL :: Text Search Template Detail
+SELECT tmplname, tmpl_namespace.nspname,
+       tmplinit, tmpllexize
+FROM pg_ts_template
+     JOIN pg_namespace tmpl_namespace ON tmpl_namespace.oid = pg_ts_template.tmplnamespace
+WHERE pg_ts_template.oid = $1
+
+-- SQL :: Text Search Parser Detail
+SELECT prsname, prs_namespace.nspname,
+       prsstart, prstoken, prsend, prslextype, prsheadline
+FROM pg_ts_parser
+     JOIN pg_namespace prs_namespace ON prs_namespace.oid = pg_ts_parser.prsnamespace
+WHERE pg_ts_parser.oid = $1
+
+-- SQL :: Text Search Configuration Detail
+SELECT cfgname, cfg_namespace.nspname, owner.rolname AS owner,
+       prsname, prs_namespace.nspname
+FROM pg_ts_config
+     JOIN pg_namespace cfg_namespace ON cfg_namespace.oid = pg_ts_config.cfgnamespace
+     JOIN pg_roles owner ON owner.oid = pg_ts_config.cfgowner
+     JOIN pg_ts_parser ON pg_ts_parser.oid = pg_ts_config.cfgparser
+     JOIN pg_namespace prs_namespace ON prs_namespace.oid = pg_ts_parser.prsnamespace
+WHERE pg_ts_config.oid = $1
+
+-- SQL :: Text Search Configuration Mappings
+SELECT maptokentype, dictname, dict_namespace.nspname
+FROM pg_ts_config_map
+     JOIN pg_ts_dict ON pg_ts_dict.oid = pg_ts_config_map.mapdict
+     JOIN pg_namespace dict_namespace ON dict_namespace.oid = pg_ts_dict.dictnamespace
+WHERE pg_ts_config_map.mapcfg = $1

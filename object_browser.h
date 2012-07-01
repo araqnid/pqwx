@@ -242,6 +242,18 @@ private:
   DECLARE_SCRIPT_HANDLERS(Function, Alter);
   DECLARE_SCRIPT_HANDLERS(Function, Drop);
   DECLARE_SCRIPT_HANDLERS(Function, Select);
+  DECLARE_SCRIPT_HANDLERS(TextSearchDictionary, Create);
+  DECLARE_SCRIPT_HANDLERS(TextSearchDictionary, Alter);
+  DECLARE_SCRIPT_HANDLERS(TextSearchDictionary, Drop);
+  DECLARE_SCRIPT_HANDLERS(TextSearchParser, Create);
+  DECLARE_SCRIPT_HANDLERS(TextSearchParser, Alter);
+  DECLARE_SCRIPT_HANDLERS(TextSearchParser, Drop);
+  DECLARE_SCRIPT_HANDLERS(TextSearchTemplate, Create);
+  DECLARE_SCRIPT_HANDLERS(TextSearchTemplate, Alter);
+  DECLARE_SCRIPT_HANDLERS(TextSearchTemplate, Drop);
+  DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Create);
+  DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Alter);
+  DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Drop);
 
   // context menus
   wxMenu *serverMenu;

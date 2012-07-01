@@ -64,6 +64,7 @@ private:
   int OnExit();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
+  void SuggestConfiguredToolLocations();
 };
 
 DECLARE_APP(PQWXApp);

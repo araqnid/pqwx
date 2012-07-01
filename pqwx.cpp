@@ -46,7 +46,7 @@ bool PQWXApp::OnInit()
   toolsRegistry.SetUseSystemPath(false);
   toolsRegistry.AddSuggestion(_T("/usr/lib/postgresql"));
 #endif
-
+  SuggestConfiguredToolLocations();
   toolsRegistry.BeginFindInstallations();
 
   objectBrowserModel = new ObjectBrowserModel();
@@ -118,6 +118,25 @@ bool PQWXApp::OnCmdLineParsed(wxCmdLineParser &parser) {
 
   return true;
 }
+
+void PQWXApp::SuggestConfiguredToolLocations()
+{
+  wxConfigBase *cfg = wxConfig::Get();
+  wxString oldPath = cfg->GetPath();
+  cfg->SetPath(_T("Installations"));
+
+  int pos = 0;
+  do {
+    wxString key = wxString::Format(_T("%d"), pos++);
+    wxString location;
+    if (!cfg->Read(key + _T("/Location"), &location))
+      break;
+    if (!location.empty()) toolsRegistry.AddSuggestion(location);
+  } while (1);
+
+  cfg->SetPath(oldPath);
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

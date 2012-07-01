@@ -148,7 +148,7 @@ class DatabaseScriptWork : public ScriptWork {
 public:
   DatabaseScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), dboid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate database script"), this);
+    wxLogDebug(_T("%p: work to generate database script: %s"), this, ref.Identify().c_str());
   }
 protected:
   void GenerateScript(OutputIterator output);
@@ -164,7 +164,7 @@ class TableScriptWork : public ScriptWork {
 public:
   TableScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate table script"), this);
+    wxLogDebug(_T("%p: work to generate table script: %s"), this, tableRef.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -181,7 +181,7 @@ class SchemaScriptWork : public ScriptWork {
 public:
   SchemaScriptWork(const ObjectModelReference& schemaRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(schemaRef.DatabaseRef(), mode, output), nspoid(schemaRef.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate schema script"), this);
+    wxLogDebug(_T("%p: work to generate schema script: %s"), this, schemaRef.Identify().c_str());
   }
 private:
   const Oid nspoid;
@@ -197,7 +197,7 @@ class ViewScriptWork : public ScriptWork {
 public:
   ViewScriptWork(const ObjectModelReference& viewRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(viewRef.DatabaseRef(), mode, output), reloid(viewRef.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate view script"), this);
+    wxLogDebug(_T("%p: work to generate view script: %s"), this, viewRef.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -213,7 +213,7 @@ class SequenceScriptWork : public ScriptWork {
 public:
   SequenceScriptWork(const ObjectModelReference& sequenceRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequenceRef.DatabaseRef(), mode, output), reloid(sequenceRef.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate sequence script"), this);
+    wxLogDebug(_T("%p: work to generate sequence script: %s"), this, sequenceRef.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -229,7 +229,7 @@ class FunctionScriptWork : public ScriptWork {
 public:
   FunctionScriptWork(const ObjectModelReference& functionRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(functionRef.DatabaseRef(), mode, output), procoid(functionRef.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate function script"), this);
+    wxLogDebug(_T("%p: work to generate function script: %s"), this, functionRef.Identify().c_str());
   }
 private:
   Oid procoid;

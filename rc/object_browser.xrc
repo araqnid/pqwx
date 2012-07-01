@@ -481,4 +481,248 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
+
+  <object class="wxMenu" name="TextSearchParserMenu">
+    <object class="wxMenuItem" name="TextSearchParserMenu_New">
+      <label>&amp;New Text Search Parser...</label>
+    </object>
+    <object class="wxMenu" name="TextSearchParserMenu_Script">
+      <object class="wxMenu" name="TextSearchParserMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TextSearchParserMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TextSearchParserMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchParserMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Text Search Parser as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TextSearchParserMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchParserMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchParserMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TextSearchParserMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+
+  <object class="wxMenu" name="TextSearchTemplateMenu">
+    <object class="wxMenuItem" name="TextSearchTemplateMenu_New">
+      <label>&amp;New Text Search Template...</label>
+    </object>
+    <object class="wxMenu" name="TextSearchTemplateMenu_Script">
+      <object class="wxMenu" name="TextSearchTemplateMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TextSearchTemplateMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TextSearchTemplateMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchTemplateMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Text Search Template as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TextSearchTemplateMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchTemplateMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchTemplateMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TextSearchTemplateMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+
+  <object class="wxMenu" name="TextSearchDictionaryMenu">
+    <object class="wxMenuItem" name="TextSearchDictionaryMenu_New">
+      <label>&amp;New Text Search Dictionary...</label>
+    </object>
+    <object class="wxMenu" name="TextSearchDictionaryMenu_Script">
+      <object class="wxMenu" name="TextSearchDictionaryMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TextSearchDictionaryMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TextSearchDictionaryMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchDictionaryMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Text Search Dictionary as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TextSearchDictionaryMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchDictionaryMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchDictionaryMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TextSearchDictionaryMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+
+  <object class="wxMenu" name="TextSearchConfigurationMenu">
+    <object class="wxMenuItem" name="TextSearchConfigurationMenu_New">
+      <label>&amp;New Text Search Configuration...</label>
+    </object>
+    <object class="wxMenu" name="TextSearchConfigurationMenu_Script">
+      <object class="wxMenu" name="TextSearchConfigurationMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TextSearchConfigurationMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TextSearchConfigurationMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TextSearchConfigurationMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Text Search Configuration as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TextSearchConfigurationMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchConfigurationMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TextSearchConfigurationMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TextSearchConfigurationMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
 </resource>

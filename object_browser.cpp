@@ -179,6 +179,10 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   functionMenu = wxXmlResource::Get()->LoadMenu(_T("FunctionMenu"));
   schemaMenu = wxXmlResource::Get()->LoadMenu(_T("SchemaMenu"));
   extensionMenu = wxXmlResource::Get()->LoadMenu(_T("ExtensionMenu"));
+  textSearchParserMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchParserMenu"));
+  textSearchTemplateMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchTemplateMenu"));
+  textSearchDictionaryMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchDictionaryMenu"));
+  textSearchConfigurationMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchConfigurationMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
@@ -965,6 +969,25 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     PrepareSchemaMenu(schemaMenu, objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     PopupMenu(schemaMenu);
     break;
+
+  case ObjectModelReference::PG_TS_PARSER:
+    OpenSchemaMemberMenu(textSearchParserMenu, XRCID("TextSearchParserMenu_Schema"), static_cast<const TextSearchParserModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    break;
+
+  case ObjectModelReference::PG_TS_DICT:
+    OpenSchemaMemberMenu(textSearchDictionaryMenu, XRCID("TextSearchDictionaryMenu_Schema"), static_cast<const TextSearchDictionaryModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    break;
+
+  case ObjectModelReference::PG_TS_TEMPLATE:
+    OpenSchemaMemberMenu(textSearchTemplateMenu, XRCID("TextSearchTemplateMenu_Schema"), static_cast<const TextSearchTemplateModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    break;
+
+  case ObjectModelReference::PG_TS_CONFIG:
+    OpenSchemaMemberMenu(textSearchConfigurationMenu, XRCID("TextSearchConfigurationMenu_Schema"), static_cast<const TextSearchConfigurationModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    break;
+
+  default:
+    wxLogDebug(_T("%s: No context menu applicable"), ref->Identify().c_str());
   }
 }
 

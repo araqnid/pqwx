@@ -252,6 +252,10 @@ private:
   wxMenu *functionMenu;
   wxMenu *schemaMenu;
   wxMenu *extensionMenu;
+  wxMenu *textSearchParserMenu;
+  wxMenu *textSearchTemplateMenu;
+  wxMenu *textSearchDictionaryMenu;
+  wxMenu *textSearchConfigurationMenu;
 
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;

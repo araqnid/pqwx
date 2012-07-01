@@ -1123,7 +1123,9 @@ wxTreeItemId ObjectBrowser::LookupSymbolItem(const ObjectModelReference& databas
 {
   wxASSERT(database.GetObjectClass() == ObjectModelReference::PG_DATABASE);
   std::map< ObjectModelReference, std::map< Oid, wxTreeItemId > >::const_iterator tablePtr = symbolTables.find(database);
-  wxASSERT(tablePtr != symbolTables.end());
+  if (tablePtr == symbolTables.end())
+    return wxTreeItemId();
+
   const std::map< Oid, wxTreeItemId >& symbolTable = (*tablePtr).second;
 
   std::map< Oid, wxTreeItemId >::const_iterator itemPtr = symbolTable.find(oid);

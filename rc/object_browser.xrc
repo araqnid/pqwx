@@ -71,6 +71,7 @@
     <object class="wxMenuItem" name="DatabaseMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
+    <label>Database '$$'</label>
   </object>
   <object class="wxMenu" name="TableMenu">
     <object class="wxMenuItem" name="TableMenu_New">
@@ -469,6 +470,8 @@
       </object>
       <label>&amp;Script Schema as</label>
     </object>
+    <object class="separator"/>
+    <object_ref name="SchemaMenu_Database" ref="DatabaseMenu"/>
     <object class="separator"/>
     <object class="wxMenuItem" name="SchemaMenu_ViewDependencies">
       <label>View &amp;Dependencies...</label>

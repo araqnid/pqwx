@@ -85,38 +85,33 @@ void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { 
   SubmitDatabaseWork(objectBrowserModel->FindDatabase(ref.DatabaseRef()), new menu##ScriptWork(ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode)                     \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    contextMenuRef) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      contextMenuRef) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, contextMenuRef)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref)                \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, ref)
 
-#define IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(menu, mode)                   \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    FindContextSchema()) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      FindContextSchema()) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, FindContextSchema())
-
-IMPLEMENT_SCRIPT_HANDLERS(Database, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Alter)
-IMPLEMENT_SCRIPT_HANDLERS(Database, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Select)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Insert)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Update)
-IMPLEMENT_SCRIPT_HANDLERS(Table, Delete)
-IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(Schema, Create)
-IMPLEMENT_SCRIPT_HANDLERS_SCHEMA(Schema, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(View, Create)
-IMPLEMENT_SCRIPT_HANDLERS(View, Alter)
-IMPLEMENT_SCRIPT_HANDLERS(View, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(View, Select)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter)
-IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Create)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Alter)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Drop)
-IMPLEMENT_SCRIPT_HANDLERS(Function, Select)
+IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuRef.DatabaseRef())
+IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuRef.DatabaseRef())
+IMPLEMENT_SCRIPT_HANDLERS(Database, Drop, contextMenuRef.DatabaseRef())
+IMPLEMENT_SCRIPT_HANDLERS(Table, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Schema, Create, FindContextSchema())
+IMPLEMENT_SCRIPT_HANDLERS(Schema, Drop, FindContextSchema())
+IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(View, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(View, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(View, Select, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Sequence, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Function, Select, contextMenuRef)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)
@@ -900,11 +895,19 @@ void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, O
   Expand(item);
 }
 
-void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const SchemaMemberModel *member)
+void ObjectBrowser::PrepareSchemaMenu(wxMenu *menu, const DatabaseModel *database)
+{
+  wxMenuItem *databaseItem = menu->FindItem(XRCID("SchemaMenu_Database"), NULL);
+  wxASSERT(databaseItem != NULL);
+  databaseItem->SetItemLabel(wxString::Format(_("Database '%s'"), database->name.c_str()));
+}
+
+void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const SchemaMemberModel *member, const DatabaseModel *database)
 {
   wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
   wxASSERT(schemaItem != NULL);
   schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.name.c_str()));
+  PrepareSchemaMenu(schemaItem->GetSubMenu(), database);
   PopupMenu(menu);
 }
 
@@ -935,22 +938,23 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
   case ObjectModelReference::PG_CLASS:
     {
       const RelationModel *relation = objectBrowserModel->FindRelation(*ref);
+      const DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
       switch (relation->type) {
       case RelationModel::TABLE:
-        OpenSchemaMemberMenu(tableMenu, XRCID("TableMenu_Schema"), relation);
+        OpenSchemaMemberMenu(tableMenu, XRCID("TableMenu_Schema"), relation, database);
         break;
       case RelationModel::VIEW:
-        OpenSchemaMemberMenu(viewMenu, XRCID("ViewMenu_Schema"), relation);
+        OpenSchemaMemberMenu(viewMenu, XRCID("ViewMenu_Schema"), relation, database);
         break;
       case RelationModel::SEQUENCE:
-        OpenSchemaMemberMenu(sequenceMenu, XRCID("SequenceMenu_Schema"), relation);
+        OpenSchemaMemberMenu(sequenceMenu, XRCID("SequenceMenu_Schema"), relation, database);
         break;
       }
     }
     break;
 
   case ObjectModelReference::PG_PROC:
-    OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), objectBrowserModel->FindFunction(*ref));
+    OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), objectBrowserModel->FindFunction(*ref), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_EXTENSION:
@@ -958,6 +962,7 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_NAMESPACE:
+    PrepareSchemaMenu(schemaMenu, objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     PopupMenu(schemaMenu);
     break;
   }

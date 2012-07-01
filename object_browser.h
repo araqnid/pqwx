@@ -205,7 +205,8 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
-  void OpenSchemaMemberMenu(wxMenu*, int schemaItemId, const SchemaMemberModel*);
+  void PrepareSchemaMenu(wxMenu*, const DatabaseModel*);
+  void OpenSchemaMemberMenu(wxMenu*, int schemaItemId, const SchemaMemberModel*, const DatabaseModel*);
 
   void AppendRoleItems(const ServerModel *serverModel, wxTreeItemId serverItem);
   void AppendDatabaseItems(const ServerModel*, wxTreeItemId parent, const std::vector<const DatabaseModel*> &database);

@@ -230,6 +230,9 @@ private:
   DECLARE_SCRIPT_HANDLERS(Table, Insert);
   DECLARE_SCRIPT_HANDLERS(Table, Update);
   DECLARE_SCRIPT_HANDLERS(Table, Delete);
+  DECLARE_SCRIPT_HANDLERS(Index, Create);
+  DECLARE_SCRIPT_HANDLERS(Index, Alter);
+  DECLARE_SCRIPT_HANDLERS(Index, Drop);
   DECLARE_SCRIPT_HANDLERS(Schema, Create);
   DECLARE_SCRIPT_HANDLERS(Schema, Drop);
   DECLARE_SCRIPT_HANDLERS(View, Create);
@@ -255,6 +258,15 @@ private:
   DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Create);
   DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Alter);
   DECLARE_SCRIPT_HANDLERS(TextSearchConfiguration, Drop);
+  DECLARE_SCRIPT_HANDLERS(Extension, Create);
+  DECLARE_SCRIPT_HANDLERS(Extension, Alter);
+  DECLARE_SCRIPT_HANDLERS(Extension, Drop);
+  DECLARE_SCRIPT_HANDLERS(Role, Create);
+  DECLARE_SCRIPT_HANDLERS(Role, Alter);
+  DECLARE_SCRIPT_HANDLERS(Role, Drop);
+  DECLARE_SCRIPT_HANDLERS(Tablespace, Create);
+  DECLARE_SCRIPT_HANDLERS(Tablespace, Alter);
+  DECLARE_SCRIPT_HANDLERS(Tablespace, Drop);
 
   // context menus
   wxMenu *serverMenu;

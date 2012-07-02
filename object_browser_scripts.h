@@ -29,14 +29,14 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(const ObjectModelReference& databaseRef, Mode mode, Output output) : ObjectBrowserWork(ScriptWork::GetSqlDictionary()), databaseRef(databaseRef), mode(mode), output(output) {}
+  ScriptWork(const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(ScriptWork::GetSqlDictionary()), targetRef(targetRef), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;
 
   virtual void GenerateScript(OutputIterator output) = 0;
 
-  const ObjectModelReference databaseRef;
+  const ObjectModelReference targetRef;
   const Mode mode;
 
   static std::map<wxChar, wxString> PrivilegeMap(const wxString &spec);
@@ -170,6 +170,21 @@ private:
   const Oid reloid;
   static std::map<wxChar, wxString> privilegeMap;
   void GenerateForeignKey(OutputIterator output, const wxString& tableName, const wxString& srcColumns, const wxString& dstColumns, const QueryResults::Row& fkeyRow);
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce index scripts.
+ */
+class IndexScriptWork : public ScriptWork {
+public:
+  IndexScriptWork(const ObjectModelReference& indexRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(indexRef.DatabaseRef(), mode, output), reloid(indexRef.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate table script: %s"), this, indexRef.Identify().c_str());
+  }
+private:
+  const Oid reloid;
 protected:
   void GenerateScript(OutputIterator output);
 };
@@ -316,6 +331,37 @@ protected:
   void GenerateMappings(OutputIterator output);
   wxString qualifiedName;
   static const std::vector<wxString> tokenTypeAliases;
+};
+
+/**
+ * Produce tablespace scripts.
+ */
+class TablespaceScriptWork : public ScriptWork {
+public:
+  TablespaceScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), spcoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate tablespace configuration script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid spcoid;
+  static std::map<wxChar, wxString> privilegeMap;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce role scripts.
+ */
+class RoleScriptWork : public ScriptWork {
+public:
+  RoleScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), spcoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate role configuration script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  Oid spcoid;
+protected:
+  void GenerateScript(OutputIterator output);
 };
 
 #endif

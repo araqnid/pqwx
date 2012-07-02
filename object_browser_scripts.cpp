@@ -18,7 +18,18 @@ void ScriptWork::UpdateView(ObjectBrowser *ob)
 {
   switch (output) {
   case Window: {
-    const DatabaseModel *database = ob->objectBrowserModel->FindDatabase(databaseRef);
+    const DatabaseModel *database;
+    switch (targetRef.GetObjectClass()) {
+    case ObjectModelReference::PG_DATABASE:
+      database = ob->objectBrowserModel->FindDatabase(targetRef);
+      break;
+    case InvalidOid:
+      database = ob->objectBrowserModel->FindAdminDatabase(targetRef);
+      break;
+    default:
+      wxASSERT(false);
+      return;
+    }
     PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
     evt.SetString(script);
     ob->ProcessEvent(evt);
@@ -486,6 +497,10 @@ void TableScriptWork::GenerateForeignKey(OutputIterator output, const wxString& 
 }
 
 std::map<wxChar, wxString> TableScriptWork::privilegeMap = PrivilegeMap(_T("a=INSERT r=SELECT w=UPDATE d=DELETE D=TRUNCATE x=REFERENCES t=TRIGGER"));
+
+void IndexScriptWork::GenerateScript(OutputIterator output)
+{
+}
 
 void SchemaScriptWork::GenerateScript(OutputIterator output)
 {
@@ -1102,6 +1117,16 @@ static std::vector<wxString> TokenTypeAliases()
 }
 
 const std::vector<wxString> TextSearchConfigurationScriptWork::tokenTypeAliases = TokenTypeAliases();
+
+void TablespaceScriptWork::GenerateScript(OutputIterator output)
+{
+}
+
+std::map<wxChar, wxString> TablespaceScriptWork::privilegeMap = PrivilegeMap(_T("C=CREATE"));
+
+void RoleScriptWork::GenerateScript(OutputIterator output)
+{
+}
 
 // Local Variables:
 // mode: c++

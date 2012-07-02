@@ -168,6 +168,13 @@ void ObjectBrowserModel::RemoveServer(const wxString& serverId)
   }
 }
 
+DatabaseModel* ObjectBrowserModel::FindAdminDatabase(const wxString& serverId)
+{
+  ServerModel* server = FindServerById(serverId);
+  wxASSERT(server != NULL);
+  return server->FindAdminDatabase();
+}
+
 DatabaseModel *ObjectBrowserModel::FindDatabase(const ServerConnection &server, const wxString &dbname)
 {
   ServerModel *serverModel = FindServer(server);

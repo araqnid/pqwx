@@ -65,6 +65,9 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Table, Insert)
   BIND_SCRIPT_HANDLERS(Table, Update)
   BIND_SCRIPT_HANDLERS(Table, Delete)
+  BIND_SCRIPT_HANDLERS(Index, Create)
+  BIND_SCRIPT_HANDLERS(Index, Alter)
+  BIND_SCRIPT_HANDLERS(Index, Drop)
   BIND_SCRIPT_HANDLERS(Schema, Create)
   BIND_SCRIPT_HANDLERS(Schema, Drop)
   BIND_SCRIPT_HANDLERS(View, Create)
@@ -90,17 +93,28 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(TextSearchConfiguration, Create)
   BIND_SCRIPT_HANDLERS(TextSearchConfiguration, Alter)
   BIND_SCRIPT_HANDLERS(TextSearchConfiguration, Drop)
+  BIND_SCRIPT_HANDLERS(Tablespace, Create)
+  BIND_SCRIPT_HANDLERS(Tablespace, Alter)
+  BIND_SCRIPT_HANDLERS(Tablespace, Drop)
+  BIND_SCRIPT_HANDLERS(Role, Create)
+  BIND_SCRIPT_HANDLERS(Role, Alter)
+  BIND_SCRIPT_HANDLERS(Role, Drop)
 END_EVENT_TABLE()
 
-#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, ref)                   \
+#define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, db, ref) \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(objectBrowserModel->FindDatabase(ref.DatabaseRef()), new menu##ScriptWork(ref, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(db, new menu##ScriptWork(ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
-#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref)                \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, ref)
+#define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref)
+
+#define IMPLEMENT_SERVER_SCRIPT_HANDLERS(menu, mode, ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref)
 
 IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuRef.DatabaseRef())
 IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuRef.DatabaseRef())
@@ -111,6 +125,9 @@ IMPLEMENT_SCRIPT_HANDLERS(Table, Select, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Insert, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Update, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(Table, Delete, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Index, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Index, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Index, Drop, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(Schema, Create, FindContextSchema())
 IMPLEMENT_SCRIPT_HANDLERS(Schema, Drop, FindContextSchema())
 IMPLEMENT_SCRIPT_HANDLERS(View, Create, contextMenuRef)
@@ -136,6 +153,12 @@ IMPLEMENT_SCRIPT_HANDLERS(TextSearchTemplate, Drop, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Create, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Alter, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Drop, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Create, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Alter, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Drop, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Role, Create, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Role, Alter, contextMenuRef)
+IMPLEMENT_SERVER_SCRIPT_HANDLERS(Role, Drop, contextMenuRef)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptNew)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptToWindow)

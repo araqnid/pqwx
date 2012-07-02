@@ -423,6 +423,10 @@ public:
    */
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
   /**
+   * Find the administrative database model on this server.
+   */
+  DatabaseModel *FindAdminDatabase() { return FindDatabase(GlobalDbName()); }
+  /**
    * Find a named database model on this server.
    */
   DatabaseModel *FindDatabase(const wxString &dbname);
@@ -496,6 +500,10 @@ public:
    */
   DatabaseModel *FindDatabase(const ObjectModelReference &ref);
   /**
+   * Find the administrative database for a server by reference.
+   */
+  DatabaseModel *FindAdminDatabase(const ObjectModelReference &ref) { wxASSERT(ref.GetOid() == InvalidOid); return FindAdminDatabase(ref.GetServerId()); }
+  /**
    * Register a new server connection with the object browser.
    */
   ServerModel* AddServerConnection(const ServerConnection &conninfo, DatabaseConnection *db);
@@ -565,6 +573,7 @@ public:
   static const int TIMER_MAINTAIN = 20000;
 private:
   ServerModel *FindServerById(const wxString&);
+  DatabaseModel *FindAdminDatabase(const wxString&);
   std::list<ServerModel> servers;
   std::list<ObjectBrowser*> views;
   DECLARE_EVENT_TABLE();

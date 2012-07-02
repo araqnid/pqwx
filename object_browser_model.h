@@ -254,13 +254,30 @@ public:
 };
 
 /**
- * A tablespace.
+ * Some object that is a direct server member.
  */
-class TablespaceModel : public ObjectModel {
+class ServerMemberModel : public ObjectModel {
 public:
   Oid oid;
+};
+
+/**
+ * A tablespace.
+ */
+class TablespaceModel : public ServerMemberModel {
+public:
   wxString location;
   bool IsSystem() const { return name.StartsWith(_T("pg_")); }
+};
+
+/**
+ * Some object that is a direct database member.
+ */
+class DatabaseMemberModel : public ObjectModel {
+public:
+  Oid oid;
+  Oid databaseOid;
+  wxString databaseName;
 };
 
 /**
@@ -268,7 +285,7 @@ public:
  *
  * This also contains a OID-to-tree-item lookup table and a CatalogueIndex.
  */
-class DatabaseModel : public ObjectModel {
+class DatabaseModel : public ServerMemberModel {
 public:
   DatabaseModel() : loaded(false), server(NULL), catalogueIndex(NULL) {}
   virtual ~DatabaseModel() {
@@ -276,7 +293,6 @@ public:
       delete catalogueIndex;
   }
   operator ObjectModelReference () const;
-  Oid oid;
   bool isTemplate;
   bool allowConnections;
   bool havePrivsToConnect;
@@ -328,9 +344,8 @@ public:
 /**
  * A server role.
  */
-class RoleModel : public ObjectModel {
+class RoleModel : public ServerMemberModel {
 public:
-  Oid oid;
   bool superuser;
   bool canLogin;
 };

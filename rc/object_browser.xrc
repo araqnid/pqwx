@@ -10,6 +10,7 @@
     <object class="wxMenuItem" name="ServerMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
+    <label>Server</label>
   </object>
   <object class="wxMenu" name="DatabaseMenu">
     <object class="wxMenuItem" name="DatabaseMenu_New">
@@ -71,7 +72,7 @@
     <object class="wxMenuItem" name="DatabaseMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
-    <label>Database '$$'</label>
+    <label>Database</label>
   </object>
   <object class="wxMenu" name="TableMenu">
     <object class="wxMenuItem" name="TableMenu_New">
@@ -436,7 +437,7 @@
     </object>
   </object>
   <object class="wxMenu" name="SchemaMenu">
-    <label>Schema '$$'</label>
+    <label>Schema</label>
     <object class="wxMenuItem" name="SchemaMenu_New">
       <label>&amp;New Schema...</label>
     </object>
@@ -481,7 +482,6 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
-
   <object class="wxMenu" name="TextSearchParserMenu">
     <object class="wxMenuItem" name="TextSearchParserMenu_New">
       <label>&amp;New Text Search Parser...</label>
@@ -542,7 +542,6 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
-
   <object class="wxMenu" name="TextSearchTemplateMenu">
     <object class="wxMenuItem" name="TextSearchTemplateMenu_New">
       <label>&amp;New Text Search Template...</label>
@@ -603,7 +602,6 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
-
   <object class="wxMenu" name="TextSearchDictionaryMenu">
     <object class="wxMenuItem" name="TextSearchDictionaryMenu_New">
       <label>&amp;New Text Search Dictionary...</label>
@@ -664,7 +662,6 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
-
   <object class="wxMenu" name="TextSearchConfigurationMenu">
     <object class="wxMenuItem" name="TextSearchConfigurationMenu_New">
       <label>&amp;New Text Search Configuration...</label>
@@ -725,7 +722,6 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
-
   <object class="wxMenu" name="IndexMenu">
     <object class="wxMenuItem" name="IndexMenu_New">
       <label>&amp;New Index...</label>
@@ -783,6 +779,126 @@
       <label>Re&amp;fresh</label>
     </object>
     <object class="wxMenuItem" name="IndexMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="RoleMenu">
+    <object class="wxMenuItem" name="RoleMenu_New">
+      <label>&amp;New Role...</label>
+    </object>
+    <object class="wxMenu" name="RoleMenu_Script">
+      <object class="wxMenu" name="RoleMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="RoleMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="RoleMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="RoleMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="RoleMenu_ScriptAlter">
+        <object class="wxMenuItem" name="RoleMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="RoleMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="RoleMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="RoleMenu_ScriptDrop">
+        <object class="wxMenuItem" name="RoleMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="RoleMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="RoleMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Role as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="RoleMenu_Server" ref="ServerMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="RoleMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="RoleMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="RoleMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="TablespaceMenu">
+    <object class="wxMenuItem" name="TablespaceMenu_New">
+      <label>&amp;New Tablespace...</label>
+    </object>
+    <object class="wxMenu" name="TablespaceMenu_Script">
+      <object class="wxMenu" name="TablespaceMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TablespaceMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TablespaceMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TablespaceMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Tablespace as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TablespaceMenu_Server" ref="ServerMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TablespaceMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TablespaceMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TablespaceMenu_Properties">
       <label>P&amp;roperties</label>
     </object>
   </object>

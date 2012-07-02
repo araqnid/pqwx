@@ -206,6 +206,8 @@ private:
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
   void PrepareSchemaMenu(wxMenu*, const DatabaseModel*);
+  void OpenServerMemberMenu(wxMenu*, int serverItemId, const ServerMemberModel*, const ServerModel*);
+  void OpenDatabaseMemberMenu(wxMenu*, int databaseItemId, const DatabaseMemberModel*, const DatabaseModel*);
   void OpenSchemaMemberMenu(wxMenu*, int schemaItemId, const SchemaMemberModel*, const DatabaseModel*);
 
   void AppendRoleItems(const ServerModel *serverModel, wxTreeItemId serverItem);
@@ -269,6 +271,8 @@ private:
   wxMenu *textSearchDictionaryMenu;
   wxMenu *textSearchConfigurationMenu;
   wxMenu *indexMenu;
+  wxMenu *roleMenu;
+  wxMenu *tablespaceMenu;
 
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;

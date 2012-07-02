@@ -208,6 +208,8 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   textSearchDictionaryMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchDictionaryMenu"));
   textSearchConfigurationMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchConfigurationMenu"));
   indexMenu = wxXmlResource::Get()->LoadMenu(_T("IndexMenu"));
+  roleMenu = wxXmlResource::Get()->LoadMenu(_T("RoleMenu"));
+  tablespaceMenu = wxXmlResource::Get()->LoadMenu(_T("TablespaceMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
@@ -931,6 +933,19 @@ void ObjectBrowser::PrepareSchemaMenu(wxMenu *menu, const DatabaseModel *databas
   databaseItem->SetItemLabel(wxString::Format(_("Database '%s'"), database->name.c_str()));
 }
 
+void ObjectBrowser::OpenServerMemberMenu(wxMenu *menu, int serverItemId, const ServerMemberModel *member, const ServerModel *server)
+{
+  PopupMenu(menu);
+}
+
+void ObjectBrowser::OpenDatabaseMemberMenu(wxMenu *menu, int databaseItemId, const DatabaseMemberModel *member, const DatabaseModel *database)
+{
+  wxMenuItem *schemaItem = menu->FindItem(databaseItemId, NULL);
+  wxASSERT(schemaItem != NULL);
+  schemaItem->SetItemLabel(wxString::Format(_("Database '%s'"), member->databaseName.c_str()));
+  PopupMenu(menu);
+}
+
 void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const SchemaMemberModel *member, const DatabaseModel *database)
 {
   wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
@@ -961,7 +976,15 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_DATABASE:
-    PopupMenu(databaseMenu);
+    OpenServerMemberMenu(databaseMenu, XRCID("DatabaseMenu_Server"), objectBrowserModel->FindDatabase(*ref), objectBrowserModel->FindServer(ref->GetServerId()));
+    break;
+
+  case ObjectModelReference::PG_ROLE:
+    OpenServerMemberMenu(roleMenu, XRCID("RoleMenu_Server"), static_cast<RoleModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindServer(ref->GetServerId()));
+    break;
+
+  case ObjectModelReference::PG_TABLESPACE:
+    OpenServerMemberMenu(tablespaceMenu, XRCID("TablespaceMenu_Server"), static_cast<TablespaceModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindServer(ref->GetServerId()));
     break;
 
   case ObjectModelReference::PG_CLASS:
@@ -1098,7 +1121,7 @@ void ObjectBrowser::UpdateSelectedDatabase()
 }
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
   wxLogDebug(_T("Disconnect: %s (context menu)"), server->Identification().c_str());
   objectBrowserModel->RemoveServer(server->Identification());
@@ -1106,13 +1129,13 @@ void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
 }
 
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
   wxMessageBox(_T("TODO Refresh server: ") + server->Identification());
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
   wxMessageBox(_T("TODO Show server properties: ") + server->Identification());
 }

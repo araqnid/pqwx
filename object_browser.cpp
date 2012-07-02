@@ -696,7 +696,7 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
     itemText += _T(")");
 
     wxTreeItemId columnItem = AppendItem(relationItem, itemText);
-    SetItemData(columnItem, new ModelReference(relationRef, ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column.attnum));
+    SetItemData(columnItem, new ModelReference(relationRef.DatabaseRef(), ObjectModelReference::PG_ATTRIBUTE, relationModel->oid, column.attnum));
     SetItemImage(columnItem, img_column);
     columnItems[column.attnum] = columnItem;
 
@@ -705,7 +705,7 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
       if (sequence.owningColumn != column.attnum) continue;
 
       wxTreeItemId sequenceItem = AppendItem(columnItem, sequence.QualifiedName());
-      SetItemData(sequenceItem, new ModelReference(relationRef, ObjectModelReference::PG_CLASS, relationModel->oid));
+      SetItemData(sequenceItem, new ModelReference(relationRef.DatabaseRef(), ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
     }
   }
@@ -715,7 +715,7 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
     SetItemImage(indicesItem, img_folder);
     for (std::vector<IndexModel>::const_iterator iter = relationModel->indices.begin(); iter != relationModel->indices.end(); iter++) {
       wxTreeItemId indexItem = AppendItem(indicesItem, (*iter).name);
-      SetItemData(indexItem, new ModelReference(relationRef, ObjectModelReference::PG_INDEX, (*iter).oid));
+      SetItemData(indexItem, new ModelReference(relationRef.DatabaseRef(), ObjectModelReference::PG_INDEX, (*iter).oid));
       if ((*iter).primaryKey)
         SetItemImage(indexItem, img_index_pkey);
       else if ((*iter).unique || (*iter).exclusion)

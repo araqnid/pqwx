@@ -155,11 +155,18 @@ public:
 };
 
 /**
- * A namespace within the database.
+ * Some object that is a direct database member.
  */
-class SchemaModel : public ObjectModel {
+class DatabaseMemberModel : public ObjectModel {
 public:
   Oid oid;
+};
+
+/**
+ * A namespace within the database.
+ */
+class SchemaModel : public DatabaseMemberModel {
+public:
   bool IsSystem() const
   {
     return name.StartsWith(_T("pg_")) || name == _T("information_schema");
@@ -169,9 +176,8 @@ public:
 /**
  * An extension within the database.
  */
-class ExtensionModel : public ObjectModel {
+class ExtensionModel : public DatabaseMemberModel {
 public:
-  Oid oid;
   bool operator<(const ExtensionModel& other) const
   {
     return oid < other.oid;
@@ -268,16 +274,6 @@ class TablespaceModel : public ServerMemberModel {
 public:
   wxString location;
   bool IsSystem() const { return name.StartsWith(_T("pg_")); }
-};
-
-/**
- * Some object that is a direct database member.
- */
-class DatabaseMemberModel : public ObjectModel {
-public:
-  Oid oid;
-  Oid databaseOid;
-  wxString databaseName;
 };
 
 /**

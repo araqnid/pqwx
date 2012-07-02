@@ -926,13 +926,6 @@ void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, O
   Expand(item);
 }
 
-void ObjectBrowser::PrepareSchemaMenu(wxMenu *menu, const DatabaseModel *database)
-{
-  wxMenuItem *databaseItem = menu->FindItem(XRCID("SchemaMenu_Database"), NULL);
-  wxASSERT(databaseItem != NULL);
-  databaseItem->SetItemLabel(wxString::Format(_("Database '%s'"), database->name.c_str()));
-}
-
 void ObjectBrowser::OpenServerMemberMenu(wxMenu *menu, int serverItemId, const ServerMemberModel *member, const ServerModel *server)
 {
   PopupMenu(menu);
@@ -940,10 +933,10 @@ void ObjectBrowser::OpenServerMemberMenu(wxMenu *menu, int serverItemId, const S
 
 void ObjectBrowser::OpenDatabaseMemberMenu(wxMenu *menu, int databaseItemId, const DatabaseMemberModel *member, const DatabaseModel *database)
 {
-  wxMenuItem *schemaItem = menu->FindItem(databaseItemId, NULL);
-  wxASSERT(schemaItem != NULL);
-  schemaItem->SetItemLabel(wxString::Format(_("Database '%s'"), member->databaseName.c_str()));
-  PopupMenu(menu);
+  wxMenuItem *databaseItem = menu->FindItem(databaseItemId, NULL);
+  wxASSERT(databaseItem != NULL);
+  databaseItem->SetItemLabel(wxString::Format(_("Database '%s'"), database->name.c_str()));
+  OpenServerMemberMenu(menu, XRCID("DatabaseMenu_Server"), database, database->server);
 }
 
 void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const SchemaMemberModel *member, const DatabaseModel *database)
@@ -951,8 +944,7 @@ void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const S
   wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
   wxASSERT(schemaItem != NULL);
   schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.name.c_str()));
-  PrepareSchemaMenu(schemaItem->GetSubMenu(), database);
-  PopupMenu(menu);
+  OpenDatabaseMemberMenu(menu, XRCID("SchemaMenu_Database"), &member->schema, database);
 }
 
 void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
@@ -1010,12 +1002,11 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_EXTENSION:
-    PopupMenu(extensionMenu);
+    OpenDatabaseMemberMenu(extensionMenu, XRCID("ExtensionMenu_Database"), static_cast<const ExtensionModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_NAMESPACE:
-    PrepareSchemaMenu(schemaMenu, objectBrowserModel->FindDatabase(ref->DatabaseRef()));
-    PopupMenu(schemaMenu);
+    OpenDatabaseMemberMenu(schemaMenu, XRCID("SchemaMenu_Database"), static_cast<const SchemaModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_TS_PARSER:

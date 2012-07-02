@@ -268,6 +268,7 @@ private:
   wxMenu *textSearchTemplateMenu;
   wxMenu *textSearchDictionaryMenu;
   wxMenu *textSearchConfigurationMenu;
+  wxMenu *indexMenu;
 
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;

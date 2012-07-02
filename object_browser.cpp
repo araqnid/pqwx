@@ -207,6 +207,7 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   textSearchTemplateMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchTemplateMenu"));
   textSearchDictionaryMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchDictionaryMenu"));
   textSearchConfigurationMenu = wxXmlResource::Get()->LoadMenu(_T("TextSearchConfigurationMenu"));
+  indexMenu = wxXmlResource::Get()->LoadMenu(_T("IndexMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
@@ -1009,6 +1010,24 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
   case ObjectModelReference::PG_TS_CONFIG:
     OpenSchemaMemberMenu(textSearchConfigurationMenu, XRCID("TextSearchConfigurationMenu_Schema"), static_cast<const TextSearchConfigurationModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
     break;
+
+  case ObjectModelReference::PG_INDEX: {
+    RelationModel *relation = NULL;
+    for (wxTreeItemId cursor = contextMenuItem; cursor != GetRootItem(); cursor = GetItemParent(cursor)) {
+      wxTreeItemData *data = GetItemData(cursor);
+      if (data == NULL) continue;
+      ModelReference *ref = dynamic_cast<ModelReference*>(data);
+      if (ref == NULL) return;
+      wxLogDebug(_T("Ancestor: %s"), ref->Identify().c_str());
+      if (ref->GetObjectClass() == ObjectModelReference::PG_CLASS) {
+        relation = objectBrowserModel->FindRelation(*ref);
+        break;
+      }
+    }
+    wxASSERT(relation != NULL);
+    OpenSchemaMemberMenu(indexMenu, XRCID("IndexMenu_Schema"), relation, objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    break;
+  }
 
   default:
     wxLogDebug(_T("%s: No context menu applicable"), ref->Identify().c_str());

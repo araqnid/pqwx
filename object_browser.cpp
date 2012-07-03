@@ -1217,6 +1217,8 @@ wxTreeItemId ObjectBrowser::LookupSymbolItem(const ObjectModelReference& databas
 
 ObjectModelReference ObjectBrowser::FindContextSchema()
 {
+  if (contextMenuRef.GetObjectClass() == ObjectModelReference::PG_NAMESPACE)
+    return contextMenuRef;
   const ObjectModel *object = objectBrowserModel->FindObject(contextMenuRef);
   wxASSERT(object != NULL);
   const SchemaMemberModel *schemaMember = dynamic_cast<const SchemaMemberModel*>(object);

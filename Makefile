@@ -38,7 +38,7 @@ CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) -
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --libs $(WX_MODULES))
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc
-PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp static_resources.cpp dependencies_view.cpp database_work.cpp object_browser_scripts.cpp documents_notebook.cpp results_notebook.cpp script_editor.cpp execution_lexer.cpp script_editor_pane.cpp script_editor_wordlists.cpp script_query_work.cpp script_execution.cpp pg_tools_registry.cpp object_browser_database_work.cpp object_browser_model.cpp
+PQWX_SOURCES = pqwx.cpp pqwx_frame.cpp object_browser.cpp database_connection.cpp resources.cpp connect_dialogue.cpp catalogue_index.cpp object_finder.cpp static_resources_txt.cpp dependencies_view.cpp database_work.cpp object_browser_scripts.cpp documents_notebook.cpp results_notebook.cpp script_editor.cpp execution_lexer.cpp script_editor_pane.cpp script_editor_wordlists.cpp script_query_work.cpp script_execution.cpp pg_tools_registry.cpp object_browser_database_work.cpp object_browser_model.cpp
 PQWX_HEADERS = catalogue_index.h connect_dialogue.h database_connection.h database_work.h object_browser_database_work.h object_browser.h object_browser_model.h object_finder.h pqwx_frame.h pqwx.h server_connection.h sql_logger.h sql_dictionary.h documents_notebook.h results_notebook.h script_editor.h script_events.h execution_lexer.h script_query_work.h pg_error.h database_event_type.h script_editor_pane.h static_resources.h script_query_work.h script_execution.h pg_tools_registry.h object_browser_scripts.h pqwx_util.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) object_browser_sql.o dependencies_view_sql.o object_browser_scripts_sql.o
@@ -68,6 +68,7 @@ dump_catalogue$(dotEXE): dump_catalogue.o object_browser_sql.o
 	g++ $(LDFLAGS) -o $@ $^ $(LIBS)
 
 -include $(SOURCES:.cpp=.d)
+-include static_resources.d
 
 pqwx_rc.o: pqwx.rc pqwx_version.h
 	$(shell $(WX_CONFIG) --rescomp) pqwx.rc $@
@@ -91,7 +92,7 @@ object_browser_scripts_sql.cpp: object_browser_scripts.sql format_sql_header
 dependencies_view_sql.cpp: dependencies_view.sql format_sql_header
 	./format_sql_header -c DependenciesViewSql  -f 'DependenciesView::GetSqlDictionary' -h dependencies_view.h dependencies_view.sql $@
 
-static_resources.cpp: static_resources.txt static_resources.h
+static_resources_txt.cpp: static_resources.txt static_resources.h
 	./format_static_resources -f 'StaticResources::RegisterMemoryResources' -h static_resources.h -o $@ -d static_resources.d static_resources.txt
 
 script_editor_wordlists.cpp: postgresql_wordlists_keywords.txt postgresql_wordlists_database_objects.txt postgresql_wordlists_sqlplus.txt postgresql_wordlists_user1.txt postgresql_wordlists_user2.txt postgresql_wordlists_user3.txt postgresql_wordlists_user4.txt ./format_wordlists

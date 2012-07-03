@@ -22,3 +22,4 @@ script_editor_wordlists.cpp
 html
 latex
 object_browser_scripts_sql.cpp
+static_resources_txt.cpp

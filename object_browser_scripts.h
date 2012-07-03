@@ -354,12 +354,12 @@ protected:
  */
 class RoleScriptWork : public ScriptWork {
 public:
-  RoleScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), spcoid(ref.GetOid())
+  RoleScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), roloid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate role configuration script: %s"), this, ref.Identify().c_str());
   }
 private:
-  Oid spcoid;
+  Oid roloid;
 protected:
   void GenerateScript(OutputIterator output);
 };

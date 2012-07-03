@@ -263,3 +263,25 @@ SELECT spcname, owner.rolname AS owner,
 FROM pg_tablespace
      JOIN pg_roles owner ON owner.oid = pg_tablespace.spcowner
 WHERE pg_tablespace.oid = $1
+
+-- SQL :: Role Detail
+SELECT rolname,
+       rolsuper, rolinherit, rolcreaterole, rolcreatedb,
+       rolcanlogin, rolreplication, rolconnlimit, rolvaliduntil,
+       rolconfig
+FROM pg_roles
+WHERE pg_roles.oid = $1
+
+-- SQL :: Role Memberships
+SELECT granted_role.rolname, grantor_role.rolname,
+       pg_auth_members.admin_option
+FROM pg_auth_members
+     JOIN pg_roles granted_role ON granted_role.oid = pg_auth_members.roleid
+     JOIN pg_roles grantor_role ON grantor_role.oid = pg_auth_members.grantor
+WHERE pg_auth_members.member = $1
+
+-- SQL :: Role PerDatabase Settings
+SELECT pg_database.datname, setconfig
+FROM pg_db_role_setting
+     JOIN pg_database ON pg_database.oid = pg_db_role_setting.setdatabase
+WHERE pg_db_role_setting.setrole = $1

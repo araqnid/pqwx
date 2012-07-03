@@ -249,3 +249,17 @@ FROM pg_ts_config_map
      JOIN pg_ts_dict ON pg_ts_dict.oid = pg_ts_config_map.mapdict
      JOIN pg_namespace dict_namespace ON dict_namespace.oid = pg_ts_dict.dictnamespace
 WHERE pg_ts_config_map.mapcfg = $1
+
+-- SQL :: Tablespace Detail :: 9.2
+SELECT spcname, owner.rolname AS owner,
+       spcacl, pg_catalog.pg_tablespace_location(pg_tablespace.oid), spcoptions
+FROM pg_tablespace
+     JOIN pg_roles owner ON owner.oid = pg_tablespace.spcowner
+WHERE pg_tablespace.oid = $1
+
+-- SQL :: Tablespace Detail
+SELECT spcname, owner.rolname AS owner,
+       spcacl, spclocation, spcoptions
+FROM pg_tablespace
+     JOIN pg_roles owner ON owner.oid = pg_tablespace.spcowner
+WHERE pg_tablespace.oid = $1

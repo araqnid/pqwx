@@ -25,6 +25,7 @@ public:
   void OnLoseFocus(wxFocusEvent &event);
   void OnSavePointLeft(wxStyledTextEvent &event);
   void OnSavePointReached(wxStyledTextEvent &event);
+  void OnChar(wxKeyEvent& evt);
 
   /**
    * Load a file into the buffer.

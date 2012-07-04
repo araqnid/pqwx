@@ -17,6 +17,7 @@ BEGIN_EVENT_TABLE(ScriptEditor, wxStyledTextCtrl)
   EVT_KILL_FOCUS(ScriptEditor::OnLoseFocus)
   EVT_STC_SAVEPOINTLEFT(wxID_ANY, ScriptEditor::OnSavePointLeft)
   EVT_STC_SAVEPOINTREACHED(wxID_ANY, ScriptEditor::OnSavePointReached)
+  EVT_CHAR(ScriptEditor::OnChar)
 END_EVENT_TABLE()
 
 ScriptEditor::ScriptEditor(wxWindow *parent, wxWindowID id, ScriptEditorPane *owner)
@@ -83,6 +84,15 @@ void ScriptEditor::OnSavePointLeft(wxStyledTextEvent &event)
 void ScriptEditor::OnSavePointReached(wxStyledTextEvent &event)
 {
   owner->MarkModified(false);
+}
+
+void ScriptEditor::OnChar(wxKeyEvent& event)
+{
+#if wxUSE_UNICODE and __WXGTK__ 
+  if (m_lastKeyDownConsumed && event.GetUnicodeKey() > 255) 
+    m_lastKeyDownConsumed = false; 
+#endif
+  wxStyledTextCtrl::OnChar(event);
 }
 
 void ScriptEditor::LoadFile(const wxString &filename)

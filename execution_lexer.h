@@ -104,7 +104,7 @@ private:
   const unsigned length;
   unsigned pos;
   void PassWhitespace();
-  char CharAt(unsigned ofs) const { return buffer[ofs]; }
+  unsigned char CharAt(unsigned ofs) const { return buffer[ofs]; }
   int Peek() const { return pos >= length ? -1 : CharAt(pos); }
   int Take() { return pos >= length ? -1 : CharAt(pos++); }
   void BackUp() { --pos; }

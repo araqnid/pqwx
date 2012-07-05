@@ -282,7 +282,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
   SetItemImage(serverItem, img_server);
   SetFocus();
 
-  RefreshDatabaseList(serverItem);
+  LoadServer(ObjectModelReference(server.Identification()));
 }
 
 void ObjectBrowser::Dispose()
@@ -290,10 +290,9 @@ void ObjectBrowser::Dispose()
   objectBrowserModel->UnregisterView(this);
 }
 
-void ObjectBrowser::RefreshDatabaseList(wxTreeItemId serverItem) {
-  ModelReference *ref = static_cast<ModelReference*>(GetItemData(serverItem));
-  ServerModel *serverModel = objectBrowserModel->FindServer(ref->ServerRef());
-  SubmitServerWork(serverModel, new RefreshDatabaseListWork(ref->GetServerId()));
+void ObjectBrowser::LoadServer(const ObjectModelReference &ref) {
+  ServerModel *serverModel = objectBrowserModel->FindServer(ref.ServerRef());
+  SubmitServerWork(serverModel, new RefreshDatabaseListWork(ref.GetServerId()));
 }
 
 LazyLoader *ObjectBrowser::GetLazyLoader(wxTreeItemId item) const {
@@ -363,6 +362,8 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
     SetItemImage(serverItem, img_server_encrypted);
   }
   SetItemText(serverItem, serverItemText);
+
+  DeleteChildren(serverItem);
 
   const std::vector<DatabaseModel> &databases = serverModel->GetDatabases();
   std::vector<const DatabaseModel*> systemDatabases;
@@ -674,6 +675,8 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
   const DatabaseModel *databaseModel = objectBrowserModel->FindDatabase(databaseRef);
   wxTreeItemId databaseItem = FindDatabaseItem(databaseRef);
   wxWindowUpdateLocker noUpdates(this);
+
+  DeleteChildren(databaseItem);
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
 
@@ -1143,9 +1146,9 @@ void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
 }
 
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
+  ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
   wxASSERT(server != NULL);
-  wxMessageBox(_T("TODO Refresh server: ") + server->Identification());
+  LoadServer(contextMenuRef);
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
@@ -1165,7 +1168,7 @@ void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
   const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
-  wxMessageBox(_T("TODO Refresh database: ") + database->server->Identification() + _T(" ") + database->name);
+  LoadDatabase(contextMenuRef, NULL);
 }
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {

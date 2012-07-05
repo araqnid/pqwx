@@ -45,6 +45,10 @@ static std::map<wxString, CatalogueIndex::Type> getTypeMap() {
   typeMap[_T("T")] = CatalogueIndex::TYPE;
   typeMap[_T("O")] = CatalogueIndex::COLLATION;
   typeMap[_T("x")] = CatalogueIndex::EXTENSION;
+  typeMap[_T("F")] = CatalogueIndex::TEXT_CONFIGURATION;
+  typeMap[_T("Fd")] = CatalogueIndex::TEXT_DICTIONARY;
+  typeMap[_T("Fp")] = CatalogueIndex::TEXT_PARSER;
+  typeMap[_T("Ft")] = CatalogueIndex::TEXT_TEMPLATE;
   return typeMap;
 }
 
@@ -67,7 +71,7 @@ int TestCatalogueApp::OnRun() {
     if (parts[1][parts[1].length()-1] == _T('S')) {
       systemObject = true;
       wxString typeString(parts[1].Left(parts[1].length()-1));
-      wxASSERT(typeMap.count(typeString) > 0);
+      wxASSERT_MSG(typeMap.count(typeString) > 0, parts[1]);
       entityType = typeMap[typeString];
     }
     else {

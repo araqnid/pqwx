@@ -363,6 +363,8 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
   }
   SetItemText(serverItem, serverItemText);
 
+  std::vector<ObjectModelReference> expanded;
+  SaveExpandedObjects(serverItem, expanded);
   DeleteChildren(serverItem);
 
   const std::vector<DatabaseModel> &databases = serverModel->GetDatabases();
@@ -423,7 +425,8 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
     AppendTablespaceItems(serverModel, folderItem, systemTablespaces);
   }
 
-  if (expandAfter) {
+  if (expandAfter || !expanded.empty()) {
+    RestoreExpandedObjects(serverItem, expanded);
     EnsureVisible(serverItem);
     SelectItem(serverItem);
     Expand(serverItem);
@@ -676,6 +679,8 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
   wxTreeItemId databaseItem = FindDatabaseItem(databaseRef);
   wxWindowUpdateLocker noUpdates(this);
 
+  std::vector<ObjectModelReference> expanded;
+  SaveExpandedObjects(databaseItem, expanded);
   DeleteChildren(databaseItem);
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
@@ -697,7 +702,10 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
   SetItemImage(systemDivisionItem, img_folder);
   wxTreeItemId systemDivisionLoaderItem = AppendItem(systemDivisionItem, _T("Loading..."));
   SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, *databaseModel, divisions.systemDivision));
-  if (expandAfter) Expand(databaseItem);
+  if (expandAfter || !expanded.empty()) {
+    Expand(databaseItem);
+    RestoreExpandedObjects(databaseItem, expanded);
+  }
   SetItemText(databaseItem, databaseModel->name); // remove loading message
 }
 
@@ -1227,6 +1235,47 @@ ObjectModelReference ObjectBrowser::FindContextSchema()
   const SchemaMemberModel *schemaMember = dynamic_cast<const SchemaMemberModel*>(object);
   wxASSERT(schemaMember != NULL);
   return ObjectModelReference(contextMenuRef.DatabaseRef(), ObjectModelReference::PG_NAMESPACE, schemaMember->schema.oid);
+}
+
+void ObjectBrowser::SaveExpandedObjects(wxTreeItemId item, std::vector<ObjectModelReference>& output)
+{
+  if (!IsExpanded(item))
+    return;
+
+  wxTreeItemData *data = GetItemData(item);
+  if (data != NULL) {
+    ObjectModelReference *ref = dynamic_cast<ObjectModelReference*>(data);
+    if (ref != NULL) {
+      output.push_back(*ref);
+    }
+  }
+
+  wxTreeItemIdValue cookie;
+  for (wxTreeItemId child = GetFirstChild(item, cookie); child.IsOk(); child = GetNextChild(item, cookie)) {
+    SaveExpandedObjects(child, output);
+  }
+}
+
+void ObjectBrowser::RestoreExpandedObjects(wxTreeItemId item, const std::vector<ObjectModelReference>& saved)
+{
+  wxTreeItemData *data = GetItemData(item);
+  if (data != NULL) {
+    ObjectModelReference *ref = dynamic_cast<ObjectModelReference*>(data);
+    if (ref != NULL) {
+      if (std::find(saved.begin(), saved.end(), *ref) != saved.end()) {
+        for (wxTreeItemId cursor = item; cursor.IsOk(); cursor = GetItemParent(cursor)) {
+          if (IsExpanded(cursor))
+            break;
+          Expand(cursor);
+        }
+      }
+    }
+  }
+
+  wxTreeItemIdValue cookie;
+  for (wxTreeItemId child = GetFirstChild(item, cookie); child.IsOk(); child = GetNextChild(item, cookie)) {
+    RestoreExpandedObjects(child, saved);
+  }
 }
 
 // Local Variables:

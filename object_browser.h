@@ -335,6 +335,9 @@ private:
   std::map< ObjectModelReference, wxTreeItemId > databaseItems;
 
   wxString GetToolTipText(const wxTreeItemId& itemId) const;
+
+  void SaveExpandedObjects(wxTreeItemId, std::vector<ObjectModelReference>&);
+  void RestoreExpandedObjects(wxTreeItemId, const std::vector<ObjectModelReference>&);
 };
 
 #endif

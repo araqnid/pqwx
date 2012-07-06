@@ -42,6 +42,9 @@ bool PQWXApp::OnInit()
 
   StaticResources::Init();
 
+  avahiPoller.Start();
+  avahiBrowser = new PQWXAvahi::ServiceBrowser(avahiClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, _T("_postgresql._tcp"), wxEmptyString, (AvahiLookupFlags)0);
+
   std::vector<PgToolsRegistry::Suggestion> suggestions;
   bool useSystemPath;
 #ifdef USE_DEBIAN_PGCLUSTER
@@ -80,6 +83,9 @@ bool PQWXApp::OnInit()
 int PQWXApp::OnExit()
 {
   int rc = wxApp::OnExit();
+
+  if (avahiBrowser != NULL) delete avahiBrowser;
+  avahiPoller.Stop();
 
 #ifdef PQWX_NOTIFICATION_MONITOR
   if (monitor) delete monitor;
@@ -140,6 +146,21 @@ void PQWXApp::SuggestConfiguredToolLocations(std::vector<PgToolsRegistry::Sugges
   } while (1);
 
   cfg->SetPath(oldPath);
+}
+
+void PQWXApp::ServiceFound(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, bool local, int interface, int addressFamily, const wxString& addr, wxUint16 port)
+{
+  wxLogDebug(_T("FOUND: \"%s\" on %s port %u, %s, interface=%d, addressFamily=%d"), name.c_str(), addr.c_str(), port, local ? _T("local") : _T("not-local"), interface, addressFamily);
+}
+
+void PQWXApp::ServiceLost(const wxString &name, const wxString& type, const wxString& domain)
+{
+  wxLogDebug(_T("LOST:  \"%s\""), name.c_str());
+}
+
+void PQWXApp::ServiceRefreshFinished(const wxString& type)
+{
+  wxLogDebug(_T("Finished refreshing \"%s\""), type.c_str());
 }
 
 // Local Variables:

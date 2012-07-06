@@ -13,6 +13,7 @@
 #include "wx/app.h"
 #include "pg_tools_registry.h"
 #include "database_notification_monitor.h"
+#include "avahi.h"
 
 /*
  * controls and menu commands
@@ -38,10 +39,10 @@ class ObjectBrowserModel;
  *
  * This deals with creating the initial frame, and executing actions based on the command line.
  */
-class PQWXApp : public wxApp {
+class PQWXApp : public wxApp, public PQWXAvahi::Channel {
 public:
 #ifdef PQWX_NOTIFICATION_MONITOR
-  PQWXApp() : monitor(NULL), objectBrowserModel(NULL) {}
+  PQWXApp() : monitor(NULL), objectBrowserModel(NULL), avahiClient(this, avahiPoller, AVAHI_CLIENT_NO_FAIL), avahiBrowser(NULL) {}
   DatabaseNotificationMonitor& GetNotificationMonitor();
 #else
   PQWXApp() : objectBrowserModel(NULL) {}
@@ -60,11 +61,19 @@ private:
 #endif
   ObjectBrowserModel *objectBrowserModel;
   PgToolsRegistry toolsRegistry;
+  PQWXAvahi::ThreadedPoller avahiPoller;
+  PQWXAvahi::Client avahiClient;
+  PQWXAvahi::ServiceBrowser *avahiBrowser;
   bool OnInit();
   int OnExit();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
   void SuggestConfiguredToolLocations(std::vector<PgToolsRegistry::Suggestion>&);
+
+  // AVAHI channel
+  void ServiceFound(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, bool local, int interface, int addressFamily, const wxString& addr, wxUint16 port);
+  void ServiceLost(const wxString &name, const wxString& type, const wxString& domain);
+  void ServiceRefreshFinished(const wxString& type);
 };
 
 DECLARE_APP(PQWXApp);

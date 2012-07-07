@@ -198,6 +198,8 @@ void ConnectDialogue::SaveRecentServers() {
 void ConnectDialogue::LoadRecentServers() {
   ReadRecentServers();
 
+  // setup server list
+
   for (std::list<RecentServerParameters>::iterator iter = recentServerList.begin(); iter != recentServerList.end(); iter++) {
     hostnameInput->Append(iter->server);
   }
@@ -210,8 +212,22 @@ void ConnectDialogue::LoadRecentServers() {
       hostnameInput->Append(clusterName);
     }
   }
+#endif
 
+  std::list<NearbyServersRegistry::ServerInfo> nearbyServers = ::wxGetApp().GetNearbyServersRegistry().GetDiscoveredServers();
+  for (std::list<NearbyServersRegistry::ServerInfo>::iterator iter = nearbyServers.begin(); iter != nearbyServers.end(); iter++) {
+    wxString serverName = (*iter).name;
+    wxLogDebug(_T("Nearby server: %s"), serverName.c_str());
+    if (hostnameInput->FindString(serverName) == wxNOT_FOUND) {
+      hostnameInput->Append(serverName);
+    }
+  }
+
+  // pick default server
+
+#ifdef USE_DEBIAN_PGCLUSTER
   wxString defaultCluster = clusters.DefaultCluster();
+
   if (!defaultCluster.IsEmpty()) {
     // is the default cluster in the recent server list? if so, pick up its additional parameters
     std::list<RecentServerParameters>::const_iterator defaultAsRecentServer = std::find(recentServerList.begin(), recentServerList.end(), defaultCluster);
@@ -229,6 +245,7 @@ void ConnectDialogue::LoadRecentServers() {
     return;
   }
 #endif
+
   if (!recentServerList.empty())
     LoadRecentServer(recentServerList.front());
 }

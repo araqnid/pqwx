@@ -35,20 +35,46 @@ enum {
 class ObjectBrowserModel;
 
 /**
+ * Cache nearby database servers discovered with Avahi.
+ */
+class NearbyServersRegistry : public PQWXAvahi::Channel {
+public:
+  class ServerInfo {
+  public:
+    wxString name;
+    wxString hostname;
+    wxString address;
+    wxUint16 port;
+    bool local;
+  };
+
+  const std::list<ServerInfo>& GetDiscoveredServers() const { return servers; }
+
+  // AVAHI channel
+  void ServiceFound(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, bool local, int interface, int addressFamily, const wxString& addr, wxUint16 port);
+  void ServiceLost(const wxString &name, const wxString& type, const wxString& domain);
+  void ServiceRefreshFinished(const wxString& type);
+
+private:
+  std::list<ServerInfo> servers;
+};
+
+/**
  * The wxApp implementation for PQWX.
  *
  * This deals with creating the initial frame, and executing actions based on the command line.
  */
-class PQWXApp : public wxApp, public PQWXAvahi::Channel {
+class PQWXApp : public wxApp {
 public:
 #ifdef PQWX_NOTIFICATION_MONITOR
-  PQWXApp() : monitor(NULL), objectBrowserModel(NULL), avahiClient(this, avahiPoller, AVAHI_CLIENT_NO_FAIL), avahiBrowser(NULL) {}
+  PQWXApp() : monitor(NULL), objectBrowserModel(NULL), avahiClient(&nearbyServers, avahiPoller, AVAHI_CLIENT_NO_FAIL), avahiBrowser(NULL) {}
   DatabaseNotificationMonitor& GetNotificationMonitor();
 #else
   PQWXApp() : objectBrowserModel(NULL) {}
 #endif
   ObjectBrowserModel& GetObjectBrowserModel() { return *objectBrowserModel; }
   PgToolsRegistry& GetToolsRegistry() { return toolsRegistry; }
+  NearbyServersRegistry& GetNearbyServersRegistry() { return nearbyServers; }
 private:
   bool haveInitial;
   wxString initialServer;
@@ -64,6 +90,7 @@ private:
   PQWXAvahi::ThreadedPoller avahiPoller;
   PQWXAvahi::Client avahiClient;
   PQWXAvahi::ServiceBrowser *avahiBrowser;
+  NearbyServersRegistry nearbyServers;
   bool OnInit();
   int OnExit();
   void OnInitCmdLine(wxCmdLineParser &parser);

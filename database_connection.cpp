@@ -128,6 +128,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       if (connStatus == CONNECTION_BAD) {
         wxLogDebug(_T("thr#%lx [%s] connection invalid, exiting"), wxThread::GetCurrentId(), db->identification.c_str());
         SetState(DatabaseConnection::DISCONNECTED);
+        DeleteRemainingWork();
         return 0;
       }
     }
@@ -135,6 +136,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
     if (disconnect) {
       wxLogDebug(_T("thr#%lx [%s] disconnection completed"), wxThread::GetCurrentId(), db->identification.c_str());
       SetState(DatabaseConnection::DISCONNECTED);
+      DeleteRemainingWork();
       return 0;
     }
 
@@ -158,6 +160,15 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
   } while (true);
 
   return 0;
+}
+
+void DatabaseConnection::WorkerThread::DeleteRemainingWork()
+{
+  for (std::deque<DatabaseWork*>::iterator iter = db->workQueue.begin(); iter != db->workQueue.end(); iter++) {
+    DatabaseWork *work = *iter;
+    work->NotifyLostConnection();
+    delete work;
+  }
 }
 
 static const char *options[] = {

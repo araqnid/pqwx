@@ -26,6 +26,7 @@ public:
   virtual void NotifyFinished() = 0;
   virtual void NotifyCrashed(const std::exception& e) { NotifyCrashed(); }
   virtual void NotifyCrashed() {}
+  virtual void NotifyLostConnection() { NotifyCrashed(); }
 
   wxString QuoteIdent(const wxString &str) const;
   wxString QuoteLiteral(const wxString &str) const;

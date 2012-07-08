@@ -270,6 +270,7 @@ private:
 
     bool Connect();
     void HandleNotification();
+    void DeleteRemainingWork();
 
     State GetState() const {
       wxCriticalSectionLocker locker(stateCriticalSection);

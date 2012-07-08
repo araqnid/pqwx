@@ -81,10 +81,11 @@ bool DatabaseWork::DoCommand(const char *sql) const {
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {
     db->LogSqlQueryFailed(PgError(rs));
+    throw PgQueryFailure(sql, PgError(rs));
   }
   else if (status != PGRES_COMMAND_OK) {
     db->LogSqlQueryInvalidStatus(PQresultErrorMessage(rs), status);
-    return false;
+    throw PgInvalidQuery(sql, PgError(rs));
   }
 
   PQclear(rs);

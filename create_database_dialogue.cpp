@@ -24,6 +24,7 @@ CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *l
 {
   InitXRC(parent);
   launcher->DoWork(new ListUsersWork(), this);
+  launcher->DoWork(new ListTemplatesWork(), this);
   launcher->DoWork(new ListCollationsWork(), this);
 }
 
@@ -42,6 +43,7 @@ void CreateDatabaseDialogue::InitXRC(wxWindow *parent)
   scriptInput = XRCCTRL(*this, "script", wxTextCtrl);
 
   ownerInput = XRCCTRL(*this, "owner", wxComboBox);
+  templateInput = XRCCTRL(*this, "template", wxComboBox);
   nameInput = XRCCTRL(*this, "database_name", wxTextCtrl);
   encodingInput = XRCCTRL(*this, "encoding", wxComboBox);
   localeInput = XRCCTRL(*this, "locale", wxComboBox);
@@ -164,6 +166,24 @@ void CreateDatabaseDialogue::OnListUsersComplete(Work *work)
   }
 }
 
+void CreateDatabaseDialogue::ListTemplatesWork::operator()()
+{
+  QueryResults rs = Query(_T("List templates")).List();
+  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+    result.push_back((*iter)[0]);
+  }
+}
+
+void CreateDatabaseDialogue::OnListTemplatesComplete(Work *work)
+{
+  ListTemplatesWork *listTemplatesWork = static_cast<ListTemplatesWork*>(work);
+  wxLogDebug(_T("Listing templates complete"));
+  const std::vector<wxString>& result = listTemplatesWork->result;
+  for (std::vector<wxString>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
+    templateInput->Append(*iter);
+  }
+}
+
 void CreateDatabaseDialogue::ListCollationsWork::operator()()
 {
   QueryResults rs = Query(_T("List collations")).List();
@@ -221,6 +241,8 @@ void CreateDatabaseDialogue::GenerateScript(T output)
 
   wxString encoding = encodingInput->GetValue();
   if (!encoding.empty()) sql << _T("\n\tENCODING = ") << QuoteLiteral(encoding);
+  wxString templateName = templateInput->GetValue();
+  if (!templateName.empty()) sql << _T("\n\tTEMPLATE ") << QuoteIdent(templateName);
   if (collationOverrideInput->IsChecked())
     sql << _T("\n\tLC_COLLATE = ") << QuoteLiteral(collationInput->GetValue());
   if (ctypeOverrideInput->IsChecked())

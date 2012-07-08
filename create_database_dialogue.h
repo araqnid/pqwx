@@ -64,6 +64,7 @@ private:
 
   wxTextCtrl *nameInput;
   wxComboBox *ownerInput;
+  wxComboBox *templateInput;
   wxComboBox *encodingInput;
   wxComboBox *localeInput;
   wxComboBox *collationInput;
@@ -91,6 +92,16 @@ private:
     ListUsersWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListUsersComplete)
     {
       wxLogDebug(_T("%p: work to list users for owners dropdown"), this);
+    }
+    void operator()();
+    std::vector<wxString> result;
+  };
+
+  class ListTemplatesWork : public Work {
+  public:
+    ListTemplatesWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListTemplatesComplete)
+    {
+      wxLogDebug(_T("%p: work to list templates for dropdown"), this);
     }
     void operator()();
     std::vector<wxString> result;
@@ -138,6 +149,7 @@ private:
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
   void OnListUsersComplete(Work*);
+  void OnListTemplatesComplete(Work*);
   void OnListCollationsComplete(Work*);
   void OnScriptExecuted(Work*);
 

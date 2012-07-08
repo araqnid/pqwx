@@ -30,6 +30,16 @@
                   <object class="wxComboBox" name="owner"/>
                   <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
                 </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>&amp;Template:</label>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="template"/>
+                  <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                </object>
               </object>
             </object>
             <label>General</label>
@@ -67,7 +77,7 @@
                     <object class="sizeritem">
                       <object class="wxComboBox" name="locale">
                         <content>
-                          <item></item>
+                          <item/>
                           <item>C</item>
                         </content>
                         <selection>0</selection>

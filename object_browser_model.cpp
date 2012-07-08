@@ -51,7 +51,7 @@ public:
         if (!details.GetDetail().empty())
           work->crashMessage += _T("\nDETAIL: ") + details.GetDetail();
         if (!details.GetHint().empty())
-          work->crashMessage += _T("\bHINT: ") + details.GetDetail();
+          work->crashMessage += _T("\nHINT: ") + details.GetHint();
         for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
           work->crashMessage += _T("\nCONTEXT: ") + *iter;
         }

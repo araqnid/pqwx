@@ -76,7 +76,9 @@ void DatabaseWork::DoCommand(const char *sql) const {
   db->LogSql(sql);
 
   PGresult *rs = PQexec(conn, sql);
-  wxASSERT(rs != NULL);
+  if (rs == NULL) {
+    throw PgInvalidQuery(sql, _T("NULL result from PQexec"));
+  }
 
   ExecStatusType status = PQresultStatus(rs);
   if (status == PGRES_FATAL_ERROR) {

@@ -6,8 +6,13 @@
 #ifndef __create_database_dialogue_h
 #define __create_database_dialogue_h
 
-#include "wx/combobox.h"
 #include "action_dialogue_work.h"
+
+class wxNotebook;
+class wxChoice;
+class wxCheckBox;
+class wxComboBox;
+class wxNotebookEvent;
 
 /**
  * Allow dialogue box to perform work on the relevant database connection.
@@ -91,6 +96,23 @@ private:
     std::vector<wxString> result;
   };
 
+  class QualifiedName {
+  public:
+    QualifiedName(const wxString& schema, const wxString& name) : schema(schema), name(name) {}
+    wxString schema;
+    wxString name;
+  };
+
+  class ListCollationsWork : public Work {
+  public:
+    ListCollationsWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListCollationsComplete)
+    {
+      wxLogDebug(_T("%p: work to list collations for dropdown"), this);
+    }
+    void operator()();
+    std::vector<QualifiedName> result;
+  };
+
   class ExecuteScriptWork : public Work {
   public:
     ExecuteScriptWork(const std::vector<wxString>& commands) : Work(NO_TRANSACTION, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
@@ -116,6 +138,7 @@ private:
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
   void OnListUsersComplete(Work*);
+  void OnListCollationsComplete(Work*);
   void OnScriptExecuted(Work*);
 
   void InitXRC(wxWindow *parent);

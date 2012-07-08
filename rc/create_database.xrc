@@ -67,10 +67,8 @@
                     <object class="sizeritem">
                       <object class="wxComboBox" name="locale">
                         <content>
+                          <item></item>
                           <item>C</item>
-                          <item>en_GB</item>
-                          <item>en_US</item>
-                          <item>ru_RU</item>
                         </content>
                         <selection>0</selection>
                       </object>
@@ -87,18 +85,15 @@
                             <label>Collate as:</label>
                           </object>
                         </object>
+                        <cols>2</cols>
+                        <rows>2</rows>
                         <object class="sizeritem">
                           <object class="wxComboBox" name="collation">
                             <content>
-                              <item>C</item>
-                              <item>en_US</item>
-                              <item>en_GB</item>
-                              <item>ru_RU</item>
+                              <item/>
                             </content>
                           </object>
                         </object>
-                        <cols>2</cols>
-                        <rows>2</rows>
                         <object class="sizeritem">
                           <object class="wxCheckBox" name="ctype_override">
                             <label>Identify characters as:</label>
@@ -107,10 +102,7 @@
                         <object class="sizeritem">
                           <object class="wxComboBox" name="ctype">
                             <content>
-                              <item>C</item>
-                              <item>en_GB</item>
-                              <item>en_US</item>
-                              <item>ru_RU</item>
+                              <item/>
                             </content>
                           </object>
                         </object>

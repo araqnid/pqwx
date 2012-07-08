@@ -24,6 +24,7 @@ CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *l
 {
   InitXRC(parent);
   launcher->DoWork(new ListUsersWork(), this);
+  launcher->DoWork(new ListCollationsWork(), this);
 }
 
 CreateDatabaseDialogue::~CreateDatabaseDialogue()
@@ -160,6 +161,28 @@ void CreateDatabaseDialogue::OnListUsersComplete(Work *work)
   const std::vector<wxString>& result = listUsersWork->result;
   for (std::vector<wxString>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
     ownerInput->Append(*iter);
+  }
+}
+
+void CreateDatabaseDialogue::ListCollationsWork::operator()()
+{
+  QueryResults rs = Query(_T("List collations")).List();
+  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+    wxString schema = (*iter)[0];
+    wxString name = (*iter)[1];
+    result.push_back(QualifiedName(schema, name));
+  }
+}
+
+void CreateDatabaseDialogue::OnListCollationsComplete(Work *work)
+{
+  ListCollationsWork *listCollationsWork = static_cast<ListCollationsWork*>(work);
+  wxLogDebug(_T("Listing collations complete"));
+
+  const std::vector<QualifiedName>& result = listCollationsWork->result;
+  for (std::vector<QualifiedName>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
+    collationInput->Append((*iter).name);
+    ctypeInput->Append((*iter).name);
   }
 }
 

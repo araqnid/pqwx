@@ -28,3 +28,4 @@ pqwx-appicon-16.png		PqwxFrame
 object_browser.sql		ObjectBrowser
 object_browser_scripts.sql	ObjectBrowser
 dependencies_view.sql		DependenciesView
+create_database_dialogue.sql	CreateDatabaseDialogue

@@ -12,6 +12,7 @@
 #include "pqwx_util.h"
 #include "create_database_dialogue.h"
 #include "script_events.h"
+#include "sql_dictionary_file.h"
 
 BEGIN_EVENT_TABLE(CreateDatabaseDialogue, wxDialog)
   EVT_BUTTON(wxID_OK, CreateDatabaseDialogue::OnExecute)
@@ -20,6 +21,12 @@ BEGIN_EVENT_TABLE(CreateDatabaseDialogue, wxDialog)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, CreateDatabaseDialogue::OnWorkFinished)
   PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, CreateDatabaseDialogue::OnWorkCrashed)
 END_EVENT_TABLE()
+
+const SqlDictionary& CreateDatabaseDialogue::GetSqlDictionary()
+{
+  static SqlDictionaryFile sqlDictionary(_T("memory:CreateDatabaseDialogue/create_database_dialogue.sql"));
+  return sqlDictionary;
+}
 
 CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *launcher, ExecutionCallback *executionCallback) : wxDialog(), launcher(launcher), executionCallback(executionCallback), tabsNotebook(NULL)
 {

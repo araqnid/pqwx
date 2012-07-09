@@ -1201,7 +1201,7 @@ void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
 {
   const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
-  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, contextMenuRef), new AfterDatabaseCreated(contextMenuRef, this));
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
   dbox->Show();
 }
 

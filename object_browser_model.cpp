@@ -16,7 +16,7 @@
  */
 class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
 public:
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserManagedWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserModel *model, ObjectBrowserManagedWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), model(model), work(work) {}
   void operator()() {
     TransactionBoundary txn(work->txMode, this);
     work->owner = this;
@@ -81,14 +81,15 @@ public:
   }
 
 private:
-  wxEvtHandler *dest;
-  ObjectBrowserManagedWork *work;
+  wxEvtHandler * const dest;
+  ObjectBrowserModel * const model;
+  ObjectBrowserManagedWork * const work;
 
   void Reschedule()
   {
     wxCommandEvent event(PQWX_RescheduleObjectBrowserWork);
     event.SetClientData(work);
-    dest->AddPendingEvent(event);
+    model->AddPendingEvent(event);
   }
 
   class TransactionBoundary {
@@ -132,14 +133,14 @@ void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowse
 {
   ServerModel *server = FindServerById(serverId);
   wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, work));
+  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, this, work));
 }
 
 void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork *work)
 {
   DatabaseModel *database = FindDatabase(databaseRef);
   wxASSERT(database != NULL);
-  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, work));
+  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, this, work));
 }
 
 void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work)
@@ -188,18 +189,14 @@ void ObjectBrowserModel::OnRescheduleWork(wxCommandEvent &e)
 
   const ObjectModelReference& dbRef = work->database;
   wxLogDebug(_T("%p: reschedule on %s"), work, dbRef.Identify().c_str());
-  wxASSERT(dbRef.GetObjectClass() == ObjectModelReference::PG_DATABASE);
-
-  // this is broken for action dialogue work where the destination handler is being lost
-  ObjectBrowserWork *obWork = dynamic_cast<ObjectBrowserWork*>(work);
-  wxASSERT(obWork != NULL);
+  wxASSERT_MSG(dbRef.GetObjectClass() == ObjectModelReference::PG_DATABASE, dbRef.Identify());
 
   // special hack to reschedule these as "server work"
   if (dbRef.GetOid() == InvalidOid) {
-    SubmitServerWork(dbRef.GetServerId(), obWork);
+    SubmitServerWork(dbRef.GetServerId(), work);
   }
   else {
-    SubmitDatabaseWork(dbRef, obWork);
+    SubmitDatabaseWork(dbRef, work);
   }
 }
 
@@ -267,7 +264,7 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
 
 void ObjectBrowserModel::SetupDatabaseConnection(const ObjectModelReference& ref, DatabaseConnection *db)
 {
-  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(ref)));
+  db->AddWork(new ObjectBrowserDatabaseWork(this, this, new SetupDatabaseConnectionWork(ref)));
 }
 
 void ObjectBrowserModel::Dispose()

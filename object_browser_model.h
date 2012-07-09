@@ -425,7 +425,7 @@ public:
   /**
    * Gets a reference to the administrative database.
    */
-  ObjectModelReference GetServerAdminDatabaseRef()
+  ObjectModelReference GetServerAdminDatabaseRef() const
   {
     // this is a nasty hack to allow returning the reference to the admin db when we may not know its OID yet.
     return ObjectModelReference(Identification(), InvalidOid);

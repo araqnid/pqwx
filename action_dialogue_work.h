@@ -10,9 +10,7 @@
 
 class ActionDialogueWork : public ObjectBrowserManagedWork {
 public:
-  ActionDialogueWork(TxMode txMode, const ObjectModelReference& databaseRef, const SqlDictionary& sqlDictionary) : ObjectBrowserManagedWork(txMode, databaseRef), sqlDictionary(sqlDictionary) {}
-  const SqlDictionary &sqlDictionary;
-private:
+  ActionDialogueWork(TxMode txMode, const ObjectModelReference& databaseRef, const SqlDictionary& sqlDictionary, wxEvtHandler* dest) : ObjectBrowserManagedWork(txMode, databaseRef, sqlDictionary, dest) {}
 };
 
 #endif

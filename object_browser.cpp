@@ -223,9 +223,9 @@ class ServerWorkLauncher : public WorkLauncher {
 public:
   ServerWorkLauncher(ObjectBrowserModel *objectBrowserModel, const ObjectModelReference& adminDatabaseRef) : objectBrowserModel(objectBrowserModel), databaseRef(adminDatabaseRef) {}
 
-  void DoWork(ActionDialogueWork *work, wxEvtHandler *dest)
+  void DoWork(ActionDialogueWork *work)
   {
-    objectBrowserModel->SubmitServerWork(databaseRef.GetServerId(), work, dest);
+    objectBrowserModel->SubmitServerWork(databaseRef.GetServerId(), work);
   }
 
   ObjectModelReference GetDatabaseRef() const

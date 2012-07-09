@@ -23,9 +23,9 @@ END_EVENT_TABLE()
 CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *launcher, ExecutionCallback *executionCallback) : wxDialog(), launcher(launcher), executionCallback(executionCallback), tabsNotebook(NULL)
 {
   InitXRC(parent);
-  launcher->DoWork(new ListUsersWork(launcher->GetDatabaseRef()), this);
-  launcher->DoWork(new ListTemplatesWork(launcher->GetDatabaseRef()), this);
-  launcher->DoWork(new ListCollationsWork(launcher->GetDatabaseRef()), this);
+  launcher->DoWork(new ListUsersWork(launcher->GetDatabaseRef(), this));
+  launcher->DoWork(new ListTemplatesWork(launcher->GetDatabaseRef(), this));
+  launcher->DoWork(new ListCollationsWork(launcher->GetDatabaseRef(), this));
 }
 
 CreateDatabaseDialogue::~CreateDatabaseDialogue()
@@ -70,7 +70,7 @@ void CreateDatabaseDialogue::OnExecute(wxCommandEvent& event)
   case MODE_EXECUTE: {
     std::vector<wxString> commands;
     GenerateScript(std::back_inserter(commands));
-    launcher->DoWork(new ExecuteScriptWork(launcher->GetDatabaseRef(), commands), this);
+    launcher->DoWork(new ExecuteScriptWork(launcher->GetDatabaseRef(), this, commands));
     return; // don't destroy the dialog
   }
     break;

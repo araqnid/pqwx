@@ -483,8 +483,7 @@ private:
   friend class RefreshDatabaseListWork;
 };
 
-class ObjectBrowserWork;
-class ActionDialogueWork;
+class ObjectBrowserManagedWork;
 
 /**
  * The "top level" of the object browser model.
@@ -571,10 +570,8 @@ public:
     views.remove(view);
   }
 
-  void SubmitServerWork(const wxString& serverId, ObjectBrowserWork*);
-  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork*);
-  void SubmitServerWork(const wxString& serverId, ActionDialogueWork*, wxEvtHandler*);
-  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ActionDialogueWork*, wxEvtHandler*);
+  void SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork*);
+  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork*);
 
   /**
    * Clean up expired and stale database connections.

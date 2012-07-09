@@ -24,7 +24,7 @@ public:
   /**
    * Launch database work, sending completed/crashed events to dest.
    */
-  virtual void DoWork(ActionDialogueWork *work, wxEvtHandler *dest) = 0;
+  virtual void DoWork(ActionDialogueWork *work) = 0;
 
   /**
    * Retrieve a reference to the database model.
@@ -88,13 +88,13 @@ private:
 
   class Work : public ActionDialogueWork {
   public:
-    Work(TxMode txMode, const ObjectModelReference& databaseRef, WorkCompleted completionHandler) : ActionDialogueWork(txMode, databaseRef, GetSqlDictionary()), completionHandler(completionHandler) {}
+    Work(TxMode txMode, const ObjectModelReference& databaseRef, CreateDatabaseDialogue* dest, WorkCompleted completionHandler) : ActionDialogueWork(txMode, databaseRef, GetSqlDictionary(), dest), completionHandler(completionHandler) {}
     const WorkCompleted completionHandler;
   };
 
   class ListUsersWork : public Work {
   public:
-    ListUsersWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListUsersComplete)
+    ListUsersWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListUsersComplete)
     {
       wxLogDebug(_T("%p: work to list users for owners dropdown"), this);
     }
@@ -104,7 +104,7 @@ private:
 
   class ListTemplatesWork : public Work {
   public:
-    ListTemplatesWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListTemplatesComplete)
+    ListTemplatesWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListTemplatesComplete)
     {
       wxLogDebug(_T("%p: work to list templates for dropdown"), this);
     }
@@ -121,7 +121,7 @@ private:
 
   class ListCollationsWork : public Work {
   public:
-    ListCollationsWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListCollationsComplete)
+    ListCollationsWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListCollationsComplete)
     {
       wxLogDebug(_T("%p: work to list collations for dropdown"), this);
     }
@@ -131,7 +131,7 @@ private:
 
   class ExecuteScriptWork : public Work {
   public:
-    ExecuteScriptWork(const ObjectModelReference& databaseRef, const std::vector<wxString>& commands) : Work(NO_TRANSACTION, databaseRef, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
+    ExecuteScriptWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest, const std::vector<wxString>& commands) : Work(NO_TRANSACTION, databaseRef, dest, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
     {
       wxLogDebug(_T("%p: work to execute generated script"), this);
     }

@@ -40,7 +40,7 @@ public:
     NO_TRANSACTION
   };
 
-  ObjectBrowserManagedWork(TxMode txMode, const ObjectModelReference& database) : txMode(txMode), database(database) {}
+  ObjectBrowserManagedWork(TxMode txMode, const ObjectModelReference& database, const SqlDictionary& sqlDictionary, wxEvtHandler* dest = NULL) : txMode(txMode), database(database), sqlDictionary(sqlDictionary), dest(dest) {}
   virtual ~ObjectBrowserManagedWork() {}
 
   /**
@@ -79,8 +79,11 @@ protected:
   DatabaseWorkWithDictionary *owner;
 
 private:
-  TxMode txMode;
-  ObjectModelReference database;
+  const TxMode txMode;
+  const ObjectModelReference database;
+  const SqlDictionary& sqlDictionary;
+  wxEvtHandler* const dest;
+
   wxString crashMessage;
   friend class ObjectBrowserDatabaseWork;
   friend class ObjectBrowserModel;
@@ -98,7 +101,7 @@ private:
  */
 class ObjectBrowserWork : public ObjectBrowserManagedWork {
 public:
-  ObjectBrowserWork(const ObjectModelReference& database, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database), sqlDictionary(sqlDictionary) {}
+  ObjectBrowserWork(const ObjectModelReference& database, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database, sqlDictionary) {}
   virtual ~ObjectBrowserWork() {}
 
   /*
@@ -113,10 +116,6 @@ public:
    * This method is executed on the GUI thread.
    */
   virtual void UpdateView(ObjectBrowser *browser) = 0;
-
-private:
-  const SqlDictionary& sqlDictionary;
-  friend class ObjectBrowserModel;
 };
 
 /**

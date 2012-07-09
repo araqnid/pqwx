@@ -16,7 +16,7 @@
  */
 class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
 public:
-  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserManagedWork *work, const SqlDictionary& sqlDictionary) : DatabaseWorkWithDictionary(sqlDictionary), dest(dest), work(work) {}
+  ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserManagedWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), work(work) {}
   void operator()() {
     TransactionBoundary txn(work->txMode, this);
     work->owner = this;
@@ -128,32 +128,18 @@ BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   EVT_TIMER(ObjectBrowserModel::TIMER_MAINTAIN, ObjectBrowserModel::OnTimerTick)
 END_EVENT_TABLE()
 
-void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowserWork *work)
+void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork *work)
 {
   ServerModel *server = FindServerById(serverId);
   wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
+  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, work));
 }
 
-void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ActionDialogueWork *work, wxEvtHandler *dest)
-{
-  ServerModel *server = FindServerById(serverId);
-  wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
-}
-
-void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork *work)
+void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork *work)
 {
   DatabaseModel *database = FindDatabase(databaseRef);
   wxASSERT(database != NULL);
-  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
-}
-
-void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ActionDialogueWork *work, wxEvtHandler *dest)
-{
-  DatabaseModel *database = FindDatabase(databaseRef);
-  wxASSERT(database != NULL);
-  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
+  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, work));
 }
 
 void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work)
@@ -281,7 +267,7 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
 
 void ObjectBrowserModel::SetupDatabaseConnection(const ObjectModelReference& ref, DatabaseConnection *db)
 {
-  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(ref), ObjectBrowser::GetSqlDictionary()));
+  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(ref)));
 }
 
 void ObjectBrowserModel::Dispose()

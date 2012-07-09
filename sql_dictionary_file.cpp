@@ -48,8 +48,10 @@ SqlDictionaryFile::SqlDictionaryFile(const wxString& filename)
     }
   } while (!stream->Eof());
   delete fsfile;
-  if (!tag.name.empty())
-    AddSql(tag.name, sqlBuffer.utf8_str(), tag.majorVersion, tag.minorVersion);
+  if (!tag.name.empty()) {
+    buffers.push_back(wxCharBuffer(CollapseSql(sqlBuffer).utf8_str()));
+    AddSql(tag.name, buffers.back().data(), tag.majorVersion, tag.minorVersion);
+  }
 }
 
 wxString SqlDictionaryFile::CollapseSql(const wxString& sql)

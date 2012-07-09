@@ -423,6 +423,14 @@ public:
    */
   DatabaseConnection *GetServerAdminConnection() { return GetDatabaseConnection(GlobalDbName()); }
   /**
+   * Gets a reference to the administrative database.
+   */
+  ObjectModelReference GetServerAdminDatabaseRef()
+  {
+    // this is a nasty hack to allow returning the reference to the admin db when we may not know its OID yet.
+    return ObjectModelReference(Identification(), InvalidOid);
+  }
+  /**
    * Find the administrative database model on this server.
    */
   DatabaseModel *FindAdminDatabase() { return FindDatabase(GlobalDbName()); }
@@ -516,7 +524,7 @@ public:
    * Remove a server.
    */
   void RemoveServer(const wxString& serverId);
-  void SetupDatabaseConnection(DatabaseConnection *db);
+  void SetupDatabaseConnection(const ObjectModelReference& ref, DatabaseConnection *db);
 
   /**
    * Find any object by reference.
@@ -582,8 +590,9 @@ private:
   DECLARE_EVENT_TABLE();
   void OnWorkFinished(wxCommandEvent&);
   void OnWorkCrashed(wxCommandEvent&);
+  void OnRescheduleWork(wxCommandEvent&);
   void OnTimerTick(wxTimerEvent&);
-  void ConnectAndAddWork(DatabaseConnection *db, DatabaseWork *work);
+  void ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work);
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

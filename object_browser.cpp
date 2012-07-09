@@ -168,6 +168,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork)
 
 class DatabaseLoader : public LazyLoader {
 public:
@@ -220,11 +221,16 @@ private:
 
 class ServerWorkLauncher : public WorkLauncher {
 public:
-  ServerWorkLauncher(ObjectBrowserModel *objectBrowserModel, const wxString& serverId) : objectBrowserModel(objectBrowserModel), serverId(serverId) {}
+  ServerWorkLauncher(ObjectBrowserModel *objectBrowserModel, const ObjectModelReference& adminDatabaseRef) : objectBrowserModel(objectBrowserModel), databaseRef(adminDatabaseRef) {}
 
   void DoWork(ActionDialogueWork *work, wxEvtHandler *dest)
   {
-    objectBrowserModel->SubmitServerWork(serverId, work, dest);
+    objectBrowserModel->SubmitServerWork(databaseRef.GetServerId(), work, dest);
+  }
+
+  ObjectModelReference GetDatabaseRef() const
+  {
+    return databaseRef;
   }
 
   ServerConnection GetServerConnection() const
@@ -244,6 +250,7 @@ private:
     return *server;
   }
   ObjectBrowserModel *objectBrowserModel;
+  ObjectModelReference databaseRef;
   wxString serverId;
 };
 
@@ -1194,7 +1201,7 @@ void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
 {
   const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
-  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, contextMenuRef.GetServerId()), new AfterDatabaseCreated(contextMenuRef, this));
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, contextMenuRef), new AfterDatabaseCreated(contextMenuRef, this));
   dbox->Show();
 }
 

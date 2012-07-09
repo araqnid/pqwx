@@ -40,7 +40,7 @@ public:
     NO_TRANSACTION
   };
 
-  ObjectBrowserManagedWork(TxMode txMode) : txMode(txMode) {}
+  ObjectBrowserManagedWork(TxMode txMode, const ObjectModelReference& database) : txMode(txMode), database(database) {}
   virtual ~ObjectBrowserManagedWork() {}
 
   /**
@@ -80,6 +80,7 @@ protected:
 
 private:
   TxMode txMode;
+  ObjectModelReference database;
   wxString crashMessage;
   friend class ObjectBrowserDatabaseWork;
   friend class ObjectBrowserModel;
@@ -97,7 +98,7 @@ private:
  */
 class ObjectBrowserWork : public ObjectBrowserManagedWork {
 public:
-  ObjectBrowserWork(const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY), sqlDictionary(sqlDictionary) {}
+  ObjectBrowserWork(const ObjectModelReference& database, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database), sqlDictionary(sqlDictionary) {}
   virtual ~ObjectBrowserWork() {}
 
   /*
@@ -124,6 +125,8 @@ private:
  * Run once on each database connection added to the object browser.
  */
 class SetupDatabaseConnectionWork : public ObjectBrowserWork {
+public:
+  SetupDatabaseConnectionWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef) {}
 protected:
   void operator()()
   {
@@ -146,7 +149,7 @@ public:
    * Create work object
    * @param serverModel Server model to populate
    */
-  RefreshDatabaseListWork(const wxString& serverId) : serverId(serverId)
+  RefreshDatabaseListWork(const ObjectModelReference& database) : ObjectBrowserWork(database), serverId(database.GetServerId())
   {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
@@ -178,7 +181,7 @@ public:
    * @param databaseModel Database model to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseSchemaWork(const ObjectModelReference& databaseRef, bool expandAfter) : databaseRef(databaseRef), expandAfter(expandAfter) {
+  LoadDatabaseSchemaWork(const ObjectModelReference& databaseRef, bool expandAfter) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -206,7 +209,7 @@ public:
   /**
    * @param databaseModel Database model to populate
    */
-  LoadDatabaseDescriptionsWork(const ObjectModelReference& databaseRef) : databaseRef(databaseRef) {
+  LoadDatabaseDescriptionsWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef) {
     wxLogDebug(_T("%p: work to load schema object descriptions"), this);
   }
 private:
@@ -239,7 +242,7 @@ public:
    * @param database Database being indexed
    * @param completion Additional callback to notify when indexing completed
    */
-  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *completion = NULL) : databaseRef(databaseRef), completion(completion) {
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *completion = NULL) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), completion(completion) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
@@ -261,7 +264,7 @@ public:
   /**
    * @param relationModel Relation model to populate
    */
-  LoadRelationWork(RelationModel::Type relationType, const ObjectModelReference& relationRef) : relationType(relationType), relationRef(relationRef) {
+  LoadRelationWork(RelationModel::Type relationType, const ObjectModelReference& relationRef) : ObjectBrowserWork(relationRef.DatabaseRef()), relationType(relationType), relationRef(relationRef) {
     wxLogDebug(_T("%p: work to load relation"), this);
   }
 private:

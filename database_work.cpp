@@ -77,6 +77,9 @@ void DatabaseWork::DoCommand(const char *sql) const {
 
   PGresult *rs = PQexec(conn, sql);
   if (rs == NULL) {
+    ConnStatusType connStatus = PQstatus(conn);
+    if (connStatus == CONNECTION_BAD)
+      throw PgLostConnection();
     throw PgInvalidQuery(sql, _T("NULL result from PQexec"));
   }
 

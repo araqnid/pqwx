@@ -27,6 +27,11 @@ public:
   virtual void DoWork(ActionDialogueWork *work, wxEvtHandler *dest) = 0;
 
   /**
+   * Retrieve a reference to the database model.
+   */
+  virtual ObjectModelReference GetDatabaseRef() const = 0;
+
+  /**
    * Retrieve the server connection details.
    */
   virtual ServerConnection GetServerConnection() const = 0;
@@ -83,13 +88,13 @@ private:
 
   class Work : public ActionDialogueWork {
   public:
-    Work(TxMode txMode, WorkCompleted completionHandler) : ActionDialogueWork(txMode, GetSqlDictionary()), completionHandler(completionHandler) {}
+    Work(TxMode txMode, const ObjectModelReference& databaseRef, WorkCompleted completionHandler) : ActionDialogueWork(txMode, databaseRef, GetSqlDictionary()), completionHandler(completionHandler) {}
     const WorkCompleted completionHandler;
   };
 
   class ListUsersWork : public Work {
   public:
-    ListUsersWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListUsersComplete)
+    ListUsersWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListUsersComplete)
     {
       wxLogDebug(_T("%p: work to list users for owners dropdown"), this);
     }
@@ -99,7 +104,7 @@ private:
 
   class ListTemplatesWork : public Work {
   public:
-    ListTemplatesWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListTemplatesComplete)
+    ListTemplatesWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListTemplatesComplete)
     {
       wxLogDebug(_T("%p: work to list templates for dropdown"), this);
     }
@@ -116,7 +121,7 @@ private:
 
   class ListCollationsWork : public Work {
   public:
-    ListCollationsWork() : Work(READ_ONLY, &CreateDatabaseDialogue::OnListCollationsComplete)
+    ListCollationsWork(const ObjectModelReference& databaseRef) : Work(READ_ONLY, databaseRef, &CreateDatabaseDialogue::OnListCollationsComplete)
     {
       wxLogDebug(_T("%p: work to list collations for dropdown"), this);
     }
@@ -126,7 +131,7 @@ private:
 
   class ExecuteScriptWork : public Work {
   public:
-    ExecuteScriptWork(const std::vector<wxString>& commands) : Work(NO_TRANSACTION, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
+    ExecuteScriptWork(const ObjectModelReference& databaseRef, const std::vector<wxString>& commands) : Work(NO_TRANSACTION, databaseRef, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
     {
       wxLogDebug(_T("%p: work to execute generated script"), this);
     }

@@ -36,6 +36,13 @@ public:
     dest->AddPendingEvent(event);
   }
   void NotifyCrashed(const std::exception& e) {
+    const PgLostConnection* lostConnection = dynamic_cast<const PgLostConnection*>(&e);
+    if (lostConnection != NULL) {
+      wxLogDebug(_T("%p: object browser work indicated connection lost, rescheduling"), work);
+      Reschedule();
+      return;
+    }
+
     wxLogDebug(_T("%p: object browser work crashed with some exception, notifying GUI thread"), work);
 
     const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
@@ -67,10 +74,22 @@ public:
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }
+  void NotifyConnectionLost()
+  {
+    wxLogDebug(_T("%p: object browser work abandoned, rescheduling"), work);
+    Reschedule();
+  }
 
 private:
   wxEvtHandler *dest;
   ObjectBrowserManagedWork *work;
+
+  void Reschedule()
+  {
+    wxCommandEvent event(PQWX_RescheduleObjectBrowserWork);
+    event.SetClientData(work);
+    dest->AddPendingEvent(event);
+  }
 
   class TransactionBoundary {
   public:
@@ -105,6 +124,7 @@ private:
 BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowserModel::OnWorkFinished)
   PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowserModel::OnWorkCrashed)
+  PQWX_RESCHEDULE_OBJECT_BROWSER_WORK(wxID_ANY, ObjectBrowserModel::OnRescheduleWork)
   EVT_TIMER(ObjectBrowserModel::TIMER_MAINTAIN, ObjectBrowserModel::OnTimerTick)
 END_EVENT_TABLE()
 
@@ -112,36 +132,36 @@ void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowse
 {
   ServerModel *server = FindServerById(serverId);
   wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
+  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
 }
 
 void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ActionDialogueWork *work, wxEvtHandler *dest)
 {
   ServerModel *server = FindServerById(serverId);
   wxASSERT(server != NULL);
-  ConnectAndAddWork(server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
+  ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
 }
 
 void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserWork *work)
 {
   DatabaseModel *database = FindDatabase(databaseRef);
   wxASSERT(database != NULL);
-  ConnectAndAddWork(database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
+  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(this, work, work->sqlDictionary));
 }
 
 void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ActionDialogueWork *work, wxEvtHandler *dest)
 {
   DatabaseModel *database = FindDatabase(databaseRef);
   wxASSERT(database != NULL);
-  ConnectAndAddWork(database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
+  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(dest, work, work->sqlDictionary));
 }
 
-void ObjectBrowserModel::ConnectAndAddWork(DatabaseConnection *db, DatabaseWork *work)
+void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work)
 {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
     db->Connect();
-    SetupDatabaseConnection(db);
+    SetupDatabaseConnection(ref, db);
   }
   db->AddWork(work);
 }
@@ -173,6 +193,28 @@ void ObjectBrowserModel::OnWorkCrashed(wxCommandEvent &e)
   }
 
   delete work;
+}
+
+void ObjectBrowserModel::OnRescheduleWork(wxCommandEvent &e)
+{
+  ObjectBrowserManagedWork *work = static_cast<ObjectBrowserManagedWork*>(e.GetClientData());
+  wxLogDebug(_T("%p: work needs rescheduling (received by model)"), work);
+
+  const ObjectModelReference& dbRef = work->database;
+  wxLogDebug(_T("%p: reschedule on %s"), work, dbRef.Identify().c_str());
+  wxASSERT(dbRef.GetObjectClass() == ObjectModelReference::PG_DATABASE);
+
+  // this is broken for action dialogue work where the destination handler is being lost
+  ObjectBrowserWork *obWork = dynamic_cast<ObjectBrowserWork*>(work);
+  wxASSERT(obWork != NULL);
+
+  // special hack to reschedule these as "server work"
+  if (dbRef.GetOid() == InvalidOid) {
+    SubmitServerWork(dbRef.GetServerId(), obWork);
+  }
+  else {
+    SubmitDatabaseWork(dbRef, obWork);
+  }
 }
 
 void ObjectBrowserModel::OnTimerTick(wxTimerEvent &e)
@@ -227,7 +269,7 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
   if (db) {
     servers.push_back(ServerModel(server, db));
     if (db->IsConnected()) {
-      SetupDatabaseConnection(db);
+      SetupDatabaseConnection(servers.back().GetServerAdminDatabaseRef(), db);
     }
   }
   else {
@@ -237,9 +279,9 @@ ServerModel* ObjectBrowserModel::AddServerConnection(const ServerConnection &ser
   return &(servers.back());
 }
 
-void ObjectBrowserModel::SetupDatabaseConnection(DatabaseConnection *db)
+void ObjectBrowserModel::SetupDatabaseConnection(const ObjectModelReference& ref, DatabaseConnection *db)
 {
-  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(), ObjectBrowser::GetSqlDictionary()));
+  db->AddWork(new ObjectBrowserDatabaseWork(this, new SetupDatabaseConnectionWork(ref), ObjectBrowser::GetSqlDictionary()));
 }
 
 void ObjectBrowserModel::Dispose()

@@ -287,6 +287,15 @@ private:
   wxCharBuffer messageBuf;
 };
 
+/**
+ * Exception thrown when a query fails and the connection status is discovered to be bad.
+ */
+class PgLostConnection : public std::exception {
+public:
+  PgLostConnection() {}
+  const char *what() const throw () { return "lost database connection"; }
+};
+
 #endif
 
 // Local Variables:

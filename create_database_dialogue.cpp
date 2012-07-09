@@ -128,7 +128,7 @@ void CreateDatabaseDialogue::OnWorkFinished(wxCommandEvent& event)
 {
   Work *work = static_cast<Work*>(event.GetClientData());
   wxASSERT(work != NULL);
-  wxLogDebug(_T("%p: work finished (on create database dialogue)"));
+  wxLogDebug(_T("%p: work finished (on create database dialogue)"), work);
   CALL_WORK_COMPLETION(*this, work->completionHandler)(work);
   delete work;
 }
@@ -136,7 +136,7 @@ void CreateDatabaseDialogue::OnWorkFinished(wxCommandEvent& event)
 void CreateDatabaseDialogue::OnWorkCrashed(wxCommandEvent& event)
 {
   Work *work = static_cast<Work*>(event.GetClientData());
-  wxLogDebug(_T("%p: work crashed (on create database dialogue)"));
+  wxLogDebug(_T("%p: work crashed (on create database dialogue)"), work);
 
   if (!work->GetCrashMessage().empty()) {
     wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());

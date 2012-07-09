@@ -6,13 +6,13 @@
 #ifndef __create_database_dialogue_h
 #define __create_database_dialogue_h
 
-#include "action_dialogue_work.h"
-
 class wxNotebook;
 class wxChoice;
 class wxCheckBox;
 class wxComboBox;
 class wxNotebookEvent;
+
+#include "object_browser_database_work.h"
 
 /**
  * Allow dialogue box to perform work on the relevant database connection.
@@ -24,7 +24,7 @@ public:
   /**
    * Launch database work, sending completed/crashed events to dest.
    */
-  virtual void DoWork(ActionDialogueWork *work) = 0;
+  virtual void DoWork(ObjectBrowserManagedWork *work) = 0;
 
   /**
    * Retrieve a reference to the database model.
@@ -86,9 +86,9 @@ private:
 
   typedef void (CreateDatabaseDialogue::*WorkCompleted)(Work*);
 
-  class Work : public ActionDialogueWork {
+  class Work : public ObjectBrowserManagedWork {
   public:
-    Work(TxMode txMode, const ObjectModelReference& databaseRef, CreateDatabaseDialogue* dest, WorkCompleted completionHandler) : ActionDialogueWork(txMode, databaseRef, GetSqlDictionary(), dest), completionHandler(completionHandler) {}
+    Work(TxMode txMode, const ObjectModelReference& databaseRef, CreateDatabaseDialogue* dest, WorkCompleted completionHandler) : ObjectBrowserManagedWork(txMode, databaseRef, GetSqlDictionary(), dest), completionHandler(completionHandler) {}
     const WorkCompleted completionHandler;
   };
 

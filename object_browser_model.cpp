@@ -9,7 +9,6 @@
 #include "object_browser.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
-#include "action_dialogue_work.h"
 
 /**
  * Implementation of DatabaseWork that deals with passing results back to the GUI thread.

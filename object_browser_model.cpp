@@ -74,7 +74,7 @@ public:
     event.SetClientData(work);
     dest->AddPendingEvent(event);
   }
-  void NotifyConnectionLost()
+  void NotifyLostConnection()
   {
     wxLogDebug(_T("%p: object browser work abandoned, rescheduling"), work);
     Reschedule();

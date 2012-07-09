@@ -12,6 +12,10 @@
 #include "execution_lexer.h"
 #include "script_events.h"
 
+#if PG_VERSION_NUM >= 90200
+#define USE_PG_ROW_PROCESSOR 1
+#endif
+
 class ScriptExecutionWork : public DatabaseWork {
 public:
   /**
@@ -93,6 +97,9 @@ public:
   ScriptQueryWork(wxEvtHandler *dest, const wxString &sql) : ScriptExecutionWork(dest), sql(sql) {}
 
   void operator()();
+#ifdef USE_PG_ROW_PROCESSOR
+  int ProcessRow(PGresult *res, const PGdataValue *columns, const char **errmsgp);
+#endif
 private:
   wxString sql;
 };

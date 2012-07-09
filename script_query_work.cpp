@@ -43,6 +43,15 @@ void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *con
   oidValue = PQoidValue(rs);
 }
 
+#ifdef USE_PG_ROW_PROCESSOR
+extern "C" {
+  static int RowProcessorFunc(PGresult *res, const PGdataValue *columns, const char **errmsgp, void *param)
+  {
+    return ((ScriptQueryWork*) param)->ProcessRow(res, columns, errmsgp);
+  }
+}
+#endif
+
 void ScriptQueryWork::operator()()
 {
   wxStopWatch stopwatch;
@@ -51,6 +60,10 @@ void ScriptQueryWork::operator()()
   output = new Result();
   db->LogSql(sqlBuffer.data());
   stopwatch.Start();
+
+#ifdef USE_PG_ROW_PROCESSOR
+  PQsetRowProcessor(conn, RowProcessorFunc, this);
+#endif
 
   PGresult *rs = PQexecParams(conn, sqlBuffer.data(), 0, NULL, NULL, NULL, NULL, 0);
   wxASSERT(rs != NULL);
@@ -61,6 +74,19 @@ void ScriptQueryWork::operator()()
 
   output->Finalise(stopwatch.Time(), conn);
 }
+
+#ifdef USE_PG_ROW_PROCESSOR
+int ScriptQueryWork::ProcessRow(PGresult *res, const PGdataValue *columns, const char **errmsgp)
+{
+  if (columns == NULL) {
+    wxLogDebug(_T("Result set schema..."));
+  }
+  else {
+    wxLogDebug(_T("Result set row..."));
+  }
+  return 1;
+}
+#endif
 
 void ScriptPutCopyDataWork::operator()()
 {

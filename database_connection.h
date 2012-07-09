@@ -270,6 +270,7 @@ private:
 
     bool Connect();
     void HandleNotification();
+    void CheckConnectionStatus();
     void DeleteRemainingWork();
 
     State GetState() const {

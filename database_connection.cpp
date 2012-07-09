@@ -112,25 +112,27 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       work->conn = conn;
       try {
         (*work)();
+        CheckConnectionStatus();
         work->NotifyFinished();
       } catch (std::exception &e) {
-        wxLogDebug(_T("Exception thrown by database work: %s"), wxString(e.what(), wxConvUTF8).c_str());
+        wxLogDebug(_T("%p: Exception thrown by database work: %s"), work, wxString(e.what(), wxConvUTF8).c_str());
+        CheckConnectionStatus();
         work->NotifyCrashed(e);
       } catch (...) {
-        wxLogDebug(_T("Unrecognisable exception thrown by database work"));
+        wxLogDebug(_T("%p: Unrecognisable exception thrown by database work"), work);
+        CheckConnectionStatus();
         work->NotifyCrashed();
       }
       delete work;
-      SetState(DatabaseConnection::IDLE);
       db->workQueueMutex.Lock();
 
-      ConnStatusType connStatus = PQstatus(conn);
-      if (connStatus == CONNECTION_BAD) {
-        wxLogDebug(_T("thr#%lx [%s] connection invalid, exiting"), wxThread::GetCurrentId(), db->identification.c_str());
-        SetState(DatabaseConnection::DISCONNECTED);
+      if (GetState() == DatabaseConnection::DISCONNECTED) {
+        wxLogDebug(_T("thr#%lx [%s] exiting due to invalid connection"), wxThread::GetCurrentId(), db->identification.c_str());
         DeleteRemainingWork();
         return 0;
       }
+
+      SetState(DatabaseConnection::IDLE);
     }
 
     if (disconnect) {
@@ -162,10 +164,20 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
   return 0;
 }
 
+void DatabaseConnection::WorkerThread::CheckConnectionStatus()
+{
+  ConnStatusType connStatus = PQstatus(conn);
+  if (connStatus == CONNECTION_BAD) {
+    wxLogDebug(_T("thr#%lx [%s] connection now invalid"), wxThread::GetCurrentId(), db->identification.c_str());
+    SetState(DatabaseConnection::DISCONNECTED);
+  }
+}
+
 void DatabaseConnection::WorkerThread::DeleteRemainingWork()
 {
   for (std::deque<DatabaseWork*>::iterator iter = db->workQueue.begin(); iter != db->workQueue.end(); iter++) {
     DatabaseWork *work = *iter;
+    wxLogDebug(_T("%p: Evicting work after lost connection"), work);
     work->NotifyLostConnection();
     delete work;
   }

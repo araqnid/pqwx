@@ -85,10 +85,6 @@ public:
    */
   void AddServerConnection(const ServerConnection& server, DatabaseConnection *db);
   /**
-   * Load the schema for a specified database.
-   */
-  void LoadDatabase(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion = NULL);
-  /**
    * Load the detail for a specified relation.
    */
   void LoadRelation(const ObjectModelReference& relationRef);

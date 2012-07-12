@@ -177,7 +177,7 @@ public:
   bool load(wxTreeItemId parent) {
     DatabaseModel *db = ob->Model()->FindDatabase(databaseRef);
     if (!db->loaded) {
-      ob->LoadDatabase(databaseRef);
+      db->Load();
       return true;
     }
     return false;
@@ -383,13 +383,6 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
     }
     Delete(firstChildItem);
   }
-}
-
-void ObjectBrowser::LoadDatabase(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(databaseRef);
-  SubmitDatabaseWork(database, new LoadDatabaseSchemaWork(databaseRef, indexCompletion == NULL));
-  SubmitDatabaseWork(database, new IndexDatabaseSchemaWork(databaseRef, indexCompletion));
-  SubmitDatabaseWork(database, new LoadDatabaseDescriptionsWork(databaseRef));
 }
 
 void ObjectBrowser::LoadRelation(const ObjectModelReference& relationRef) {
@@ -917,11 +910,11 @@ protected:
 };
 
 void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &dbname) {
-  const DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
-    LoadDatabase(*database, new OpenObjectFinderOnIndexSchemaCompletion());
+    database->Load(new OpenObjectFinderOnIndexSchemaCompletion());
     return;
   }
 
@@ -1231,9 +1224,9 @@ void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
-  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
-  LoadDatabase(contextMenuRef, NULL);
+  database->Load();
 }
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {

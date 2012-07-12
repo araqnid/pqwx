@@ -130,18 +130,14 @@ BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   EVT_TIMER(ObjectBrowserModel::TIMER_MAINTAIN, ObjectBrowserModel::OnTimerTick)
 END_EVENT_TABLE()
 
-void ObjectBrowserModel::SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork *work)
+void ObjectBrowserModel::SubmitServerWork(ServerModel *server, ObjectBrowserManagedWork *work)
 {
-  ServerModel *server = FindServerById(serverId);
-  wxASSERT(server != NULL);
   ConnectAndAddWork(server->GetServerAdminDatabaseRef(), server->GetServerAdminConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, this, work));
 }
 
-void ObjectBrowserModel::SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork *work)
+void ObjectBrowserModel::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserManagedWork *work)
 {
-  DatabaseModel *database = FindDatabase(databaseRef);
-  wxASSERT(database != NULL);
-  ConnectAndAddWork(databaseRef, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, this, work));
+  ConnectAndAddWork(*database, database->GetDatabaseConnection(), new ObjectBrowserDatabaseWork(work->dest == NULL ? this : work->dest, this, work));
 }
 
 void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work)
@@ -559,6 +555,18 @@ DatabaseModel::Divisions DatabaseModel::DivideSchemaMembers() const
   }
 
   return result;
+}
+
+void DatabaseModel::SubmitWork(ObjectBrowserManagedWork *work)
+{
+  wxGetApp().GetObjectBrowserModel().SubmitDatabaseWork(this, work);
+}
+
+void DatabaseModel::Load(IndexSchemaCompletionCallback *indexCompletion)
+{
+  SubmitWork(new LoadDatabaseSchemaWork(*this, indexCompletion == NULL));
+  SubmitWork(new IndexDatabaseSchemaWork(*this, indexCompletion));
+  SubmitWork(new LoadDatabaseDescriptionsWork(*this));
 }
 
 // Local Variables:

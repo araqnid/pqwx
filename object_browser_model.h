@@ -276,6 +276,9 @@ public:
   bool IsSystem() const { return name.StartsWith(_T("pg_")); }
 };
 
+class ObjectBrowserManagedWork;
+class IndexSchemaCompletionCallback;
+
 /**
  * A database.
  *
@@ -335,6 +338,14 @@ public:
    * Divide the schema members up into user, system and extension members.
    */
   Divisions DivideSchemaMembers() const;
+
+  /**
+   * Load the database schema.
+   */
+  void Load(IndexSchemaCompletionCallback *indexCompletion = NULL);
+
+private:
+  void SubmitWork(ObjectBrowserManagedWork *work);
 };
 
 /**
@@ -345,8 +356,6 @@ public:
   bool superuser;
   bool canLogin;
 };
-
-class ObjectBrowserManagedWork;
 
 /**
  * A server.
@@ -576,8 +585,19 @@ public:
     views.remove(view);
   }
 
-  void SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork*);
-  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork*);
+  void SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork *work)
+  {
+    ServerModel *server = FindServerById(serverId);
+    wxASSERT(server != NULL);
+    SubmitServerWork(server, work);
+  }
+
+  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork *work)
+  {
+    DatabaseModel *database = FindDatabase(databaseRef);
+    wxASSERT(database != NULL);
+    SubmitDatabaseWork(database, work);
+  }
 
   /**
    * Clean up expired and stale database connections.
@@ -595,7 +615,12 @@ private:
   void OnWorkCrashed(wxCommandEvent&);
   void OnRescheduleWork(wxCommandEvent&);
   void OnTimerTick(wxTimerEvent&);
+  void SubmitServerWork(ServerModel*, ObjectBrowserManagedWork*);
+  void SubmitDatabaseWork(DatabaseModel*, ObjectBrowserManagedWork*);
   void ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work);
+
+  friend class ServerModel;
+  friend class DatabaseModel;
 };
 
 static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {

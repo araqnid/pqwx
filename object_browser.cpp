@@ -890,7 +890,7 @@ private:
 
 class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
 protected:
-  void Completed(ObjectBrowser& ob, const ObjectModelReference& databaseRef, const CatalogueIndex *catalogue) {
+  void Completed(ObjectBrowser& ob, const ObjectModelReference& databaseRef, const CatalogueIndex& catalogue) {
     ob.FindObject(databaseRef);
   }
 };

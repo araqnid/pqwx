@@ -297,7 +297,7 @@ void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
 void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
 {
   if (completion) {
-    completion->Completed(ob, databaseRef, catalogueIndex);
+    completion->Completed(ob, databaseRef, *catalogueIndex);
     delete completion;
   }
 }

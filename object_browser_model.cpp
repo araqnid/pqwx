@@ -199,10 +199,14 @@ void ObjectBrowserModel::OnRescheduleWork(wxCommandEvent &e)
 
   // special hack to reschedule these as "server work"
   if (dbRef.GetOid() == InvalidOid) {
-    SubmitServerWork(dbRef.GetServerId(), work);
+    ServerModel *server = FindServer(dbRef.GetServerId());
+    wxASSERT(server != NULL);
+    SubmitServerWork(server, work);
   }
   else {
-    SubmitDatabaseWork(dbRef, work);
+    DatabaseModel *database = FindDatabase(dbRef);
+    wxASSERT(database != NULL);
+    SubmitDatabaseWork(database, work);
   }
 }
 
@@ -437,7 +441,7 @@ void ServerModel::UpdateServerParameters(const wxString& serverVersionString_, i
 void ServerModel::SubmitWork(ObjectBrowserManagedWork *work)
 {
   ObjectBrowserModel& model = ::wxGetApp().GetObjectBrowserModel();
-  model.SubmitServerWork(Identification(), work);
+  model.SubmitServerWork(this, work);
 }
 
 void ServerModel::Load()

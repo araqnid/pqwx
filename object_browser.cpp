@@ -24,16 +24,6 @@
 #include "create_database_dialogue.h"
 #include "script_events.h"
 
-inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work)
-{
-  objectBrowserModel->SubmitServerWork(server->Identification(), work);
-}
-
-inline void ObjectBrowser::SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work)
-{
-  objectBrowserModel->SubmitDatabaseWork(*database, work);
-}
-
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "File"), ObjectBrowser::On##menu##MenuScript##mode##File) \
@@ -106,7 +96,7 @@ END_EVENT_TABLE()
 
 #define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, db, ref) \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(db, new menu##ScriptWork(this, ref, ScriptWork::mode, ScriptWork::output)); \
+  db->SubmitWork(new menu##ScriptWork(this, ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
 #define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref) \
@@ -227,7 +217,7 @@ public:
 
   void DoWork(ObjectBrowserManagedWork *work)
   {
-    objectBrowserModel->SubmitServerWork(databaseRef.GetServerId(), work);
+    GetServerModel().SubmitWork(work);
   }
 
   ObjectModelReference GetDatabaseRef() const

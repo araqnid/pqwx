@@ -382,7 +382,9 @@ public:
    */
   void LoadRelation(const ObjectModelReference& ref);
 
-private:
+  /**
+   * Submit some work to this database.
+   */
   void SubmitWork(ObjectBrowserManagedWork *work);
 };
 
@@ -525,6 +527,11 @@ public:
    * Load database list.
    */
   void Load();
+
+  /**
+   * Submit some work to this server.
+   */
+  void SubmitWork(ObjectBrowserManagedWork*);
 private:
   std::vector<DatabaseModel> databases;
   std::vector<TablespaceModel> tablespaces;
@@ -534,7 +541,6 @@ private:
   wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
-  void SubmitWork(ObjectBrowserManagedWork*);
   friend class RefreshDatabaseListWork;
 };
 
@@ -621,20 +627,6 @@ public:
   void UnregisterView(ObjectBrowser *view)
   {
     views.remove(view);
-  }
-
-  void SubmitServerWork(const wxString& serverId, ObjectBrowserManagedWork *work)
-  {
-    ServerModel *server = FindServerById(serverId);
-    wxASSERT(server != NULL);
-    SubmitServerWork(server, work);
-  }
-
-  void SubmitDatabaseWork(const ObjectModelReference& databaseRef, ObjectBrowserManagedWork *work)
-  {
-    DatabaseModel *database = FindDatabase(databaseRef);
-    wxASSERT(database != NULL);
-    SubmitDatabaseWork(database, work);
   }
 
   /**

@@ -119,15 +119,6 @@ public:
   void Dispose();
 
   /**
-   * Submit some work to the administrative database for a server.
-   */
-  void SubmitServerWork(ServerModel *server, ObjectBrowserWork *work);
-  /**
-   * Submit some work to a particular database.
-   */
-  void SubmitDatabaseWork(DatabaseModel *database, ObjectBrowserWork *work);
-
-  /**
    * Update server details tree after loading from the database.
    */
   void UpdateServer(const wxString& serverId, bool expandAfter);

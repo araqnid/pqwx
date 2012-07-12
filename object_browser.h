@@ -19,9 +19,6 @@
 #include "object_browser_model.h"
 
 BEGIN_DECLARE_EVENT_TYPES()
-  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
-  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
-  DECLARE_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork, -1)
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
   DECLARE_EVENT_TYPE(PQWX_NoObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()

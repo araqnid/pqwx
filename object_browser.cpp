@@ -155,9 +155,6 @@ IMPLEMENT_SERVER_SCRIPT_HANDLERS(Role, Drop, contextMenuRef)
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectSelected)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_NoObjectSelected)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed)
-DEFINE_LOCAL_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork)
 
 class DatabaseLoader : public LazyLoader {
 public:

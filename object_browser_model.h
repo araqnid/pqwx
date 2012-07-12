@@ -9,6 +9,12 @@
 
 #include <openssl/ssl.h>
 
+BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
+  DECLARE_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork, -1)
+END_DECLARE_EVENT_TYPES()
+
 /**
  * A "soft" reference into the object model.
  */

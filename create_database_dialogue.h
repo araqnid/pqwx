@@ -88,8 +88,9 @@ private:
 
   class Work : public ObjectBrowserManagedWork {
   public:
-    Work(TxMode txMode, const ObjectModelReference& databaseRef, CreateDatabaseDialogue* dest, WorkCompleted completionHandler) : ObjectBrowserManagedWork(txMode, databaseRef, GetSqlDictionary(), dest), completionHandler(completionHandler) {}
+    Work(TxMode txMode, const ObjectModelReference& databaseRef, CreateDatabaseDialogue* dest, WorkCompleted completionHandler, WorkCompleted crashHandler = NULL) : ObjectBrowserManagedWork(txMode, databaseRef, GetSqlDictionary(), dest), completionHandler(completionHandler), crashHandler(crashHandler) {}
     const WorkCompleted completionHandler;
+    const WorkCompleted crashHandler;
   };
 
   class ListUsersWork : public Work {
@@ -131,7 +132,7 @@ private:
 
   class ExecuteScriptWork : public Work {
   public:
-    ExecuteScriptWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest, const std::vector<wxString>& commands) : Work(NO_TRANSACTION, databaseRef, dest, &CreateDatabaseDialogue::OnScriptExecuted), commands(commands)
+    ExecuteScriptWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest, const std::vector<wxString>& commands) : Work(NO_TRANSACTION, databaseRef, dest, &CreateDatabaseDialogue::OnScriptExecuted, &CreateDatabaseDialogue::OnScriptCrashed), commands(commands)
     {
       wxLogDebug(_T("%p: work to execute generated script"), this);
     }
@@ -157,6 +158,7 @@ private:
   void OnListTemplatesComplete(Work*);
   void OnListCollationsComplete(Work*);
   void OnScriptExecuted(Work*);
+  void OnScriptCrashed(Work*);
 
   void InitXRC(wxWindow *parent);
   DECLARE_EVENT_TABLE();

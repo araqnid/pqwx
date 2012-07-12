@@ -71,6 +71,8 @@ void CreateDatabaseDialogue::OnExecute(wxCommandEvent& event)
     std::vector<wxString> commands;
     GenerateScript(std::back_inserter(commands));
     launcher->DoWork(new ExecuteScriptWork(launcher->GetDatabaseRef(), this, commands));
+    FindWindow(wxID_OK)->Disable();
+    FindWindow(wxID_CANCEL)->Disable();
     return; // don't destroy the dialog
   }
     break;
@@ -117,6 +119,12 @@ void CreateDatabaseDialogue::OnScriptExecuted(Work *work)
   Destroy();
 }
 
+void CreateDatabaseDialogue::OnScriptCrashed(Work *work)
+{
+  FindWindow(wxID_OK)->Enable();
+  FindWindow(wxID_CANCEL)->Enable();
+}
+
 void CreateDatabaseDialogue::OnCancel(wxCommandEvent& event)
 {
   Destroy();
@@ -144,6 +152,9 @@ void CreateDatabaseDialogue::OnWorkCrashed(wxCommandEvent& event)
   else {
     wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
   }
+
+  if (work->crashHandler != NULL)
+    CALL_WORK_COMPLETION(*this, work->crashHandler)(work);
 
   delete work;
 }

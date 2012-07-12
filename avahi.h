@@ -42,6 +42,7 @@ namespace PQWXAvahi {
     const AvahiPoll* GetPollerImpl() const { return avahi_simple_poll_get(avahiSimplePoller); }
 
   private:
+    SimplePoller(const SimplePoller&); // Do not copy
     AvahiSimplePoll *avahiSimplePoller;
   };
 
@@ -58,6 +59,7 @@ namespace PQWXAvahi {
     void Quit() { avahi_threaded_poll_quit(avahiThreadedPoller); }
 
   private:
+    ThreadedPoller(const ThreadedPoller&); // Do not copy
     AvahiThreadedPoll *avahiThreadedPoller;
   };
 
@@ -79,6 +81,7 @@ namespace PQWXAvahi {
     wxString GetVersionString() { return wxString(avahi_client_get_version_string(avahiClient), wxConvUTF8); }
 
   private:
+    Client(const Client&); // Do not copy
     Channel *channel;
     AvahiClient *avahiClient;
 
@@ -106,6 +109,7 @@ namespace PQWXAvahi {
     }
     ~ServiceResolver() { avahi_service_resolver_free(avahiServiceResolver); }
   private:
+    ServiceResolver(const ServiceResolver&); // do not copy
     AvahiServiceResolver* avahiServiceResolver;
     Client* client;
 
@@ -155,6 +159,7 @@ namespace PQWXAvahi {
       avahi_service_browser_free(avahiServiceBrowser);
     }
   private:
+    ServiceBrowser(const ServiceBrowser&); // do not copy
     AvahiServiceBrowser* avahiServiceBrowser;
     Client* client;
     std::vector<ServiceResolver*> resolvers;

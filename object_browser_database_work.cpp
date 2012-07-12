@@ -71,18 +71,18 @@ void RefreshDatabaseListWork::ReadTablespaces()
   }
 }
 
-void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel *model)
+void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
 {
-  ServerModel *server = model->FindServer(serverId);
+  ServerModel *server = model.FindServer(serverId);
   server->UpdateServerParameters(serverVersionString, serverVersion, ssl);
   server->UpdateDatabases(databases);
   server->UpdateRoles(roles);
   server->UpdateTablespaces(tablespaces);
 }
 
-void RefreshDatabaseListWork::UpdateView(ObjectBrowser *ob)
+void RefreshDatabaseListWork::UpdateView(ObjectBrowser& ob)
 {
-  ob->UpdateServer(serverId, true);
+  ob.UpdateServer(serverId, true);
 }
 
 /*
@@ -177,16 +177,16 @@ void LoadDatabaseSchemaWork::LoadSimpleSchemaMembers(const wxString &queryName, 
   }
 }
 
-void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
+void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
 {
-  ServerModel *server = model->FindServer(databaseRef.ServerRef());
+  ServerModel *server = model.FindServer(databaseRef.ServerRef());
   wxASSERT(server != NULL);
   server->UpdateDatabase(incoming);
 }
 
-void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
+void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
 {
-  ob->UpdateDatabase(databaseRef, expandAfter);
+  ob.UpdateDatabase(databaseRef, expandAfter);
 }
 
 /*
@@ -216,9 +216,9 @@ void PutDescriptions(const std::map<unsigned long, wxString>& descriptions, std:
   }
 }
 
-void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
+void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel& model)
 {
-  DatabaseModel *databaseModel = model->FindDatabase(databaseRef);
+  DatabaseModel *databaseModel = model.FindDatabase(databaseRef);
   int count = 0;
   PutDescriptions(descriptions, databaseModel->relations, count);
   PutDescriptions(descriptions, databaseModel->functions, count);
@@ -229,7 +229,7 @@ void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel *model)
   wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
 }
 
-void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser *ob)
+void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser& ob)
 {
 }
 
@@ -287,17 +287,17 @@ void IndexDatabaseSchemaWork::operator()() {
   catalogueIndex->Commit();
 }
 
-void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel *model)
+void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
 {
-  DatabaseModel *database = model->FindDatabase(databaseRef);
+  DatabaseModel *database = model.FindDatabase(databaseRef);
   wxASSERT(database != NULL);
   database->catalogueIndex = catalogueIndex;
 }
 
-void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser *ob)
+void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
 {
   if (completion) {
-    completion->Completed(*ob, databaseRef, catalogueIndex);
+    completion->Completed(ob, databaseRef, catalogueIndex);
     delete completion;
   }
 }
@@ -417,9 +417,9 @@ void LoadRelationWork::ReadConstraints() {
   }
 }
 
-void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
+void LoadRelationWork::UpdateModel(ObjectBrowserModel& model)
 {
-  RelationModel *relationModel = model->FindRelation(relationRef);
+  RelationModel *relationModel = model.FindRelation(relationRef);
   relationModel->columns = incoming.columns;
   relationModel->indices = incoming.indices;
   relationModel->triggers = incoming.triggers;
@@ -427,9 +427,9 @@ void LoadRelationWork::UpdateModel(ObjectBrowserModel *model)
   relationModel->checkConstraints = incoming.checkConstraints;
 }
 
-void LoadRelationWork::UpdateView(ObjectBrowser *ob)
+void LoadRelationWork::UpdateView(ObjectBrowser& ob)
 {
-  ob->UpdateRelation(relationRef);
+  ob.UpdateRelation(relationRef);
 }
 
 // Local Variables:

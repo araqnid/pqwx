@@ -22,10 +22,10 @@ protected:
   {
     owner->DoCommand(_T("SetupObjectBrowserConnection"));
   }
-  void UpdateModel(ObjectBrowserModel *model)
+  void UpdateModel(ObjectBrowserModel& model)
   {
   }
-  void UpdateView(ObjectBrowser *ob)
+  void UpdateView(ObjectBrowser& ob)
   {
   }
 };
@@ -45,8 +45,8 @@ public:
   }
 protected:
   void operator()();
-  void UpdateModel(ObjectBrowserModel *model);
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel& model);
+  void UpdateView(ObjectBrowser& ob);
 private:
   const wxString serverId;
   wxString serverVersionString;
@@ -84,8 +84,8 @@ protected:
   void LoadFunctions();
   template<typename T>
   void LoadSimpleSchemaMembers(const wxString &queryName, typename std::vector<T>& vec);
-  void UpdateModel(ObjectBrowserModel *model);
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel& model);
+  void UpdateView(ObjectBrowser& ob);
 private:
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
@@ -107,8 +107,8 @@ private:
   std::map<unsigned long, wxString> descriptions;
 protected:
   void operator()();
-  void UpdateModel(ObjectBrowserModel *model);
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel& model);
+  void UpdateView(ObjectBrowser& ob);
 };
 
 /**
@@ -130,8 +130,8 @@ private:
   static const std::map<wxString, CatalogueIndex::Type> typeMap;
 protected:
   void operator()();
-  void UpdateModel(ObjectBrowserModel *model);
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel& model);
+  void UpdateView(ObjectBrowser& ob);
 };
 
 /**
@@ -156,8 +156,8 @@ private:
   void ReadTriggers();
   void ReadSequences();
   void ReadConstraints();
-  void UpdateModel(ObjectBrowserModel *model);
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateModel(ObjectBrowserModel& model);
+  void UpdateView(ObjectBrowser& ob);
   static std::vector<int> ParseInt2Vector(const wxString &str);
 };
 

@@ -61,8 +61,8 @@ private:
 
   wxString script;
 
-  void UpdateModel(ObjectBrowserModel *model) {}
-  void UpdateView(ObjectBrowser *ob) {}
+  void UpdateModel(ObjectBrowserModel& model) {}
+  void UpdateView(ObjectBrowser& ob) {}
   void OnCompletion();
 
   static const SqlDictionary& GetSqlDictionary();

@@ -131,14 +131,14 @@ public:
    *
    * This method is executed on the GUI thread.
    */
-  virtual void UpdateModel(ObjectBrowserModel *model) = 0;
+  virtual void UpdateModel(ObjectBrowserModel& model) = 0;
 
   /**
    * Update the object browser view to display the data fetched by this work.
    *
    * This method is executed on the GUI thread.
    */
-  virtual void UpdateView(ObjectBrowser *browser) = 0;
+  virtual void UpdateView(ObjectBrowser& browser) = 0;
 
 private:
   CompletionCallback* const completion;

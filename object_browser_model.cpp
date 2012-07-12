@@ -154,11 +154,11 @@ void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
   ObjectBrowserWork *work = static_cast<ObjectBrowserWork*>(e.GetClientData());
 
   wxLogDebug(_T("%p: work finished (received by model)"), work);
-  work->UpdateModel(this);
+  work->UpdateModel(*this);
 
   for (std::list<ObjectBrowser*>::iterator iter = views.begin(); iter != views.end(); iter++) {
     wxLogDebug(_T("%p: updating view %p"), work, *iter);
-    work->UpdateView(*iter);
+    work->UpdateView(**iter);
   }
 
   if (work->completion != NULL) {

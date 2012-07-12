@@ -49,6 +49,7 @@ PQWX_SOURCES = \
 	dependencies_view.cpp \
 	documents_notebook.cpp \
 	execution_lexer.cpp \
+	nearby_servers_registry.cpp \
 	object_browser.cpp \
 	object_browser_database_work.cpp \
 	object_browser_model.cpp \
@@ -88,6 +89,7 @@ PQWX_HEADERS = \
 	database_work.h \
 	documents_notebook.h \
 	execution_lexer.h \
+	nearby_servers_registry.h \
 	object_browser.h \
 	object_browser_database_work_impl.h \
 	object_browser_managed_work.h \

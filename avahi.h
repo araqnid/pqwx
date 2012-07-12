@@ -6,6 +6,8 @@
 #ifndef __avahi_h
 #define __avahi_h
 
+#include <vector>
+
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
 

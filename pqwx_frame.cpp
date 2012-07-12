@@ -82,7 +82,7 @@ PqwxFrame::PqwxFrame(const wxString& title)
   objectBrowserModelTimer = new wxTimer(&(::wxGetApp().GetObjectBrowserModel()), ObjectBrowserModel::TIMER_MAINTAIN);
   objectBrowserModelTimer->Start(30 * 1000, wxTIMER_CONTINUOUS); // 30 seconds
 
-  objectBrowser = new ObjectBrowser(&(::wxGetApp().GetObjectBrowserModel()), mainSplitter, Pqwx_ObjectBrowser);
+  objectBrowser = new ObjectBrowser(::wxGetApp().GetObjectBrowserModel(), mainSplitter, Pqwx_ObjectBrowser);
   documentsBook = new DocumentsNotebook(mainSplitter, Pqwx_DocumentsNotebook);
   mainSplitter->SplitVertically(objectBrowser, documentsBook);
   mainSplitter->SetSashGravity(0.2);

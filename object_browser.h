@@ -73,7 +73,7 @@ public:
   /**
    * Create object browser.
    */
-  ObjectBrowser(ObjectBrowserModel *model, wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
+  ObjectBrowser(ObjectBrowserModel& model, wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT);
 
   ~ObjectBrowser()
   {
@@ -173,7 +173,10 @@ public:
    */
   ObjectModelReference GetSelected() const { return selectedRef; }
 
-  ObjectBrowserModel* Model() const { return objectBrowserModel; }
+  /**
+   * @return Object browser model
+   */
+  ObjectBrowserModel& Model() const { return model; }
 
   /**
    * Gets the SQL dictionary for the object browser.
@@ -181,7 +184,7 @@ public:
   static const SqlDictionary& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
-  ObjectBrowserModel *objectBrowserModel;
+  ObjectBrowserModel& model;
   void BeforeExpand(wxTreeEvent&);
   void OnItemSelected(wxTreeEvent&);
   void OnSetFocus(wxFocusEvent&);

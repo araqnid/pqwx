@@ -100,14 +100,14 @@ void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { 
 }
 
 #define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, objectBrowserModel->FindDatabase(ref.DatabaseRef()), ref)
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    model.FindDatabase(ref.DatabaseRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      model.FindDatabase(ref.DatabaseRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, model.FindDatabase(ref.DatabaseRef()), ref)
 
 #define IMPLEMENT_SERVER_SCRIPT_HANDLERS(menu, mode, ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref) \
-  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, objectBrowserModel->FindAdminDatabase(ref.ServerRef()), ref)
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Window,    model.FindAdminDatabase(ref.ServerRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, File,      model.FindAdminDatabase(ref.ServerRef()), ref) \
+  IMPLEMENT_SCRIPT_HANDLER(menu, mode, Clipboard, model.FindAdminDatabase(ref.ServerRef()), ref)
 
 IMPLEMENT_SCRIPT_HANDLERS(Database, Create, contextMenuRef.DatabaseRef())
 IMPLEMENT_SCRIPT_HANDLERS(Database, Alter, contextMenuRef.DatabaseRef())
@@ -164,7 +164,7 @@ public:
   DatabaseLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
 
   bool load(wxTreeItemId parent) {
-    DatabaseModel *db = ob->Model()->FindDatabase(databaseRef);
+    DatabaseModel *db = ob->Model().FindDatabase(databaseRef);
     if (!db->loaded) {
       db->Load();
       return true;
@@ -199,7 +199,7 @@ public:
   SystemSchemasLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, std::vector<const SchemaMemberModel*> division) : ob(ob), databaseRef(databaseRef), division(division) {}
 
   bool load(wxTreeItemId parent) {
-    DatabaseModel *db = ob->Model()->FindDatabase(databaseRef);
+    DatabaseModel *db = ob->Model().FindDatabase(databaseRef);
     wxWindowUpdateLocker noUpdates(ob);
     ob->AppendDivision(db, division, parent);
     return false;
@@ -213,7 +213,7 @@ private:
 
 class ServerWorkLauncher : public WorkLauncher {
 public:
-  ServerWorkLauncher(ObjectBrowserModel *objectBrowserModel, const ObjectModelReference& adminDatabaseRef) : objectBrowserModel(objectBrowserModel), databaseRef(adminDatabaseRef) {}
+  ServerWorkLauncher(ObjectBrowserModel& model, const ObjectModelReference& adminDatabaseRef) : model(model), databaseRef(adminDatabaseRef) {}
 
   void DoWork(ObjectBrowserManagedWork *work)
   {
@@ -237,11 +237,11 @@ public:
 private:
   ServerModel& GetServerModel() const
   {
-    ServerModel *server = objectBrowserModel->FindServer(serverId);
+    ServerModel *server = model.FindServer(serverId);
     wxASSERT(server != NULL);
     return *server;
   }
-  ObjectBrowserModel *objectBrowserModel;
+  ObjectBrowserModel& model;
   ObjectModelReference databaseRef;
   wxString serverId;
 };
@@ -252,8 +252,8 @@ public:
 
   void ActionPerformed()
   {
-    ObjectBrowserModel *objectBrowserModel = ob->objectBrowserModel;
-    ServerModel *serverModel = objectBrowserModel->FindServer(server);
+    ServerModel *serverModel = ob->model.FindServer(server);
+    wxASSERT(serverModel != NULL);
     serverModel->Load();
   }
 
@@ -262,7 +262,7 @@ private:
   ObjectBrowser * const ob;
 };
 
-ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), objectBrowserModel(objectBrowserModel), contextMenuRef(wxEmptyString), selectedRef(wxEmptyString) {
+ObjectBrowser::ObjectBrowser(ObjectBrowserModel& model, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), model(model), contextMenuRef(wxEmptyString), selectedRef(wxEmptyString) {
   AddRoot(_T("root"));
   serverMenu = wxXmlResource::Get()->LoadMenu(_T("ServerMenu"));
   databaseMenu = wxXmlResource::Get()->LoadMenu(_T("DatabaseMenu"));
@@ -303,11 +303,11 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel *objectBrowserModel, wxWindow *p
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_dictionary.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_text_search_configuration.png")));
   AssignImageList(images);
-  objectBrowserModel->RegisterView(this);
+  model.RegisterView(this);
 }
 
 void ObjectBrowser::AddServerConnection(const ServerConnection& server, DatabaseConnection *db) {
-  ServerModel *serverModel = objectBrowserModel->FindServer(server);
+  ServerModel *serverModel = model.FindServer(server);
   if (serverModel != NULL) {
     wxLogDebug(_T("Ignoring server connection already registered in object browser: %s"), server.Identification().c_str());
     if (db != NULL) {
@@ -317,7 +317,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
     return;
   }
 
-  serverModel = objectBrowserModel->AddServerConnection(server, db);
+  serverModel = model.AddServerConnection(server, db);
 
   // setting the text twice is a bug workaround for wx 2.8
   // see http://trac.wxwidgets.org/ticket/10085
@@ -333,7 +333,7 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
 
 void ObjectBrowser::Dispose()
 {
-  objectBrowserModel->UnregisterView(this);
+  model.UnregisterView(this);
 }
 
 LazyLoader *ObjectBrowser::GetLazyLoader(wxTreeItemId item) const {
@@ -379,7 +379,7 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
 
 void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
   wxWindowUpdateLocker noUpdates(this);
-  const ServerModel *serverModel = objectBrowserModel->FindServer(serverId);
+  const ServerModel *serverModel = model.FindServer(serverId);
   wxASSERT(serverModel != NULL);
   wxTreeItemId serverItem = FindServerItem(serverId);
   wxASSERT(serverItem.IsOk());
@@ -703,7 +703,7 @@ void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vect
 
 void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool expandAfter)
 {
-  const DatabaseModel *databaseModel = objectBrowserModel->FindDatabase(databaseRef);
+  const DatabaseModel *databaseModel = model.FindDatabase(databaseRef);
   wxTreeItemId databaseItem = FindDatabaseItem(databaseRef);
   wxWindowUpdateLocker noUpdates(this);
 
@@ -739,7 +739,7 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
 
 void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
 {
-  const RelationModel *relationModel = objectBrowserModel->FindRelation(relationRef);
+  const RelationModel *relationModel = model.FindRelation(relationRef);
   wxASSERT(relationModel != NULL);
   wxTreeItemId relationItem = FindRelationItem(relationRef);
   wxWindowUpdateLocker noUpdates(this);
@@ -848,7 +848,7 @@ wxString ObjectBrowser::GetToolTipText(const wxTreeItemId& itemId) const
   if (itemData == NULL) return wxEmptyString;
   ObjectModelReference *ref = dynamic_cast<ObjectModelReference*>(itemData);
   if (ref == NULL) return wxEmptyString;
-  const ObjectModel *object = objectBrowserModel->FindObject(*ref);
+  const ObjectModel *object = model.FindObject(*ref);
   if (object == NULL) return wxEmptyString;
   if (object->description.empty())
     return object->FormatName();
@@ -870,7 +870,7 @@ void ObjectBrowser::DisconnectSelected() {
   if (!ref.GetServerId().empty()) {
     wxLogDebug(_T("Disconnect: %s (menubar)"), ref.GetServerId().c_str());
     Delete(FindServerItem(ref.GetServerId()));
-    objectBrowserModel->RemoveServer(ref.GetServerId());
+    model.RemoveServer(ref.GetServerId());
     UpdateSelectedDatabase();
   }
 }
@@ -896,7 +896,7 @@ protected:
 };
 
 void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &dbname) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(server, dbname);
+  DatabaseModel *database = model.FindDatabase(server, dbname);
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
@@ -908,7 +908,7 @@ void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &d
 }
 
 void ObjectBrowser::FindObject(const ObjectModelReference& databaseRef) {
-  const DatabaseModel *database = objectBrowserModel->FindDatabase(databaseRef);
+  const DatabaseModel *database = model.FindDatabase(databaseRef);
   wxASSERT(database->loaded);
   wxASSERT(database->catalogueIndex != NULL);
 
@@ -1030,21 +1030,21 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_DATABASE:
-    OpenServerMemberMenu(databaseMenu, XRCID("DatabaseMenu_Server"), objectBrowserModel->FindDatabase(*ref), objectBrowserModel->FindServer(ref->GetServerId()));
+    OpenServerMemberMenu(databaseMenu, XRCID("DatabaseMenu_Server"), model.FindDatabase(*ref), model.FindServer(ref->GetServerId()));
     break;
 
   case ObjectModelReference::PG_ROLE:
-    OpenServerMemberMenu(roleMenu, XRCID("RoleMenu_Server"), static_cast<RoleModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindServer(ref->GetServerId()));
+    OpenServerMemberMenu(roleMenu, XRCID("RoleMenu_Server"), static_cast<RoleModel*>(model.FindObject(*ref)), model.FindServer(ref->GetServerId()));
     break;
 
   case ObjectModelReference::PG_TABLESPACE:
-    OpenServerMemberMenu(tablespaceMenu, XRCID("TablespaceMenu_Server"), static_cast<TablespaceModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindServer(ref->GetServerId()));
+    OpenServerMemberMenu(tablespaceMenu, XRCID("TablespaceMenu_Server"), static_cast<TablespaceModel*>(model.FindObject(*ref)), model.FindServer(ref->GetServerId()));
     break;
 
   case ObjectModelReference::PG_CLASS:
     {
-      const RelationModel *relation = objectBrowserModel->FindRelation(*ref);
-      const DatabaseModel *database = objectBrowserModel->FindDatabase(ref->DatabaseRef());
+      const RelationModel *relation = model.FindRelation(*ref);
+      const DatabaseModel *database = model.FindDatabase(ref->DatabaseRef());
       switch (relation->type) {
       case RelationModel::TABLE:
         OpenSchemaMemberMenu(tableMenu, XRCID("TableMenu_Schema"), relation, database);
@@ -1060,31 +1060,31 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_PROC:
-    OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), objectBrowserModel->FindFunction(*ref), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(functionMenu, XRCID("FunctionMenu_Schema"), model.FindFunction(*ref), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_EXTENSION:
-    OpenDatabaseMemberMenu(extensionMenu, XRCID("ExtensionMenu_Database"), static_cast<const ExtensionModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenDatabaseMemberMenu(extensionMenu, XRCID("ExtensionMenu_Database"), static_cast<const ExtensionModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_NAMESPACE:
-    OpenDatabaseMemberMenu(schemaMenu, XRCID("SchemaMenu_Database"), static_cast<const SchemaModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenDatabaseMemberMenu(schemaMenu, XRCID("SchemaMenu_Database"), static_cast<const SchemaModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_TS_PARSER:
-    OpenSchemaMemberMenu(textSearchParserMenu, XRCID("TextSearchParserMenu_Schema"), static_cast<const TextSearchParserModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(textSearchParserMenu, XRCID("TextSearchParserMenu_Schema"), static_cast<const TextSearchParserModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_TS_DICT:
-    OpenSchemaMemberMenu(textSearchDictionaryMenu, XRCID("TextSearchDictionaryMenu_Schema"), static_cast<const TextSearchDictionaryModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(textSearchDictionaryMenu, XRCID("TextSearchDictionaryMenu_Schema"), static_cast<const TextSearchDictionaryModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_TS_TEMPLATE:
-    OpenSchemaMemberMenu(textSearchTemplateMenu, XRCID("TextSearchTemplateMenu_Schema"), static_cast<const TextSearchTemplateModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(textSearchTemplateMenu, XRCID("TextSearchTemplateMenu_Schema"), static_cast<const TextSearchTemplateModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_TS_CONFIG:
-    OpenSchemaMemberMenu(textSearchConfigurationMenu, XRCID("TextSearchConfigurationMenu_Schema"), static_cast<const TextSearchConfigurationModel*>(objectBrowserModel->FindObject(*ref)), objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(textSearchConfigurationMenu, XRCID("TextSearchConfigurationMenu_Schema"), static_cast<const TextSearchConfigurationModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_INDEX: {
@@ -1096,12 +1096,12 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
       if (ref == NULL) return;
       wxLogDebug(_T("Ancestor: %s"), ref->Identify().c_str());
       if (ref->GetObjectClass() == ObjectModelReference::PG_CLASS) {
-        relation = objectBrowserModel->FindRelation(*ref);
+        relation = model.FindRelation(*ref);
         break;
       }
     }
     wxASSERT(relation != NULL);
-    OpenSchemaMemberMenu(indexMenu, XRCID("IndexMenu_Schema"), relation, objectBrowserModel->FindDatabase(ref->DatabaseRef()));
+    OpenSchemaMemberMenu(indexMenu, XRCID("IndexMenu_Schema"), relation, model.FindDatabase(ref->DatabaseRef()));
     break;
   }
 
@@ -1157,8 +1157,8 @@ void ObjectBrowser::UpdateSelectedDatabase()
   }
 
   if (ref != selectedRef) {
-    DatabaseModel *database = objectBrowserModel->FindDatabase(ref.DatabaseRef());
-    ServerModel *server = objectBrowserModel->FindServer(ref.ServerRef());
+    DatabaseModel *database = model.FindDatabase(ref.DatabaseRef());
+    ServerModel *server = model.FindServer(ref.ServerRef());
     wxString dbname;
     if (database) dbname = database->name;
     PQWXDatabaseEvent evt(server->conninfo, dbname, PQWX_ObjectSelected);
@@ -1175,72 +1175,72 @@ void ObjectBrowser::UpdateSelectedDatabase()
 
 void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
 {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
+  const ServerModel *server = model.FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
-  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(objectBrowserModel, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(model, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
   dbox->Show();
 }
 
 void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
+  const ServerModel *server = model.FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
   wxLogDebug(_T("Disconnect: %s (context menu)"), server->Identification().c_str());
-  objectBrowserModel->RemoveServer(server->Identification());
+  model.RemoveServer(server->Identification());
   Delete(contextMenuItem);
 }
 
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
-  ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
+  ServerModel *server = model.FindServer(contextMenuRef);
   wxASSERT(server != NULL);
   server->Load();
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {
-  const ServerModel *server = objectBrowserModel->FindServer(contextMenuRef.GetServerId());
+  const ServerModel *server = model.FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
   wxMessageBox(_T("TODO Show server properties: ") + server->Identification());
 }
 
 void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
 {
-  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  const DatabaseModel *database = model.FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
   PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptNew);
   ProcessEvent(evt);
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  DatabaseModel *database = model.FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
   database->Load();
 }
 
 void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
-  const DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  const DatabaseModel *database = model.FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
   wxMessageBox(_T("TODO Show database properties: ") + database->server->Identification() + _T(" ") + database->name);
 }
 
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef);
+  DatabaseModel *database = model.FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
   DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), database->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) database->oid, (Oid) database->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
-  RelationModel *relation = objectBrowserModel->FindRelation(contextMenuRef);
+  RelationModel *relation = model.FindRelation(contextMenuRef);
   wxASSERT(relation != NULL);
-  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef());
+  DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
   wxASSERT(database != NULL);
   DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), relation->FormatName(), ObjectModelReference::PG_CLASS, (Oid) relation->oid, (Oid) database->oid);
   dialog->Show();
 }
 
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
-  FunctionModel *function = objectBrowserModel->FindFunction(contextMenuRef);
+  FunctionModel *function = model.FindFunction(contextMenuRef);
   wxASSERT(function != NULL);
-  DatabaseModel *database = objectBrowserModel->FindDatabase(contextMenuRef.DatabaseRef());
+  DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
   wxASSERT(database != NULL);
   DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), function->FormatName(), ObjectModelReference::PG_PROC, (Oid) function->oid, (Oid) database->oid);
   dialog->Show();
@@ -1266,7 +1266,7 @@ ObjectModelReference ObjectBrowser::FindContextSchema()
 {
   if (contextMenuRef.GetObjectClass() == ObjectModelReference::PG_NAMESPACE)
     return contextMenuRef;
-  const ObjectModel *object = objectBrowserModel->FindObject(contextMenuRef);
+  const ObjectModel *object = model.FindObject(contextMenuRef);
   wxASSERT(object != NULL);
   const SchemaMemberModel *schemaMember = dynamic_cast<const SchemaMemberModel*>(object);
   wxASSERT(schemaMember != NULL);

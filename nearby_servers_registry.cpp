@@ -18,7 +18,7 @@ void NearbyServersRegistry::ServiceFound(const wxString& name, const wxString& t
   addrInfo.port = port;
 
   std::list<ServerInfo>::iterator server = FindServer(name);
-  if (server != servers.end()) {
+  if (server == servers.end()) {
     ServerInfo newServer;
     newServer.name = name;
     newServer.hostname = hostName;

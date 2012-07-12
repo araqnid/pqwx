@@ -13,28 +13,44 @@ void NearbyServersRegistry::ServiceFound(const wxString& name, const wxString& t
   wxLogDebug(_T("FOUND: \"%s\" on %s port %u, %s, interface=%d, addressFamily=%d"), name.c_str(), addr.c_str(), port, local ? _T("local") : _T("not-local"), interface, addressFamily);
 
   ServerAddress addrInfo;
+  addrInfo.family = addressFamily;
   addrInfo.address = addr;
   addrInfo.port = port;
 
-  ServerInfo *server = FindServer(name);
-  if (server == NULL) {
-    servers.push_back(ServerInfo());
-    server = &(servers.back());
-    server->name = name;
-    server->hostname = hostName;
-    server->local = local;
+  std::list<ServerInfo>::iterator server = FindServer(name);
+  if (server != servers.end()) {
+    ServerInfo newServer;
+    newServer.name = name;
+    newServer.hostname = hostName;
+    newServer.local = local;
+    server = servers.insert(servers.end(), newServer);
   }
-  server->addresses.push_back(addrInfo);
+  (*server).addresses.push_back(addrInfo);
+}
+
+void NearbyServersRegistry::ServiceAddressLost(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, int interface, int addressFamily)
+{
+  wxLogDebug(_T("LOST:  \"%s\" address family %d on interface %d"), name.c_str(), addressFamily, interface);
+  std::list<ServerInfo>::iterator server = FindServer(name);
+  if (server == servers.end()) return;
+  std::vector<ServerAddress>& addresses = server->addresses;
+  for (std::vector<ServerAddress>::iterator iter = addresses.begin(); iter != addresses.end(); iter++) {
+    if ((*iter).family == addressFamily) {
+      addresses.erase(iter);
+    }
+  }
+  if (addresses.empty()) {
+    wxLogDebug(_T("Pruning server with no remaining addresses"));
+    servers.erase(server);
+  }
 }
 
 void NearbyServersRegistry::ServiceLost(const wxString &name, const wxString& type, const wxString& domain)
 {
   wxLogDebug(_T("LOST:  \"%s\""), name.c_str());
-  for (std::list<ServerInfo>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    if ((*iter).name == name) {
-      servers.erase(iter);
-    }
-  }
+  std::list<ServerInfo>::iterator server = FindServer(name);
+  if (server == servers.end()) return;
+  servers.erase(server);
 }
 
 void NearbyServersRegistry::ServiceRefreshFinished(const wxString& type)
@@ -42,13 +58,13 @@ void NearbyServersRegistry::ServiceRefreshFinished(const wxString& type)
   wxLogDebug(_T("Finished refreshing \"%s\""), type.c_str());
 }
 
-NearbyServersRegistry::ServerInfo* NearbyServersRegistry::FindServer(const wxString& name)
+std::list<NearbyServersRegistry::ServerInfo>::iterator NearbyServersRegistry::FindServer(const wxString& name)
 {
   for (std::list<ServerInfo>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
     if ((*iter).name == name)
-      return &(*iter);
+      return iter;
   }
-  return NULL;
+  return servers.end();
 }
 
 // Local Variables:

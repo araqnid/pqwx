@@ -21,6 +21,7 @@ public:
 
   class ServerAddress {
   public:
+    int family;
     wxString address;
     wxUint16 port;
   };
@@ -50,12 +51,13 @@ public:
   // AVAHI channel
   void ServiceFound(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, bool local, int interface, int addressFamily, const wxString& addr, wxUint16 port);
   void ServiceLost(const wxString &name, const wxString& type, const wxString& domain);
+  void ServiceAddressLost(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, int interface, int addressFamily);
   void ServiceRefreshFinished(const wxString& type);
 
 private:
   std::list<ServerInfo> servers;
 
-  ServerInfo* FindServer(const wxString& name);
+  std::list<ServerInfo>::iterator FindServer(const wxString& name);
 
   PQWXAvahi::ThreadedPoller avahiPoller;
   PQWXAvahi::Client avahiClient;

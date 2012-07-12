@@ -24,6 +24,7 @@ namespace PQWXAvahi {
     virtual ~Channel() {}
     virtual void ServiceFound(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, bool local, int interface, int addressFamily, const wxString& addr, wxUint16 port) = 0;
     virtual void ServiceLost(const wxString &name, const wxString& type, const wxString& domain) = 0;
+    virtual void ServiceAddressLost(const wxString& name, const wxString& type, const wxString& domain, const wxString& hostName, int interface, int addressFamily) = 0;
     virtual void ServiceRefreshFinished(const wxString& type) = 0;
   };
 
@@ -125,8 +126,14 @@ namespace PQWXAvahi {
         avahi_address_snprint(addrname, sizeof(addrname), a);
         wxLogDebug(_T(" Address: [%s] %s port=%u"), wxString(protoname, wxConvUTF8).c_str(), wxString(addrname, wxConvUTF8).c_str(), port);
 
+        if (event == AVAHI_RESOLVER_FOUND) {
+          ServiceResolver *resolver = static_cast<ServiceResolver*>(userdata);
+          resolver->client->channel->ServiceFound(wxString(name, wxConvUTF8), wxString(type, wxConvUTF8), wxString(domain, wxConvUTF8), wxString(host_name, wxConvUTF8), (flags & AVAHI_LOOKUP_RESULT_LOCAL) == AVAHI_LOOKUP_RESULT_LOCAL, interface, avahi_proto_to_af(protocol), wxString(addrname, wxConvUTF8), port);
+        }
+      }
+      else if (event == AVAHI_RESOLVER_FAILURE) {
         ServiceResolver *resolver = static_cast<ServiceResolver*>(userdata);
-        resolver->client->channel->ServiceFound(wxString(name, wxConvUTF8), wxString(type, wxConvUTF8), wxString(domain, wxConvUTF8), wxString(host_name, wxConvUTF8), (flags & AVAHI_LOOKUP_RESULT_LOCAL) == AVAHI_LOOKUP_RESULT_LOCAL, interface, avahi_proto_to_af(protocol), wxString(addrname, wxConvUTF8), port);
+        resolver->client->channel->ServiceAddressLost(wxString(name, wxConvUTF8), wxString(type, wxConvUTF8), wxString(domain, wxConvUTF8), wxString(host_name, wxConvUTF8), interface, avahi_proto_to_af(protocol));
       }
       if (txt != NULL) {
         wxLogDebug(_T(" TXT..."));

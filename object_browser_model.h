@@ -287,7 +287,7 @@ public:
   /**
    * Called when schema index completed.
    */
-  virtual void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *index) = 0;
+  virtual void Completed(ObjectBrowser& ob, const ObjectModelReference& databaseRef, const CatalogueIndex *index) = 0;
 };
 
 /**

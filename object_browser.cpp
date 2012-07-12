@@ -161,10 +161,10 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork)
 
 class DatabaseLoader : public LazyLoader {
 public:
-  DatabaseLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
+  DatabaseLoader(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
 
   bool load(wxTreeItemId parent) {
-    DatabaseModel *db = ob->Model().FindDatabase(databaseRef);
+    DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
     if (!db->loaded) {
       db->Load();
       return true;
@@ -173,47 +173,47 @@ public:
   }
   
 private:
-  ObjectBrowser *ob;
+  ObjectBrowser& ob;
   const ObjectModelReference databaseRef;
 };
 
 class RelationLoader : public LazyLoader {
 public:
-  RelationLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, Oid oid) : ob(ob), relationRef(databaseRef, ObjectModelReference::PG_CLASS, oid) {}
+  RelationLoader(ObjectBrowser& ob, const ObjectModelReference& databaseRef, Oid oid) : ob(ob), relationRef(databaseRef, ObjectModelReference::PG_CLASS, oid) {}
 
   bool load(wxTreeItemId parent)
   {
-    DatabaseModel *database = ob->Model().FindDatabase(relationRef.DatabaseRef());
+    DatabaseModel *database = ob.Model().FindDatabase(relationRef.DatabaseRef());
     wxASSERT(database != NULL);
     database->LoadRelation(relationRef);
     return true;
   }
   
 private:
-  ObjectBrowser *ob;
+  ObjectBrowser& ob;
   const ObjectModelReference relationRef;
 };
 
 class SystemSchemasLoader : public LazyLoader {
 public:
-  SystemSchemasLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, std::vector<const SchemaMemberModel*> division) : ob(ob), databaseRef(databaseRef), division(division) {}
+  SystemSchemasLoader(ObjectBrowser& ob, const ObjectModelReference& databaseRef, std::vector<const SchemaMemberModel*> division) : ob(ob), databaseRef(databaseRef), division(division) {}
 
   bool load(wxTreeItemId parent) {
-    DatabaseModel *db = ob->Model().FindDatabase(databaseRef);
-    wxWindowUpdateLocker noUpdates(ob);
-    ob->AppendDivision(db, division, parent);
+    DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
+    wxWindowUpdateLocker noUpdates(&ob);
+    ob.AppendDivision(db, division, parent);
     return false;
   }
 
 private:
-  ObjectBrowser *ob;
+  ObjectBrowser& ob;
   const ObjectModelReference databaseRef;
   std::vector<const SchemaMemberModel*> division;
 };
 
 class ServerWorkLauncher : public WorkLauncher {
 public:
-  ServerWorkLauncher(ObjectBrowser *ob, const ObjectModelReference& adminDatabaseRef) : ob(ob), databaseRef(adminDatabaseRef) {}
+  ServerWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& adminDatabaseRef) : ob(ob), databaseRef(adminDatabaseRef) {}
 
   void DoWork(ObjectBrowserManagedWork *work)
   {
@@ -237,29 +237,29 @@ public:
 private:
   ServerModel& GetServerModel() const
   {
-    ServerModel *server = ob->Model().FindServer(serverId);
+    ServerModel *server = ob.Model().FindServer(serverId);
     wxASSERT(server != NULL);
     return *server;
   }
-  ObjectBrowser *ob;
+  ObjectBrowser& ob;
   ObjectModelReference databaseRef;
   wxString serverId;
 };
 
 class AfterDatabaseCreated : public CreateDatabaseDialogue::ExecutionCallback {
 public:
-  AfterDatabaseCreated(ObjectModelReference server, ObjectBrowser *ob) : server(server), ob(ob) {}
+  AfterDatabaseCreated(ObjectModelReference server, ObjectBrowser& ob) : server(server), ob(ob) {}
 
   void ActionPerformed()
   {
-    ServerModel *serverModel = ob->model.FindServer(server);
+    ServerModel *serverModel = ob.model.FindServer(server);
     wxASSERT(serverModel != NULL);
     serverModel->Load();
   }
 
 private:
   const ObjectModelReference server;
-  ObjectBrowser * const ob;
+  ObjectBrowser& ob;
 };
 
 ObjectBrowser::ObjectBrowser(ObjectBrowserModel& model, wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) : wxTreeCtrl(parent, id, pos, size, style), model(model), contextMenuRef(wxEmptyString), selectedRef(wxEmptyString) {
@@ -469,7 +469,7 @@ void ObjectBrowser::AppendDatabaseItems(const ServerModel *server, wxTreeItemId 
     SetItemData(databaseItem, new ModelReference(server->Identification(), database->oid));
     SetItemImage(databaseItem, img_database);
     if (database->IsUsable())
-      SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(this, *database));
+      SetItemData(AppendItem(databaseItem, _T("Loading...")), new DatabaseLoader(*this, *database));
     databaseItems[*database] = databaseItem;
   }
 }
@@ -542,7 +542,7 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
     SetItemData(memberItem, new ModelReference(databaseRef, ObjectModelReference::PG_CLASS, relation->oid));
     RegisterSymbolItem(databaseRef, relation->oid, memberItem);
     if (relation->type == RelationModel::TABLE || relation->type == RelationModel::VIEW)
-      SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(this, databaseRef, relation->oid));
+      SetItemData(AppendItem(memberItem, _("Loading...")), new RelationLoader(*this, databaseRef, relation->oid));
     switch (relation->type) {
     case RelationModel::TABLE:
       if (relation->unlogged)
@@ -729,7 +729,7 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
   wxTreeItemId systemDivisionItem = AppendItem(databaseItem, _("System schemas"));
   SetItemImage(systemDivisionItem, img_folder);
   wxTreeItemId systemDivisionLoaderItem = AppendItem(systemDivisionItem, _T("Loading..."));
-  SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(this, *databaseModel, divisions.systemDivision));
+  SetItemData(systemDivisionLoaderItem, new SystemSchemasLoader(*this, *databaseModel, divisions.systemDivision));
   if (expandAfter || !expanded.empty()) {
     Expand(databaseItem);
     RestoreExpandedObjects(databaseItem, expanded);
@@ -877,21 +877,21 @@ void ObjectBrowser::DisconnectSelected() {
 
 class ZoomToFoundObjectOnCompletion : public ObjectFinder::Completion {
 public:
-  ZoomToFoundObjectOnCompletion(ObjectBrowser *ob, const ObjectModelReference& databaseRef) : databaseRef(databaseRef), ob(ob) {}
+  ZoomToFoundObjectOnCompletion(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : databaseRef(databaseRef), ob(ob) {}
   void OnObjectChosen(const CatalogueIndex::Document *document) {
-    ob->ZoomToFoundObject(databaseRef, document);
+    ob.ZoomToFoundObject(databaseRef, document);
   }
   void OnCancelled() {
   }
 private:
   ObjectModelReference databaseRef;
-  ObjectBrowser *ob;
+  ObjectBrowser& ob;
 };
 
 class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
 protected:
-  void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *catalogue) {
-    ob->FindObject(databaseRef);
+  void Completed(ObjectBrowser& ob, const ObjectModelReference& databaseRef, const CatalogueIndex *catalogue) {
+    ob.FindObject(databaseRef);
   }
 };
 
@@ -1177,7 +1177,7 @@ void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
 {
   const ServerModel *server = model.FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
-  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(this, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(*this, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, *this));
   dbox->Show();
 }
 

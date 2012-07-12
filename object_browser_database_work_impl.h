@@ -184,6 +184,25 @@ private:
   static std::vector<int> ParseInt2Vector(const wxString &str);
 };
 
+/**
+ * Drop database.
+ */
+class DropDatabaseWork : public ObjectBrowserWork {
+public:
+  DropDatabaseWork(const ObjectModelReference& ref, const wxString& dbname) : ObjectBrowserWork(ref, NULL, NO_TRANSACTION), serverId(ref.GetServerId()), dbname(dbname)
+  {
+    wxLogDebug(_T("%p: work to drop database"), this);
+  }
+
+  void operator()();
+  void UpdateModel(ObjectBrowserModel&);
+  void UpdateView(ObjectBrowser&);
+
+private:
+  const wxString serverId;
+  const wxString dbname;
+};
+
 #endif
 
 // Local Variables:

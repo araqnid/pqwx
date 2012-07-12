@@ -41,10 +41,12 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
   EVT_MENU(XRCID("ServerMenu_Refresh"), ObjectBrowser::OnServerMenuRefresh)
 
+  EVT_MENU(XRCID("DatabaseMenu_Query"), ObjectBrowser::OnDatabaseMenuQuery)
+  EVT_MENU(XRCID("DatabaseMenu_Drop"), ObjectBrowser::OnDatabaseMenuDrop)
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
   EVT_MENU(XRCID("DatabaseMenu_ViewDependencies"), ObjectBrowser::OnDatabaseMenuViewDependencies)
-  EVT_MENU(XRCID("DatabaseMenu_Query"), ObjectBrowser::OnDatabaseMenuQuery)
+
   EVT_MENU(XRCID("TableMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
   EVT_MENU(XRCID("ViewMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
   EVT_MENU(XRCID("SequenceMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
@@ -1208,6 +1210,13 @@ void ObjectBrowser::OnDatabaseMenuQuery(wxCommandEvent &event)
   wxASSERT(database != NULL);
   PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptNew);
   ProcessEvent(evt);
+}
+
+void ObjectBrowser::OnDatabaseMenuDrop(wxCommandEvent &event)
+{
+  DatabaseModel *database = model.FindDatabase(contextMenuRef);
+  wxASSERT(database != NULL);
+  database->Drop();
 }
 
 void ObjectBrowser::OnDatabaseMenuRefresh(wxCommandEvent &event) {

@@ -119,7 +119,7 @@ public:
     virtual void OnCrash() {}
   };
 
-  ObjectBrowserWork(const ObjectModelReference& database, CompletionCallback* completion = NULL, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database, sqlDictionary), completion(completion) {}
+  ObjectBrowserWork(const ObjectModelReference& database, CompletionCallback* completion = NULL, TxMode txMode = READ_ONLY, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(txMode, database, sqlDictionary), completion(completion) {}
   virtual ~ObjectBrowserWork()
   {
     if (completion != NULL)

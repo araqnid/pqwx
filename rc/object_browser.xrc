@@ -17,7 +17,6 @@
     <label>Server</label>
   </object>
   <object class="wxMenu" name="DatabaseMenu">
-    
     <object class="wxMenuItem" name="DatabaseMenu_Query">
       <label>New &amp;Query</label>
     </object>
@@ -62,6 +61,10 @@
         <label>&amp;DROP to</label>
       </object>
       <label>&amp;Script Database as</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="DatabaseMenu_Drop">
+      <label>Drop Database</label>
     </object>
     <object class="separator"/>
     <object_ref name="DatabaseMenu_Server" ref="ServerMenu"/>

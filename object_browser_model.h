@@ -392,6 +392,11 @@ public:
   void LoadRelation(const ObjectModelReference& ref);
 
   /**
+   * Drop database.
+   */
+  void Drop();
+
+  /**
    * Submit some work to this database.
    */
   void SubmitWork(ObjectBrowserManagedWork *work);
@@ -550,8 +555,14 @@ private:
   wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
+  void DropDatabase(DatabaseModel*);
+  void RemoveDatabase(const wxString& dbname);
   friend class RefreshDatabaseListWork;
+  friend class DatabaseModel;
+  friend class DropDatabaseWork;
 };
+
+inline void DatabaseModel::Drop() { server->DropDatabase(this); }
 
 /**
  * The "top level" of the object browser model.

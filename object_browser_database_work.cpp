@@ -424,6 +424,25 @@ void LoadRelationWork::UpdateView(ObjectBrowser& ob)
   ob.UpdateRelation(relationRef);
 }
 
+void DropDatabaseWork::operator()()
+{
+  wxString sql;
+  sql << _T("DROP DATABASE ") << QuoteIdent(dbname);
+  owner->DatabaseWork::DoCommand(sql);
+}
+
+void DropDatabaseWork::UpdateModel(ObjectBrowserModel& model)
+{
+  ServerModel *server = model.FindServer(serverId);
+  wxASSERT(server != NULL);
+  server->RemoveDatabase(dbname);
+}
+
+void DropDatabaseWork::UpdateView(ObjectBrowser& ob)
+{
+  ob.UpdateServer(serverId, false);
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

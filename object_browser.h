@@ -186,6 +186,7 @@ private:
   void OnServerMenuRefresh(wxCommandEvent&);
   void OnServerMenuProperties(wxCommandEvent&);
   void OnDatabaseMenuQuery(wxCommandEvent&);
+  void OnDatabaseMenuDrop(wxCommandEvent&);
   void OnDatabaseMenuRefresh(wxCommandEvent&);
   void OnDatabaseMenuProperties(wxCommandEvent&);
   void OnDatabaseMenuViewDependencies(wxCommandEvent&);

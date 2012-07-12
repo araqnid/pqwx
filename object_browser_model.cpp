@@ -404,6 +404,24 @@ void ServerModel::Dispose()
   connections.clear();
 }
 
+void ServerModel::DropDatabase(DatabaseModel *database)
+{
+  // Detect script windows still connected to this database?
+  // This should all be done in the background somehow
+  std::map<wxString, DatabaseConnection*>::const_iterator iter = connections.find(database->name);
+  if (iter != connections.end()) {
+    DatabaseConnection *db = iter->second;
+    if (db->IsAcceptingWork()) {
+      wxLogDebug(_T("Closing database connection to %s before droppping"), db->Identification().c_str());
+      db->Dispose();
+      delete db;
+    }
+    connections.erase(database->name);
+  }
+  // execute drop script...
+  SubmitWork(new DropDatabaseWork(GetServerAdminDatabaseRef(), database->name));
+}
+
 DatabaseModel *ServerModel::FindDatabase(const wxString &dbname)
 {
   for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
@@ -420,6 +438,16 @@ DatabaseModel *ServerModel::FindDatabaseByOid(Oid oid)
       return &(*iter);
   }
   return NULL;
+}
+
+void ServerModel::RemoveDatabase(const wxString &dbname)
+{
+  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
+    if ((*iter).name == dbname) {
+      databases.erase(iter);
+      return;
+    }
+  }
 }
 
 ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref)

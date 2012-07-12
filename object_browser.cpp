@@ -18,7 +18,6 @@
 #include "database_work.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
-#include "object_browser_database_work_impl.h"
 #include "object_browser_scripts.h"
 #include "dependencies_view.h"
 #include "static_resources.h"
@@ -192,8 +191,11 @@ class RelationLoader : public LazyLoader {
 public:
   RelationLoader(ObjectBrowser *ob, const ObjectModelReference& databaseRef, Oid oid) : ob(ob), relationRef(databaseRef, ObjectModelReference::PG_CLASS, oid) {}
 
-  bool load(wxTreeItemId parent) {
-    ob->LoadRelation(relationRef);
+  bool load(wxTreeItemId parent)
+  {
+    DatabaseModel *database = ::wxGetApp().GetObjectBrowserModel().FindDatabase(relationRef.DatabaseRef());
+    wxASSERT(database != NULL);
+    database->LoadRelation(relationRef);
     return true;
   }
   
@@ -383,12 +385,6 @@ void ObjectBrowser::BeforeExpand(wxTreeEvent &event) {
     }
     Delete(firstChildItem);
   }
-}
-
-void ObjectBrowser::LoadRelation(const ObjectModelReference& relationRef) {
-  DatabaseModel *database = objectBrowserModel->FindDatabase(relationRef.DatabaseRef());
-  RelationModel *relation = objectBrowserModel->FindRelation(relationRef);
-  SubmitDatabaseWork(database, new LoadRelationWork(relation->type, relationRef));
 }
 
 void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {

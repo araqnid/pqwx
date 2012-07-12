@@ -277,7 +277,18 @@ public:
 };
 
 class ObjectBrowserManagedWork;
-class IndexSchemaCompletionCallback;
+
+/**
+ * Callback interface to notify some client that the schema index has been built.
+ */
+class IndexSchemaCompletionCallback {
+public:
+  virtual ~IndexSchemaCompletionCallback() {}
+  /**
+   * Called when schema index completed.
+   */
+  virtual void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *index) = 0;
+};
 
 /**
  * A database.
@@ -340,9 +351,36 @@ public:
   Divisions DivideSchemaMembers() const;
 
   /**
+   * Find a particular relation.
+   */
+  RelationModel *FindRelation(const ObjectModelReference &ref)
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_CLASS);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<RelationModel*>(obj);
+  }
+
+  /**
+   * Find a particular function.
+   */
+  FunctionModel *FindFunction(const ObjectModelReference &ref)
+  {
+    wxASSERT(ref.GetObjectClass() == ObjectModelReference::PG_PROC);
+    ObjectModel *obj = FindObject(ref);
+    if (obj == NULL) return NULL;
+    return static_cast<FunctionModel*>(obj);
+  }
+
+  /**
    * Load the database schema.
    */
   void Load(IndexSchemaCompletionCallback *indexCompletion = NULL);
+
+  /**
+   * Load the detail of a particular relation.
+   */
+  void LoadRelation(const ObjectModelReference& ref);
 
 private:
   void SubmitWork(ObjectBrowserManagedWork *work);

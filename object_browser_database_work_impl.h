@@ -112,18 +112,6 @@ protected:
 };
 
 /**
- * Callback interface to notify some client that the schema index has been built.
- */
-class IndexSchemaCompletionCallback {
-public:
-  virtual ~IndexSchemaCompletionCallback() {}
-  /**
-   * Called when schema index completed.
-   */
-  virtual void Completed(ObjectBrowser *ob, const ObjectModelReference& databaseRef, const CatalogueIndex *index) = 0;
-};
-
-/**
  * Build index of database schema for object finder.
  */
 class IndexDatabaseSchemaWork : public ObjectBrowserWork {

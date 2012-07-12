@@ -569,6 +569,13 @@ void DatabaseModel::Load(IndexSchemaCompletionCallback *indexCompletion)
   SubmitWork(new LoadDatabaseDescriptionsWork(*this));
 }
 
+void DatabaseModel::LoadRelation(const ObjectModelReference& relationRef)
+{
+  RelationModel *relation = FindRelation(relationRef);
+  wxASSERT(relation != NULL);
+  SubmitWork(new LoadRelationWork(relation->type, relationRef));
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

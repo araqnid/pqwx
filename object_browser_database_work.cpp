@@ -294,14 +294,6 @@ void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
   database->catalogueIndex = catalogueIndex;
 }
 
-void IndexDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
-{
-  if (completion) {
-    completion->Completed(ob, databaseRef, *catalogueIndex);
-    delete completion;
-  }
-}
-
 /*
  * Load a relation's details.
  */

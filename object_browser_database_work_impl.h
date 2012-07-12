@@ -120,18 +120,32 @@ public:
    * @param database Database being indexed
    * @param completion Additional callback to notify when indexing completed
    */
-  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *completion = NULL) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), completion(completion) {
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef) {
+    wxLogDebug(_T("%p: work to index schema"), this);
+  }
+
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) : ObjectBrowserWork(databaseRef, new CallCompletion(this, indexCompletion)), databaseRef(databaseRef) {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
   const ObjectModelReference databaseRef;
-  IndexSchemaCompletionCallback *completion;
   CatalogueIndex *catalogueIndex;
   static const std::map<wxString, CatalogueIndex::Type> typeMap;
+  class CallCompletion : public CompletionCallback {
+  public:
+    CallCompletion(IndexDatabaseSchemaWork *owner, IndexSchemaCompletionCallback *indexCompletion) : owner(owner), indexCompletion(indexCompletion) {}
+    void OnCompletion()
+    {
+      indexCompletion->Completed(*(owner->catalogueIndex));
+    }
+  private:
+    IndexDatabaseSchemaWork * const owner;
+    IndexSchemaCompletionCallback * const indexCompletion;
+  };
 protected:
   void operator()();
   void UpdateModel(ObjectBrowserModel& model);
-  void UpdateView(ObjectBrowser& ob);
+  void UpdateView(ObjectBrowser& ob) {}
 };
 
 /**

@@ -29,7 +29,7 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), ScriptWork::GetSqlDictionary()), targetRef(targetRef), mode(mode), output(output) {}
+  ScriptWork(const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), NULL, ScriptWork::GetSqlDictionary()), targetRef(targetRef), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;

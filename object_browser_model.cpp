@@ -163,6 +163,11 @@ void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {
     work->UpdateView(*iter);
   }
 
+  if (work->completion != NULL) {
+    wxLogDebug(_T("%p: calling OnCompletion on completion callback"), work);
+    work->completion->OnCompletion();
+  }
+
   delete work;
 }
 
@@ -178,6 +183,10 @@ void ObjectBrowserModel::OnWorkCrashed(wxCommandEvent &e)
     wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
   }
 
+  if (work->completion != NULL) {
+    wxLogDebug(_T("%p: calling OnCrash on completion callback"), work);
+    work->completion->OnCrash();
+  }
   delete work;
 }
 

@@ -101,7 +101,27 @@ private:
  */
 class ObjectBrowserWork : public ObjectBrowserManagedWork {
 public:
-  ObjectBrowserWork(const ObjectModelReference& database, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database, sqlDictionary) {}
+  /**
+   * A callback object called after the database work has completed.
+   *
+   * This is called after the work completed successfully, and the views have been updated, or after the work crashed.
+   */
+  class CompletionCallback {
+  public:
+    virtual ~CompletionCallback() {}
+
+    /**
+     * Called on completion.
+     */
+    virtual void OnCompletion() = 0;
+
+    /**
+     * Called after crashing.
+     */
+    virtual void OnCrash() {}
+  };
+
+  ObjectBrowserWork(const ObjectModelReference& database, CompletionCallback* completion = NULL, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database, sqlDictionary), completion(completion) {}
   virtual ~ObjectBrowserWork() {}
 
   /*
@@ -110,12 +130,17 @@ public:
    * This method is executed on the GUI thread.
    */
   virtual void UpdateModel(ObjectBrowserModel *model) = 0;
+
   /**
    * Update the object browser view to display the data fetched by this work.
    *
    * This method is executed on the GUI thread.
    */
   virtual void UpdateView(ObjectBrowser *browser) = 0;
+
+private:
+  CompletionCallback* const completion;
+  friend class ObjectBrowserModel;
 };
 
 /**

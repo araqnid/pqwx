@@ -15,6 +15,10 @@
 #include <avahi-common/simple-watch.h>
 #include <avahi-common/thread-watch.h>
 
+#ifdef __WXDEBUG__
+//#define PQWX_DEBUG_AVAHI 1
+#endif
+
 namespace PQWXAvahi {
   //static bool NssSupport() { return avahi_nss_support(); }
 
@@ -87,6 +91,7 @@ namespace PQWXAvahi {
 
     static void Callback(AvahiClient *avahiClient, AvahiClientState state, void *userdata)
     {
+#ifdef PQWX_DEBUG_AVAHI
       wxString stateString =
         state == AVAHI_CLIENT_S_REGISTERING ? _T("S_REGISTERING")
         : state == AVAHI_CLIENT_S_RUNNING ? _T("S_RUNNING")
@@ -95,6 +100,7 @@ namespace PQWXAvahi {
         : state == AVAHI_CLIENT_CONNECTING ? _T("CONNECTING")
         : _T("?");
         wxLogDebug(_T("AVAHI client callback called (state: %s)"), stateString.c_str());
+#endif
     }
 
     friend class ServiceBrowser;
@@ -115,20 +121,25 @@ namespace PQWXAvahi {
 
     static void Callback(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress* a, uint16_t port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *userdata)
     {
+#ifdef PQWX_DEBUG_AVAHI
       wxString eventString =
         event == AVAHI_RESOLVER_FOUND ? _T("FOUND")
         : event == AVAHI_RESOLVER_FAILURE ? _T("FAILURE")
         : _T("?");
-      wxLogDebug(_T("AVAHI service resolver callback called; interface=%d protocol=%s event=%s"), interface, wxString(avahi_proto_to_string(protocol), wxConvUTF8).c_str(), eventString.c_str());
-      if (name != NULL) wxLogDebug(_T(" name=%s"), wxString(name, wxConvUTF8).c_str());
-      if (type != NULL) wxLogDebug(_T(" type=%s"), wxString(type, wxConvUTF8).c_str());
-      if (domain != NULL) wxLogDebug(_T(" domain=%s"), wxString(domain, wxConvUTF8).c_str());
-      if (host_name != NULL) wxLogDebug(_T(" host_name=%s"), wxString(host_name, wxConvUTF8).c_str());
+      wxString message = wxString::Format(_T("AVAHI service resolver callback called; interface=%d protocol=%s event=%s"), interface, wxString(avahi_proto_to_string(protocol), wxConvUTF8).c_str(), eventString.c_str());
+      if (name != NULL) message << wxString::Format(_T(" name=%s"), wxString(name, wxConvUTF8).c_str());
+      if (type != NULL) message << wxString::Format(_T(" type=%s"), wxString(type, wxConvUTF8).c_str());
+      if (domain != NULL) message << wxString::Format(_T(" domain=%s"), wxString(domain, wxConvUTF8).c_str());
+      if (host_name != NULL) message << wxString::Format(_T(" host_name=%s"), wxString(host_name, wxConvUTF8).c_str());
+      wxLogDebug(_T("%s"), message.c_str());
+#endif
       if (a != NULL) {
-        const char *protoname = avahi_proto_to_string(a->proto);
         char addrname[AVAHI_ADDRESS_STR_MAX];
         avahi_address_snprint(addrname, sizeof(addrname), a);
+#ifdef PQWX_DEBUG_AVAHI
+        const char *protoname = avahi_proto_to_string(a->proto);
         wxLogDebug(_T(" Address: [%s] %s port=%u"), wxString(protoname, wxConvUTF8).c_str(), wxString(addrname, wxConvUTF8).c_str(), port);
+#endif
 
         if (event == AVAHI_RESOLVER_FOUND) {
           ServiceResolver *resolver = static_cast<ServiceResolver*>(userdata);
@@ -139,9 +150,11 @@ namespace PQWXAvahi {
         ServiceResolver *resolver = static_cast<ServiceResolver*>(userdata);
         resolver->client->channel->ServiceAddressLost(wxString(name, wxConvUTF8), wxString(type, wxConvUTF8), wxString(domain, wxConvUTF8), wxString(host_name, wxConvUTF8), interface, avahi_proto_to_af(protocol));
       }
+#ifdef PQWX_DEBUG_AVAHI
       if (txt != NULL) {
         wxLogDebug(_T(" TXT..."));
       }
+#endif
     }
   };
 
@@ -166,6 +179,7 @@ namespace PQWXAvahi {
 
     static void Callback(AvahiServiceBrowser *sb, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, void *userdata)
     {
+#ifdef PQWX_DEBUG_AVAHI
       wxString eventString =
         event == AVAHI_BROWSER_NEW ? _T("NEW")
         : event == AVAHI_BROWSER_REMOVE ? _T("REMOVE")
@@ -181,10 +195,12 @@ namespace PQWXAvahi {
       if (flags & AVAHI_LOOKUP_RESULT_OUR_OWN) flagsString << _T("|OUR_OWN");
       if (flags & AVAHI_LOOKUP_RESULT_STATIC) flagsString << _T("|STATIC");
       if (!flagsString.empty()) flagsString = flagsString.Mid(1);
-      wxLogDebug(_T("AVAHI service browser callback called; interface=%d protocol=%s event=%s flags=%s"), interface, wxString(avahi_proto_to_string(protocol), wxConvUTF8).c_str(), eventString.c_str(), flagsString.c_str());
-      if (name != NULL) wxLogDebug(_T(" name=%s"), wxString(name, wxConvUTF8).c_str());
-      if (type != NULL) wxLogDebug(_T(" type=%s"), wxString(type, wxConvUTF8).c_str());
-      if (domain != NULL) wxLogDebug(_T(" domain=%s"), wxString(domain, wxConvUTF8).c_str());
+      wxString message = wxString::Format(_T("AVAHI service browser callback called; interface=%d protocol=%s event=%s flags=%s"), interface, wxString(avahi_proto_to_string(protocol), wxConvUTF8).c_str(), eventString.c_str(), flagsString.c_str());
+      if (name != NULL) message << wxString::Format(_T(" name=%s"), wxString(name, wxConvUTF8).c_str());
+      if (type != NULL) message << wxString::Format(_T(" type=%s"), wxString(type, wxConvUTF8).c_str());
+      if (domain != NULL) message << wxString::Format(_T(" domain=%s"), wxString(domain, wxConvUTF8).c_str());
+      wxLogDebug(_T("%s"), message.c_str());
+#endif
 
       if (event == AVAHI_BROWSER_NEW) {
         ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);

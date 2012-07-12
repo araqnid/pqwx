@@ -6,6 +6,8 @@
     #include "wx/wx.h"
 #endif
 
+#include "pqwx.h"
+
 #include "object_browser.h"
 #include "object_browser_model.h"
 #include "object_browser_scripts.h"
@@ -13,17 +15,19 @@
 
 #include "wx/clipbrd.h"
 
-void ScriptWork::UpdateView(ObjectBrowser *ob)
+void ScriptWork::OnCompletion()
 {
+  ObjectBrowserModel& obm = ::wxGetApp().GetObjectBrowserModel();
+
   switch (output) {
   case Window: {
     const DatabaseModel *database;
     switch (targetRef.GetObjectClass()) {
     case ObjectModelReference::PG_DATABASE:
-      database = ob->objectBrowserModel->FindDatabase(targetRef);
+      database = obm.FindDatabase(targetRef);
       break;
     case InvalidOid:
-      database = ob->objectBrowserModel->FindAdminDatabase(targetRef);
+      database = obm.FindAdminDatabase(targetRef);
       break;
     default:
       wxASSERT(false);
@@ -31,7 +35,7 @@ void ScriptWork::UpdateView(ObjectBrowser *ob)
     }
     PQWXDatabaseEvent evt(database->server->conninfo, database->name, PQWX_ScriptToWindow);
     evt.SetString(script);
-    ob->ProcessEvent(evt);
+    view->ProcessEvent(evt);
     return;
   }
     break;

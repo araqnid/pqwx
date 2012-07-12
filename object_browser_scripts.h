@@ -19,7 +19,7 @@
  * to produce the script by populating the statements member in an
  * Execute() implementation.
  */
-class ScriptWork : public ObjectBrowserWork {
+class ScriptWork : public ObjectBrowserWork, public ObjectBrowserWork::CompletionCallback {
 public:
   /**
    * Type of script to produce.
@@ -29,13 +29,14 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), NULL, ScriptWork::GetSqlDictionary()), targetRef(targetRef), mode(mode), output(output) {}
+  ScriptWork(ObjectBrowser *view, const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), this, ScriptWork::GetSqlDictionary()), view(view), targetRef(targetRef), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;
 
   virtual void GenerateScript(OutputIterator output) = 0;
 
+  ObjectBrowser* const view;
   const ObjectModelReference targetRef;
   const Mode mode;
 
@@ -50,7 +51,9 @@ private:
   wxString script;
 
   void UpdateModel(ObjectBrowserModel *model) {}
-  void UpdateView(ObjectBrowser *ob);
+  void UpdateView(ObjectBrowser *ob) {}
+  void OnCompletion();
+
   static const SqlDictionary& GetSqlDictionary();
 
 public:
@@ -146,7 +149,7 @@ private:
  */
 class DatabaseScriptWork : public ScriptWork {
 public:
-  DatabaseScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), dboid(ref.GetOid())
+  DatabaseScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), dboid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate database script: %s"), this, ref.Identify().c_str());
   }
@@ -162,9 +165,9 @@ private:
  */
 class TableScriptWork : public ScriptWork {
 public:
-  TableScriptWork(const ObjectModelReference& tableRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(tableRef.DatabaseRef(), mode, output), reloid(tableRef.GetOid())
+  TableScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), reloid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate table script: %s"), this, tableRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate table script: %s"), this, ref.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -179,9 +182,9 @@ protected:
  */
 class IndexScriptWork : public ScriptWork {
 public:
-  IndexScriptWork(const ObjectModelReference& indexRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(indexRef.DatabaseRef(), mode, output), reloid(indexRef.GetOid())
+  IndexScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), reloid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate table script: %s"), this, indexRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate table script: %s"), this, ref.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -194,9 +197,9 @@ protected:
  */
 class SchemaScriptWork : public ScriptWork {
 public:
-  SchemaScriptWork(const ObjectModelReference& schemaRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(schemaRef.DatabaseRef(), mode, output), nspoid(schemaRef.GetOid())
+  SchemaScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), nspoid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate schema script: %s"), this, schemaRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate schema script: %s"), this, ref.Identify().c_str());
   }
 private:
   const Oid nspoid;
@@ -210,9 +213,9 @@ protected:
  */
 class ViewScriptWork : public ScriptWork {
 public:
-  ViewScriptWork(const ObjectModelReference& viewRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(viewRef.DatabaseRef(), mode, output), reloid(viewRef.GetOid())
+  ViewScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), reloid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate view script: %s"), this, viewRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate view script: %s"), this, ref.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -226,9 +229,9 @@ protected:
  */
 class SequenceScriptWork : public ScriptWork {
 public:
-  SequenceScriptWork(const ObjectModelReference& sequenceRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(sequenceRef.DatabaseRef(), mode, output), reloid(sequenceRef.GetOid())
+  SequenceScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), reloid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate sequence script: %s"), this, sequenceRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate sequence script: %s"), this, ref.Identify().c_str());
   }
 private:
   const Oid reloid;
@@ -242,9 +245,9 @@ protected:
  */
 class FunctionScriptWork : public ScriptWork {
 public:
-  FunctionScriptWork(const ObjectModelReference& functionRef, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(functionRef.DatabaseRef(), mode, output), procoid(functionRef.GetOid())
+  FunctionScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), procoid(ref.GetOid())
   {
-    wxLogDebug(_T("%p: work to generate function script: %s"), this, functionRef.Identify().c_str());
+    wxLogDebug(_T("%p: work to generate function script: %s"), this, ref.Identify().c_str());
   }
 private:
   Oid procoid;
@@ -275,7 +278,7 @@ private:
  */
 class TextSearchDictionaryScriptWork : public ScriptWork {
 public:
-  TextSearchDictionaryScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), dictoid(ref.GetOid())
+  TextSearchDictionaryScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), dictoid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate text search dictionary script: %s"), this, ref.Identify().c_str());
   }
@@ -290,7 +293,7 @@ protected:
  */
 class TextSearchParserScriptWork : public ScriptWork {
 public:
-  TextSearchParserScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), prsoid(ref.GetOid())
+  TextSearchParserScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), prsoid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate text search parser script: %s"), this, ref.Identify().c_str());
   }
@@ -305,7 +308,7 @@ protected:
  */
 class TextSearchTemplateScriptWork : public ScriptWork {
 public:
-  TextSearchTemplateScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), tmploid(ref.GetOid())
+  TextSearchTemplateScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), tmploid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate text search template script: %s"), this, ref.Identify().c_str());
   }
@@ -320,7 +323,7 @@ protected:
  */
 class TextSearchConfigurationScriptWork : public ScriptWork {
 public:
-  TextSearchConfigurationScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.DatabaseRef(), mode, output), cfgoid(ref.GetOid())
+  TextSearchConfigurationScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), cfgoid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate text search configuration script: %s"), this, ref.Identify().c_str());
   }
@@ -338,7 +341,7 @@ protected:
  */
 class TablespaceScriptWork : public ScriptWork {
 public:
-  TablespaceScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), spcoid(ref.GetOid())
+  TablespaceScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.ServerRef(), mode, output), spcoid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate tablespace configuration script: %s"), this, ref.Identify().c_str());
   }
@@ -354,7 +357,7 @@ protected:
  */
 class RoleScriptWork : public ScriptWork {
 public:
-  RoleScriptWork(const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(ref.ServerRef(), mode, output), roloid(ref.GetOid())
+  RoleScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.ServerRef(), mode, output), roloid(ref.GetOid())
   {
     wxLogDebug(_T("%p: work to generate role configuration script: %s"), this, ref.Identify().c_str());
   }

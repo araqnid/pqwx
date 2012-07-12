@@ -105,7 +105,7 @@ END_EVENT_TABLE()
 
 #define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, db, ref) \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
-  SubmitDatabaseWork(db, new menu##ScriptWork(ref, ScriptWork::mode, ScriptWork::output)); \
+  SubmitDatabaseWork(db, new menu##ScriptWork(this, ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
 #define IMPLEMENT_SCRIPT_HANDLERS(menu, mode, ref) \

@@ -18,8 +18,6 @@
 #include "database_event_type.h"
 #include "object_browser_model.h"
 
-class ObjectBrowserWork;
-
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
   DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
@@ -60,10 +58,6 @@ END_DECLARE_EVENT_TYPES()
   void On##menu##MenuScript##mode##Window(wxCommandEvent&); \
   void On##menu##MenuScript##mode##File(wxCommandEvent&); \
   void On##menu##MenuScript##mode##Clipboard(wxCommandEvent&)
-
-class IndexSchemaCompletionCallback;
-class LoadRelationWork;
-class ScriptWork;
 
 /**
  * The object browser tree control.

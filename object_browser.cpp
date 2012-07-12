@@ -213,7 +213,7 @@ private:
 
 class ServerWorkLauncher : public WorkLauncher {
 public:
-  ServerWorkLauncher(ObjectBrowserModel& model, const ObjectModelReference& adminDatabaseRef) : model(model), databaseRef(adminDatabaseRef) {}
+  ServerWorkLauncher(ObjectBrowser *ob, const ObjectModelReference& adminDatabaseRef) : ob(ob), databaseRef(adminDatabaseRef) {}
 
   void DoWork(ObjectBrowserManagedWork *work)
   {
@@ -237,11 +237,11 @@ public:
 private:
   ServerModel& GetServerModel() const
   {
-    ServerModel *server = model.FindServer(serverId);
+    ServerModel *server = ob->Model().FindServer(serverId);
     wxASSERT(server != NULL);
     return *server;
   }
-  ObjectBrowserModel& model;
+  ObjectBrowser *ob;
   ObjectModelReference databaseRef;
   wxString serverId;
 };
@@ -1177,7 +1177,7 @@ void ObjectBrowser::OnServerMenuNewDatabase(wxCommandEvent &event)
 {
   const ServerModel *server = model.FindServer(contextMenuRef.GetServerId());
   wxASSERT(server != NULL);
-  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(model, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
+  CreateDatabaseDialogue *dbox = new CreateDatabaseDialogue(this, new ServerWorkLauncher(this, server->GetServerAdminDatabaseRef()), new AfterDatabaseCreated(contextMenuRef, this));
   dbox->Show();
 }
 

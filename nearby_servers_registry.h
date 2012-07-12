@@ -19,13 +19,18 @@ public:
   NearbyServersRegistry() : avahiClient(this, avahiPoller, AVAHI_CLIENT_NO_FAIL), avahiBrowser(NULL) {}
   ~NearbyServersRegistry() {}
 
+  class ServerAddress {
+  public:
+    wxString address;
+    wxUint16 port;
+  };
+
   class ServerInfo {
   public:
     wxString name;
     wxString hostname;
-    wxString address;
-    wxUint16 port;
     bool local;
+    std::vector<ServerAddress> addresses;
   };
 
   const std::list<ServerInfo>& GetDiscoveredServers() const { return servers; }
@@ -49,6 +54,8 @@ public:
 
 private:
   std::list<ServerInfo> servers;
+
+  ServerInfo* FindServer(const wxString& name);
 
   PQWXAvahi::ThreadedPoller avahiPoller;
   PQWXAvahi::Client avahiClient;

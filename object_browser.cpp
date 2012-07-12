@@ -183,7 +183,7 @@ public:
 
   bool load(wxTreeItemId parent)
   {
-    DatabaseModel *database = ::wxGetApp().GetObjectBrowserModel().FindDatabase(relationRef.DatabaseRef());
+    DatabaseModel *database = ob->Model().FindDatabase(relationRef.DatabaseRef());
     wxASSERT(database != NULL);
     database->LoadRelation(relationRef);
     return true;

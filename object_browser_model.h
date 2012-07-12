@@ -9,6 +9,9 @@
 
 #include <openssl/ssl.h>
 
+#include "catalogue_index.h"
+#include "database_connection.h"
+
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
   DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)

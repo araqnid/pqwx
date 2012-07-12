@@ -136,7 +136,16 @@ private:
     CallCompletion(IndexDatabaseSchemaWork *owner, IndexSchemaCompletionCallback *indexCompletion) : owner(owner), indexCompletion(indexCompletion) {}
     void OnCompletion()
     {
-      indexCompletion->Completed(*(owner->catalogueIndex));
+      if (indexCompletion != NULL) {
+        indexCompletion->Completed(*(owner->catalogueIndex));
+        delete indexCompletion;
+      }
+    }
+    void OnCrash()
+    {
+      if (indexCompletion != NULL) {
+        delete indexCompletion;
+      }
     }
   private:
     IndexDatabaseSchemaWork * const owner;

@@ -160,7 +160,7 @@ namespace PQWXAvahi {
 
   class ServiceBrowser {
   public:
-    ServiceBrowser(Client& client, AvahiIfIndex interface, AvahiProtocol protocol, const wxString& type, const wxString& domain, AvahiLookupFlags flags) : client(&client)
+    ServiceBrowser(Client& client, AvahiIfIndex interface, AvahiProtocol protocol, const wxString& type, const wxString& domain, AvahiLookupFlags flags, bool resolveLocals = false) : client(&client), resolveLocals(resolveLocals)
     {
       avahiServiceBrowser = avahi_service_browser_new(client.avahiClient, interface, protocol, type.utf8_str(), domain.utf8_str(), flags, Callback, this);
     }
@@ -175,6 +175,7 @@ namespace PQWXAvahi {
     ServiceBrowser(const ServiceBrowser&); // do not copy
     AvahiServiceBrowser* avahiServiceBrowser;
     Client* client;
+    bool resolveLocals;
     std::vector<ServiceResolver*> resolvers;
 
     static void Callback(AvahiServiceBrowser *sb, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, void *userdata)
@@ -204,7 +205,9 @@ namespace PQWXAvahi {
 
       if (event == AVAHI_BROWSER_NEW) {
         ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);
-        browser->resolvers.push_back(new ServiceResolver(*(browser->client), interface, protocol, name, type, domain, protocol));
+        if (!(flags & AVAHI_LOOKUP_RESULT_LOCAL) || browser->resolveLocals) {
+          browser->resolvers.push_back(new ServiceResolver(*(browser->client), interface, protocol, name, type, domain, protocol));
+        }
       }
       else if (event == AVAHI_BROWSER_REMOVE) {
         ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);

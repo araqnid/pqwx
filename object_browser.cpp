@@ -260,7 +260,9 @@ public:
 
   void ActionPerformed()
   {
-    ob->LoadServer(server);
+    ObjectBrowserModel *objectBrowserModel = ob->objectBrowserModel;
+    ServerModel *serverModel = objectBrowserModel->FindServer(server);
+    serverModel->Load();
   }
 
 private:
@@ -334,17 +336,12 @@ void ObjectBrowser::AddServerConnection(const ServerConnection& server, Database
   SetItemImage(serverItem, img_server);
   SetFocus();
 
-  LoadServer(ObjectModelReference(server.Identification()));
+  serverModel->Load();
 }
 
 void ObjectBrowser::Dispose()
 {
   objectBrowserModel->UnregisterView(this);
-}
-
-void ObjectBrowser::LoadServer(const ObjectModelReference &ref) {
-  ServerModel *serverModel = objectBrowserModel->FindServer(ref.ServerRef());
-  SubmitServerWork(serverModel, new RefreshDatabaseListWork(ref.GetServerId()));
 }
 
 LazyLoader *ObjectBrowser::GetLazyLoader(wxTreeItemId item) const {
@@ -1216,7 +1213,7 @@ void ObjectBrowser::OnServerMenuDisconnect(wxCommandEvent &event) {
 void ObjectBrowser::OnServerMenuRefresh(wxCommandEvent &event) {
   ServerModel *server = objectBrowserModel->FindServer(contextMenuRef);
   wxASSERT(server != NULL);
-  LoadServer(contextMenuRef);
+  server->Load();
 }
 
 void ObjectBrowser::OnServerMenuProperties(wxCommandEvent &event) {

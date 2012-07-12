@@ -6,6 +6,7 @@
     #include "wx/wx.h"
 #endif
 
+#include "pqwx.h"
 #include "object_browser.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
@@ -435,6 +436,17 @@ void ServerModel::UpdateServerParameters(const wxString& serverVersionString_, i
   if (ssl != NULL) {
     sslCipher = wxString(SSL_get_cipher(ssl), wxConvUTF8);
   }
+}
+
+void ServerModel::SubmitWork(ObjectBrowserManagedWork *work)
+{
+  ObjectBrowserModel& model = ::wxGetApp().GetObjectBrowserModel();
+  model.SubmitServerWork(Identification(), work);
+}
+
+void ServerModel::Load()
+{
+  SubmitWork(new RefreshDatabaseListWork(Identification()));
 }
 
 void ServerModel::UpdateDatabases(const std::vector<DatabaseModel>& incoming)

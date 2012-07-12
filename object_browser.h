@@ -195,7 +195,6 @@ public:
 private:
   DECLARE_EVENT_TABLE();
   ObjectBrowserModel *objectBrowserModel;
-  void LoadServer(const ObjectModelReference&);
   void BeforeExpand(wxTreeEvent&);
   void OnItemSelected(wxTreeEvent&);
   void OnSetFocus(wxFocusEvent&);

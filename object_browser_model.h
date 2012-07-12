@@ -346,6 +346,8 @@ public:
   bool canLogin;
 };
 
+class ObjectBrowserManagedWork;
+
 /**
  * A server.
  *
@@ -471,6 +473,11 @@ public:
    * Clean up expired and stale database connections.
    */
   void Maintain();
+
+  /**
+   * Load database list.
+   */
+  void Load();
 private:
   std::vector<DatabaseModel> databases;
   std::vector<TablespaceModel> tablespaces;
@@ -480,10 +487,9 @@ private:
   wxString sslCipher;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
+  void SubmitWork(ObjectBrowserManagedWork*);
   friend class RefreshDatabaseListWork;
 };
-
-class ObjectBrowserManagedWork;
 
 /**
  * The "top level" of the object browser model.

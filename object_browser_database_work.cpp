@@ -7,6 +7,7 @@
 #endif
 
 #include "object_browser_database_work.h"
+#include "object_browser_database_work_impl.h"
 
 /*
  * Database list, and other server globals.

@@ -18,10 +18,12 @@
 #include "database_work.h"
 #include "object_browser_model.h"
 #include "object_browser_database_work.h"
+#include "object_browser_database_work_impl.h"
 #include "object_browser_scripts.h"
 #include "dependencies_view.h"
 #include "static_resources.h"
 #include "create_database_dialogue.h"
+#include "script_events.h"
 
 inline void ObjectBrowser::SubmitServerWork(ServerModel *server, ObjectBrowserWork *work)
 {

@@ -12,6 +12,7 @@
 #include "object_browser_model.h"
 #include "object_browser_scripts.h"
 #include "object_browser_scripts_util.h"
+#include "script_events.h"
 
 #include "wx/clipbrd.h"
 

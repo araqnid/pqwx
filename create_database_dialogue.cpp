@@ -11,6 +11,7 @@
 #include "wx/clipbrd.h"
 #include "pqwx_util.h"
 #include "create_database_dialogue.h"
+#include "script_events.h"
 
 BEGIN_EVENT_TABLE(CreateDatabaseDialogue, wxDialog)
   EVT_BUTTON(wxID_OK, CreateDatabaseDialogue::OnExecute)

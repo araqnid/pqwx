@@ -178,6 +178,10 @@ namespace PQWXAvahi {
         ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);
         browser->resolvers.push_back(new ServiceResolver(*(browser->client), interface, protocol, name, type, domain, protocol));
       }
+      else if (event == AVAHI_BROWSER_REMOVE) {
+        ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);
+        browser->client->channel->ServiceLost(wxString(name, wxConvUTF8), wxString(type, wxConvUTF8), wxString(domain, wxConvUTF8));
+      }
       else if (event == AVAHI_BROWSER_ALL_FOR_NOW) {
         ServiceBrowser *browser = static_cast<ServiceBrowser*>(userdata);
         browser->client->channel->ServiceRefreshFinished(wxString(type, wxConvUTF8));

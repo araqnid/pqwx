@@ -19,7 +19,7 @@
  * to produce the script by populating the statements member in an
  * Execute() implementation.
  */
-class ScriptWork : public ObjectBrowserWork, public ObjectBrowserWork::CompletionCallback {
+class ScriptWork : public ObjectBrowserWork {
 public:
   /**
    * Type of script to produce.
@@ -29,7 +29,7 @@ public:
    * Output channel.
    */
   enum Output { Window, File, Clipboard };
-  ScriptWork(ObjectBrowser *view, const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), this, ScriptWork::GetSqlDictionary()), view(view), targetRef(targetRef), mode(mode), output(output) {}
+  ScriptWork(ObjectBrowser *view, const ObjectModelReference& targetRef, Mode mode, Output output) : ObjectBrowserWork(targetRef.DatabaseRef(), new ScriptComplete(this), ScriptWork::GetSqlDictionary()), view(view), targetRef(targetRef), mode(mode), output(output) {}
 
 protected:
   typedef WxStringConcatenator OutputIterator;
@@ -43,6 +43,17 @@ protected:
   static std::map<wxChar, wxString> PrivilegeMap(const wxString &spec);
 
 private:
+  class ScriptComplete : public ObjectBrowserWork::CompletionCallback {
+  public:
+    ScriptComplete(ScriptWork *owner) : owner(owner) {}
+    void OnCompletion()
+    {
+      owner->OnCompletion();
+    }
+  private:
+    ScriptWork * const owner;
+  };
+
   void operator()()
   {
     GenerateScript(WxStringConcatenator(script, _T(";\n\n")));

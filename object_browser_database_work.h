@@ -122,7 +122,11 @@ public:
   };
 
   ObjectBrowserWork(const ObjectModelReference& database, CompletionCallback* completion = NULL, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(READ_ONLY, database, sqlDictionary), completion(completion) {}
-  virtual ~ObjectBrowserWork() {}
+  virtual ~ObjectBrowserWork()
+  {
+    if (completion != NULL)
+      delete completion;
+  }
 
   /*
    * Merge the data fetched into the object model.

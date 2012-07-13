@@ -13,126 +13,25 @@
 #include "database_work.h"
 #include "lazy_loader.h"
 
-static const int EVENT_LOADED_ROOT = 10000;
-static const int EVENT_LOADED_MORE = 10001;
-
 static const Oid paramTypes[] = { 26 /* oid (pg_class) */, 26 /* oid */, 23 /* int4 */};
-
-class InitialObjectInfo : public wxTreeItemData {
-public:
-  wxString name;
-  wxString type;
-};
-
-class LoadInitialObjectWork : public DatabaseWorkWithDictionary {
-public:
-  LoadInitialObjectWork(wxEvtHandler *dest, Oid regclass, Oid oid) : DatabaseWorkWithDictionary(DependenciesView::GetSqlDictionary()), dest(dest), regclass(regclass), oid(oid) {
-    wxLogDebug(_T("Work to load dependency tree root: %p"), (void*) this);
-  }
-
-protected:
-  void operator()() {
-    info = new InitialObjectInfo();
-    info->name = _T("ROOT NAME");
-    info->type = _T("ROOT TYPE");
-  }
-  void NotifyFinished() {
-    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_LOADED_ROOT);
-    event.SetClientData(info);
-    dest->AddPendingEvent(event);
-  }
-
-private:
-  wxEvtHandler *dest;
-  Oid regclass;
-  Oid oid;
-  InitialObjectInfo *info;
-};
-
-class DependencyModel : public wxTreeItemData {
-public:
-  wxString deptype;
-  wxString type;
-  Oid regclass;
-  Oid oid;
-  wxString parentSubobject;
-  wxString childSubobject;
-  wxString symbol;
-  bool hasMore;
-};
-
-class DependencyResult {
-public:
-  DependencyResult(wxTreeItemId item, const std::vector<DependencyModel*> &objects) : item(item), objects(objects) {}
-  wxString name;
-  wxString type;
-  wxTreeItemId item;
-  std::vector<DependencyModel*> objects;
-};
-
-class LoadMoreDependenciesWork : public DatabaseWorkWithDictionary {
-public:
-  LoadMoreDependenciesWork(wxEvtHandler *dest, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid, Oid database) : DatabaseWorkWithDictionary(DependenciesView::GetSqlDictionary()), dest(dest), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid), database(database) {
-    wxLogDebug(_T("Work to load dependencies: %p"), this);
-  }
-
-protected:
-  void operator()() {
-    QueryResults rs = DoDependenciesQuery(dependenciesMode ? _T("Dependencies") : _T("Dependents"));
-    std::vector<DependencyModel*> objects;
-    for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-      DependencyModel *dep = new DependencyModel();
-      dep->deptype = (*iter).ReadText(0);
-      dep->regclass = (*iter).ReadOid(1);
-      dep->oid = (*iter).ReadOid(2);
-      dep->symbol = (*iter).ReadText(5);
-      dep->parentSubobject = (*iter).ReadText(6);
-      dep->childSubobject = (*iter).ReadText(7);
-      dep->hasMore = (*iter).ReadBool(8);
-      objects.push_back(dep);
-    }
-    result = new DependencyResult(item, objects);
-  }
-
-  QueryResults DoDependenciesQuery(const wxString &name) {
-    return Query(name).OidParam(regclass).OidParam(oid).OidParam(database).List();
-  }
-
-  void NotifyFinished() {
-    wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, EVENT_LOADED_MORE);
-    event.SetClientData(result);
-    dest->AddPendingEvent(event);
-  }
-
-private:
-  wxEvtHandler *dest;
-  wxTreeItemId item;
-  bool dependenciesMode;
-  Oid regclass;
-  Oid oid;
-  Oid database;
-  int objsubid;
-  DependencyResult *result;
-};
 
 class LoadDependenciesLazyLoader : public LazyLoader {
 public:
-  LoadDependenciesLazyLoader(wxEvtHandler *dest, bool dependenciesMode, DatabaseConnection *db, DependencyModel *dep, Oid database) : dest(dest), dependenciesMode(dependenciesMode), db(db), dep(dep), database(database) {}
+  LoadDependenciesLazyLoader(DependenciesView *dest, bool dependenciesMode, DependenciesView::DependencyModel *dep) : dest(dest), dependenciesMode(dependenciesMode), dep(dep) {}
 private:
-  wxEvtHandler *dest;
-  bool dependenciesMode;
-  DatabaseConnection *db;
-  DependencyModel *dep;
-  Oid database;
-  bool load(wxTreeItemId item) {
-    db->AddWork(new LoadMoreDependenciesWork(dest, item, dependenciesMode, dep->regclass, dep->oid, database));
+  DependenciesView * const dest;
+  const bool dependenciesMode;
+  DependenciesView::DependencyModel * const dep;
+  bool load(wxTreeItemId item)
+  {
+    dest->launcher->DoWork(new DependenciesView::LoadMoreDependenciesWork(dest->rootRef.DatabaseRef(), item, dependenciesMode, dep->regclass, dep->oid, dest->rootRef.GetDatabase(), dest));
     return true;
   }
 };
 
 BEGIN_EVENT_TABLE(DependenciesView, wxDialog)
-  EVT_COMMAND(EVENT_LOADED_ROOT, wxEVT_COMMAND_TEXT_UPDATED, DependenciesView::OnLoadedRoot)
-  EVT_COMMAND(EVENT_LOADED_MORE, wxEVT_COMMAND_TEXT_UPDATED, DependenciesView::OnLoadedDependencies)
+  PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, DependenciesView::OnWorkFinished)
+  PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, DependenciesView::OnWorkCrashed)
   EVT_RADIOBOX(XRCID("DependenciesView_mode"), DependenciesView::OnChooseMode)
   EVT_TREE_ITEM_EXPANDING(wxID_ANY, DependenciesView::OnBeforeExpand)
   EVT_TREE_SEL_CHANGED(wxID_ANY, DependenciesView::OnSelectionChanged)
@@ -147,9 +46,38 @@ void DependenciesView::InitXRC(wxWindow *parent) {
   selectedTypeCtrl = XRCCTRL(*this, "DependenciesView_selectedType", wxTextCtrl);
 }
 
+#define CALL_WORK_COMPLETION(dbox, handler) ((dbox).*(handler))
+
+void DependenciesView::OnWorkFinished(wxCommandEvent& event)
+{
+  Work *work = static_cast<Work*>(event.GetClientData());
+  wxASSERT(work != NULL);
+  wxLogDebug(_T("%p: work finished (on dependencies view)"), work);
+  CALL_WORK_COMPLETION(*this, work->completionHandler)(work);
+  delete work;
+}
+
+void DependenciesView::OnWorkCrashed(wxCommandEvent& event)
+{
+  Work *work = static_cast<Work*>(event.GetClientData());
+  wxLogDebug(_T("%p: work crashed (on dependencies view)"), work);
+
+  if (!work->GetCrashMessage().empty()) {
+    wxLogError(_T("%s\n%s"), _("An unexpected error occurred interacting with the database. Failure will ensue."), work->GetCrashMessage().c_str());
+  }
+  else {
+    wxLogError(_T("%s"), _("An unexpected and unidentified error occurred interacting with the database. Failure will ensue."));
+  }
+
+  if (work->crashHandler != NULL)
+    CALL_WORK_COMPLETION(*this, work->crashHandler)(work);
+
+  delete work;
+}
+
 void DependenciesView::LoadInitialObject() {
-  wxLogDebug(_T("Load initial object %lu:%lu in database %s"), (unsigned long) rootClass, (unsigned long) rootObject, db->Identification().c_str());
-  db->AddWork(new LoadInitialObjectWork(this, rootClass, rootObject));
+  wxLogDebug(_T("Load initial object %s"), rootRef.Identify().c_str());
+  launcher->DoWork(new LoadInitialObjectWork(rootRef.DatabaseRef(), rootRef.GetObjectClass(), rootRef.GetOid(), this));
 }
 
 void DependenciesView::FillInLabels(const wxString &value) {
@@ -160,45 +88,64 @@ void DependenciesView::FillInLabels(const wxString &value) {
   }
 }
 
-void DependenciesView::OnLoadedRoot(wxCommandEvent &event) {
-  wxASSERT(event.GetClientData() != NULL);
-  InitialObjectInfo *rootInfo = static_cast<InitialObjectInfo*>(event.GetClientData());
-  wxCHECK(rootInfo != NULL, );
-  rootName = rootInfo->name;
-  rootType = rootInfo->type;
-  delete rootInfo;
+void DependenciesView::LoadInitialObjectWork::operator()()
+{
+  name = _T("ROOT NAME");
+  type = _T("ROOT TYPE");
+}
+
+void DependenciesView::OnLoadedRoot(Work* work) {
+  LoadInitialObjectWork* loadWork = static_cast<LoadInitialObjectWork*>(work);
+  rootName = loadWork->name;
+  rootType = loadWork->type;
 
   tree->AddRoot(rootName);
   selectedNameCtrl->SetValue(rootName);
   selectedTypeCtrl->SetValue(rootType);
-  db->AddWork(new LoadMoreDependenciesWork(this, tree->GetRootItem(), mode == DEPENDENCIES, rootClass, rootObject, database));
+
+  launcher->DoWork(new LoadMoreDependenciesWork(rootRef.DatabaseRef(), tree->GetRootItem(), mode == DEPENDENCIES, rootRef.GetObjectClass(), rootRef.GetOid(), rootRef.GetDatabase(), this));
 }
 
-void DependenciesView::OnLoadedDependencies(wxCommandEvent &event) {
-  DependencyResult *result = static_cast< DependencyResult* >(event.GetClientData());
-  wxASSERT(result);
+void DependenciesView::LoadMoreDependenciesWork::operator()()
+{
+  wxString queryName = dependenciesMode ? _T("Dependencies") : _T("Dependents");
+  QueryResults rs = Query(queryName).OidParam(regclass).OidParam(oid).OidParam(database).List();
+  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+    DependencyModel dep;
+    dep.deptype = (*iter).ReadText(0);
+    dep.regclass = (*iter).ReadOid(1);
+    dep.oid = (*iter).ReadOid(2);
+    dep.symbol = (*iter).ReadText(5);
+    dep.parentSubobject = (*iter).ReadText(6);
+    dep.childSubobject = (*iter).ReadText(7);
+    dep.hasMore = (*iter).ReadBool(8);
+    objects.push_back(dep);
+  }
+}
+
+void DependenciesView::OnLoadedDependencies(Work* work) {
+  LoadMoreDependenciesWork* loadWork = static_cast<LoadMoreDependenciesWork*>(work);
   wxLogDebug(_T("Dependencies work finished"));
-  for (std::vector<DependencyModel*>::iterator iter = result->objects.begin(); iter != result->objects.end(); iter++) {
-    DependencyModel *dep = *iter;
+  for (std::vector<DependencyModel>::iterator iter = loadWork->objects.begin(); iter != loadWork->objects.end(); iter++) {
+    DependencyModel *dep = new DependencyModel(*iter);
     wxString itemText;
     if (!dep->parentSubobject.IsEmpty())
       itemText << wxString::Format(_("(on %s)"), dep->parentSubobject.c_str()) << _T(" ");
     itemText << dep->symbol << _T(" [deptype=") << dep->deptype << _T("]");
     if (!dep->childSubobject.IsEmpty())
       itemText << _T(" ") << wxString::Format(_("(on %s)"), dep->childSubobject.c_str());
-    wxTreeItemId newItem = tree->AppendItem(result->item, itemText);
+    wxTreeItemId newItem = tree->AppendItem(loadWork->item, itemText);
     tree->SetItemData(newItem, dep);
     if (dep->hasMore) {
       wxTreeItemId dummyItem = tree->AppendItem(newItem, _T("Loading..."));
-      LazyLoader *loader = new LoadDependenciesLazyLoader(this, mode == DEPENDENCIES, db, dep, database);
+      LazyLoader *loader = new LoadDependenciesLazyLoader(this, mode == DEPENDENCIES, dep);
       tree->SetItemData(dummyItem, loader);
     }
   }
-  wxString label = tree->GetItemText(result->item);
+  wxString label = tree->GetItemText(loadWork->item);
   label = label.Left(label.length() - wxString(_(" (loading...)")).length());
-  tree->SetItemText(result->item, label);
-  tree->Expand(result->item);
-  delete result;
+  tree->SetItemText(loadWork->item, label);
+  tree->Expand(loadWork->item);
 }
 
 void DependenciesView::OnChooseMode(wxCommandEvent &event) {
@@ -247,6 +194,7 @@ void DependenciesView::OnSelectionChanged(wxTreeEvent &event) {
     selectedTypeCtrl->SetValue(dep->type);
   }
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

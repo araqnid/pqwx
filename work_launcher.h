@@ -6,6 +6,8 @@
 #ifndef __work_launcher_h
 #define __work_launcher_h
 
+#include "object_browser_database_work.h"
+
 /**
  * Allow dialogue box to perform work on the relevant database connection.
  */

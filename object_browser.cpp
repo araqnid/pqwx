@@ -245,6 +245,46 @@ private:
   wxString serverId;
 };
 
+class DatabaseWorkLauncher : public WorkLauncher {
+public:
+  DatabaseWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
+
+  void DoWork(ObjectBrowserManagedWork *work)
+  {
+    GetDatabaseModel().SubmitWork(work);
+  }
+
+  ObjectModelReference GetDatabaseRef() const
+  {
+    return databaseRef;
+  }
+
+  ServerConnection GetServerConnection() const
+  {
+    return GetServerModel().conninfo;
+  }
+
+  wxString GetDatabaseName() const
+  {
+    return GetServerModel().GlobalDbName();
+  }
+private:
+  DatabaseModel& GetDatabaseModel() const
+  {
+    DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
+    wxASSERT(db != NULL);
+    return *db;
+  }
+  ServerModel& GetServerModel() const
+  {
+    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
+    wxASSERT(server != NULL);
+    return *server;
+  }
+  ObjectBrowser& ob;
+  ObjectModelReference databaseRef;
+};
+
 class AfterDatabaseCreated : public CreateDatabaseDialogue::ExecutionCallback {
 public:
   AfterDatabaseCreated(ObjectModelReference server, ObjectBrowser& ob) : server(server), ob(ob) {}
@@ -1234,7 +1274,7 @@ void ObjectBrowser::OnDatabaseMenuProperties(wxCommandEvent &event) {
 void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
   DatabaseModel *database = model.FindDatabase(contextMenuRef);
   wxASSERT(database != NULL);
-  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), database->FormatName(), ObjectModelReference::PG_DATABASE, (Oid) database->oid, (Oid) database->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, new DatabaseWorkLauncher(*this, contextMenuRef), database->FormatName(), contextMenuRef);
   dialog->Show();
 }
 
@@ -1243,7 +1283,7 @@ void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
   wxASSERT(relation != NULL);
   DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
   wxASSERT(database != NULL);
-  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), relation->FormatName(), ObjectModelReference::PG_CLASS, (Oid) relation->oid, (Oid) database->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, new DatabaseWorkLauncher(*this, contextMenuRef.DatabaseRef()), relation->FormatName(), contextMenuRef);
   dialog->Show();
 }
 
@@ -1252,7 +1292,7 @@ void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
   wxASSERT(function != NULL);
   DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
   wxASSERT(database != NULL);
-  DependenciesView *dialog = new DependenciesView(NULL, database->GetDatabaseConnection(), function->FormatName(), ObjectModelReference::PG_PROC, (Oid) function->oid, (Oid) database->oid);
+  DependenciesView *dialog = new DependenciesView(NULL, new DatabaseWorkLauncher(*this, contextMenuRef.DatabaseRef()), function->FormatName(), contextMenuRef);
   dialog->Show();
 }
 

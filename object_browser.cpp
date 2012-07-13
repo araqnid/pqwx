@@ -236,13 +236,12 @@ public:
 private:
   ServerModel& GetServerModel() const
   {
-    ServerModel *server = ob.Model().FindServer(serverId);
+    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
     wxASSERT(server != NULL);
     return *server;
   }
   ObjectBrowser& ob;
-  ObjectModelReference databaseRef;
-  wxString serverId;
+  const ObjectModelReference databaseRef;
 };
 
 class DatabaseWorkLauncher : public WorkLauncher {
@@ -282,7 +281,7 @@ private:
     return *server;
   }
   ObjectBrowser& ob;
-  ObjectModelReference databaseRef;
+  const ObjectModelReference databaseRef;
 };
 
 class AfterDatabaseCreated : public CreateDatabaseDialogue::ExecutionCallback {

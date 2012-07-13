@@ -68,7 +68,6 @@ PQWX_SOURCES = \
 	pg_tools_registry.cpp \
 	pqwx.cpp \
 	pqwx_frame.cpp \
-	resources.cpp \
 	results_notebook.cpp \
 	script_editor.cpp \
 	script_editor_pane.cpp \
@@ -110,7 +109,7 @@ PQWX_HEADERS = \
 	work_launcher.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 SQL_DICTIONARIES = object_browser.sql dependencies_view.sql object_browser_scripts.sql create_database_dialogue.sql
-GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp
+GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp resources.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) $(GENERATED_SOURCES:.cpp=.o)
 ifneq (,$(findstring MINGW,$(host_system)))
 PQWX_OBJS += pqwx_rc.o
@@ -194,6 +193,6 @@ pqwx-appicon.ico: pqwx-appicon-16-8.png pqwx-appicon-32-8.png pqwx-appicon-64-8.
 	icotool -c -o $@ $^
 
 clean:
-	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.cpp resources.h rc/*.c build_settings wx_flavour.h $(GENERATED_SOURCES)
+	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.h rc/*.c build_settings wx_flavour.h $(GENERATED_SOURCES)
 
 .PHONY: FORCE

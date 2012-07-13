@@ -14,6 +14,9 @@
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserConnectionMade)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserConnectionFailed)
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserConnectionNeedsPassword)
 
 /**
  * Implementation of DatabaseWork that deals with passing results back to the GUI thread.
@@ -126,10 +129,40 @@ private:
 
 };
 
+class ObjectBrowserConnectionCallback : public ConnectionCallback {
+public:
+  ObjectBrowserConnectionCallback(ObjectBrowserModel& model, const ObjectModelReference& ref) : model(model), ref(ref) {}
+
+  void OnConnection(bool usedPassword)
+  {
+    PQWXObjectBrowserModelEvent event(ref, PQWX_ObjectBrowserConnectionMade);
+    model.AddPendingEvent(event);
+  }
+
+  void OnConnectionFailed(const wxString& message)
+  {
+    PQWXObjectBrowserModelEvent event(ref, PQWX_ObjectBrowserConnectionFailed);
+    event.SetString(message);
+    model.AddPendingEvent(event);
+  }
+
+  void OnConnectionNeedsPassword()
+  {
+    PQWXObjectBrowserModelEvent event(ref, PQWX_ObjectBrowserConnectionNeedsPassword);
+    model.AddPendingEvent(event);
+  }
+private:
+  ObjectBrowserModel& model;
+  const ObjectModelReference ref;
+};
+
 BEGIN_EVENT_TABLE(ObjectBrowserModel, wxEvtHandler)
   PQWX_OBJECT_BROWSER_WORK_FINISHED(wxID_ANY, ObjectBrowserModel::OnWorkFinished)
   PQWX_OBJECT_BROWSER_WORK_CRASHED(wxID_ANY, ObjectBrowserModel::OnWorkCrashed)
   PQWX_RESCHEDULE_OBJECT_BROWSER_WORK(wxID_ANY, ObjectBrowserModel::OnRescheduleWork)
+  PQWX_OBJECT_BROWSER_CONNECTION_MADE(wxID_ANY, ObjectBrowserModel::OnConnectionMade)
+  PQWX_OBJECT_BROWSER_CONNECTION_FAILED(wxID_ANY, ObjectBrowserModel::OnConnectionFailed)
+  PQWX_OBJECT_BROWSER_CONNECTION_NEEDS_PASSWORD(wxID_ANY, ObjectBrowserModel::OnConnectionNeedsPassword)
   EVT_TIMER(ObjectBrowserModel::TIMER_MAINTAIN, ObjectBrowserModel::OnTimerTick)
 END_EVENT_TABLE()
 
@@ -147,10 +180,25 @@ void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, Data
 {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
-    db->Connect();
+    db->Connect(new ObjectBrowserConnectionCallback(*this, ref));
     SetupDatabaseConnection(ref, db);
   }
   db->AddWork(work);
+}
+
+void ObjectBrowserModel::OnConnectionMade(PQWXObjectBrowserModelEvent& e)
+{
+  wxLogDebug(_T("Object browser connection made"));
+}
+
+void ObjectBrowserModel::OnConnectionFailed(PQWXObjectBrowserModelEvent& e)
+{
+  wxLogError(_T("Object browser connection failed: %s"), e.GetString().c_str());
+}
+
+void ObjectBrowserModel::OnConnectionNeedsPassword(PQWXObjectBrowserModelEvent& e)
+{
+  wxLogDebug(_T("Object browser connection needs password (TODO)"));
 }
 
 void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {

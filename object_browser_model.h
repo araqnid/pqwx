@@ -12,12 +12,6 @@
 #include "catalogue_index.h"
 #include "database_connection.h"
 
-BEGIN_DECLARE_EVENT_TYPES()
-  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
-  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
-  DECLARE_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork, -1)
-END_DECLARE_EVENT_TYPES()
-
 /**
  * A "soft" reference into the object model.
  */
@@ -101,6 +95,39 @@ class RelationModel;
 class DatabaseModel;
 class ServerModel;
 class ObjectBrowser;
+
+class PQWXObjectBrowserModelEvent : public wxNotifyEvent {
+public:
+  PQWXObjectBrowserModelEvent(const ObjectModelReference& ref, wxEventType type = wxEVT_NULL, int id = 0) : wxNotifyEvent(type, id), ref(ref) {}
+
+  const ObjectModelReference ref;
+};
+
+/**
+ * Prototype for handling a database event.
+ */
+typedef void (wxEvtHandler::*PQWXObjectBrowserModelEventFunction)(PQWXObjectBrowserModelEvent&);
+
+/**
+ * Static event table macro.
+ */
+#define EVT_OBJECT_BROWSER_MODEL(id, type, fn) \
+    DECLARE_EVENT_TABLE_ENTRY( type, id, -1, \
+    (wxObjectEventFunction) (wxEventFunction) (PQWXObjectBrowserModelEventFunction) (wxNotifyEventFunction) \
+    wxStaticCastEvent( PQWXObjectBrowserModelEventFunction, & fn ), (wxObject *) NULL ),
+
+BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
+  DECLARE_EVENT_TYPE(PQWX_RescheduleObjectBrowserWork, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserConnectionMade, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserConnectionFailed, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserConnectionNeedsPassword, -1)
+END_DECLARE_EVENT_TYPES()
+
+#define PQWX_OBJECT_BROWSER_CONNECTION_MADE(id, fn) EVT_OBJECT_BROWSER_MODEL(id, PQWX_ObjectBrowserConnectionMade, fn)
+#define PQWX_OBJECT_BROWSER_CONNECTION_FAILED(id, fn) EVT_OBJECT_BROWSER_MODEL(id, PQWX_ObjectBrowserConnectionFailed, fn)
+#define PQWX_OBJECT_BROWSER_CONNECTION_NEEDS_PASSWORD(id, fn) EVT_OBJECT_BROWSER_MODEL(id, PQWX_ObjectBrowserConnectionNeedsPassword, fn)
 
 /**
  * Base class for models of all database objects.
@@ -665,6 +692,9 @@ private:
   void OnWorkCrashed(wxCommandEvent&);
   void OnRescheduleWork(wxCommandEvent&);
   void OnTimerTick(wxTimerEvent&);
+  void OnConnectionMade(PQWXObjectBrowserModelEvent&);
+  void OnConnectionFailed(PQWXObjectBrowserModelEvent&);
+  void OnConnectionNeedsPassword(PQWXObjectBrowserModelEvent&);
   void SubmitServerWork(ServerModel*, ObjectBrowserManagedWork*);
   void SubmitDatabaseWork(DatabaseModel*, ObjectBrowserManagedWork*);
   void ConnectAndAddWork(const ObjectModelReference& ref, DatabaseConnection *db, DatabaseWork *work);

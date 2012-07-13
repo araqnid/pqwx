@@ -12,6 +12,8 @@ class wxCheckBox;
 class wxComboBox;
 class wxNotebookEvent;
 
+#include "wx/dialog.h"
+
 #include "object_browser_database_work.h"
 #include "work_launcher.h"
 

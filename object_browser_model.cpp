@@ -180,6 +180,7 @@ void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, Data
 {
   // still a bodge. what if the database connection fails? need to clean up any work added in the meantime...
   if (!db->IsConnected()) {
+    wxBeginBusyCursor();
     db->Connect(new ObjectBrowserConnectionCallback(*this, ref));
     SetupDatabaseConnection(ref, db);
   }
@@ -189,16 +190,19 @@ void ObjectBrowserModel::ConnectAndAddWork(const ObjectModelReference& ref, Data
 void ObjectBrowserModel::OnConnectionMade(PQWXObjectBrowserModelEvent& e)
 {
   wxLogDebug(_T("Object browser connection made"));
+  wxEndBusyCursor();
 }
 
 void ObjectBrowserModel::OnConnectionFailed(PQWXObjectBrowserModelEvent& e)
 {
   wxLogError(_T("Object browser connection failed: %s"), e.GetString().c_str());
+  wxEndBusyCursor();
 }
 
 void ObjectBrowserModel::OnConnectionNeedsPassword(PQWXObjectBrowserModelEvent& e)
 {
   wxLogDebug(_T("Object browser connection needs password (TODO)"));
+  wxEndBusyCursor();
 }
 
 void ObjectBrowserModel::OnWorkFinished(wxCommandEvent &e) {

@@ -1,14 +1,10 @@
 #include "wx/wx.h"
 #include "wx/cmdline.h"
-#include "libpq-fe.h"
-#include "object_browser.h"
-#include "sql_dictionary.h"
-
-extern SqlDictionary *GetObjectBrowserSql();
+#include "object_browser_work.h"
 
 class DumpCatalogueApp : public wxAppConsole {
 public:
-  DumpCatalogueApp() : sqlDictionary(&(ObjectBrowser::GetSqlDictionary())) {}
+  DumpCatalogueApp() : sqlDictionary(&(ObjectBrowserWork::GetSqlDictionary())) {}
   int OnRun();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);

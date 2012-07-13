@@ -14,7 +14,7 @@ class wxNotebookEvent;
 
 #include "wx/dialog.h"
 
-#include "object_browser_database_work.h"
+#include "object_browser_managed_work.h"
 #include "work_launcher.h"
 
 /**

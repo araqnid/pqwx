@@ -10,6 +10,7 @@
 #include "database_connection.h"
 #include "sql_dictionary.h"
 #include "work_launcher.h"
+#include "object_browser_managed_work.h"
 #include "wx/dialog.h"
 #include "wx/treectrl.h"
 #include "wx/radiobox.h"

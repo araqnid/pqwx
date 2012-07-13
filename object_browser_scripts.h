@@ -7,7 +7,7 @@
 #ifndef __object_browser_scripts_h
 #define __object_browser_scripts_h
 
-#include "object_browser_database_work.h"
+#include "object_browser_work.h"
 #include "pqwx_util.h"
 
 /**

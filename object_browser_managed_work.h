@@ -4,19 +4,46 @@
  * @author Steve Haslam <araqnid@googlemail.com>
  */
 
-#ifndef __object_browser_database_work_h
-#define __object_browser_database_work_h
+#ifndef __object_browser_managed_work_h
+#define __object_browser_managed_work_h
 
-#include "object_browser.h"
-#include "object_browser_model.h"
+#include "wx/event.h"
+
+#include "object_model_reference.h"
+#include "sql_dictionary.h"
 #include "query_results.h"
 #include "database_work.h"
+
+BEGIN_DECLARE_EVENT_TYPES()
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished, -1)
+  DECLARE_EVENT_TYPE(PQWX_ObjectBrowserWorkCrashed, -1)
+END_DECLARE_EVENT_TYPES()
+
+/**
+ * Event issued when asynchronous database work finishes
+ */
+#define PQWX_OBJECT_BROWSER_WORK_FINISHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkFinished, fn)
+
+/**
+ * Event issued when asynchronous database work throws an exception
+ */
+#define PQWX_OBJECT_BROWSER_WORK_CRASHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkCrashed, fn)
 
 /**
  * Unit of work that is managed by the object browser model.
  *
  * This might be triggered the object browser itself, or may be
  * executed by the object browser model on behalf of some dialogue.
+ *
+ * The object browser model will convert the completion of the work on
+ * the database thread into wx events to be sent to the handler
+ * specified when the work object is created.
+ *
+ * An instance of this class is wrapped by a DatabaseWork in order to
+ * be executed. However, the DatabaseWork is deleted as soon as it has
+ * completed, but the wrapper will pass this class back to object
+ * browser as part of a "work finished" event so that is is available
+ * in the GUI thread.
  */
 class ObjectBrowserManagedWork {
 public:
@@ -87,63 +114,6 @@ private:
   friend class ObjectBrowserModel;
 };
 
-/**
- * Unit of work to be performed on a database connection for the
- * object browser.
- *
- * An instance of this class is wrapped by a DatabaseWork in order to
- * be executed. However, the DatabaseWork is deleted as soon as it has
- * completed, but the wrapper will pass this class back to object
- * browser as part of a "work finished" event so that is is available
- * in the GUI thread.
- */
-class ObjectBrowserWork : public ObjectBrowserManagedWork {
-public:
-  /**
-   * A callback object called after the database work has completed.
-   *
-   * This is called after the work completed successfully, and the views have been updated, or after the work crashed.
-   */
-  class CompletionCallback {
-  public:
-    virtual ~CompletionCallback() {}
-
-    /**
-     * Called on completion.
-     */
-    virtual void OnCompletion() = 0;
-
-    /**
-     * Called after crashing.
-     */
-    virtual void OnCrash() {}
-  };
-
-  ObjectBrowserWork(const ObjectModelReference& database, CompletionCallback* completion = NULL, TxMode txMode = READ_ONLY, const SqlDictionary &sqlDictionary = ObjectBrowser::GetSqlDictionary()) : ObjectBrowserManagedWork(txMode, database, sqlDictionary), completion(completion) {}
-  virtual ~ObjectBrowserWork()
-  {
-    if (completion != NULL)
-      delete completion;
-  }
-
-  /*
-   * Merge the data fetched into the object model.
-   *
-   * This method is executed on the GUI thread.
-   */
-  virtual void UpdateModel(ObjectBrowserModel& model) = 0;
-
-  /**
-   * Update the object browser view to display the data fetched by this work.
-   *
-   * This method is executed on the GUI thread.
-   */
-  virtual void UpdateView(ObjectBrowser& browser) = 0;
-
-private:
-  CompletionCallback* const completion;
-  friend class ObjectBrowserModel;
-};
 
 #endif
 

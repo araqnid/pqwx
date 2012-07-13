@@ -17,7 +17,7 @@
 #include "catalogue_index.h"
 #include "database_work.h"
 #include "object_browser_model.h"
-#include "object_browser_database_work.h"
+#include "object_browser_work.h"
 #include "object_browser_scripts.h"
 #include "dependencies_view.h"
 #include "static_resources.h"
@@ -208,80 +208,6 @@ private:
   ObjectBrowser& ob;
   const ObjectModelReference databaseRef;
   std::vector<const SchemaMemberModel*> division;
-};
-
-class ServerWorkLauncher : public WorkLauncher {
-public:
-  ServerWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& adminDatabaseRef) : ob(ob), databaseRef(adminDatabaseRef) {}
-
-  void DoWork(ObjectBrowserManagedWork *work)
-  {
-    GetServerModel().SubmitWork(work);
-  }
-
-  ObjectModelReference GetDatabaseRef() const
-  {
-    return databaseRef;
-  }
-
-  ServerConnection GetServerConnection() const
-  {
-    return GetServerModel().conninfo;
-  }
-
-  wxString GetDatabaseName() const
-  {
-    return GetServerModel().GlobalDbName();
-  }
-private:
-  ServerModel& GetServerModel() const
-  {
-    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
-    wxASSERT(server != NULL);
-    return *server;
-  }
-  ObjectBrowser& ob;
-  const ObjectModelReference databaseRef;
-};
-
-class DatabaseWorkLauncher : public WorkLauncher {
-public:
-  DatabaseWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
-
-  void DoWork(ObjectBrowserManagedWork *work)
-  {
-    GetDatabaseModel().SubmitWork(work);
-  }
-
-  ObjectModelReference GetDatabaseRef() const
-  {
-    return databaseRef;
-  }
-
-  ServerConnection GetServerConnection() const
-  {
-    return GetServerModel().conninfo;
-  }
-
-  wxString GetDatabaseName() const
-  {
-    return GetServerModel().GlobalDbName();
-  }
-private:
-  DatabaseModel& GetDatabaseModel() const
-  {
-    DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
-    wxASSERT(db != NULL);
-    return *db;
-  }
-  ServerModel& GetServerModel() const
-  {
-    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
-    wxASSERT(server != NULL);
-    return *server;
-  }
-  ObjectBrowser& ob;
-  const ObjectModelReference databaseRef;
 };
 
 class AfterDatabaseCreated : public CreateDatabaseDialogue::ExecutionCallback {

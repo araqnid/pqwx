@@ -17,26 +17,12 @@
 #include "lazy_loader.h"
 #include "database_event_type.h"
 #include "object_browser_model.h"
+#include "work_launcher.h"
 
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ObjectSelected, -1)
   DECLARE_EVENT_TYPE(PQWX_NoObjectSelected, -1)
 END_DECLARE_EVENT_TYPES()
-
-/**
- * Event issued when asynchronous database work finishes
- */
-#define PQWX_OBJECT_BROWSER_WORK_FINISHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkFinished, fn)
-
-/**
- * Event issued when asynchronous database work throws an exception
- */
-#define PQWX_OBJECT_BROWSER_WORK_CRASHED(id, fn) EVT_COMMAND(id, PQWX_ObjectBrowserWorkCrashed, fn)
-
-/**
- * Event issued when asynchronous database work needs rescheduling after a connection was lost
- */
-#define PQWX_RESCHEDULE_OBJECT_BROWSER_WORK(id, fn) EVT_COMMAND(id, PQWX_RescheduleObjectBrowserWork, fn)
 
 /**
  * Event issued when an object is selected in the object browser.
@@ -168,11 +154,6 @@ public:
    * @return Object browser model
    */
   ObjectBrowserModel& Model() const { return model; }
-
-  /**
-   * Gets the SQL dictionary for the object browser.
-   */
-  static const SqlDictionary& GetSqlDictionary();
 private:
   DECLARE_EVENT_TABLE();
   ObjectBrowserModel& model;
@@ -327,6 +308,82 @@ private:
 
   void SaveExpandedObjects(wxTreeItemId, std::vector<ObjectModelReference>&);
   void RestoreExpandedObjects(wxTreeItemId, const std::vector<ObjectModelReference>&);
+
+class ServerWorkLauncher : public WorkLauncher {
+public:
+  ServerWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& adminDatabaseRef) : ob(ob), databaseRef(adminDatabaseRef) {}
+
+  void DoWork(ObjectBrowserManagedWork *work)
+  {
+    GetServerModel().SubmitWork(work);
+  }
+
+  ObjectModelReference GetDatabaseRef() const
+  {
+    return databaseRef;
+  }
+
+  ServerConnection GetServerConnection() const
+  {
+    return GetServerModel().conninfo;
+  }
+
+  wxString GetDatabaseName() const
+  {
+    return GetServerModel().GlobalDbName();
+  }
+private:
+  ServerModel& GetServerModel() const
+  {
+    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
+    wxASSERT(server != NULL);
+    return *server;
+  }
+  ObjectBrowser& ob;
+  const ObjectModelReference databaseRef;
+};
+
+class DatabaseWorkLauncher : public WorkLauncher {
+public:
+  DatabaseWorkLauncher(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
+
+  void DoWork(ObjectBrowserManagedWork *work)
+  {
+    GetDatabaseModel().SubmitWork(work);
+  }
+
+  ObjectModelReference GetDatabaseRef() const
+  {
+    return databaseRef;
+  }
+
+  ServerConnection GetServerConnection() const
+  {
+    return GetServerModel().conninfo;
+  }
+
+  wxString GetDatabaseName() const
+  {
+    return GetServerModel().GlobalDbName();
+  }
+private:
+  DatabaseModel& GetDatabaseModel() const
+  {
+    DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
+    wxASSERT(db != NULL);
+    return *db;
+  }
+  ServerModel& GetServerModel() const
+  {
+    ServerModel *server = ob.Model().FindServer(databaseRef.GetServerId());
+    wxASSERT(server != NULL);
+    return *server;
+  }
+  ObjectBrowser& ob;
+  const ObjectModelReference databaseRef;
+};
+
+
 };
 
 #endif

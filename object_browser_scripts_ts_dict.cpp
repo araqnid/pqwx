@@ -6,9 +6,8 @@
     #include "wx/wx.h"
 #endif
 
-#include "object_browser.h"
-#include "object_browser_model.h"
 #include "object_browser_scripts.h"
+#include "object_browser_scripts_util.h"
 
 void TextSearchDictionaryScriptWork::GenerateScript(OutputIterator output)
 {

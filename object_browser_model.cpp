@@ -8,7 +8,7 @@
 
 #include "pqwx.h"
 #include "object_browser_model.h"
-#include "object_browser_database_work.h"
+#include "object_browser_work.h"
 #include "object_browser_database_work_impl.h"
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserWorkFinished)

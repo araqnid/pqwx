@@ -7,7 +7,9 @@ else
 dotEXE =
 endif
 
-all: pqwx$(dotEXE) test_catalogue$(dotEXE) dump_catalogue$(dotEXE)
+EXECUTABLES = pqwx$(dotEXE) test_catalogue$(dotEXE) dump_catalogue$(dotEXE)
+
+all: $(EXECUTABLES)
 
 vcs_version.mk pqwx_version.h: FORCE
 	@./update_vcs_version vcs_version.mk pqwx_version.h
@@ -193,6 +195,6 @@ pqwx-appicon.ico: pqwx-appicon-16-8.png pqwx-appicon-32-8.png pqwx-appicon-64-8.
 	icotool -c -o $@ $^
 
 clean:
-	rm -f *.o *.d pqwx test_catalogue vcs_version.mk pqwx_version.h resources.h rc/*.c build_settings wx_flavour.h $(GENERATED_SOURCES)
+	rm -f *.o *.d $(EXECUTABLES) vcs_version.mk pqwx_version.h resources.h rc/*.c build_settings wx_flavour.h $(GENERATED_SOURCES)
 
 .PHONY: FORCE

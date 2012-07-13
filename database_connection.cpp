@@ -97,6 +97,8 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
 
   if (!Connect()) {
     SetState(DatabaseConnection::DISCONNECTED);
+    wxLogDebug(_T("thr#%lx [%s] exiting due to failed connection"), wxThread::GetCurrentId(), db->identification.c_str());
+    DeleteRemainingWork();
     return 0;
   }
 

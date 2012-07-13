@@ -72,7 +72,6 @@ PQWX_SOURCES = \
 	results_notebook.cpp \
 	script_editor.cpp \
 	script_editor_pane.cpp \
-	script_editor_wordlists.cpp \
 	script_execution.cpp \
 	script_query_work.cpp
 PQWX_HEADERS = \
@@ -111,7 +110,7 @@ PQWX_HEADERS = \
 	work_launcher.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 SQL_DICTIONARIES = object_browser.sql dependencies_view.sql object_browser_scripts.sql create_database_dialogue.sql
-GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp
+GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) $(GENERATED_SOURCES:.cpp=.o)
 ifneq (,$(findstring MINGW,$(host_system)))
 PQWX_OBJS += pqwx_rc.o

@@ -1206,8 +1206,6 @@ void ObjectBrowser::OnDatabaseMenuViewDependencies(wxCommandEvent &event) {
 void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
   RelationModel *relation = model.FindRelation(contextMenuRef);
   wxASSERT(relation != NULL);
-  DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
-  wxASSERT(database != NULL);
   DependenciesView *dialog = new DependenciesView(NULL, new DatabaseWorkLauncher(*this, contextMenuRef.DatabaseRef()), relation->FormatName(), contextMenuRef);
   dialog->Show();
 }
@@ -1215,8 +1213,6 @@ void ObjectBrowser::OnRelationMenuViewDependencies(wxCommandEvent &event) {
 void ObjectBrowser::OnFunctionMenuViewDependencies(wxCommandEvent &event) {
   FunctionModel *function = model.FindFunction(contextMenuRef);
   wxASSERT(function != NULL);
-  DatabaseModel *database = model.FindDatabase(contextMenuRef.DatabaseRef());
-  wxASSERT(database != NULL);
   DependenciesView *dialog = new DependenciesView(NULL, new DatabaseWorkLauncher(*this, contextMenuRef.DatabaseRef()), function->FormatName(), contextMenuRef);
   dialog->Show();
 }

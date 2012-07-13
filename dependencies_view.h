@@ -44,7 +44,7 @@ private:
 
   class LoadInitialObjectWork : public Work {
   public:
-    LoadInitialObjectWork(const ObjectModelReference& databaseRef, Oid regclass, Oid oid, DependenciesView *dest) : Work(databaseRef, dest, &DependenciesView::OnLoadedRoot)
+    LoadInitialObjectWork(const ObjectModelReference& ref, DependenciesView *dest) : Work(ref.DatabaseRef(), dest, &DependenciesView::OnLoadedRoot), ref(ref)
     {
       wxLogDebug(_T("Work to load dependency tree root: %p"), (void*) this);
     }
@@ -54,9 +54,7 @@ private:
     void operator()();
 
   private:
-    wxEvtHandler *dest;
-    Oid regclass;
-    Oid oid;
+    const ObjectModelReference ref;
   };
 
   class DependencyModel : public wxTreeItemData {
@@ -73,7 +71,7 @@ private:
 
   class LoadMoreDependenciesWork : public Work {
   public:
-    LoadMoreDependenciesWork(const ObjectModelReference& databaseRef, wxTreeItemId item, bool dependenciesMode, Oid regclass, Oid oid, Oid database, DependenciesView *dest) : Work(databaseRef, dest, &DependenciesView::OnLoadedDependencies), item(item), dependenciesMode(dependenciesMode), regclass(regclass), oid(oid), database(database)
+    LoadMoreDependenciesWork(wxTreeItemId item, bool dependenciesMode, const ObjectModelReference& ref, DependenciesView *dest) : Work(ref.DatabaseRef(), dest, &DependenciesView::OnLoadedDependencies), item(item), dependenciesMode(dependenciesMode), ref(ref)
     {
       wxLogDebug(_T("Work to load dependencies: %p"), this);
     }
@@ -86,13 +84,9 @@ private:
     void operator()();
 
   private:
-    wxEvtHandler *dest;
-    wxTreeItemId item;
-    bool dependenciesMode;
-    Oid regclass;
-    Oid oid;
-    Oid database;
-    int objsubid;
+    const wxTreeItemId item;
+    const bool dependenciesMode;
+    const ObjectModelReference ref;
 
     friend class DependenciesView;
   };

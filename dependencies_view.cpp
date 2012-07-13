@@ -24,7 +24,7 @@ private:
   DependenciesView::DependencyModel * const dep;
   bool load(wxTreeItemId item)
   {
-    dest->launcher->DoWork(new DependenciesView::LoadMoreDependenciesWork(dest->rootRef.DatabaseRef(), item, dependenciesMode, dep->regclass, dep->oid, dest->rootRef.GetDatabase(), dest));
+    dest->launcher->DoWork(new DependenciesView::LoadMoreDependenciesWork(item, dependenciesMode, ObjectModelReference(dest->rootRef.DatabaseRef(), dep->regclass, dep->oid), dest));
     return true;
   }
 };
@@ -77,7 +77,7 @@ void DependenciesView::OnWorkCrashed(wxCommandEvent& event)
 
 void DependenciesView::LoadInitialObject() {
   wxLogDebug(_T("Load initial object %s"), rootRef.Identify().c_str());
-  launcher->DoWork(new LoadInitialObjectWork(rootRef.DatabaseRef(), rootRef.GetObjectClass(), rootRef.GetOid(), this));
+  launcher->DoWork(new LoadInitialObjectWork(rootRef, this));
 }
 
 void DependenciesView::FillInLabels(const wxString &value) {
@@ -103,13 +103,13 @@ void DependenciesView::OnLoadedRoot(Work* work) {
   selectedNameCtrl->SetValue(rootName);
   selectedTypeCtrl->SetValue(rootType);
 
-  launcher->DoWork(new LoadMoreDependenciesWork(rootRef.DatabaseRef(), tree->GetRootItem(), mode == DEPENDENCIES, rootRef.GetObjectClass(), rootRef.GetOid(), rootRef.GetDatabase(), this));
+  launcher->DoWork(new LoadMoreDependenciesWork(tree->GetRootItem(), mode == DEPENDENCIES, rootRef, this));
 }
 
 void DependenciesView::LoadMoreDependenciesWork::operator()()
 {
   wxString queryName = dependenciesMode ? _T("Dependencies") : _T("Dependents");
-  QueryResults rs = Query(queryName).OidParam(regclass).OidParam(oid).OidParam(database).List();
+  QueryResults rs = Query(queryName).OidParam(ref.GetObjectClass()).OidParam(ref.GetOid()).OidParam(ref.GetDatabase()).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
     DependencyModel dep;
     dep.deptype = (*iter).ReadText(0);

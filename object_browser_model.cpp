@@ -517,6 +517,22 @@ void ServerModel::UpdateServerParameters(const wxString& serverVersionString_, i
   serverVersionString = serverVersionString_;
   serverVersion = serverVersion_;
   if (ssl != NULL) {
+    int version = SSL_version(ssl);
+    switch (version) {
+    case SSL2_VERSION:
+      sslProtocol = _T("SSLv2");
+      break;
+    case SSL3_VERSION:
+      sslProtocol = _T("SSLv3");
+      break;
+    case TLS1_VERSION:
+      sslProtocol = _T("TLSv1");
+      break;
+    default:
+      sslProtocol = wxEmptyString;
+      sslProtocol << _T("#") << version << _T("?");
+      break;
+    }
     sslCipher = wxString(SSL_get_cipher(ssl), wxConvUTF8);
   }
 }

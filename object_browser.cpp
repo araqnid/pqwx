@@ -350,7 +350,7 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
 
   wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
   if (serverModel->IsUsingSSL()) {
-    serverItemText += _T(" [") + serverModel->GetSSLCipher() + _T("]");
+    serverItemText << _T(" [") << serverModel->GetSSLProtocol() << _T(":") << serverModel->GetSSLCipher() << _T("]");
     SetItemImage(serverItem, img_server_encrypted);
   }
   SetItemText(serverItem, serverItemText);

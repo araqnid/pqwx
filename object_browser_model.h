@@ -428,6 +428,10 @@ public:
    */
   const wxString& GetSSLCipher() const { return sslCipher; }
   /**
+   * @return The name of the SSL protocol in use, if applicable
+   */
+  const wxString& GetSSLProtocol() const { return sslProtocol; }
+  /**
    * Gets a connection to some database.
    *
    * The connection object returned may not be connected yet.
@@ -505,6 +509,7 @@ private:
   int serverVersion;
   wxString serverVersionString;
   wxString sslCipher;
+  wxString sslProtocol;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
   void DropDatabase(DatabaseModel*);

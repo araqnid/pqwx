@@ -24,3 +24,4 @@ latex
 object_browser_scripts_sql.cpp
 static_resources_txt.cpp
 create_database_dialogue_encodings.cpp
+create_database_dialogue_sql.cpp

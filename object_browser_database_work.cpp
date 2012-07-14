@@ -8,6 +8,9 @@
 
 #include "object_browser_database_work_impl.h"
 #include "object_browser.h"
+#include "ssl_info.h"
+
+#include <openssl/ssl.h>
 
 /*
  * Database list, and other server globals.
@@ -25,7 +28,82 @@ void RefreshDatabaseListWork::ReadServer()
 {
   serverVersionString = wxString(PQparameterStatus(conn, "server_version"), wxConvUTF8);
   serverVersion = PQserverVersion(conn);
-  ssl = (SSL*) PQgetssl(conn);
+  SSL *ssl = (SSL*) PQgetssl(conn);
+  if (ssl != NULL) {
+    sslInfo = new SSLInfo(ssl);
+  }
+  else {
+    sslInfo = NULL;
+  }
+}
+
+SSLInfo::SSLInfo(SSL* ssl)
+{
+  int version = SSL_version(ssl);
+  switch (version) {
+  case SSL2_VERSION:
+    protocol = _T("SSLv2");
+    break;
+  case SSL3_VERSION:
+    protocol = _T("SSLv3");
+    break;
+  case TLS1_VERSION:
+    protocol = _T("TLSv1");
+    break;
+  default:
+    protocol << _T("#") << version << _T("?");
+    break;
+  }
+
+  const SSL_CIPHER *sslCipher = SSL_get_current_cipher(ssl);
+  if (sslCipher != NULL) {
+    cipher = wxString(SSL_CIPHER_get_name(sslCipher), wxConvUTF8);
+    bits = SSL_CIPHER_get_bits(sslCipher, NULL);
+  }
+
+  X509 *peer = SSL_get_peer_certificate(ssl);
+  if (peer != NULL) {
+    X509_NAME *peerSubject = X509_get_subject_name(peer);
+    char *nameBuf = X509_NAME_oneline(peerSubject, NULL, 0);
+    peerDN = wxString(nameBuf, wxConvUTF8);
+    OPENSSL_free(nameBuf);
+
+    int n = X509_NAME_entry_count(peerSubject);
+    for (int i = 0; i < n; i++) {
+      X509_NAME_ENTRY *nameEntry = X509_NAME_get_entry(peerSubject, i);
+
+      ASN1_STRING *nameValue = X509_NAME_ENTRY_get_data(nameEntry);
+      unsigned char *nameValuePtr;
+      ASN1_STRING_to_UTF8(&nameValuePtr, nameValue);
+      wxString nameValueString((const char*) nameValuePtr, wxConvUTF8);
+      OPENSSL_free(nameValuePtr);
+
+      ASN1_OBJECT *nameKey = X509_NAME_ENTRY_get_object(nameEntry);
+      int nid = OBJ_obj2nid(nameKey);
+      if (nid != NID_undef) {
+        peerDNstructure.push_back(std::pair<wxString,wxString>(wxString(OBJ_nid2sn(nid), wxConvUTF8), nameValueString));
+      }
+      else {
+        size_t len = OBJ_obj2txt(NULL, 0, nameKey, 0);
+        wxCharBuffer keyBuf(len + 1);
+        OBJ_obj2txt(keyBuf.data(), len + 1, nameKey, 1);
+        peerDNstructure.push_back(std::pair<wxString,wxString>(wxString(keyBuf, wxConvUTF8), nameValueString));
+      }
+    }
+  }
+
+  long verifyResult = SSL_get_verify_result(ssl);
+  switch (verifyResult) {
+  case X509_V_OK:
+    verificationStatus = VERIFIED;
+    break;
+  case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+    verificationStatus = SELF_SIGNED;
+    break;
+  default:
+    verificationStatus = FAILED;
+    break;
+  }
 }
 
 void RefreshDatabaseListWork::ReadDatabases()
@@ -74,7 +152,7 @@ void RefreshDatabaseListWork::ReadTablespaces()
 void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
 {
   ServerModel *server = model.FindServer(serverId);
-  server->UpdateServerParameters(serverVersionString, serverVersion, ssl);
+  server->UpdateServerParameters(serverVersionString, serverVersion, sslInfo);
   server->UpdateDatabases(databases);
   server->UpdateRoles(roles);
   server->UpdateTablespaces(tablespaces);

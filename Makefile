@@ -107,6 +107,7 @@ PQWX_HEADERS = \
 	server_connection.h \
 	sql_dictionary.h \
 	sql_logger.h \
+	ssl_info.h \
 	static_resources.h \
 	work_launcher.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp

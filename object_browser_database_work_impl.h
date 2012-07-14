@@ -52,7 +52,7 @@ private:
   const wxString serverId;
   wxString serverVersionString;
   int serverVersion;
-  SSL *ssl;
+  SSLInfo *sslInfo;
   std::vector<DatabaseModel> databases;
   std::vector<RoleModel> roles;
   std::vector<TablespaceModel> tablespaces;

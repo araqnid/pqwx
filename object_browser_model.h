@@ -7,8 +7,6 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
-#include <openssl/ssl.h>
-
 #include "catalogue_index.h"
 #include "database_connection.h"
 #include "object_model_reference.h"
@@ -363,6 +361,8 @@ public:
   bool canLogin;
 };
 
+class SSLInfo;
+
 /**
  * A server.
  *
@@ -377,13 +377,15 @@ public:
   /**
    * Create server model.
    */
-  ServerModel(const ServerConnection &conninfo) : conninfo(conninfo) {}
+  ServerModel(const ServerConnection &conninfo) : conninfo(conninfo), sslInfo(NULL) {}
   /**
    * Create server model with an initial connection.
    */
-  ServerModel(const ServerConnection &conninfo, DatabaseConnection *db) : conninfo(conninfo) {
+  ServerModel(const ServerConnection &conninfo, DatabaseConnection *db) : conninfo(conninfo), sslInfo(NULL) {
     connections[db->DbName()] = db;
   }
+  ~ServerModel();
+
   /**
    * Initialise some server parameters.
    *
@@ -391,7 +393,7 @@ public:
    * @param serverVersion_ Server version as an integer such as 90101
    * @param ssl SSL object (NULL if not SSL)
    */
-  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSL *ssl);
+  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSLInfo* sslInfo_);
 
   void UpdateDatabases(const std::vector<DatabaseModel>& incoming);
   void UpdateRoles(const std::vector<RoleModel>& incoming);
@@ -422,15 +424,11 @@ public:
   /**
    * @return True if server is using SSL (based on the initial connection)
    */
-  bool IsUsingSSL() const { return !sslCipher.empty(); }
+  bool IsUsingSSL() const { return sslInfo != NULL; }
   /**
-   * @return The name of the SSL cipher in use, if applicable
+   * @return SSL information from the initial connection
    */
-  const wxString& GetSSLCipher() const { return sslCipher; }
-  /**
-   * @return The name of the SSL protocol in use, if applicable
-   */
-  const wxString& GetSSLProtocol() const { return sslProtocol; }
+  const SSLInfo& GetSSLInfo() const { return *sslInfo; }
   /**
    * Gets a connection to some database.
    *
@@ -508,8 +506,7 @@ private:
   std::vector<RoleModel> roles;
   int serverVersion;
   wxString serverVersionString;
-  wxString sslCipher;
-  wxString sslProtocol;
+  SSLInfo *sslInfo;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
   void DropDatabase(DatabaseModel*);

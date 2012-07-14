@@ -23,6 +23,7 @@
 #include "static_resources.h"
 #include "create_database_dialogue.h"
 #include "script_events.h"
+#include "ssl_info.h"
 
 #define BIND_SCRIPT_HANDLERS(menu, mode) \
   EVT_MENU(XRCID(#menu "Menu_Script" #mode "Window"), ObjectBrowser::On##menu##MenuScript##mode##Window) \
@@ -350,7 +351,13 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
 
   wxString serverItemText = serverModel->Identification() + _T(" (") + serverModel->VersionString() + _T(")");
   if (serverModel->IsUsingSSL()) {
-    serverItemText << _T(" [") << serverModel->GetSSLProtocol() << _T(":") << serverModel->GetSSLCipher() << _T("]");
+    const SSLInfo& sslInfo = serverModel->GetSSLInfo();
+    if (!sslInfo.PeerDN().empty())
+      serverItemText << _T(" ") << sslInfo.PeerDN();
+    serverItemText << _T(" [") << sslInfo.Protocol()
+                   << _T(":") << sslInfo.CipherBits()
+                   << _T(":") << sslInfo.Cipher()
+                   << _T("]");
     SetItemImage(serverItem, img_server_encrypted);
   }
   SetItemText(serverItem, serverItemText);

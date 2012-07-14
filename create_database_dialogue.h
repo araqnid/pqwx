@@ -117,6 +117,7 @@ private:
   };
 
   static const SqlDictionary& GetSqlDictionary();
+  static const std::vector<wxString>& GetPgEncodings();
 
   template<class T>
   void GenerateScript(T outputIterator);

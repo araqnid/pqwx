@@ -1,0 +1,81 @@
+#!/usr/bin/perl -w
+
+require 5;
+use strict;
+use warnings;
+use utf8;
+use Getopt::Std;
+use vars qw($opt_f $opt_h);
+
+getopts('f:h:') or die "Syntax: $0 [-f singleton-function] [-h header-file] [infile [outfile]]";
+
+sub slurp_template {
+    local $/;
+    undef $/;
+    my $template = <DATA>;
+    return $template;
+}
+
+my $class_template = slurp_template();
+
+sub c_escape {
+    my $str = shift;
+    our %escape = ( "\"" => "\\\"", "\r" => "\\r", "\n" => "\\n", "\t" => "\\t", "\\" => "\\\\" );
+    $str =~ s/([\"\r\n\t\\])/$escape{$1}/ge;
+    return $str;
+}
+
+sub process_header {
+    my $functionname = shift;
+    my $input = shift;
+    my $output = shift;
+
+    my $includes = '';
+    if ($opt_h) {
+	$includes .= "#include \"$opt_h\"\n";
+    }
+
+    my($header, $footer) = split(/\{\{content\}\}/, $class_template, 2);
+    $header =~ s/\{\{functionname\}\}/$functionname/g;
+    $header =~ s/\{\{includes\}\}/$includes/g;
+    $footer =~ s/\{\{functionname\}\}/$functionname/g;
+    $footer =~ s/\{\{includes\}\}/$includes/g;
+
+    print $output $header;
+
+    while (<$input>) {
+	chomp;
+	print $output "encodings.push_back(_T(\"".c_escape($_)."\"));\n";
+    }
+
+    print $output $footer;
+}
+
+my $functionname = $opt_f || "GetPgEncodings";
+if (@ARGV == 0) {
+    process_header($functionname, \*STDIN, \*STDOUT);
+}
+else {
+    my $infilename = shift;
+    open my $input, '<', $infilename or die "Unable to read '$infilename': $!\n";
+    my $outfilename = shift;
+    if (!$outfilename) {
+	$outfilename = $infilename;
+	$infilename =~ s/\.sql$/_sql/;
+	$outfilename .= ".h";
+    }
+    open my $output, '>', $outfilename or die "Unable to write '$outfilename': $!\n";
+    process_header($functionname, $input, $output);
+}
+
+__DATA__
+{{includes}}
+
+const std::vector<wxString>& {{functionname}}()
+{
+  static std::vector<wxString> encodings;
+  if (encodings.empty()) {
+{{content}}
+  }
+  return encodings;
+}

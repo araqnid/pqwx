@@ -111,7 +111,7 @@ PQWX_HEADERS = \
 	work_launcher.h
 SOURCES = $(PQWX_SOURCES) test_catalogue.cpp dump_catalogue.cpp
 SQL_DICTIONARIES = object_browser.sql dependencies_view.sql object_browser_scripts.sql create_database_dialogue.sql
-GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp resources.cpp
+GENERATED_SOURCES = $(patsubst %.sql,%_sql.cpp,$(SQL_DICTIONARIES)) static_resources_txt.cpp script_editor_wordlists.cpp resources.cpp create_database_dialogue_encodings.cpp
 PQWX_OBJS = $(PQWX_SOURCES:.cpp=.o) $(GENERATED_SOURCES:.cpp=.o)
 ifneq (,$(findstring MINGW,$(host_system)))
 PQWX_OBJS += pqwx_rc.o
@@ -177,6 +177,9 @@ script_editor_wordlists.cpp: postgresql_wordlists_keywords.txt postgresql_wordli
 		 user2=postgresql_wordlists_user2.txt \
 		 user3=postgresql_wordlists_user3.txt \
 		 user4=postgresql_wordlists_user4.txt
+
+create_database_dialogue_encodings.cpp: encodings.txt format_encodings
+	./format_encodings -h create_database_dialogue.h -f CreateDatabaseDialogue::GetPgEncodings encodings.txt $@
 
 -include static_finder_resources.d
 

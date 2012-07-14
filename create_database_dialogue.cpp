@@ -27,6 +27,10 @@ CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *l
   launcher->DoWork(new ListUsersWork(launcher->GetDatabaseRef(), this));
   launcher->DoWork(new ListTemplatesWork(launcher->GetDatabaseRef(), this));
   launcher->DoWork(new ListCollationsWork(launcher->GetDatabaseRef(), this));
+  const std::vector<wxString>& encodings = GetPgEncodings();
+  for (std::vector<wxString>::const_iterator iter = encodings.begin(); iter != encodings.end(); iter++) {
+    encodingInput->Append(*iter);
+  }
 }
 
 CreateDatabaseDialogue::~CreateDatabaseDialogue()

@@ -53,10 +53,14 @@ private:
   wxString serverVersionString;
   int serverVersion;
   SSLInfo *sslInfo;
+  bool createDB;
+  bool createUser;
+  bool superuser;
   std::vector<DatabaseModel> databases;
   std::vector<RoleModel> roles;
   std::vector<TablespaceModel> tablespaces;
   void ReadServer();
+  void ReadRole();
   void ReadDatabases();
   void ReadRoles();
   void ReadTablespaces();

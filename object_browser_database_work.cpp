@@ -19,6 +19,7 @@
 void RefreshDatabaseListWork::operator()()
 {
   ReadServer();
+  ReadRole();
   ReadDatabases();
   ReadRoles();
   ReadTablespaces();
@@ -106,6 +107,14 @@ SSLInfo::SSLInfo(SSL* ssl)
   }
 }
 
+void RefreshDatabaseListWork::ReadRole()
+{
+  QueryResults::Row row = Query(_T("Role")).UniqueResult();
+  createDB = row.ReadBool(0);
+  createUser = row.ReadBool(1);
+  superuser = row.ReadBool(2);
+}
+
 void RefreshDatabaseListWork::ReadDatabases()
 {
   QueryResults databaseRows = Query(_T("Databases")).List();
@@ -156,6 +165,9 @@ void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
   server->UpdateDatabases(databases);
   server->UpdateRoles(roles);
   server->UpdateTablespaces(tablespaces);
+  server->haveCreateDBPrivilege = createDB;
+  server->haveCreateUserPrivilege = createUser;
+  server->haveSuperuserStatus = superuser;
 }
 
 void RefreshDatabaseListWork::UpdateView(ObjectBrowser& ob)

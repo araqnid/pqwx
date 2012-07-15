@@ -174,6 +174,8 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
+  const ServerModel* ContextMenuServer();
+  void EnableIffHaveCreateDBPrivilege(wxUpdateUIEvent &event);
   const DatabaseModel* ContextMenuDatabase();
   void EnableIffNonSystemDatabase(wxUpdateUIEvent &event);
   void EnableIffUsableDatabase(wxUpdateUIEvent &event);

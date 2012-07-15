@@ -486,6 +486,10 @@ public:
    */
   const std::vector<TablespaceModel>& GetTablespaces() const { return tablespaces; }
 
+  bool HaveCreateDBPrivilege() const { return haveCreateDBPrivilege; }
+  bool HaveCreateUserPrivilege() const { return haveCreateUserPrivilege; }
+  bool HaveSuperuserStatus() const { return haveSuperuserStatus; }
+
   /**
    * Clean up expired and stale database connections.
    */
@@ -504,6 +508,9 @@ private:
   std::vector<DatabaseModel> databases;
   std::vector<TablespaceModel> tablespaces;
   std::vector<RoleModel> roles;
+  bool haveCreateDBPrivilege;
+  bool haveCreateUserPrivilege;
+  bool haveSuperuserStatus;
   int serverVersion;
   wxString serverVersionString;
   SSLInfo *sslInfo;

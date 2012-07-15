@@ -38,6 +38,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_SET_FOCUS(ObjectBrowser::OnSetFocus)
 
   EVT_MENU(XRCID("ServerMenu_NewDatabase"), ObjectBrowser::OnServerMenuNewDatabase)
+  EVT_UPDATE_UI(XRCID("ServerMenu_NewDatabase"), ObjectBrowser::EnableIffHaveCreateDBPrivilege)
   EVT_MENU(XRCID("ServerMenu_Disconnect"), ObjectBrowser::OnServerMenuDisconnect)
   EVT_MENU(XRCID("ServerMenu_Properties"), ObjectBrowser::OnServerMenuProperties)
   EVT_MENU(XRCID("ServerMenu_Refresh"), ObjectBrowser::OnServerMenuRefresh)
@@ -967,6 +968,22 @@ void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, O
   EnsureVisible(item);
   SelectItem(item);
   Expand(item);
+}
+
+const ServerModel* ObjectBrowser::ContextMenuServer()
+{
+  ModelReference *ref = dynamic_cast<ModelReference*>(GetItemData(contextMenuItem));
+  if (ref == NULL) {
+    // no object relevant
+    return NULL;
+  }
+  return model.FindServer(ref->ServerRef());
+}
+
+void ObjectBrowser::EnableIffHaveCreateDBPrivilege(wxUpdateUIEvent& event)
+{
+  const ServerModel* server = ContextMenuServer();
+  event.Enable(server != NULL && (server->HaveCreateDBPrivilege() || server->HaveSuperuserStatus()));
 }
 
 const DatabaseModel* ObjectBrowser::ContextMenuDatabase()

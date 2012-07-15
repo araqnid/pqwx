@@ -11,6 +11,11 @@
 -- SQL :: SetupObjectBrowserConnection
 SET search_path = pg_catalog
 
+-- SQL :: Role
+SELECT rolcreatedb, rolcreaterole, rolsuper
+FROM pg_roles
+WHERE rolname = current_user
+
 -- SQL :: Databases :: 8.2
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        has_database_privilege(pg_database.oid, 'connect') AS can_connect,

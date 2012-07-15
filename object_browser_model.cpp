@@ -25,7 +25,7 @@ DEFINE_LOCAL_EVENT_TYPE(PQWX_ObjectBrowserConnectionNeedsPassword)
 class ObjectBrowserDatabaseWork : public DatabaseWorkWithDictionary {
 public:
   ObjectBrowserDatabaseWork(wxEvtHandler *dest, ObjectBrowserModel *model, ObjectBrowserManagedWork *work) : DatabaseWorkWithDictionary(work->sqlDictionary), dest(dest), model(model), work(work) {}
-  void operator()() {
+  void DoWork() {
     TransactionBoundary txn(work->txMode, this);
     work->owner = this;
     work->conn = conn;

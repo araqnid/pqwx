@@ -92,7 +92,7 @@ public:
    */
   ScriptQueryWork(wxEvtHandler *dest, const wxString &sql) : ScriptExecutionWork(dest), sql(sql) {}
 
-  void operator()();
+  void DoWork();
 private:
   wxString sql;
 };
@@ -101,7 +101,7 @@ class ScriptPutCopyDataWork : public ScriptExecutionWork {
 public:
   ScriptPutCopyDataWork(wxEvtHandler *dest, const ExecutionLexer::Token &token, const char *buffer) : ScriptExecutionWork(dest), buffer(buffer), token(token) {}
 
-  void operator()();
+  void DoWork();
 private:
   const char *buffer;
   ExecutionLexer::Token token;

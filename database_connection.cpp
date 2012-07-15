@@ -8,7 +8,7 @@
 
 class InitialiseWork : public DatabaseWork {
 public:
-  void operator()() {
+  void DoWork() {
     int clientEncoding = PQclientEncoding(conn);
     const char *clientEncodingName = pg_encoding_to_char(clientEncoding);
     if (strcmp(clientEncodingName, "UTF8") != 0) {
@@ -23,7 +23,7 @@ public:
 class RelabelWork : public DatabaseWork {
 public:
   RelabelWork(const wxString &newLabel) : newLabel(newLabel) {}
-  void operator()() {
+  void DoWork() {
     int serverVersion = PQserverVersion(conn);
     if (serverVersion < 90000)
       return;
@@ -38,7 +38,7 @@ private:
 class DisconnectWork : public DatabaseWork {
 public:
   DisconnectWork() {}
-  void operator()() {
+  void DoWork() {
     PQfinish(conn);
     db->LogDisconnect();
   }
@@ -113,7 +113,7 @@ wxThread::ExitCode DatabaseConnection::WorkerThread::Entry() {
       work->db = db;
       work->conn = conn;
       try {
-        (*work)();
+        work->DoWork();
         CheckConnectionStatus();
         work->NotifyFinished();
       } catch (std::exception &e) {
@@ -371,7 +371,7 @@ public:
 private:
   DatabaseConnection *db;
   DatabaseConnection::NotificationReceiver *receiver;
-  void operator()()
+  void DoWork()
   {
     db->workerThread.notificationReceiver = receiver;
   }
@@ -385,7 +385,7 @@ public:
   UnregisterWithMonitor(DatabaseConnection *db) : db(db) {}
 private:
   DatabaseConnection *db;
-  void operator()()
+  void DoWork()
   {
     db->workerThread.notificationReceiver = NULL;
   }

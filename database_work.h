@@ -22,7 +22,7 @@ public:
   DatabaseWork() {}
   virtual ~DatabaseWork() {}
 
-  virtual void operator()() = 0;
+  virtual void DoWork() = 0;
   virtual void NotifyFinished() = 0;
   virtual void NotifyCrashed(const std::exception& e) { NotifyCrashed(); }
   virtual void NotifyCrashed() {}

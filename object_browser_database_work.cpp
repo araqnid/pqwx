@@ -19,10 +19,13 @@
 void LoadServerWork::DoManagedWork()
 {
   ReadServer();
-  ReadRole();
-  ReadDatabases();
-  ReadRoles();
-  ReadTablespaces();
+  ReadCurrentRole();
+  LoadThings(_T("Databases"), std::back_inserter(databases), ReadDatabase);
+  LoadThings(_T("Roles"), std::back_inserter(roles), ReadRole);
+  LoadThings(_T("Tablespaces"), std::back_inserter(tablespaces), ReadTablespace);
+  std::sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
+  std::sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
+  std::sort(tablespaces.begin(), tablespaces.end(), ObjectModel::CollateByName);
 }
 
 void LoadServerWork::ReadServer()
@@ -107,7 +110,7 @@ SSLInfo::SSLInfo(SSL* ssl)
   }
 }
 
-void LoadServerWork::ReadRole()
+void LoadServerWork::ReadCurrentRole()
 {
   QueryResults::Row row = Query(_T("Role")).UniqueResult();
   createDB = row.ReadBool(0);
@@ -116,48 +119,37 @@ void LoadServerWork::ReadRole()
   rolename = row.ReadText(3);
 }
 
-void LoadServerWork::ReadDatabases()
+DatabaseModel LoadServerWork::ReadDatabase(const QueryResults::Row& row)
 {
-  QueryResults databaseRows = Query(_T("Databases")).List();
-  for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
-    DatabaseModel database;
-    database.oid = (*iter).ReadOid(0);
-    database.name = (*iter).ReadText(1);
-    database.isTemplate = (*iter).ReadBool(2);
-    database.allowConnections = (*iter).ReadBool(3);
-    database.havePrivsToConnect = (*iter).ReadBool(4);
-    database.description = (*iter).ReadText(5);
-    database.owner = (*iter).ReadText(6);
-    databases.push_back(database);
-  }
-  std::sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
+  DatabaseModel database;
+  database.oid = row.ReadOid(0);
+  database.name = row.ReadText(1);
+  database.isTemplate = row.ReadBool(2);
+  database.allowConnections = row.ReadBool(3);
+  database.havePrivsToConnect = row.ReadBool(4);
+  database.description = row.ReadText(5);
+  database.owner = row.ReadText(6);
+  return database;
 }
 
-void LoadServerWork::ReadRoles()
+RoleModel LoadServerWork::ReadRole(const QueryResults::Row& row)
 {
-  QueryResults roleRows = Query(_T("Roles")).List();
-  for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
-    RoleModel role;
-    role.oid = (*iter).ReadOid(0);
-    role.name = (*iter).ReadText(1);
-    role.canLogin = (*iter).ReadBool(2);
-    role.superuser = (*iter).ReadBool(3);
-    role.description = (*iter).ReadText(4);
-    roles.push_back(role);
-  }
-  std::sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
+  RoleModel role;
+  role.oid = row.ReadOid(0);
+  role.name = row.ReadText(1);
+  role.canLogin = row.ReadBool(2);
+  role.superuser = row.ReadBool(3);
+  role.description = row.ReadText(4);
+  return role;
 }
 
-void LoadServerWork::ReadTablespaces()
+TablespaceModel LoadServerWork::ReadTablespace(const QueryResults::Row& row)
 {
-  QueryResults rows = Query(_T("Tablespaces")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    TablespaceModel spc;
-    spc.oid = (*iter).ReadOid(0);
-    spc.name = (*iter).ReadText(1);
-    spc.location = (*iter).ReadText(2);
-    tablespaces.push_back(spc);
-  }
+  TablespaceModel spc;
+  spc.oid = row.ReadOid(0);
+  spc.name = row.ReadText(1);
+  spc.location = row.ReadText(2);
+  return spc;
 }
 
 void LoadServerWork::UpdateModel(ObjectBrowserModel& model)
@@ -221,13 +213,6 @@ void LoadDatabaseWork::PopulateInternalLookup(typename std::map<Oid, T>& table, 
     table[(*first).oid] = *first;
     ++first;
   }
-}
-
-template<class OutputIterator, class UnaryOperator>
-void LoadDatabaseWork::LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
-{
-  QueryResults rows = Query(queryName).List();
-  std::transform(rows.begin(), rows.end(), output, mapper);
 }
 
 void LoadDatabaseWork::DoManagedWork() {

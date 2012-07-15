@@ -60,11 +60,17 @@ private:
   std::vector<DatabaseModel> databases;
   std::vector<RoleModel> roles;
   std::vector<TablespaceModel> tablespaces;
+  template<class OutputIterator, class UnaryOperator>
+  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  {
+    QueryResults rows = Query(queryName).List();
+    std::transform(rows.begin(), rows.end(), output, mapper);
+  }
   void ReadServer();
-  void ReadRole();
-  void ReadDatabases();
-  void ReadRoles();
-  void ReadTablespaces();
+  void ReadCurrentRole();
+  static DatabaseModel ReadDatabase(const QueryResults::Row&);
+  static RoleModel ReadRole(const QueryResults::Row&);
+  static TablespaceModel ReadTablespace(const QueryResults::Row&);
 };
 
 /**
@@ -111,7 +117,11 @@ private:
   template<class T, class InputIterator>
   void PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last);
   template<class OutputIterator, class UnaryOperator>
-  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper);
+  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  {
+    QueryResults rows = Query(queryName).List();
+    std::transform(rows.begin(), rows.end(), output, mapper);
+  }
   template<class Container>
   void LoadThings(const wxString& queryName, Container& target)
   {

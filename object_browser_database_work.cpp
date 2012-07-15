@@ -419,7 +419,7 @@ void LoadRelationWork::DoManagedWork()
     LoadIndices();
     LoadThings(_T("Triggers"), std::back_inserter(incoming.triggers), ReadTrigger);
     LoadThings(_T("Sequences"), std::back_inserter(incoming.sequences), ReadSequence);
-    LoadThings(_T("Constraints"), std::back_inserter(incoming.checkConstraints), ReadConstraint);
+    LoadThings(_T("Constraints"), LoadConstraint(*this));
   }
 }
 
@@ -504,14 +504,15 @@ RelationModel LoadRelationWork::ReadSequence(const QueryResults::Row& row)
   return sequence;
 }
 
-CheckConstraintModel LoadRelationWork::ReadConstraint(const QueryResults::Row& row)
+void LoadRelationWork::LoadConstraint::operator()(const QueryResults::Row& row)
 {
-  CheckConstraintModel constraint;
-  constraint.name = row.ReadText(0);
   wxString typeCode = row.ReadText(1);
-  wxASSERT(typeCode == _T("c"));
-  constraint.expression = row.ReadText(2);
-  return constraint;
+  if (typeCode == _T("c")) {
+    CheckConstraintModel constraint;
+    constraint.name = row.ReadText(0);
+    constraint.expression = row.ReadText(2);
+    checkConstraints.push_back(constraint);
+  }
 }
 
 void LoadRelationWork::UpdateModel(ObjectBrowserModel& model)

@@ -218,10 +218,22 @@ private:
   void LoadIndices();
   static TriggerModel ReadTrigger(const QueryResults::Row&);
   static RelationModel ReadSequence(const QueryResults::Row&);
-  static CheckConstraintModel ReadConstraint(const QueryResults::Row&);
+  class LoadConstraint {
+  public:
+    LoadConstraint(LoadRelationWork& parent) : checkConstraints(parent.incoming.checkConstraints) {}
+    void operator()(const QueryResults::Row&);
+  private:
+    std::vector<CheckConstraintModel>& checkConstraints;
+  };
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
   static std::vector<int> ParseInt2Vector(const wxString &str);
+  template<class UnaryOperator>
+  void LoadThings(const wxString& queryName, UnaryOperator loader)
+  {
+    QueryResults rows = Query(queryName).OidParam(relationRef.GetOid()).List();
+    std::for_each(rows.begin(), rows.end(), loader);
+  }
   template<class OutputIterator, class UnaryOperator>
   void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
   {

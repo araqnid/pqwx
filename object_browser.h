@@ -174,6 +174,12 @@ private:
   void OnRelationMenuViewDependencies(wxCommandEvent&);
   void OnFunctionMenuViewDependencies(wxCommandEvent&);
 
+  const DatabaseModel* ContextMenuDatabase();
+  void EnableIffNonSystemDatabase(wxUpdateUIEvent &event);
+  void EnableIffUsableDatabase(wxUpdateUIEvent &event);
+  void PrepareServerMenu(const ServerModel*);
+  void PrepareDatabaseMenu(const DatabaseModel*);
+  void PrepareSchemaMenu(const SchemaModel*);
   void OpenServerMemberMenu(wxMenu*, int serverItemId, const ServerMemberModel*, const ServerModel*);
   void OpenDatabaseMemberMenu(wxMenu*, int databaseItemId, const DatabaseMemberModel*, const DatabaseModel*);
   void OpenSchemaMemberMenu(wxMenu*, int schemaItemId, const SchemaMemberModel*, const DatabaseModel*);

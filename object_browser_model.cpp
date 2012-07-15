@@ -551,11 +551,14 @@ void ServerModel::UpdateDatabase(const DatabaseModel& incoming)
 {
   for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
     if ((*iter).oid == incoming.oid) {
-      wxString dbname = (*iter).name;
-      *iter = incoming;
-      (*iter).server = this;
-      (*iter).name = dbname;
       (*iter).loaded = true;
+      (*iter).catalogueIndex = NULL;
+      (*iter).relations = incoming.relations;
+      (*iter).functions = incoming.functions;
+      (*iter).textSearchDictionaries = incoming.textSearchDictionaries;
+      (*iter).textSearchParsers = incoming.textSearchParsers;
+      (*iter).textSearchTemplates = incoming.textSearchTemplates;
+      (*iter).textSearchConfigurations = incoming.textSearchConfigurations;
       return;
     }
   }

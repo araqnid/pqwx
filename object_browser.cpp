@@ -43,10 +43,16 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_MENU(XRCID("ServerMenu_Refresh"), ObjectBrowser::OnServerMenuRefresh)
 
   EVT_MENU(XRCID("DatabaseMenu_Query"), ObjectBrowser::OnDatabaseMenuQuery)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Query"), ObjectBrowser::EnableIffUsableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Drop"), ObjectBrowser::OnDatabaseMenuDrop)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Drop"), ObjectBrowser::EnableIffNonSystemDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::EnableIffUsableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Properties"), ObjectBrowser::EnableIffUsableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_ViewDependencies"), ObjectBrowser::OnDatabaseMenuViewDependencies)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Script"), ObjectBrowser::EnableIffUsableDatabase)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_ViewDependencies"), ObjectBrowser::EnableIffUsableDatabase)
 
   EVT_MENU(XRCID("TableMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
   EVT_MENU(XRCID("ViewMenu_ViewDependencies"), ObjectBrowser::OnRelationMenuViewDependencies)
@@ -963,8 +969,47 @@ void ObjectBrowser::ZoomToFoundObject(const ObjectModelReference& databaseRef, O
   Expand(item);
 }
 
+const DatabaseModel* ObjectBrowser::ContextMenuDatabase()
+{
+  ModelReference *ref = dynamic_cast<ModelReference*>(GetItemData(contextMenuItem));
+  if (ref == NULL) {
+    // no object relevant
+    return NULL;
+  }
+  if (ref->GetObjectClass() == InvalidOid) {
+    // server
+    return NULL;
+  }
+  return model.FindDatabase(ref->DatabaseRef());
+}
+
+void ObjectBrowser::EnableIffNonSystemDatabase(wxUpdateUIEvent& event)
+{
+  const DatabaseModel* database = ContextMenuDatabase();
+  event.Enable(database != NULL && !database->IsSystem());
+}
+
+void ObjectBrowser::EnableIffUsableDatabase(wxUpdateUIEvent& event)
+{
+  const DatabaseModel* database = ContextMenuDatabase();
+  event.Enable(database != NULL && database->IsUsable());
+}
+
+void ObjectBrowser::PrepareServerMenu(const ServerModel* server)
+{
+}
+
+void ObjectBrowser::PrepareDatabaseMenu(const DatabaseModel* database)
+{
+}
+
+void ObjectBrowser::PrepareSchemaMenu(const SchemaModel* database)
+{
+}
+
 void ObjectBrowser::OpenServerMemberMenu(wxMenu *menu, int serverItemId, const ServerMemberModel *member, const ServerModel *server)
 {
+  PrepareServerMenu(server);
   PopupMenu(menu);
 }
 
@@ -973,6 +1018,7 @@ void ObjectBrowser::OpenDatabaseMemberMenu(wxMenu *menu, int databaseItemId, con
   wxMenuItem *databaseItem = menu->FindItem(databaseItemId, NULL);
   wxASSERT(databaseItem != NULL);
   databaseItem->SetItemLabel(wxString::Format(_("Database '%s'"), database->name.c_str()));
+  PrepareDatabaseMenu(database);
   OpenServerMemberMenu(menu, XRCID("DatabaseMenu_Server"), database, database->server);
 }
 
@@ -981,6 +1027,7 @@ void ObjectBrowser::OpenSchemaMemberMenu(wxMenu *menu, int schemaItemId, const S
   wxMenuItem *schemaItem = menu->FindItem(schemaItemId, NULL);
   wxASSERT(schemaItem != NULL);
   schemaItem->SetItemLabel(wxString::Format(_("Schema '%s'"), member->schema.name.c_str()));
+  PrepareSchemaMenu(&(member->schema));
   OpenDatabaseMemberMenu(menu, XRCID("SchemaMenu_Database"), &member->schema, database);
 }
 
@@ -1001,10 +1048,12 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
 
   switch (ref->GetObjectClass()) {
   case InvalidOid:
+    PrepareServerMenu(model.FindServer(*ref));
     PopupMenu(serverMenu);
     break;
 
   case ObjectModelReference::PG_DATABASE:
+    PrepareDatabaseMenu(model.FindDatabase(*ref));
     OpenServerMemberMenu(databaseMenu, XRCID("DatabaseMenu_Server"), model.FindDatabase(*ref), model.FindServer(ref->GetServerId()));
     break;
 
@@ -1043,6 +1092,7 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
     break;
 
   case ObjectModelReference::PG_NAMESPACE:
+    PrepareSchemaMenu(static_cast<const SchemaModel*>(model.FindObject(*ref)));
     OpenDatabaseMemberMenu(schemaMenu, XRCID("SchemaMenu_Database"), static_cast<const SchemaModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 

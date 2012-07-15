@@ -356,8 +356,9 @@ FROM pg_namespace
                              WHEN 'v' THEN 'v'
                         END AS objtype
                  FROM pg_class
-                 WHERE relkind IN ('r','v')
-                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))
+                 WHERE (relkind IN ('r','v')
+                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a')))
+                       AND has_schema_privilege(relnamespace, 'USAGE')
                  -- functions
                  UNION ALL
                  SELECT pronamespace AS nspoid,
@@ -370,6 +371,7 @@ FROM pg_namespace
                        NOT (proargtypes::text <> '' AND EXISTS (SELECT 1 FROM regexp_split_to_table(proargtypes::text, ' ') x(typeid) WHERE typeid::oid IN ('internal'::regtype, 'cstring'::regtype)))
                        -- exclude functions with 'internal'/'cstring' return type
                        AND NOT prorettype IN ('internal'::regtype, 'cstring'::regtype)
+                       AND has_schema_privilege(pronamespace, 'USAGE')
                  -- types
                  UNION ALL
                  SELECT typnamespace AS nspoid,
@@ -382,6 +384,7 @@ FROM pg_namespace
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
                        AND NOT typrelid > 0
+                       AND has_schema_privilege(typnamespace, 'USAGE')
                  -- extensions (9.1 onwards)
                  UNION ALL
                  SELECT extnamespace AS nspoid,
@@ -390,6 +393,7 @@ FROM pg_namespace
                         null AS objdisambig,
 			'x' AS objtype
                  FROM pg_extension
+                 WHERE has_schema_privilege(extnamespace, 'USAGE')
                  -- collations (9.1 onwards)
                  UNION ALL
                  SELECT collnamespace AS nspoid,
@@ -398,6 +402,7 @@ FROM pg_namespace
                         null AS objdisambig,
 			'O' AS objtype
                  FROM pg_collation
+                 WHERE has_schema_privilege(collnamespace, 'USAGE')
                  -- text search dictionaries
                  UNION ALL
                  SELECT dictnamespace AS nspoid,
@@ -406,6 +411,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Fd' AS objtype
                  FROM pg_ts_dict
+                 WHERE has_schema_privilege(dictnamespace, 'USAGE')
                  -- text search parsers
                  UNION ALL
                  SELECT prsnamespace AS nspoid,
@@ -414,6 +420,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Fp' AS objtype
                  FROM pg_ts_parser
+                 WHERE has_schema_privilege(prsnamespace, 'USAGE')
                  -- text search templates
                  UNION ALL
                  SELECT tmplnamespace AS nspoid,
@@ -422,6 +429,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Ft' AS objtype
                  FROM pg_ts_template
+                 WHERE has_schema_privilege(tmplnamespace, 'USAGE')
                  -- text search configurations
                  UNION ALL
                  SELECT cfgnamespace AS nspoid,
@@ -430,6 +438,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'F' AS objtype
                  FROM pg_ts_config
+                 WHERE has_schema_privilege(cfgnamespace, 'USAGE')
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
@@ -452,8 +461,9 @@ FROM pg_namespace
                              WHEN 'v' THEN 'v'
                         END AS objtype
                  FROM pg_class
-                 WHERE relkind IN ('r','v')
-                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))
+                 WHERE (relkind IN ('r','v')
+                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a')))
+                       AND has_schema_privilege(relnamespace, 'USAGE')
                  -- functions
                  UNION ALL
                  SELECT pronamespace AS nspoid,
@@ -466,6 +476,7 @@ FROM pg_namespace
                        NOT (proargtypes::text <> '' AND EXISTS (SELECT 1 FROM regexp_split_to_table(proargtypes::text, ' ') x(typeid) WHERE typeid::oid IN ('internal'::regtype, 'cstring'::regtype)))
                        -- exclude functions with 'internal'/'cstring' return type
                        AND NOT prorettype IN ('internal'::regtype, 'cstring'::regtype)
+		       AND has_schema_privilege(pronamespace, 'USAGE')
                  -- types
                  UNION ALL
                  SELECT typnamespace AS nspoid,
@@ -478,6 +489,7 @@ FROM pg_namespace
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
                        AND NOT typrelid > 0
+		       AND has_schema_privilege(typnamespace, 'USAGE')
                  -- text search dictionaries
                  UNION ALL
                  SELECT dictnamespace AS nspoid,
@@ -486,6 +498,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Fd' AS objtype
                  FROM pg_ts_dict
+		 WHERE has_schema_privilege(dictnamespace, 'USAGE')
                  -- text search parsers
                  UNION ALL
                  SELECT prsnamespace AS nspoid,
@@ -494,6 +507,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Fp' AS objtype
                  FROM pg_ts_parser
+		 WHERE has_schema_privilege(prsnamespace, 'USAGE')
                  -- text search templates
                  UNION ALL
                  SELECT tmplnamespace AS nspoid,
@@ -502,6 +516,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'Ft' AS objtype
                  FROM pg_ts_template
+		 WHERE has_schema_privilege(tmplnamespace, 'USAGE')
                  -- text search configurations
                  UNION ALL
                  SELECT cfgnamespace AS nspoid,
@@ -510,6 +525,7 @@ FROM pg_namespace
                         null AS objdisambig,
                         'F' AS objtype
                  FROM pg_ts_config
+		 WHERE has_schema_privilege(cfgnamespace, 'USAGE')
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
@@ -532,8 +548,9 @@ FROM pg_namespace
                              WHEN 'v' THEN 'v'
                         END AS objtype
                  FROM pg_class
-                 WHERE relkind IN ('r','v')
-                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a'))
+                 WHERE (relkind IN ('r','v')
+                       OR (relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend WHERE classid = 'pg_class'::regclass AND objid = pg_class.oid AND refclassid = 'pg_class'::regclass AND deptype = 'a')))
+                       AND has_schema_privilege(relnamespace, 'USAGE')
                  -- functions
                  UNION ALL
                  SELECT pronamespace AS nspoid,
@@ -546,6 +563,7 @@ FROM pg_namespace
                        NOT (proargtypes::text <> '' AND EXISTS (SELECT 1 FROM regexp_split_to_table(proargtypes::text, ' ') x(typeid) WHERE typeid::oid IN ('internal'::regtype, 'cstring'::regtype)))
                        -- exclude functions with 'internal'/'cstring' return type
                        AND NOT prorettype IN ('internal'::regtype, 'cstring'::regtype)
+                       AND has_schema_privilege(pronamespace, 'USAGE')
                  -- types
                  UNION ALL
                  SELECT typnamespace AS nspoid,
@@ -558,6 +576,7 @@ FROM pg_namespace
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
                        AND NOT typrelid > 0
+                       AND has_schema_privilege(typnamespace, 'USAGE')
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3

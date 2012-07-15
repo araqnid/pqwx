@@ -155,6 +155,8 @@ std::vector<wxString> PgToolsRegistry::ScannerThread::FindSubdirectories(const w
 {
   wxDir dir(dirname);
   std::vector<wxString> result;
+  if (!dir.IsOpened())
+    return result;
   wxString filename;
   bool cont = dir.GetFirst(&filename, wxEmptyString, wxDIR_DIRS);
   while (cont) {
@@ -169,6 +171,8 @@ std::vector<wxString> PgToolsRegistry::ScannerThread::FindExecutables(const wxSt
 {
   wxDir dir(dirname);
   std::vector<wxString> result;
+  if (!dir.IsOpened())
+    return result;
   wxString filename;
 #ifdef __WXMSW__
   bool cont = dir.GetFirst(&filename, _T("*.exe"), wxDIR_FILES);

@@ -29,7 +29,7 @@ public:
     TransactionBoundary txn(work->txMode, this);
     work->owner = this;
     work->conn = conn;
-    (*work)();
+    work->DoManagedWork();
   }
   void NotifyFinished() {
     wxLogDebug(_T("%p: object browser work finished, notifying GUI thread"), work);

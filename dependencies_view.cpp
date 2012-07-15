@@ -88,7 +88,7 @@ void DependenciesView::FillInLabels(const wxString &value) {
   }
 }
 
-void DependenciesView::LoadInitialObjectWork::operator()()
+void DependenciesView::LoadInitialObjectWork::DoManagedWork()
 {
   name = _T("ROOT NAME");
   type = _T("ROOT TYPE");
@@ -106,7 +106,7 @@ void DependenciesView::OnLoadedRoot(Work* work) {
   launcher->DoWork(new LoadMoreDependenciesWork(tree->GetRootItem(), mode == DEPENDENCIES, rootRef, this));
 }
 
-void DependenciesView::LoadMoreDependenciesWork::operator()()
+void DependenciesView::LoadMoreDependenciesWork::DoManagedWork()
 {
   wxString queryName = dependenciesMode ? _T("Dependencies") : _T("Dependents");
   QueryResults rs = Query(queryName).OidParam(ref.GetObjectClass()).OidParam(ref.GetOid()).OidParam(ref.GetDatabase()).List();

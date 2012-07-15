@@ -54,7 +54,7 @@ private:
     ScriptWork * const owner;
   };
 
-  void operator()()
+  void DoManagedWork()
   {
     GenerateScript(WxStringConcatenator(script, _T(";\n\n")));
   }

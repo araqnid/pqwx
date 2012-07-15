@@ -74,7 +74,7 @@ private:
     {
       wxLogDebug(_T("%p: work to list users for owners dropdown"), this);
     }
-    void operator()();
+    void DoManagedWork();
     std::vector<wxString> result;
   };
 
@@ -84,7 +84,7 @@ private:
     {
       wxLogDebug(_T("%p: work to list templates for dropdown"), this);
     }
-    void operator()();
+    void DoManagedWork();
     std::vector<wxString> result;
   };
 
@@ -101,7 +101,7 @@ private:
     {
       wxLogDebug(_T("%p: work to list collations for dropdown"), this);
     }
-    void operator()();
+    void DoManagedWork();
     std::vector<QualifiedName> result;
   };
 
@@ -111,7 +111,7 @@ private:
     {
       wxLogDebug(_T("%p: work to execute generated script"), this);
     }
-    void operator()();
+    void DoManagedWork();
   private:
     const std::vector<wxString> commands;
   };

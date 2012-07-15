@@ -110,7 +110,7 @@ void CreateDatabaseDialogue::OnExecute(wxCommandEvent& event)
   Destroy();
 }
 
-void CreateDatabaseDialogue::ExecuteScriptWork::operator()()
+void CreateDatabaseDialogue::ExecuteScriptWork::DoManagedWork()
 {
   for (std::vector<wxString>::const_iterator iter = commands.begin(); iter != commands.end(); iter++) {
     owner->DatabaseWork::DoCommand(*iter);
@@ -164,7 +164,7 @@ void CreateDatabaseDialogue::OnWorkCrashed(wxCommandEvent& event)
   delete work;
 }
 
-void CreateDatabaseDialogue::ListUsersWork::operator()()
+void CreateDatabaseDialogue::ListUsersWork::DoManagedWork()
 {
   QueryResults rs = Query(_T("List users")).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -182,7 +182,7 @@ void CreateDatabaseDialogue::OnListUsersComplete(Work *work)
   }
 }
 
-void CreateDatabaseDialogue::ListTemplatesWork::operator()()
+void CreateDatabaseDialogue::ListTemplatesWork::DoManagedWork()
 {
   QueryResults rs = Query(_T("List templates")).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -200,7 +200,7 @@ void CreateDatabaseDialogue::OnListTemplatesComplete(Work *work)
   }
 }
 
-void CreateDatabaseDialogue::ListCollationsWork::operator()()
+void CreateDatabaseDialogue::ListCollationsWork::DoManagedWork()
 {
   QueryResults rs = Query(_T("List collations")).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {

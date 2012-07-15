@@ -51,7 +51,7 @@ private:
 
     wxString name, type;
   protected:
-    void operator()();
+    void DoManagedWork();
 
   private:
     const ObjectModelReference ref;
@@ -81,7 +81,7 @@ private:
     std::vector<DependencyModel> objects;
 
   protected:
-    void operator()();
+    void DoManagedWork();
 
   private:
     const wxTreeItemId item;

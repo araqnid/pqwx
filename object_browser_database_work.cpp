@@ -16,7 +16,7 @@
  * Database list, and other server globals.
  */
  
-void RefreshDatabaseListWork::operator()()
+void RefreshDatabaseListWork::DoManagedWork()
 {
   ReadServer();
   ReadRole();
@@ -230,7 +230,7 @@ void LoadDatabaseSchemaWork::LoadThings(const wxString& queryName, OutputIterato
   std::transform(rows.begin(), rows.end(), output, mapper);
 }
 
-void LoadDatabaseSchemaWork::operator()() {
+void LoadDatabaseSchemaWork::DoManagedWork() {
   incoming.oid = databaseRef.GetOid();
 
   LoadThings(_T("Schemas"), std::back_inserter(incoming.schemas), ReadSchema);
@@ -322,7 +322,7 @@ void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
 /*
  * All database object descriptions.
  */
-void LoadDatabaseDescriptionsWork::operator()()
+void LoadDatabaseDescriptionsWork::DoManagedWork()
 {
   QueryResults rs = Query(_T("Object Descriptions")).List();
   for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
@@ -390,7 +390,7 @@ static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
 
 const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitIndexerTypeMap();
 
-void IndexDatabaseSchemaWork::operator()() {
+void IndexDatabaseSchemaWork::DoManagedWork() {
   QueryResults rs = Query(_T("IndexSchema")).List();
   catalogueIndex = new CatalogueIndex();
   catalogueIndex->Begin();
@@ -427,7 +427,7 @@ void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
 /*
  * Load a relation's details.
  */
-void LoadRelationWork::operator()() {
+void LoadRelationWork::DoManagedWork() {
   ReadColumns();
   if (relationType == RelationModel::TABLE) {
     ReadIndices();
@@ -554,7 +554,7 @@ void LoadRelationWork::UpdateView(ObjectBrowser& ob)
   ob.UpdateRelation(relationRef);
 }
 
-void DropDatabaseWork::operator()()
+void DropDatabaseWork::DoManagedWork()
 {
   wxString sql;
   sql << _T("DROP DATABASE ") << QuoteIdent(dbname);

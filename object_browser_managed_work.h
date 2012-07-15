@@ -71,10 +71,10 @@ public:
   /**
    * Execute work.
    *
-   * Similar to the same-named method in DatabaseWork. This method is
-   * executed on the database worker thread.
+   * Similar to DatabaseWork::DoWork. This method is executed on the
+   * database worker thread.
    */
-  virtual void operator()() = 0;
+  virtual void DoManagedWork() = 0;
   /**
    * If the database work threw a fatal exception, this will retrieve the message.
    */

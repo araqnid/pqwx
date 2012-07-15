@@ -19,7 +19,7 @@ class SetupDatabaseConnectionWork : public ObjectBrowserWork {
 public:
   SetupDatabaseConnectionWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef) {}
 protected:
-  void operator()()
+  void DoManagedWork()
   {
     owner->DoCommand(_T("SetupObjectBrowserConnection"));
   }
@@ -45,7 +45,7 @@ public:
     wxLogDebug(_T("%p: work to load database list"), this);
   }
 protected:
-  void operator()();
+  void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
 private:
@@ -85,7 +85,6 @@ private:
   const bool expandAfter;
   DatabaseModel incoming;
 protected:
-  void operator()();
   void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
@@ -137,7 +136,7 @@ private:
   const ObjectModelReference databaseRef;
   std::map<unsigned long, wxString> descriptions;
 protected:
-  void operator()();
+  void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
 };
@@ -183,7 +182,7 @@ private:
     IndexSchemaCompletionCallback * const indexCompletion;
   };
 protected:
-  void operator()();
+  void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob) {}
 };
@@ -204,7 +203,7 @@ private:
   const ObjectModelReference relationRef;
   RelationModel incoming;
 private:
-  void operator()();
+  void DoManagedWork();
   void ReadColumns();
   void ReadIndices();
   void ReadTriggers();
@@ -225,7 +224,7 @@ public:
     wxLogDebug(_T("%p: work to drop database"), this);
   }
 
-  void operator()();
+  void DoManagedWork();
   void UpdateModel(ObjectBrowserModel&);
   void UpdateView(ObjectBrowser&);
 

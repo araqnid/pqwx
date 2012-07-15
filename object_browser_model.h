@@ -263,6 +263,7 @@ public:
   }
   operator ObjectModelReference () const;
   bool isTemplate;
+  wxString owner;
   bool allowConnections;
   bool havePrivsToConnect;
   bool loaded;

@@ -177,7 +177,7 @@ private:
   const ServerModel* ContextMenuServer();
   void EnableIffHaveCreateDBPrivilege(wxUpdateUIEvent &event);
   const DatabaseModel* ContextMenuDatabase();
-  void EnableIffNonSystemDatabase(wxUpdateUIEvent &event);
+  void EnableIffDroppableDatabase(wxUpdateUIEvent &event);
   void EnableIffUsableDatabase(wxUpdateUIEvent &event);
   void PrepareServerMenu(const ServerModel*);
   void PrepareDatabaseMenu(const DatabaseModel*);

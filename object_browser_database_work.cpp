@@ -127,6 +127,7 @@ void RefreshDatabaseListWork::ReadDatabases()
     database.allowConnections = (*iter).ReadBool(3);
     database.havePrivsToConnect = (*iter).ReadBool(4);
     database.description = (*iter).ReadText(5);
+    database.owner = (*iter).ReadText(6);
     databases.push_back(database);
   }
   sort(databases.begin(), databases.end(), ObjectModel::CollateByName);

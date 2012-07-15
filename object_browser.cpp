@@ -46,7 +46,7 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   EVT_MENU(XRCID("DatabaseMenu_Query"), ObjectBrowser::OnDatabaseMenuQuery)
   EVT_UPDATE_UI(XRCID("DatabaseMenu_Query"), ObjectBrowser::EnableIffUsableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Drop"), ObjectBrowser::OnDatabaseMenuDrop)
-  EVT_UPDATE_UI(XRCID("DatabaseMenu_Drop"), ObjectBrowser::EnableIffNonSystemDatabase)
+  EVT_UPDATE_UI(XRCID("DatabaseMenu_Drop"), ObjectBrowser::EnableIffDroppableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::OnDatabaseMenuRefresh)
   EVT_UPDATE_UI(XRCID("DatabaseMenu_Refresh"), ObjectBrowser::EnableIffUsableDatabase)
   EVT_MENU(XRCID("DatabaseMenu_Properties"), ObjectBrowser::OnDatabaseMenuProperties)
@@ -1000,10 +1000,11 @@ const DatabaseModel* ObjectBrowser::ContextMenuDatabase()
   return model.FindDatabase(ref->DatabaseRef());
 }
 
-void ObjectBrowser::EnableIffNonSystemDatabase(wxUpdateUIEvent& event)
+void ObjectBrowser::EnableIffDroppableDatabase(wxUpdateUIEvent& event)
 {
   const DatabaseModel* database = ContextMenuDatabase();
-  event.Enable(database != NULL && !database->IsSystem());
+  const ServerModel* server = ContextMenuServer();
+  event.Enable(database != NULL && !database->IsSystem() && (server->HaveSuperuserStatus() || database->owner == server->GetRolename()));
 }
 
 void ObjectBrowser::EnableIffUsableDatabase(wxUpdateUIEvent& event)

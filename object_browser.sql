@@ -19,16 +19,20 @@ WHERE rolname = current_user
 -- SQL :: Databases :: 8.2
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        has_database_privilege(pg_database.oid, 'connect') AS can_connect,
-       pg_shdescription.description
+       pg_shdescription.description,
+       owner.rolname
 FROM pg_database
+     JOIN pg_roles owner ON owner.oid = pg_database.datdba
      LEFT JOIN pg_shdescription ON pg_shdescription.classoid = 'pg_database'::regclass
                                    AND pg_shdescription.objoid = pg_database.oid
 
 -- SQL :: Databases
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        true AS can_connect,
-       null AS description
+       null AS description,
+       owner.rolname
 FROM pg_database
+     JOIN pg_roles owner ON owner.oid = pg_database.datdba
 
 -- SQL :: Tablespaces :: 9.2
 SELECT pg_tablespace.oid, spcname, pg_catalog.pg_tablespace_location(pg_tablespace.oid)

@@ -532,7 +532,7 @@ private:
   DatabaseModel *FindDatabaseByOid(Oid oid);
   void DropDatabase(DatabaseModel*);
   void RemoveDatabase(const wxString& dbname);
-  friend class RefreshDatabaseListWork;
+  friend class LoadServerWork;
   friend class DatabaseModel;
   friend class DropDatabaseWork;
 };

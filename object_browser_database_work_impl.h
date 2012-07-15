@@ -34,13 +34,13 @@ protected:
 /**
  * Load server information, database list and role list from server.
  */
-class RefreshDatabaseListWork : public ObjectBrowserWork {
+class LoadServerWork : public ObjectBrowserWork {
 public:
   /**
    * Create work object
    * @param serverModel Server model to populate
    */
-  RefreshDatabaseListWork(const ObjectModelReference& database) : ObjectBrowserWork(database), serverId(database.GetServerId())
+  LoadServerWork(const ObjectModelReference& database) : ObjectBrowserWork(database), serverId(database.GetServerId())
   {
     wxLogDebug(_T("%p: work to load database list"), this);
   }
@@ -70,14 +70,14 @@ private:
 /**
  * Load schema members (relations and functions) for a database.
  */
-class LoadDatabaseSchemaWork : public ObjectBrowserWork {
+class LoadDatabaseWork : public ObjectBrowserWork {
 public:
   /**
    * Create work object.
    * @param databaseModel Database model to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseSchemaWork(const ObjectModelReference& databaseRef, bool expandAfter) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), expandAfter(expandAfter) {
+  LoadDatabaseWork(const ObjectModelReference& databaseRef, bool expandAfter) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), expandAfter(expandAfter) {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -94,13 +94,13 @@ private:
   template<typename T>
   class Mapper {
   public:
-    Mapper(const LoadDatabaseSchemaWork& owner) : owner(owner) {}
+    Mapper(const LoadDatabaseWork& owner) : owner(owner) {}
     T operator()(const QueryResults::Row&);
   protected:
     SchemaModel Schema(Oid oid) { return owner.Schema(oid); }
     ExtensionModel Extension(Oid oid) { return owner.Extension(oid); }
   private:
-    const LoadDatabaseSchemaWork& owner;
+    const LoadDatabaseWork& owner;
   };
   std::map<Oid, SchemaModel> schemas;
   std::map<Oid, ExtensionModel> extensions;

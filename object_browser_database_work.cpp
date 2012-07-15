@@ -16,7 +16,7 @@
  * Database list, and other server globals.
  */
  
-void RefreshDatabaseListWork::DoManagedWork()
+void LoadServerWork::DoManagedWork()
 {
   ReadServer();
   ReadRole();
@@ -25,7 +25,7 @@ void RefreshDatabaseListWork::DoManagedWork()
   ReadTablespaces();
 }
 
-void RefreshDatabaseListWork::ReadServer()
+void LoadServerWork::ReadServer()
 {
   serverVersionString = wxString(PQparameterStatus(conn, "server_version"), wxConvUTF8);
   serverVersion = PQserverVersion(conn);
@@ -107,7 +107,7 @@ SSLInfo::SSLInfo(SSL* ssl)
   }
 }
 
-void RefreshDatabaseListWork::ReadRole()
+void LoadServerWork::ReadRole()
 {
   QueryResults::Row row = Query(_T("Role")).UniqueResult();
   createDB = row.ReadBool(0);
@@ -116,7 +116,7 @@ void RefreshDatabaseListWork::ReadRole()
   rolename = row.ReadText(3);
 }
 
-void RefreshDatabaseListWork::ReadDatabases()
+void LoadServerWork::ReadDatabases()
 {
   QueryResults databaseRows = Query(_T("Databases")).List();
   for (QueryResults::const_iterator iter = databaseRows.begin(); iter != databaseRows.end(); iter++) {
@@ -133,7 +133,7 @@ void RefreshDatabaseListWork::ReadDatabases()
   sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
 }
 
-void RefreshDatabaseListWork::ReadRoles()
+void LoadServerWork::ReadRoles()
 {
   QueryResults roleRows = Query(_T("Roles")).List();
   for (QueryResults::const_iterator iter = roleRows.begin(); iter != roleRows.end(); iter++) {
@@ -148,7 +148,7 @@ void RefreshDatabaseListWork::ReadRoles()
   sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
 }
 
-void RefreshDatabaseListWork::ReadTablespaces()
+void LoadServerWork::ReadTablespaces()
 {
   QueryResults rows = Query(_T("Tablespaces")).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
@@ -160,7 +160,7 @@ void RefreshDatabaseListWork::ReadTablespaces()
   }
 }
 
-void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
+void LoadServerWork::UpdateModel(ObjectBrowserModel& model)
 {
   ServerModel *server = model.FindServer(serverId);
   server->UpdateServerParameters(serverVersionString, serverVersion, sslInfo);
@@ -173,7 +173,7 @@ void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
   server->rolename = rolename;
 }
 
-void RefreshDatabaseListWork::UpdateView(ObjectBrowser& ob)
+void LoadServerWork::UpdateView(ObjectBrowser& ob)
 {
   ob.UpdateServer(serverId, true);
 }
@@ -191,7 +191,7 @@ static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
   return typemap;
 }
 
-const std::map<wxString, RelationModel::Type> LoadDatabaseSchemaWork::relationTypeMap = InitRelationTypeMap();
+const std::map<wxString, RelationModel::Type> LoadDatabaseWork::relationTypeMap = InitRelationTypeMap();
 
 static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
 {
@@ -204,10 +204,10 @@ static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
   return typemap;
 }
 
-const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
+const std::map<wxString, FunctionModel::Type> LoadDatabaseWork::functionTypeMap = InitFunctionTypeMap();
 
 template <class T>
-const T& LoadDatabaseSchemaWork::InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const
+const T& LoadDatabaseWork::InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const
 {
   typename std::map<Oid,T>::const_iterator ptr = table.find(oid);
   wxASSERT_MSG(ptr != table.end(), wxString::Format(_T("%u not found in lookup table"), oid));
@@ -215,7 +215,7 @@ const T& LoadDatabaseSchemaWork::InternalLookup(const typename std::map<Oid, T>&
 }
 
 template<class T, class InputIterator>
-void LoadDatabaseSchemaWork::PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last)
+void LoadDatabaseWork::PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last)
 {
   while (first != last) {
     table[(*first).oid] = *first;
@@ -224,13 +224,13 @@ void LoadDatabaseSchemaWork::PopulateInternalLookup(typename std::map<Oid, T>& t
 }
 
 template<class OutputIterator, class UnaryOperator>
-void LoadDatabaseSchemaWork::LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+void LoadDatabaseWork::LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
 {
   QueryResults rows = Query(queryName).List();
   std::transform(rows.begin(), rows.end(), output, mapper);
 }
 
-void LoadDatabaseSchemaWork::DoManagedWork() {
+void LoadDatabaseWork::DoManagedWork() {
   incoming.oid = databaseRef.GetOid();
 
   LoadThings(_T("Schemas"), std::back_inserter(incoming.schemas), ReadSchema);
@@ -247,7 +247,7 @@ void LoadDatabaseSchemaWork::DoManagedWork() {
   LoadThings(_T("Text search configurations"), incoming.textSearchConfigurations);
 }
 
-SchemaModel LoadDatabaseSchemaWork::ReadSchema(const QueryResults::Row& row)
+SchemaModel LoadDatabaseWork::ReadSchema(const QueryResults::Row& row)
 {
   SchemaModel schema;
   schema.oid = row.ReadOid(0);
@@ -256,7 +256,7 @@ SchemaModel LoadDatabaseSchemaWork::ReadSchema(const QueryResults::Row& row)
   return schema;
 }
 
-ExtensionModel LoadDatabaseSchemaWork::ReadExtension(const QueryResults::Row& row)
+ExtensionModel LoadDatabaseWork::ReadExtension(const QueryResults::Row& row)
 {
   ExtensionModel extension;
   extension.oid = row.ReadOid(0);
@@ -265,7 +265,7 @@ ExtensionModel LoadDatabaseSchemaWork::ReadExtension(const QueryResults::Row& ro
 }
 
 template<>
-RelationModel LoadDatabaseSchemaWork::Mapper<RelationModel>::operator()(const QueryResults::Row& row)
+RelationModel LoadDatabaseWork::Mapper<RelationModel>::operator()(const QueryResults::Row& row)
 {
   RelationModel relation;
   relation.schema = Schema(row.ReadOid(0));
@@ -282,7 +282,7 @@ RelationModel LoadDatabaseSchemaWork::Mapper<RelationModel>::operator()(const Qu
 }
 
 template<>
-FunctionModel LoadDatabaseSchemaWork::Mapper<FunctionModel>::operator()(const QueryResults::Row& row)
+FunctionModel LoadDatabaseWork::Mapper<FunctionModel>::operator()(const QueryResults::Row& row)
 {
   FunctionModel func;
   func.schema = Schema(row.ReadOid(0));
@@ -297,7 +297,7 @@ FunctionModel LoadDatabaseSchemaWork::Mapper<FunctionModel>::operator()(const Qu
 }
 
 template<typename T>
-T LoadDatabaseSchemaWork::Mapper<T>::operator()(const QueryResults::Row& row)
+T LoadDatabaseWork::Mapper<T>::operator()(const QueryResults::Row& row)
 {
   T obj;
   obj.schema = Schema(row.ReadOid(0));
@@ -307,14 +307,14 @@ T LoadDatabaseSchemaWork::Mapper<T>::operator()(const QueryResults::Row& row)
   return obj;
 }
 
-void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
+void LoadDatabaseWork::UpdateModel(ObjectBrowserModel& model)
 {
   ServerModel *server = model.FindServer(databaseRef.ServerRef());
   wxASSERT(server != NULL);
   server->UpdateDatabase(incoming);
 }
 
-void LoadDatabaseSchemaWork::UpdateView(ObjectBrowser& ob)
+void LoadDatabaseWork::UpdateView(ObjectBrowser& ob)
 {
   ob.UpdateDatabase(databaseRef, expandAfter);
 }

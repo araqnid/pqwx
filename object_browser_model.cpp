@@ -534,7 +534,7 @@ void ServerModel::SubmitWork(ObjectBrowserManagedWork *work)
 
 void ServerModel::Load()
 {
-  SubmitWork(new RefreshDatabaseListWork(Identification()));
+  SubmitWork(new LoadServerWork(Identification()));
 }
 
 void ServerModel::UpdateDatabases(const std::vector<DatabaseModel>& incoming)
@@ -666,7 +666,7 @@ void DatabaseModel::SubmitWork(ObjectBrowserManagedWork *work)
 
 void DatabaseModel::Load(IndexSchemaCompletionCallback *indexCompletion)
 {
-  SubmitWork(new LoadDatabaseSchemaWork(*this, indexCompletion == NULL));
+  SubmitWork(new LoadDatabaseWork(*this, indexCompletion == NULL));
   SubmitWork(new IndexDatabaseSchemaWork(*this, indexCompletion));
   SubmitWork(new LoadDatabaseDescriptionsWork(*this));
 }

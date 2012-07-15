@@ -355,6 +355,9 @@ public:
    * Submit some work to this database.
    */
   void SubmitWork(ObjectBrowserManagedWork *work);
+
+private:
+  static const SchemaMemberModel* TakePointer(const SchemaMemberModel& value) { return &value; }
 };
 
 /**

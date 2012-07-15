@@ -618,26 +618,15 @@ ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)
 DatabaseModel::Divisions DatabaseModel::DivideSchemaMembers() const
 {
   std::vector<const SchemaMemberModel*> members;
-  for (std::vector<RelationModel>::const_iterator iter = relations.begin(); iter != relations.end(); iter++) {
-    members.push_back(&(*iter));
-  }
-  for (std::vector<FunctionModel>::const_iterator iter = functions.begin(); iter != functions.end(); iter++) {
-    members.push_back(&(*iter));
-  }
-  for (std::vector<TextSearchDictionaryModel>::const_iterator iter = textSearchDictionaries.begin(); iter != textSearchDictionaries.end(); iter++) {
-    members.push_back(&(*iter));
-  }
-  for (std::vector<TextSearchParserModel>::const_iterator iter = textSearchParsers.begin(); iter != textSearchParsers.end(); iter++) {
-    members.push_back(&(*iter));
-  }
-  for (std::vector<TextSearchTemplateModel>::const_iterator iter = textSearchTemplates.begin(); iter != textSearchTemplates.end(); iter++) {
-    members.push_back(&(*iter));
-  }
-  for (std::vector<TextSearchConfigurationModel>::const_iterator iter = textSearchConfigurations.begin(); iter != textSearchConfigurations.end(); iter++) {
-    members.push_back(&(*iter));
-  }
 
-  sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
+  std::transform(relations.begin(), relations.end(), std::back_inserter(members), TakePointer);
+  std::transform(functions.begin(), functions.end(), std::back_inserter(members), TakePointer);
+  std::transform(textSearchDictionaries.begin(), textSearchDictionaries.end(), std::back_inserter(members), TakePointer);
+  std::transform(textSearchParsers.begin(), textSearchParsers.end(), std::back_inserter(members), TakePointer);
+  std::transform(textSearchTemplates.begin(), textSearchTemplates.end(), std::back_inserter(members), TakePointer);
+  std::transform(textSearchConfigurations.begin(), textSearchConfigurations.end(), std::back_inserter(members), TakePointer);
+
+  std::sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
 
   Divisions result;
 

@@ -92,31 +92,16 @@ protected:
 private:
   static SchemaModel ReadSchema(const QueryResults::Row&);
   static ExtensionModel ReadExtension(const QueryResults::Row&);
+  template<typename T>
   class Mapper {
   public:
     Mapper(const LoadDatabaseSchemaWork& owner) : owner(owner) {}
-    virtual ~Mapper() {}
+    T operator()(const QueryResults::Row&);
   protected:
     SchemaModel Schema(Oid oid) { return owner.Schema(oid); }
     ExtensionModel Extension(Oid oid) { return owner.Extension(oid); }
   private:
     const LoadDatabaseSchemaWork& owner;
-  };
-  class RelationMapper : public Mapper {
-  public:
-    RelationMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
-    RelationModel operator()(const QueryResults::Row&);
-  };
-  class FunctionMapper : public Mapper {
-  public:
-    FunctionMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
-    FunctionModel operator()(const QueryResults::Row&);
-  };
-  template<typename T>
-  class SimpleMapper : public Mapper {
-  public:
-    SimpleMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
-    T operator()(const QueryResults::Row&);
   };
   std::map<Oid, SchemaModel> schemas;
   std::map<Oid, ExtensionModel> extensions;

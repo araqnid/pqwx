@@ -239,13 +239,12 @@ void LoadDatabaseSchemaWork::operator()() {
   PopulateInternalLookup(schemas, incoming.schemas.begin(), incoming.schemas.end());
   PopulateInternalLookup(extensions, incoming.extensions.begin(), incoming.extensions.end());
 
-  LoadThings(_T("Relations"), std::back_inserter(incoming.relations), RelationMapper(*this));
-  LoadThings(_T("Functions"), std::back_inserter(incoming.functions), FunctionMapper(*this));
-
-  LoadThings(_T("Text search dictionaries"), std::back_inserter(incoming.textSearchDictionaries), SimpleMapper<TextSearchDictionaryModel>(*this));
-  LoadThings(_T("Text search parsers"), std::back_inserter(incoming.textSearchParsers), SimpleMapper<TextSearchParserModel>(*this));
-  LoadThings(_T("Text search templates"), std::back_inserter(incoming.textSearchTemplates), SimpleMapper<TextSearchTemplateModel>(*this));
-  LoadThings(_T("Text search configurations"), std::back_inserter(incoming.textSearchConfigurations), SimpleMapper<TextSearchConfigurationModel>(*this));
+  LoadThings(_T("Relations"), std::back_inserter(incoming.relations), Mapper<RelationModel>(*this));
+  LoadThings(_T("Functions"), std::back_inserter(incoming.functions), Mapper<FunctionModel>(*this));
+  LoadThings(_T("Text search dictionaries"), std::back_inserter(incoming.textSearchDictionaries), Mapper<TextSearchDictionaryModel>(*this));
+  LoadThings(_T("Text search parsers"), std::back_inserter(incoming.textSearchParsers), Mapper<TextSearchParserModel>(*this));
+  LoadThings(_T("Text search templates"), std::back_inserter(incoming.textSearchTemplates), Mapper<TextSearchTemplateModel>(*this));
+  LoadThings(_T("Text search configurations"), std::back_inserter(incoming.textSearchConfigurations), Mapper<TextSearchConfigurationModel>(*this));
 }
 
 SchemaModel LoadDatabaseSchemaWork::ReadSchema(const QueryResults::Row& row)
@@ -265,7 +264,8 @@ ExtensionModel LoadDatabaseSchemaWork::ReadExtension(const QueryResults::Row& ro
   return extension;
 }
 
-RelationModel LoadDatabaseSchemaWork::RelationMapper::operator()(const QueryResults::Row& row)
+template<>
+RelationModel LoadDatabaseSchemaWork::Mapper<RelationModel>::operator()(const QueryResults::Row& row)
 {
   RelationModel relation;
   relation.schema = Schema(row.ReadOid(0));
@@ -281,7 +281,8 @@ RelationModel LoadDatabaseSchemaWork::RelationMapper::operator()(const QueryResu
   return relation;
 }
 
-FunctionModel LoadDatabaseSchemaWork::FunctionMapper::operator()(const QueryResults::Row& row)
+template<>
+FunctionModel LoadDatabaseSchemaWork::Mapper<FunctionModel>::operator()(const QueryResults::Row& row)
 {
   FunctionModel func;
   func.schema = Schema(row.ReadOid(0));
@@ -296,7 +297,7 @@ FunctionModel LoadDatabaseSchemaWork::FunctionMapper::operator()(const QueryResu
 }
 
 template<typename T>
-T LoadDatabaseSchemaWork::SimpleMapper<T>::operator()(const QueryResults::Row& row)
+T LoadDatabaseSchemaWork::Mapper<T>::operator()(const QueryResults::Row& row)
 {
   T obj;
   obj.schema = Schema(row.ReadOid(0));

@@ -206,97 +206,104 @@ static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
 
 const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTypeMap = InitFunctionTypeMap();
 
-void LoadDatabaseSchemaWork::operator()() {
-  incoming.oid = databaseRef.GetOid();
-  LoadSchemas();
-  LoadExtensions();
-  LoadRelations();
-  LoadFunctions();
-  LoadSimpleSchemaMembers(_T("Text search dictionaries"), incoming.textSearchDictionaries);
-  LoadSimpleSchemaMembers(_T("Text search parsers"), incoming.textSearchParsers);
-  LoadSimpleSchemaMembers(_T("Text search templates"), incoming.textSearchTemplates);
-  LoadSimpleSchemaMembers(_T("Text search configurations"), incoming.textSearchConfigurations);
-}
-
-void LoadDatabaseSchemaWork::LoadSchemas()
-{
-  QueryResults rows = Query(_T("Schemas")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    SchemaModel schema;
-    schema.oid = (*iter).ReadOid(0);
-    schema.name = (*iter).ReadText(1);
-    schema.accessible = (*iter).ReadBool(2);
-    incoming.schemas.push_back(schema);
-    schemas[schema.oid] = schema;
-  }
-}
-
-void LoadDatabaseSchemaWork::LoadExtensions()
-{
-  QueryResults rows = Query(_T("Extensions")).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    ExtensionModel extension;
-    extension.oid = (*iter).ReadOid(0);
-    extension.name = (*iter).ReadText(1);
-    incoming.extensions.push_back(extension);
-    extensions[extension.oid] = extension;
-  }
-}
-
 template <class T>
-const T& LoadDatabaseSchemaWork::InternalLookup(typename std::map<Oid, T> table, Oid oid) const
+const T& LoadDatabaseSchemaWork::InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const
 {
   typename std::map<Oid,T>::const_iterator ptr = table.find(oid);
   wxASSERT_MSG(ptr != table.end(), wxString::Format(_T("%u not found in lookup table"), oid));
   return ptr->second;
 }
 
-void LoadDatabaseSchemaWork::LoadRelations() {
-  QueryResults relationRows = Query(_T("Relations")).List();
-  for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
-    RelationModel relation;
-    relation.schema = Schema((*iter).ReadOid(0));
-    relation.extension = Extension((*iter).ReadOid(1));
-    if (!(*iter)[4].IsEmpty()) {
-      relation.oid = (*iter).ReadOid(2);
-      relation.name = (*iter).ReadText(3);
-      wxString relkind((*iter).ReadText(4));
-      relation.unlogged = (*iter).ReadBool(5);
-      wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
-      relation.type = relationTypeMap.find(relkind)->second;
-    }
-    incoming.relations.push_back(relation);
+template<class T, class InputIterator>
+void LoadDatabaseSchemaWork::PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last)
+{
+  while (first != last) {
+    table[(*first).oid] = *first;
+    ++first;
   }
 }
 
-void LoadDatabaseSchemaWork::LoadFunctions() {
-  QueryResults functionRows = Query(_T("Functions")).List();
-  for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
-    FunctionModel func;
-    func.schema = Schema((*iter).ReadOid(0));
-    func.extension = Extension((*iter).ReadOid(1));
-    func.oid = (*iter).ReadOid(2);
-    func.name = (*iter).ReadText(3);
-    func.arguments = (*iter).ReadText(4);
-    wxString type((*iter).ReadText(5));
-    wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
-    func.type = functionTypeMap.find(type)->second;
-    incoming.functions.push_back(func);
+template<class OutputIterator, class UnaryOperator>
+void LoadDatabaseSchemaWork::LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+{
+  QueryResults rows = Query(queryName).List();
+  std::transform(rows.begin(), rows.end(), output, mapper);
+}
+
+void LoadDatabaseSchemaWork::operator()() {
+  incoming.oid = databaseRef.GetOid();
+
+  LoadThings(_T("Schemas"), std::back_inserter(incoming.schemas), ReadSchema);
+  LoadThings(_T("Extensions"), std::back_inserter(incoming.extensions), ReadExtension);
+
+  PopulateInternalLookup(schemas, incoming.schemas.begin(), incoming.schemas.end());
+  PopulateInternalLookup(extensions, incoming.extensions.begin(), incoming.extensions.end());
+
+  LoadThings(_T("Relations"), std::back_inserter(incoming.relations), RelationMapper(*this));
+  LoadThings(_T("Functions"), std::back_inserter(incoming.functions), FunctionMapper(*this));
+
+  LoadThings(_T("Text search dictionaries"), std::back_inserter(incoming.textSearchDictionaries), SimpleMapper<TextSearchDictionaryModel>(*this));
+  LoadThings(_T("Text search parsers"), std::back_inserter(incoming.textSearchParsers), SimpleMapper<TextSearchParserModel>(*this));
+  LoadThings(_T("Text search templates"), std::back_inserter(incoming.textSearchTemplates), SimpleMapper<TextSearchTemplateModel>(*this));
+  LoadThings(_T("Text search configurations"), std::back_inserter(incoming.textSearchConfigurations), SimpleMapper<TextSearchConfigurationModel>(*this));
+}
+
+SchemaModel LoadDatabaseSchemaWork::ReadSchema(const QueryResults::Row& row)
+{
+  SchemaModel schema;
+  schema.oid = row.ReadOid(0);
+  schema.name = row.ReadText(1);
+  schema.accessible = row.ReadBool(2);
+  return schema;
+}
+
+ExtensionModel LoadDatabaseSchemaWork::ReadExtension(const QueryResults::Row& row)
+{
+  ExtensionModel extension;
+  extension.oid = row.ReadOid(0);
+  extension.name = row.ReadText(1);
+  return extension;
+}
+
+RelationModel LoadDatabaseSchemaWork::RelationMapper::operator()(const QueryResults::Row& row)
+{
+  RelationModel relation;
+  relation.schema = Schema(row.ReadOid(0));
+  relation.extension = Extension(row.ReadOid(1));
+  if (!row[4].IsEmpty()) {
+    relation.oid = row.ReadOid(2);
+    relation.name = row.ReadText(3);
+    wxString relkind(row.ReadText(4));
+    relation.unlogged = row.ReadBool(5);
+    wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
+    relation.type = relationTypeMap.find(relkind)->second;
   }
+  return relation;
+}
+
+FunctionModel LoadDatabaseSchemaWork::FunctionMapper::operator()(const QueryResults::Row& row)
+{
+  FunctionModel func;
+  func.schema = Schema(row.ReadOid(0));
+  func.extension = Extension(row.ReadOid(1));
+  func.oid = row.ReadOid(2);
+  func.name = row.ReadText(3);
+  func.arguments = row.ReadText(4);
+  wxString type(row.ReadText(5));
+  wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
+  func.type = functionTypeMap.find(type)->second;
+  return func;
 }
 
 template<typename T>
-void LoadDatabaseSchemaWork::LoadSimpleSchemaMembers(const wxString &queryName, typename std::vector<T>& vec)
+T LoadDatabaseSchemaWork::SimpleMapper<T>::operator()(const QueryResults::Row& row)
 {
-  const QueryResults rows = Query(queryName).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    T obj;
-    obj.schema = Schema((*iter).ReadOid(0));
-    obj.extension = Extension((*iter).ReadOid(1));
-    obj.oid = (*iter).ReadOid(2);
-    obj.name = (*iter).ReadText(3);
-    vec.push_back(obj);
-  }
+  T obj;
+  obj.schema = Schema(row.ReadOid(0));
+  obj.extension = Extension(row.ReadOid(1));
+  obj.oid = row.ReadOid(2);
+  obj.name = row.ReadText(3);
+  return obj;
 }
 
 void LoadDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)

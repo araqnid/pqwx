@@ -86,21 +86,48 @@ private:
   DatabaseModel incoming;
 protected:
   void operator()();
-  void LoadSchemas();
-  void LoadExtensions();
-  void LoadRelations();
-  void LoadFunctions();
-  template<typename T>
-  void LoadSimpleSchemaMembers(const wxString &queryName, typename std::vector<T>& vec);
+  void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
 private:
+  static SchemaModel ReadSchema(const QueryResults::Row&);
+  static ExtensionModel ReadExtension(const QueryResults::Row&);
+  class Mapper {
+  public:
+    Mapper(const LoadDatabaseSchemaWork& owner) : owner(owner) {}
+    virtual ~Mapper() {}
+  protected:
+    SchemaModel Schema(Oid oid) { return owner.Schema(oid); }
+    ExtensionModel Extension(Oid oid) { return owner.Extension(oid); }
+  private:
+    const LoadDatabaseSchemaWork& owner;
+  };
+  class RelationMapper : public Mapper {
+  public:
+    RelationMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
+    RelationModel operator()(const QueryResults::Row&);
+  };
+  class FunctionMapper : public Mapper {
+  public:
+    FunctionMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
+    FunctionModel operator()(const QueryResults::Row&);
+  };
+  template<typename T>
+  class SimpleMapper : public Mapper {
+  public:
+    SimpleMapper(const LoadDatabaseSchemaWork& owner) : Mapper(owner) {}
+    T operator()(const QueryResults::Row&);
+  };
   std::map<Oid, SchemaModel> schemas;
   std::map<Oid, ExtensionModel> extensions;
   SchemaModel Schema(Oid oid) const { return InternalLookup(schemas, oid); }
   ExtensionModel Extension(Oid oid) const { return oid == InvalidOid ? ExtensionModel() : InternalLookup(extensions, oid); }
   template<class T>
-  const T& InternalLookup(typename std::map<Oid, T> table, Oid oid) const;
+  const T& InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const;
+  template<class T, class InputIterator>
+  void PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last);
+  template<class OutputIterator, class UnaryOperator>
+  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper);
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };

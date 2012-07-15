@@ -9,6 +9,9 @@
 #include <list>
 #include "wx/xrc/xmlres.h"
 #include "object_browser.h"
+#ifdef USE_DEBIAN_PGCLUSTER
+#include "debian_pgcluster.h"
+#endif
 
 BEGIN_DECLARE_EVENT_TYPES()
   DECLARE_EVENT_TYPE(PQWX_ConnectionAttemptCompleted, -1)
@@ -158,6 +161,9 @@ private:
   bool cancelling;
   ServerConnection server;
   DatabaseConnection *db;
+#ifdef USE_DEBIAN_PGCLUSTER
+  PgClusters clusters;
+#endif
 
   class RecentServerParameters {
     wxString server;

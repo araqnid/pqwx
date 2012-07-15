@@ -121,6 +121,10 @@ else
 PQWX_OBJS += database_notification_monitor.o
 PQWX_SOURCES += database_notification_monitor.cpp
 endif
+ifneq (,$(debversion))
+PQWX_SOURCES += debian_pgcluster.cpp
+PQWX_OBJS += debian_pgcluster.o
+endif
 
 wx_flavour.h build_settings: FORCE
 	@settings='$(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --selected-config)'; \

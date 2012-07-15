@@ -42,12 +42,16 @@ bool PQWXApp::OnInit()
 
   StaticResources::Init();
 
+  std::vector<PgToolsRegistry::Suggestion> suggestions;
+  bool useSystemPath;
 #ifdef USE_DEBIAN_PGCLUSTER
-  toolsRegistry.SetUseSystemPath(false);
-  toolsRegistry.AddSuggestion(_T("/usr/lib/postgresql"));
+  useSystemPath = false;
+  suggestions.push_back(PgToolsRegistry::Suggestion(PgToolsRegistry::SYSTEM, _T("/usr/lib/postgresql")));
+#else
+  useSystemPath = true;
 #endif
-  SuggestConfiguredToolLocations();
-  toolsRegistry.BeginFindInstallations();
+  SuggestConfiguredToolLocations(suggestions);
+  toolsRegistry.AddInstallations(suggestions, useSystemPath);
 
   objectBrowserModel = new ObjectBrowserModel();
 
@@ -119,7 +123,7 @@ bool PQWXApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   return true;
 }
 
-void PQWXApp::SuggestConfiguredToolLocations()
+void PQWXApp::SuggestConfiguredToolLocations(std::vector<PgToolsRegistry::Suggestion>& suggestions)
 {
   wxConfigBase *cfg = wxConfig::Get();
   wxString oldPath = cfg->GetPath();
@@ -131,7 +135,8 @@ void PQWXApp::SuggestConfiguredToolLocations()
     wxString location;
     if (!cfg->Read(key + _T("/Location"), &location))
       break;
-    if (!location.empty()) toolsRegistry.AddSuggestion(location);
+    if (!location.empty())
+      suggestions.push_back(PgToolsRegistry::Suggestion(PgToolsRegistry::USER, location));
   } while (1);
 
   cfg->SetPath(oldPath);

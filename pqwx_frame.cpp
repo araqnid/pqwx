@@ -22,6 +22,7 @@
 #include "script_events.h"
 #include "script_editor_pane.h"
 #include "static_resources.h"
+#include "preferences_dialogue.h"
 
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptExecute)
 DEFINE_LOCAL_EVENT_TYPE(PQWX_ScriptDisconnect)
@@ -43,6 +44,7 @@ BEGIN_EVENT_TABLE(PqwxFrame, wxFrame)
   EVT_UPDATE_UI(XRCID("DisconnectScript"), PqwxFrame::EnableIffScriptConnected)
   EVT_MENU(XRCID("ReconnectScript"), PqwxFrame::OnReconnectScript)
   EVT_UPDATE_UI(XRCID("ReconnectScript"), PqwxFrame::EnableIffScriptOpen)
+  EVT_MENU(XRCID("ShowPreferences"), PqwxFrame::OnShowPreferences)
   EVT_MENU(wxID_NEW, PqwxFrame::OnNewScript)
   EVT_MENU(wxID_OPEN, PqwxFrame::OnOpenScript)
   EVT_MENU(wxID_CLOSE, PqwxFrame::OnCloseScript)
@@ -356,6 +358,13 @@ void PqwxFrame::EnableIffScriptModified(wxUpdateUIEvent &event)
 {
   event.Enable(currentEditor != NULL && currentEditor->IsModified());
 }
+
+void PqwxFrame::OnShowPreferences(wxCommandEvent& event)
+{
+  PreferencesDialogue *dialogue = new PreferencesDialogue(this);
+  dialogue->Show();
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

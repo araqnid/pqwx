@@ -64,7 +64,7 @@ private:
   int OnExit();
   void OnInitCmdLine(wxCmdLineParser &parser);
   bool OnCmdLineParsed(wxCmdLineParser &parser);
-  void SuggestConfiguredToolLocations();
+  void SuggestConfiguredToolLocations(std::vector<PgToolsRegistry::Suggestion>&);
 };
 
 DECLARE_APP(PQWXApp);

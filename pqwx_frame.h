@@ -70,6 +70,8 @@ private:
   void OnCloseScript(wxCommandEvent& event);
   void OnSaveScript(wxCommandEvent& event);
   void OnSaveScriptAs(wxCommandEvent& event);
+  void OnShowPreferences(wxCommandEvent& event);
+
   void OnScriptToWindow(PQWXDatabaseEvent& event);
   void OnDocumentSelected(PQWXDatabaseEvent& event);
   void OnNoDocumentSelected(wxCommandEvent& event);

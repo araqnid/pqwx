@@ -27,6 +27,8 @@
 #define PATH_SEPARATOR _T('/')
 #endif
 
+DEFINE_LOCAL_EVENT_TYPE(PQWX_ToolsRegistryUpdated)
+
 const std::vector<wxString>& PgToolsRegistry::ScannerThread::GetInterestingCommands()
 {
   static std::vector<wxString> commands;
@@ -37,6 +39,49 @@ const std::vector<wxString>& PgToolsRegistry::ScannerThread::GetInterestingComma
     commands.push_back(_T("postgres"));
   }
   return commands;
+}
+
+void PgToolsRegistry::AddInstallations(const std::vector<Suggestion> suggestions, bool includeSystemPath)
+{
+  wxCriticalSectionLocker locker(guardState);
+  wxCHECK2(workerThread == NULL, );
+  workerThread = new ScannerThread(this, suggestions, includeSystemPath, new MarkFinishedOnCompletion(this));
+  workerThread->Create();
+  workerThread->Run();
+}
+
+void PgToolsRegistry::AddUserInstallation(const wxString& path, wxEvtHandler *notify, int id)
+{
+  wxCriticalSectionLocker locker(guardState);
+  wxCHECK2(workerThread == NULL, );
+  std::vector<Suggestion> suggestions;
+  suggestions.push_back(Suggestion(USER, path));
+  workerThread = new ScannerThread(this, suggestions, false, new NotifyWindowOnCompletion(notify, id));
+  workerThread->Create();
+  workerThread->Run();
+}
+
+bool PgToolsRegistry::IsScanningFinished() const
+{
+  wxCriticalSectionLocker locker(guardState);
+  return finishedScanning;
+}
+
+void PgToolsRegistry::NotifyWindowOnCompletion::FinishedScanning(const std::vector<DiscoveryResult>& result)
+{
+  wxLogDebug(_T("Finished scanning for installations on behalf of %p"), dest);
+  PQWXToolsRegistryEvent event(PQWX_ToolsRegistryUpdated, id);
+  event.discoveryResult = result;
+  dest->AddPendingEvent(event);
+}
+
+void PgToolsRegistry::ScannerThread::ScanForInstallations()
+{
+  for (std::vector<Suggestion>::const_iterator iter = suggestions.begin(); iter != suggestions.end(); iter++) {
+    ScanSuggestedLocation((*iter).GetType(), (*iter).GetPath());
+  }
+  if (scanSystemPath)
+    ScanExecutionPath();
 }
 
 int PgToolsRegistry::Installation::ParseVersion(const wxString& version)
@@ -70,19 +115,19 @@ bool Contains(std::vector<T> const& sequence, T const key)
   return find(sequence.begin(), sequence.end(), key) != sequence.end();
 }
 
-void PgToolsRegistry::ScannerThread::ScanSuggestedLocation(const wxString& dir)
+void PgToolsRegistry::ScannerThread::ScanSuggestedLocation(Type type, const wxString& dir)
 {
   wxLogDebug(_T("Scanning suggested location: %s"), dir.c_str());
 
   std::vector<wxString> firstLevelExecutables = FindExecutables(dir);
   if (Contains<wxString>(firstLevelExecutables, _T("psql" EXEC_SUFFIX))) {
-    AddInstallation(dir);
+    AddInstallation(type, dir, dir);
     return;
   }
 
   std::vector<wxString> firstLevelDirs = FindSubdirectories(dir);
   if (Contains<wxString>(firstLevelDirs, _T("bin"))) {
-    AddInstallation(dir + PATH_SEPARATOR + _T("bin"));
+    AddInstallation(type, dir, dir + PATH_SEPARATOR + _T("bin"));
     return;
   }
 
@@ -91,13 +136,13 @@ void PgToolsRegistry::ScannerThread::ScanSuggestedLocation(const wxString& dir)
 
     std::vector<wxString> secondLevelExecutables = FindExecutables(firstLevelDir);
     if (Contains<wxString>(secondLevelExecutables, _T("psql" EXEC_SUFFIX))) {
-      AddInstallation(firstLevelDir);
+      AddInstallation(type, firstLevelDir, firstLevelDir);
       continue;
     }
 
     std::vector<wxString> secondLevelDirs = FindSubdirectories(firstLevelDir);
     if (Contains<wxString>(secondLevelDirs, _T("bin"))) {
-      AddInstallation(firstLevelDir + PATH_SEPARATOR + _T("bin"));
+      AddInstallation(type, firstLevelDir, firstLevelDir + PATH_SEPARATOR + _T("bin"));
     }
   }
 }
@@ -109,7 +154,7 @@ void PgToolsRegistry::ScannerThread::ScanExecutionPath()
   wxString version = GetToolVersion(_T("psql" EXEC_SUFFIX), true);
   if (version.empty()) return;
 
-  Installation installation(wxEmptyString, version);
+  Installation installation(SYSTEM, wxEmptyString, wxEmptyString, version);
   installation.AddCommand(_T("psql"));
   wxLogDebug(_T(" Registered installation version %s (%u)"), installation.Version().c_str(), installation.VersionNumber());
 
@@ -123,32 +168,37 @@ void PgToolsRegistry::ScannerThread::ScanExecutionPath()
   owner->installations.push_back(installation);
 }
 
-void PgToolsRegistry::ScannerThread::AddInstallation(const wxString &dirname)
+void PgToolsRegistry::ScannerThread::AddInstallation(Type type, const wxString& dir, const wxString &bindir)
 {
-  wxLogDebug(_T("Checking installation in %s"), dirname.c_str());
+  wxLogDebug(_T("Checking installation in %s (commands in %s)"), dir.c_str(), bindir.c_str());
 
-  std::vector<wxString> executables = FindExecutables(dirname);
+  std::vector<wxString> executables = FindExecutables(bindir);
   if (!Contains<wxString>(executables, _T("psql" EXEC_SUFFIX))) {
     wxLogDebug(_T(" No psql"));
     return;
   }
-  wxString version = GetToolVersion(dirname + PATH_SEPARATOR + _T("psql" EXEC_SUFFIX), false);
+  wxString version = GetToolVersion(bindir + PATH_SEPARATOR + _T("psql" EXEC_SUFFIX), false);
   if (version.empty()) {
     return;
   }
 
-  Installation installation(dirname, version);
+  Installation installation(type, dir, bindir, version);
   installation.AddCommand(_T("psql"));
   wxLogDebug(_T(" Registered installation version %s (%u)"), installation.Version().c_str(), installation.VersionNumber());
 
   const std::vector<wxString>& interestingCommands = GetInterestingCommands();
 
   for (std::vector<wxString>::const_iterator iter = interestingCommands.begin(); iter != interestingCommands.end(); iter++) {
-    if (GetToolVersion(dirname + PATH_SEPARATOR + *iter + _T(EXEC_SUFFIX), false) == version)
+    if (GetToolVersion(bindir + PATH_SEPARATOR + *iter + _T(EXEC_SUFFIX), false) == version)
       installation.AddCommand(*iter);
   }
 
-  owner->installations.push_back(installation);
+  if (owner->RegisterInstallation(installation)) {
+    result.push_back(DiscoveryResult(DiscoveryResult::ADDED, installation));
+  }
+  else {
+    result.push_back(DiscoveryResult(DiscoveryResult::DUPLICATE, installation));
+  }
 }
 
 std::vector<wxString> PgToolsRegistry::ScannerThread::FindSubdirectories(const wxString &dirname)
@@ -276,6 +326,7 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
   return wxEmptyString;
 #endif
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

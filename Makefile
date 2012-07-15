@@ -39,7 +39,7 @@ WXRC := $(shell $(WX_CONFIG) --utility=wxrc)
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
 LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --libs $(WX_MODULES))
-XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc rc/create_database.xrc
+XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc rc/create_database.xrc rc/preferences.xrc
 PQWX_SOURCES = \
 	catalogue_index.cpp \
 	connect_dialogue.cpp \
@@ -70,6 +70,7 @@ PQWX_SOURCES = \
 	pg_tools_registry.cpp \
 	pqwx.cpp \
 	pqwx_frame.cpp \
+	preferences_dialogue.cpp \
 	results_notebook.cpp \
 	script_editor.cpp \
 	script_editor_pane.cpp \
@@ -97,6 +98,7 @@ PQWX_HEADERS = \
 	pqwx.h \
 	pqwx_frame.h \
 	pqwx_util.h \
+	preferences_dialogue.h \
 	results_notebook.h \
 	script_editor.h \
 	script_editor_pane.h \

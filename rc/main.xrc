@@ -30,6 +30,9 @@
         <label>Find &amp;Object...</label>
         <accel>Ctrl-Shift-T</accel>
       </object>
+      <object class="wxMenuItem" name="ShowPreferences">
+        <label>&amp;Preferences...</label>
+      </object>
     </object>
     <object class="wxMenu" name="querymenu">
       <object class="wxMenuItem" name="ExecuteScript">

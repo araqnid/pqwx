@@ -179,7 +179,7 @@ std::vector<wxString> PgToolsRegistry::ScannerThread::FindExecutables(const wxSt
 #else
   bool cont = dir.GetFirst(&filename, wxEmptyString, wxDIR_FILES);
 #endif
-  while (cont) {
+  for (; cont; cont = dir.GetNext(&filename)) {
 #ifndef __WXMSW__
     struct stat statbuf;
     wxString fullName = dirname + _T('/') + filename;
@@ -189,7 +189,6 @@ std::vector<wxString> PgToolsRegistry::ScannerThread::FindExecutables(const wxSt
       continue;
 #endif
     result.push_back(filename);
-    cont = dir.GetNext(&filename);
   }
 
   return result;

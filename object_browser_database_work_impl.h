@@ -113,6 +113,11 @@ private:
   void PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last);
   template<class OutputIterator, class UnaryOperator>
   void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper);
+  template<class T>
+  void LoadThings(const wxString& queryName, typename std::vector<T>& target)
+  {
+    LoadThings(queryName, std::back_inserter(target), Mapper<T>(*this));
+  }
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };

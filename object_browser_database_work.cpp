@@ -239,12 +239,12 @@ void LoadDatabaseSchemaWork::operator()() {
   PopulateInternalLookup(schemas, incoming.schemas.begin(), incoming.schemas.end());
   PopulateInternalLookup(extensions, incoming.extensions.begin(), incoming.extensions.end());
 
-  LoadThings(_T("Relations"), std::back_inserter(incoming.relations), Mapper<RelationModel>(*this));
-  LoadThings(_T("Functions"), std::back_inserter(incoming.functions), Mapper<FunctionModel>(*this));
-  LoadThings(_T("Text search dictionaries"), std::back_inserter(incoming.textSearchDictionaries), Mapper<TextSearchDictionaryModel>(*this));
-  LoadThings(_T("Text search parsers"), std::back_inserter(incoming.textSearchParsers), Mapper<TextSearchParserModel>(*this));
-  LoadThings(_T("Text search templates"), std::back_inserter(incoming.textSearchTemplates), Mapper<TextSearchTemplateModel>(*this));
-  LoadThings(_T("Text search configurations"), std::back_inserter(incoming.textSearchConfigurations), Mapper<TextSearchConfigurationModel>(*this));
+  LoadThings(_T("Relations"), incoming.relations);
+  LoadThings(_T("Functions"), incoming.functions);
+  LoadThings(_T("Text search dictionaries"), incoming.textSearchDictionaries);
+  LoadThings(_T("Text search parsers"), incoming.textSearchParsers);
+  LoadThings(_T("Text search templates"), incoming.textSearchTemplates);
+  LoadThings(_T("Text search configurations"), incoming.textSearchConfigurations);
 }
 
 SchemaModel LoadDatabaseSchemaWork::ReadSchema(const QueryResults::Row& row)

@@ -71,8 +71,8 @@ void DatabaseNotificationMonitor::EnsureStopped()
 void DatabaseNotificationMonitor::Wake()
 {
 #ifdef HAVE_EVENTFD
-  int64_t buf = 1;
-  write(worker.controlFD, &buf, 8);
+  if (eventfd_write(worker.controlFD, 1) != 0)
+    wxLogSysError(_T("eventfd_write() failed"));
 #else
   const char *str = "!";
   write(clientControlEndpoint, str, 1);
@@ -105,8 +105,9 @@ wxThread::ExitCode DatabaseNotificationMonitor::WorkerThread::Entry()
     }
 #ifdef HAVE_EVENTFD
     if (FD_ISSET(controlFD, &readfds)) {
-      int64_t buf;
-      read(controlFD, &buf, 8);
+      eventfd_t buf;
+      if (eventfd_read(controlFD, &buf) != 0)
+        wxLogSysError(_T("eventfd_read() failed"));
       Work *work;
       while ((work = ShiftWork()) != NULL) {
         work->DoWork();

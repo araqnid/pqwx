@@ -190,8 +190,9 @@ private:
   void AppendDatabaseItems(const ServerModel*, wxTreeItemId parent, const std::vector<const DatabaseModel*> &database);
   void AppendTablespaceItems(const ServerModel*, wxTreeItemId parent, const std::vector<const TablespaceModel*> &database);
 
-  void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem);
-  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members);
+  void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, bool includeEmptySchemas, wxTreeItemId parentItem);
+  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const SchemaModel& schema, const std::vector<const SchemaMemberModel*> &members);
+  void AppendEmptySchema(const ObjectModelReference& databaseRef, wxTreeItemId parent, const SchemaModel& schema);
 
   void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
 

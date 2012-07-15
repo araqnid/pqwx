@@ -63,12 +63,24 @@ SELECT grosysid, groname, false, false,
        null AS description
 FROM pg_group
 
--- SQL :: Relations :: 9.1
+-- SQL :: Schemas
 SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+       has_schema_privilege(pg_namespace.oid, 'USAGE') AS accessible
+FROM pg_namespace
+
+-- SQL :: Extensions :: 9.1
+SELECT pg_extension.oid, extname
+FROM pg_extension
+
+-- SQL :: Extensions
+SELECT NULL::oid, NULL::text
+WHERE false
+
+-- SQL :: Relations :: 9.1
+SELECT relnamespace,
+       pg_depend.refobjid AS extoid,
        pg_class.oid, relname, relkind,
-       relpersistence = 'u' AS is_unlogged,
-       has_schema_privilege(relnamespace, 'USAGE')
+       relpersistence = 'u' AS is_unlogged
 FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
       FROM pg_class
       WHERE (relkind IN ('r','v')
@@ -87,12 +99,10 @@ FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
                          AND pg_depend.objid = pg_class.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
-     RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
 -- SQL :: Relations
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT relnamespace,
+       NULL,
        pg_class.oid, relname, relkind,
        false AS is_unlogged,
        has_schema_privilege(relnamespace, 'USAGE')
@@ -111,11 +121,10 @@ FROM (SELECT oid, relname, relkind, relnamespace
                )
             ) AND has_schema_privilege(relnamespace, 'USAGE')
      ) pg_class
-     RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
 -- SQL :: Functions :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT pronamespace,
+       pg_depend.refobjid AS extoid,
        pg_proc.oid, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
@@ -123,16 +132,14 @@ SELECT pg_namespace.oid, nspname,
             WHEN proiswindow THEN 'fw'
             ELSE 'f' END
 FROM pg_proc
-     JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_proc'::regclass
                          AND pg_depend.objid = pg_proc.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE has_schema_privilege(pronamespace, 'USAGE')
 
 -- SQL :: Functions :: 8.4
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT pronamespace,
+       NULL,
        pg_proc.oid, proname, pg_get_function_arguments(pg_proc.oid),
        CASE WHEN proretset THEN 'fs'
             WHEN prorettype = 'trigger'::regtype THEN 'ft'
@@ -140,12 +147,11 @@ SELECT pg_namespace.oid, nspname,
             WHEN proiswindow THEN 'fw'
             ELSE 'f' END
 FROM pg_proc
-     JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 WHERE has_schema_privilege(pronamespace, 'USAGE')
 
 -- SQL :: Functions
-SELECT nspoid, nspname,
-       NULL, NULL,
+SELECT nspoid,
+       NULL,
        oid, proname, substr(longname, position('(' in longname) + 1, length(longname) - position('(' in longname) - 1),
        type
 FROM (
@@ -155,7 +161,6 @@ SELECT pg_proc.oid, pg_namespace.oid as nspoid, nspname, proname, pg_proc.oid::r
             WHEN proisagg THEN 'fa'
             ELSE 'f' END AS type
 FROM pg_proc
-     JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
 WHERE has_schema_privilege(pronamespace, 'USAGE')
 ) x
 
@@ -225,11 +230,10 @@ WHERE tgrelid = $1
           )
 
 -- SQL :: Sequences :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT relnamespace,
+       pg_depend_ext.refobjid AS extoid,
        seq.oid, seq.relname, pg_depend.refobjsubid
 FROM pg_class seq
-     JOIN pg_namespace ON pg_namespace.oid = seq.relnamespace
      JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
                        AND pg_depend.objid = seq.oid
                        AND pg_depend.deptype = 'a'
@@ -238,17 +242,15 @@ FROM pg_class seq
      LEFT JOIN pg_depend pg_depend_ext ON pg_depend_ext.classid = 'pg_class'::regclass
                          AND pg_depend_ext.objid = seq.oid
                          AND pg_depend_ext.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend_ext.refobjid
 WHERE pg_depend.refobjid = $1
       AND seq.relkind = 'S'
       AND has_schema_privilege(relnamespace, 'USAGE')
 
 -- SQL :: Sequences
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT pg_namespace.oid,
+       NULL,
        seq.oid, seq.relname, pg_depend.refobjsubid
 FROM pg_class seq
-     JOIN pg_namespace ON pg_namespace.oid = seq.relnamespace
      JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
                        AND pg_depend.objid = seq.oid
                        AND pg_depend.deptype = 'a'
@@ -259,83 +261,71 @@ WHERE pg_depend.refobjid = $1
       AND has_schema_privilege(relnamespace, 'USAGE')
 
 -- SQL :: Text search dictionaries :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT dictnamespace,
+       pg_depend.refobjid AS extoid,
        pg_ts_dict.oid, dictname
 FROM pg_ts_dict
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_dict'::regclass
                          AND pg_depend.objid = pg_ts_dict.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE has_schema_privilege(dictnamespace, 'USAGE')
 
 -- SQL :: Text search dictionaries
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT dictnamespace,
+       NULL,
        pg_ts_dict.oid, dictname
 FROM pg_ts_dict
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
 WHERE has_schema_privilege(dictnamespace, 'USAGE')
 
 -- SQL :: Text search parsers :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT prsnamespace,
+       pg_depend.refobjid AS extoid,
        pg_ts_parser.oid, prsname
 FROM pg_ts_parser
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_parser'::regclass
                          AND pg_depend.objid = pg_ts_parser.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE has_schema_privilege(prsnamespace, 'USAGE')
 
 -- SQL :: Text search parsers
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
-       pg_ts_parser.oid, nspname, prsname
+SELECT prsnamespace,
+       NULL,
+       pg_ts_parser.oid, prsname
 FROM pg_ts_parser
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
 WHERE has_schema_privilege(prsnamespace, 'USAGE')
 
 -- SQL :: Text search templates :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT tmplnamespace,
+       pg_depend.refobjid AS extoid,
        pg_ts_template.oid, tmplname
 FROM pg_ts_template
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_template'::regclass
                          AND pg_depend.objid = pg_ts_template.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE has_schema_privilege(tmplnamespace, 'USAGE')
 
 -- SQL :: Text search templates
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT tmplnamespace,
+       NULL,
        pg_ts_template.oid, tmplname
 FROM pg_ts_template
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
 WHERE has_schema_privilege(tmplnamespace, 'USAGE')
 
 -- SQL :: Text search configurations :: 9.1
-SELECT pg_namespace.oid, nspname,
-       pg_extension.oid, extname,
+SELECT cfgnamespace,
+       pg_depend.refobjid AS extoid,
        pg_ts_config.oid, cfgname
 FROM pg_ts_config
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_ts_config'::regclass
                          AND pg_depend.objid = pg_ts_config.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE has_schema_privilege(cfgnamespace, 'USAGE')
 
 -- SQL :: Text search configurations
-SELECT pg_namespace.oid, nspname,
-       NULL, NULL,
+SELECT cfgnamespace,
+       NULL,
        pg_ts_config.oid, cfgname
 FROM pg_ts_config
-     JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
 WHERE has_schema_privilege(cfgnamespace, 'USAGE')
 
 -- SQL :: IndexSchema :: 9.1

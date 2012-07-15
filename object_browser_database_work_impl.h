@@ -86,6 +86,8 @@ private:
   DatabaseModel incoming;
 protected:
   void operator()();
+  void LoadSchemas();
+  void LoadExtensions();
   void LoadRelations();
   void LoadFunctions();
   template<typename T>
@@ -93,6 +95,12 @@ protected:
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
 private:
+  std::map<Oid, SchemaModel> schemas;
+  std::map<Oid, ExtensionModel> extensions;
+  SchemaModel Schema(Oid oid) const { return InternalLookup(schemas, oid); }
+  ExtensionModel Extension(Oid oid) const { return oid == InvalidOid ? ExtensionModel() : InternalLookup(extensions, oid); }
+  template<class T>
+  const T& InternalLookup(typename std::map<Oid, T> table, Oid oid) const;
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };

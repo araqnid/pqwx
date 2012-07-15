@@ -208,7 +208,7 @@ public:
   bool load(wxTreeItemId parent) {
     DatabaseModel *db = ob.Model().FindDatabase(databaseRef);
     wxWindowUpdateLocker noUpdates(&ob);
-    ob.AppendDivision(db, division, parent);
+    ob.AppendDivision(db, division, false, parent);
     return false;
   }
 
@@ -483,20 +483,19 @@ void ObjectBrowser::AppendRoleItems(const ServerModel *serverModel, wxTreeItemId
   }
 }
 
-void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members) {
-  if (members.size() == 1 && members[0]->name.IsEmpty()) {
-    const SchemaModel& schema = members[0]->schema;
-    wxString label = schema.name + _T(".");
-    if (!schema.accessible) label << _(" (inaccessible)");
-    wxTreeItemId emptySchemaItem = AppendItem(parent, label);
-    SetItemData(emptySchemaItem, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, schema.oid));
-    SetItemImage(emptySchemaItem, img_folder);
-    return;
-  }
+void ObjectBrowser::AppendEmptySchema(const ObjectModelReference& databaseRef, wxTreeItemId parent, const SchemaModel& schema)
+{
+  wxString label = schema.name + _T(".");
+  if (!schema.accessible) label << _(" (inaccessible)");
+  wxTreeItemId emptySchemaItem = AppendItem(parent, label);
+  SetItemData(emptySchemaItem, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, schema.oid));
+  SetItemImage(emptySchemaItem, img_folder);
+}
 
+void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const SchemaModel& schema, const std::vector<const SchemaMemberModel*> &members) {
   if (createSchemaItem) {
-    parent = AppendItem(parent, schemaName + _T("."));
-    SetItemData(parent, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, members[0]->schema.oid));
+    parent = AppendItem(parent, schema.name + _T("."));
+    SetItemData(parent, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, schema.oid));
     SetItemImage(parent, img_folder);
   }
 
@@ -668,17 +667,27 @@ void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef,
   }
 }
 
-void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vector<const SchemaMemberModel*> &members, wxTreeItemId parentItem) {
-  std::map<wxString, std::vector<const SchemaMemberModel*> > schemas;
+void ObjectBrowser::AppendDivision(const DatabaseModel *databaseModel, std::vector<const SchemaMemberModel*> &members, bool includeEmptySchemas, wxTreeItemId parentItem) {
+  std::map<Oid, std::vector<const SchemaMemberModel*> > schemaMembers;
+  const ObjectModelReference databaseRef = *databaseModel;
 
   for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     const SchemaMemberModel *member = *iter;
-    schemas[member->schema.name].push_back(member);
+    schemaMembers[member->schema.oid].push_back(member);
   }
 
-  bool foldSchemas = members.size() > 50 && schemas.size() > 1;
-  for (std::map<wxString, std::vector<const SchemaMemberModel*> >::iterator iter = schemas.begin(); iter != schemas.end(); iter++) {
-    AppendSchemaMembers(*databaseModel, parentItem, foldSchemas && iter->second.size() > 1, iter->first, iter->second);
+  bool foldSchemas = members.size() > 50 && schemaMembers.size() > 1;
+  for (std::vector<SchemaModel>::const_iterator iter = databaseModel->schemas.begin(); iter != databaseModel->schemas.end(); iter++) {
+    const SchemaModel& schema = *iter;
+    std::map<Oid, std::vector<const SchemaMemberModel*> >::const_iterator membersPtr = schemaMembers.find(schema.oid);
+    if (membersPtr != schemaMembers.end()) {
+      const std::vector<const SchemaMemberModel*>& thisSchemaMembers = membersPtr->second;
+      AppendSchemaMembers(databaseRef, parentItem, foldSchemas && thisSchemaMembers.size() > 1, schema, thisSchemaMembers);
+    }
+    else if (includeEmptySchemas) {
+      if (!schema.IsSystem()) // bodge
+        AppendEmptySchema(databaseRef, parentItem, schema);
+    }
   }
 }
 
@@ -694,7 +703,7 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
 
   DatabaseModel::Divisions divisions = databaseModel->DivideSchemaMembers();
 
-  AppendDivision(databaseModel, divisions.userDivision, databaseItem);
+  AppendDivision(databaseModel, divisions.userDivision, true, databaseItem);
 
   if (!divisions.extensionDivisions.empty()) {
     wxTreeItemId extensionsItem = AppendItem(databaseItem, _("Extensions"));
@@ -703,7 +712,7 @@ void ObjectBrowser::UpdateDatabase(const ObjectModelReference& databaseRef, bool
       wxTreeItemId extensionItem = AppendItem(extensionsItem, iter->first.name);
       SetItemImage(extensionItem, img_folder);
       SetItemData(extensionItem, new ModelReference(databaseRef, ObjectModelReference::PG_EXTENSION, iter->first.oid));
-      AppendDivision(databaseModel, iter->second, extensionItem);
+      AppendDivision(databaseModel, iter->second, false, extensionItem);
     }
   }
 

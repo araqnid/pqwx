@@ -208,6 +208,8 @@ const std::map<wxString, FunctionModel::Type> LoadDatabaseSchemaWork::functionTy
 
 void LoadDatabaseSchemaWork::operator()() {
   incoming.oid = databaseRef.GetOid();
+  LoadSchemas();
+  LoadExtensions();
   LoadRelations();
   LoadFunctions();
   LoadSimpleSchemaMembers(_T("Text search dictionaries"), incoming.textSearchDictionaries);
@@ -216,20 +218,50 @@ void LoadDatabaseSchemaWork::operator()() {
   LoadSimpleSchemaMembers(_T("Text search configurations"), incoming.textSearchConfigurations);
 }
 
+void LoadDatabaseSchemaWork::LoadSchemas()
+{
+  QueryResults rows = Query(_T("Schemas")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    SchemaModel schema;
+    schema.oid = (*iter).ReadOid(0);
+    schema.name = (*iter).ReadText(1);
+    schema.accessible = (*iter).ReadBool(2);
+    incoming.schemas.push_back(schema);
+    schemas[schema.oid] = schema;
+  }
+}
+
+void LoadDatabaseSchemaWork::LoadExtensions()
+{
+  QueryResults rows = Query(_T("Extensions")).List();
+  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    ExtensionModel extension;
+    extension.oid = (*iter).ReadOid(0);
+    extension.name = (*iter).ReadText(1);
+    incoming.extensions.push_back(extension);
+    extensions[extension.oid] = extension;
+  }
+}
+
+template <class T>
+const T& LoadDatabaseSchemaWork::InternalLookup(typename std::map<Oid, T> table, Oid oid) const
+{
+  typename std::map<Oid,T>::const_iterator ptr = table.find(oid);
+  wxASSERT_MSG(ptr != table.end(), wxString::Format(_T("%u not found in lookup table"), oid));
+  return ptr->second;
+}
+
 void LoadDatabaseSchemaWork::LoadRelations() {
   QueryResults relationRows = Query(_T("Relations")).List();
   for (QueryResults::const_iterator iter = relationRows.begin(); iter != relationRows.end(); iter++) {
     RelationModel relation;
-    relation.schema.oid = (*iter).ReadOid(0);
-    relation.schema.name = (*iter).ReadText(1);
-    relation.schema.accessible = (*iter).ReadBool(8);
-    relation.extension.oid = (*iter).ReadOid(2);
-    relation.extension.name = (*iter).ReadText(3);
+    relation.schema = Schema((*iter).ReadOid(0));
+    relation.extension = Extension((*iter).ReadOid(1));
     if (!(*iter)[4].IsEmpty()) {
-      relation.oid = (*iter).ReadOid(4);
-      relation.name = (*iter).ReadText(5);
-      wxString relkind((*iter).ReadText(6));
-      relation.unlogged = (*iter).ReadBool(7);
+      relation.oid = (*iter).ReadOid(2);
+      relation.name = (*iter).ReadText(3);
+      wxString relkind((*iter).ReadText(4));
+      relation.unlogged = (*iter).ReadBool(5);
       wxASSERT_MSG(relationTypeMap.count(relkind) > 0, relkind);
       relation.type = relationTypeMap.find(relkind)->second;
     }
@@ -241,14 +273,12 @@ void LoadDatabaseSchemaWork::LoadFunctions() {
   QueryResults functionRows = Query(_T("Functions")).List();
   for (QueryResults::const_iterator iter = functionRows.begin(); iter != functionRows.end(); iter++) {
     FunctionModel func;
-    func.schema.oid = (*iter).ReadOid(0);
-    func.schema.name = (*iter).ReadText(1);
-    func.extension.oid = (*iter).ReadOid(2);
-    func.extension.name = (*iter).ReadText(3);
-    func.oid = (*iter).ReadOid(4);
-    func.name = (*iter).ReadText(5);
-    func.arguments = (*iter).ReadText(6);
-    wxString type((*iter).ReadText(7));
+    func.schema = Schema((*iter).ReadOid(0));
+    func.extension = Extension((*iter).ReadOid(1));
+    func.oid = (*iter).ReadOid(2);
+    func.name = (*iter).ReadText(3);
+    func.arguments = (*iter).ReadText(4);
+    wxString type((*iter).ReadText(5));
     wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
     func.type = functionTypeMap.find(type)->second;
     incoming.functions.push_back(func);
@@ -261,12 +291,10 @@ void LoadDatabaseSchemaWork::LoadSimpleSchemaMembers(const wxString &queryName, 
   const QueryResults rows = Query(queryName).List();
   for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
     T obj;
-    obj.schema.oid = (*iter).ReadOid(0);
-    obj.schema.name = (*iter).ReadText(1);
-    obj.extension.oid = (*iter).ReadOid(2);
-    obj.extension.name = (*iter).ReadText(3);
-    obj.oid = (*iter).ReadOid(4);
-    obj.name = (*iter).ReadText(5);
+    obj.schema = Schema((*iter).ReadOid(0));
+    obj.extension = Extension((*iter).ReadOid(1));
+    obj.oid = (*iter).ReadOid(2);
+    obj.name = (*iter).ReadText(3);
     vec.push_back(obj);
   }
 }

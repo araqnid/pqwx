@@ -278,6 +278,8 @@ public:
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
   ObjectModel *FindObject(const ObjectModelReference& ref);
+  std::vector<SchemaModel> schemas;
+  std::vector<ExtensionModel> extensions;
   std::vector<RelationModel> relations;
   std::vector<FunctionModel> functions;
   std::vector<TextSearchDictionaryModel> textSearchDictionaries;

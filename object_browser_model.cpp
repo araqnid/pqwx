@@ -553,6 +553,8 @@ void ServerModel::UpdateDatabase(const DatabaseModel& incoming)
     if ((*iter).oid == incoming.oid) {
       (*iter).loaded = true;
       (*iter).catalogueIndex = NULL;
+      (*iter).schemas = incoming.schemas;
+      (*iter).extensions = incoming.extensions;
       (*iter).relations = incoming.relations;
       (*iter).functions = incoming.functions;
       (*iter).textSearchDictionaries = incoming.textSearchDictionaries;
@@ -638,6 +640,11 @@ DatabaseModel::Divisions DatabaseModel::DivideSchemaMembers() const
   sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
 
   Divisions result;
+
+  // in case there are any empty extensions...
+  for (std::vector<ExtensionModel>::const_iterator iter = extensions.begin(); iter != extensions.end(); iter++) {
+    result.extensionDivisions[*iter];
+  }
 
   for (std::vector<const SchemaMemberModel*>::iterator iter = members.begin(); iter != members.end(); iter++) {
     const SchemaMemberModel *member = *iter;

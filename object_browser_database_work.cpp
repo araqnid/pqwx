@@ -130,7 +130,7 @@ void LoadServerWork::ReadDatabases()
     database.owner = (*iter).ReadText(6);
     databases.push_back(database);
   }
-  sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
+  std::sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
 }
 
 void LoadServerWork::ReadRoles()
@@ -145,7 +145,7 @@ void LoadServerWork::ReadRoles()
     role.description = (*iter).ReadText(4);
     roles.push_back(role);
   }
-  sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
+  std::sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
 }
 
 void LoadServerWork::ReadTablespaces()

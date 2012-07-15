@@ -109,7 +109,7 @@ wxThread::ExitCode DatabaseNotificationMonitor::WorkerThread::Entry()
       read(controlFD, &buf, 8);
       Work *work;
       while ((work = ShiftWork()) != NULL) {
-        (*work)();
+        work->DoWork();
       }
     }
 #else
@@ -118,7 +118,7 @@ wxThread::ExitCode DatabaseNotificationMonitor::WorkerThread::Entry()
       read(workerControlEndpoint, buffer, sizeof(buffer));
       Work *work;
       while ((work = ShiftWork()) != NULL) {
-        (*work)();
+        work->DoWork();
       }
     }
 #endif
@@ -135,13 +135,13 @@ wxThread::ExitCode DatabaseNotificationMonitor::WorkerThread::Entry()
   return 0;
 }
 
-void DatabaseNotificationMonitor::TakeConnectionWork::operator()()
+void DatabaseNotificationMonitor::TakeConnectionWork::DoWork()
 {
   worker->clients.push_back(client);
   Done();
 }
 
-void DatabaseNotificationMonitor::ReleaseConnectionWork::operator()()
+void DatabaseNotificationMonitor::ReleaseConnectionWork::DoWork()
 {
   for (std::list<Client>::iterator iter = worker->clients.begin(); iter != worker->clients.end(); iter++) {
     if ((*iter).GetFD() == socketFd) {
@@ -152,7 +152,7 @@ void DatabaseNotificationMonitor::ReleaseConnectionWork::operator()()
   Done();
 }
 
-void DatabaseNotificationMonitor::QuitWork::operator()()
+void DatabaseNotificationMonitor::QuitWork::DoWork()
 {
   worker->quit = true;
 }

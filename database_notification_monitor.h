@@ -112,7 +112,7 @@ private:
   class Work {
   public:
     Work(WorkerThread *worker) : worker(worker) {}
-    virtual void operator()() = 0;
+    virtual void DoWork() = 0;
   protected:
     WorkerThread *worker;
   };
@@ -142,7 +142,7 @@ private:
   class TakeConnectionWork : public SynchronousWork {
   public:
     TakeConnectionWork(WorkerThread *worker, const Client &client) : SynchronousWork(worker), client(client) {}
-    void operator()();
+    void DoWork();
   private:
     Client client;
   };
@@ -150,7 +150,7 @@ private:
   class ReleaseConnectionWork : public SynchronousWork {
   public:
     ReleaseConnectionWork(WorkerThread *worker, int socketFd) : SynchronousWork(worker), socketFd(socketFd) {}
-    void operator()();
+    void DoWork();
   private:
     int socketFd;
   };
@@ -158,7 +158,7 @@ private:
   class QuitWork : public Work {
   public:
     QuitWork(WorkerThread *worker) : Work(worker) {}
-    void operator()();
+    void DoWork();
   };
 
   WorkerThread worker;

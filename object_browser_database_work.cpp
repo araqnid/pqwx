@@ -222,6 +222,7 @@ void LoadDatabaseSchemaWork::LoadRelations() {
     RelationModel relation;
     relation.schema.oid = (*iter).ReadOid(0);
     relation.schema.name = (*iter).ReadText(1);
+    relation.schema.accessible = (*iter).ReadBool(8);
     relation.extension.oid = (*iter).ReadOid(2);
     relation.extension.name = (*iter).ReadText(3);
     if (!(*iter)[4].IsEmpty()) {

@@ -485,8 +485,11 @@ void ObjectBrowser::AppendRoleItems(const ServerModel *serverModel, wxTreeItemId
 
 void ObjectBrowser::AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const wxString &schemaName, const std::vector<const SchemaMemberModel*> &members) {
   if (members.size() == 1 && members[0]->name.IsEmpty()) {
-    wxTreeItemId emptySchemaItem = AppendItem(parent, schemaName + _T("."));
-    SetItemData(emptySchemaItem, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, members[0]->schema.oid));
+    const SchemaModel& schema = members[0]->schema;
+    wxString label = schema.name + _T(".");
+    if (!schema.accessible) label << _(" (inaccessible)");
+    wxTreeItemId emptySchemaItem = AppendItem(parent, label);
+    SetItemData(emptySchemaItem, new ModelReference(databaseRef, ObjectModelReference::PG_NAMESPACE, schema.oid));
     SetItemImage(emptySchemaItem, img_folder);
     return;
   }

@@ -126,10 +126,12 @@ public:
  */
 class SchemaModel : public DatabaseMemberModel {
 public:
+  SchemaModel() : accessible(true) {}
   bool IsSystem() const
   {
     return name.StartsWith(_T("pg_")) || name == _T("information_schema");
   }
+  bool accessible;
 };
 
 /**

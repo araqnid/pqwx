@@ -22,7 +22,7 @@
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText">
-                    <label>&amp;Owner:</label>
+                    <label>O&amp;wner:</label>
                   </object>
                   <flag>wxALIGN_CENTRE_VERTICAL</flag>
                 </object>
@@ -61,7 +61,7 @@
                     <object class="sizeritem">
                       <object class="wxComboBox" name="encoding">
                         <content>
-                          <item></item>
+                          <item/>
                         </content>
                         <selection>0</selection>
                       </object>

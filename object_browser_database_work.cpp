@@ -412,32 +412,31 @@ void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
 /*
  * Load a relation's details.
  */
-void LoadRelationWork::DoManagedWork() {
-  ReadColumns();
+void LoadRelationWork::DoManagedWork()
+{
+  LoadThings(_T("Columns"), std::back_inserter(incoming.columns), ReadColumn);
   if (relationType == RelationModel::TABLE) {
-    ReadIndices();
-    ReadTriggers();
-    ReadSequences();
-    ReadConstraints();
+    LoadIndices();
+    LoadThings(_T("Triggers"), std::back_inserter(incoming.triggers), ReadTrigger);
+    LoadThings(_T("Sequences"), std::back_inserter(incoming.sequences), ReadSequence);
+    LoadThings(_T("Constraints"), std::back_inserter(incoming.checkConstraints), ReadConstraint);
   }
 }
 
-void LoadRelationWork::ReadColumns() {
-  QueryResults attributeRows = Query(_T("Columns")).OidParam(relationRef.GetOid()).List();
-  incoming.columns.reserve(attributeRows.size());
-  for (QueryResults::const_iterator iter = attributeRows.begin(); iter != attributeRows.end(); iter++) {
-    ColumnModel column;
-    column.name = (*iter).ReadText(0);
-    column.type = (*iter).ReadText(1);
-    column.nullable = (*iter).ReadBool(2);
-    column.hasDefault = (*iter).ReadBool(3);
-    column.description = (*iter).ReadText(4);
-    column.attnum = (*iter).ReadInt4(5);
-    incoming.columns.push_back(column);
-  }
+ColumnModel LoadRelationWork::ReadColumn(const QueryResults::Row& row)
+{
+  ColumnModel column;
+  column.name = row.ReadText(0);
+  column.type = row.ReadText(1);
+  column.nullable = row.ReadBool(2);
+  column.hasDefault = row.ReadBool(3);
+  column.description = row.ReadText(4);
+  column.attnum = row.ReadInt4(5);
+  return column;
 }
 
-void LoadRelationWork::ReadIndices() {
+void LoadRelationWork::LoadIndices()
+{
   QueryResults indexRows = Query(_T("Indices")).OidParam(relationRef.GetOid()).List();
   incoming.indices.reserve(indexRows.size());
   IndexModel *lastIndex = NULL;
@@ -486,42 +485,33 @@ std::vector<int> LoadRelationWork::ParseInt2Vector(const wxString &str)
   return result;
 }
 
-void LoadRelationWork::ReadTriggers() {
-  QueryResults triggerRows = Query(_T("Triggers")).OidParam(relationRef.GetOid()).List();
-  incoming.triggers.reserve(triggerRows.size());
-  for (QueryResults::const_iterator iter = triggerRows.begin(); iter != triggerRows.end(); iter++) {
-    TriggerModel trigger;
-    trigger.name = (*iter).ReadText(0);
-    incoming.triggers.push_back(trigger);
-  }
+TriggerModel LoadRelationWork::ReadTrigger(const QueryResults::Row& row)
+{
+  TriggerModel trigger;
+  trigger.name = row.ReadText(0);
+  return trigger;
 }
 
-void LoadRelationWork::ReadSequences() {
-  QueryResults sequenceRows = Query(_T("Sequences")).OidParam(relationRef.GetOid()).List();
-  incoming.sequences.reserve(sequenceRows.size());
-  for (QueryResults::const_iterator iter = sequenceRows.begin(); iter != sequenceRows.end(); iter++) {
-    RelationModel sequence;
-    sequence.type = RelationModel::SEQUENCE;
-    sequence.schema.oid = (*iter).ReadOid(0);
-    sequence.schema.name = (*iter).ReadText(1);
-    sequence.oid = (*iter).ReadOid(2);
-    sequence.name = (*iter).ReadText(3);
-    sequence.owningColumn = (*iter).ReadInt4(4);
-    incoming.sequences.push_back(sequence);
-  }
+RelationModel LoadRelationWork::ReadSequence(const QueryResults::Row& row)
+{
+  RelationModel sequence;
+  sequence.type = RelationModel::SEQUENCE;
+  sequence.schema.oid = row.ReadOid(0);
+  sequence.schema.name = row.ReadText(1);
+  sequence.oid = row.ReadOid(2);
+  sequence.name = row.ReadText(3);
+  sequence.owningColumn = row.ReadInt4(4);
+  return sequence;
 }
 
-void LoadRelationWork::ReadConstraints() {
-  QueryResults rows = Query(_T("Constraints")).OidParam(relationRef.GetOid()).List();
-  for (QueryResults::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    wxString typeCode = (*iter).ReadText(1);
-    if (typeCode == _T("c")) {
-      CheckConstraintModel constraint;
-      constraint.name = (*iter).ReadText(0);
-      constraint.expression = (*iter).ReadText(2);
-      incoming.checkConstraints.push_back(constraint);
-    }
-  }
+CheckConstraintModel LoadRelationWork::ReadConstraint(const QueryResults::Row& row)
+{
+  CheckConstraintModel constraint;
+  constraint.name = row.ReadText(0);
+  wxString typeCode = row.ReadText(1);
+  wxASSERT(typeCode == _T("c"));
+  constraint.expression = row.ReadText(2);
+  return constraint;
 }
 
 void LoadRelationWork::UpdateModel(ObjectBrowserModel& model)

@@ -214,14 +214,20 @@ private:
   RelationModel incoming;
 private:
   void DoManagedWork();
-  void ReadColumns();
-  void ReadIndices();
-  void ReadTriggers();
-  void ReadSequences();
-  void ReadConstraints();
+  static ColumnModel ReadColumn(const QueryResults::Row&);
+  void LoadIndices();
+  static TriggerModel ReadTrigger(const QueryResults::Row&);
+  static RelationModel ReadSequence(const QueryResults::Row&);
+  static CheckConstraintModel ReadConstraint(const QueryResults::Row&);
   void UpdateModel(ObjectBrowserModel& model);
   void UpdateView(ObjectBrowser& ob);
   static std::vector<int> ParseInt2Vector(const wxString &str);
+  template<class OutputIterator, class UnaryOperator>
+  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  {
+    QueryResults rows = Query(queryName).OidParam(relationRef.GetOid()).List();
+    std::transform(rows.begin(), rows.end(), output, mapper);
+  }
 };
 
 /**

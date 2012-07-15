@@ -202,6 +202,7 @@ ORDER BY relname, pg_attribute.attnum
 SELECT conname, contype, consrc
 FROM pg_constraint
 WHERE conrelid = $1
+      AND contype = 'c'
 
 -- SQL :: Triggers :: 9.0
 SELECT tgname, tgfoid::regprocedure, tgenabled

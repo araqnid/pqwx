@@ -113,6 +113,7 @@ void RefreshDatabaseListWork::ReadRole()
   createDB = row.ReadBool(0);
   createUser = row.ReadBool(1);
   superuser = row.ReadBool(2);
+  rolename = row.ReadText(3);
 }
 
 void RefreshDatabaseListWork::ReadDatabases()
@@ -168,6 +169,7 @@ void RefreshDatabaseListWork::UpdateModel(ObjectBrowserModel& model)
   server->haveCreateDBPrivilege = createDB;
   server->haveCreateUserPrivilege = createUser;
   server->haveSuperuserStatus = superuser;
+  server->rolename = rolename;
 }
 
 void RefreshDatabaseListWork::UpdateView(ObjectBrowser& ob)

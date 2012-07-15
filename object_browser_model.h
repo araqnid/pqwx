@@ -489,6 +489,14 @@ public:
   bool HaveCreateDBPrivilege() const { return haveCreateDBPrivilege; }
   bool HaveCreateUserPrivilege() const { return haveCreateUserPrivilege; }
   bool HaveSuperuserStatus() const { return haveSuperuserStatus; }
+  /**
+   * The role (user) name we are connected as.
+   *
+   * This is read from the database after connecting, which might not
+   * be the username we requested (in particular, we could be
+   * connected as the libpq default).
+   */
+  wxString GetRolename() const { return rolename; }
 
   /**
    * Clean up expired and stale database connections.
@@ -511,6 +519,7 @@ private:
   bool haveCreateDBPrivilege;
   bool haveCreateUserPrivilege;
   bool haveSuperuserStatus;
+  wxString rolename;
   int serverVersion;
   wxString serverVersionString;
   SSLInfo *sslInfo;

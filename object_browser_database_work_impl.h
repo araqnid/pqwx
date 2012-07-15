@@ -56,6 +56,7 @@ private:
   bool createDB;
   bool createUser;
   bool superuser;
+  wxString rolename;
   std::vector<DatabaseModel> databases;
   std::vector<RoleModel> roles;
   std::vector<TablespaceModel> tablespaces;

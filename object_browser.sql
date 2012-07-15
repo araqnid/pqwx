@@ -12,7 +12,7 @@
 SET search_path = pg_catalog
 
 -- SQL :: Role
-SELECT rolcreatedb, rolcreaterole, rolsuper
+SELECT rolcreatedb, rolcreaterole, rolsuper, rolname
 FROM pg_roles
 WHERE rolname = current_user
 

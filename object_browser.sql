@@ -67,10 +67,11 @@ FROM pg_group
 SELECT pg_namespace.oid, nspname,
        pg_extension.oid, extname,
        pg_class.oid, relname, relkind,
-       relpersistence = 'u' AS is_unlogged
+       relpersistence = 'u' AS is_unlogged,
+       has_schema_privilege(relnamespace, 'USAGE')
 FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
       FROM pg_class
-      WHERE relkind IN ('r','v')
+      WHERE (relkind IN ('r','v')
             OR (relkind = 'S' AND NOT EXISTS (
                      -- exclude sequences that depend on an attribute (serial columns)
                      SELECT 1
@@ -81,6 +82,7 @@ FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
                            AND refobjsubid > 0
                            AND deptype = 'a')
                )
+            ) AND has_schema_privilege(relnamespace, 'USAGE')
      ) pg_class
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_class'::regclass
                          AND pg_depend.objid = pg_class.oid
@@ -92,10 +94,11 @@ FROM (SELECT oid, relname, relkind, relnamespace, relpersistence
 SELECT pg_namespace.oid, nspname,
        NULL, NULL,
        pg_class.oid, relname, relkind,
-       false AS is_unlogged
+       false AS is_unlogged,
+       has_schema_privilege(relnamespace, 'USAGE')
 FROM (SELECT oid, relname, relkind, relnamespace
       FROM pg_class
-      WHERE relkind IN ('r','v')
+      WHERE (relkind IN ('r','v')
             OR (relkind = 'S' AND NOT EXISTS (
                      -- exclude sequences that depend on an attribute (serial columns)
                      SELECT 1
@@ -106,6 +109,7 @@ FROM (SELECT oid, relname, relkind, relnamespace
                            AND refobjsubid > 0
                            AND deptype = 'a')
                )
+            ) AND has_schema_privilege(relnamespace, 'USAGE')
      ) pg_class
      RIGHT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
@@ -124,6 +128,7 @@ FROM pg_proc
                          AND pg_depend.objid = pg_proc.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+WHERE has_schema_privilege(pronamespace, 'USAGE')
 
 -- SQL :: Functions :: 8.4
 SELECT pg_namespace.oid, nspname,
@@ -136,6 +141,7 @@ SELECT pg_namespace.oid, nspname,
             ELSE 'f' END
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
+WHERE has_schema_privilege(pronamespace, 'USAGE')
 
 -- SQL :: Functions
 SELECT nspoid, nspname,
@@ -150,6 +156,7 @@ SELECT pg_proc.oid, pg_namespace.oid as nspoid, nspname, proname, pg_proc.oid::r
             ELSE 'f' END AS type
 FROM pg_proc
      JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
+WHERE has_schema_privilege(pronamespace, 'USAGE')
 ) x
 
 -- SQL :: Object Descriptions
@@ -234,6 +241,7 @@ FROM pg_class seq
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend_ext.refobjid
 WHERE pg_depend.refobjid = $1
       AND seq.relkind = 'S'
+      AND has_schema_privilege(relnamespace, 'USAGE')
 
 -- SQL :: Sequences
 SELECT pg_namespace.oid, nspname,
@@ -248,6 +256,7 @@ FROM pg_class seq
                        AND pg_depend.refobjsubid > 0
 WHERE pg_depend.refobjid = $1
       AND seq.relkind = 'S'
+      AND has_schema_privilege(relnamespace, 'USAGE')
 
 -- SQL :: Text search dictionaries :: 9.1
 SELECT pg_namespace.oid, nspname,
@@ -259,6 +268,7 @@ FROM pg_ts_dict
                          AND pg_depend.objid = pg_ts_dict.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+WHERE has_schema_privilege(dictnamespace, 'USAGE')
 
 -- SQL :: Text search dictionaries
 SELECT pg_namespace.oid, nspname,
@@ -266,6 +276,7 @@ SELECT pg_namespace.oid, nspname,
        pg_ts_dict.oid, dictname
 FROM pg_ts_dict
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_dict.dictnamespace
+WHERE has_schema_privilege(dictnamespace, 'USAGE')
 
 -- SQL :: Text search parsers :: 9.1
 SELECT pg_namespace.oid, nspname,
@@ -277,6 +288,7 @@ FROM pg_ts_parser
                          AND pg_depend.objid = pg_ts_parser.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+WHERE has_schema_privilege(prsnamespace, 'USAGE')
 
 -- SQL :: Text search parsers
 SELECT pg_namespace.oid, nspname,
@@ -284,6 +296,7 @@ SELECT pg_namespace.oid, nspname,
        pg_ts_parser.oid, nspname, prsname
 FROM pg_ts_parser
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_parser.prsnamespace
+WHERE has_schema_privilege(prsnamespace, 'USAGE')
 
 -- SQL :: Text search templates :: 9.1
 SELECT pg_namespace.oid, nspname,
@@ -295,6 +308,7 @@ FROM pg_ts_template
                          AND pg_depend.objid = pg_ts_template.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+WHERE has_schema_privilege(tmplnamespace, 'USAGE')
 
 -- SQL :: Text search templates
 SELECT pg_namespace.oid, nspname,
@@ -302,6 +316,7 @@ SELECT pg_namespace.oid, nspname,
        pg_ts_template.oid, tmplname
 FROM pg_ts_template
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_template.tmplnamespace
+WHERE has_schema_privilege(tmplnamespace, 'USAGE')
 
 -- SQL :: Text search configurations :: 9.1
 SELECT pg_namespace.oid, nspname,
@@ -313,6 +328,7 @@ FROM pg_ts_config
                          AND pg_depend.objid = pg_ts_config.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
      LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
+WHERE has_schema_privilege(cfgnamespace, 'USAGE')
 
 -- SQL :: Text search configurations
 SELECT pg_namespace.oid, nspname,
@@ -320,6 +336,7 @@ SELECT pg_namespace.oid, nspname,
        pg_ts_config.oid, cfgname
 FROM pg_ts_config
      JOIN pg_namespace ON pg_namespace.oid = pg_ts_config.cfgnamespace
+WHERE has_schema_privilege(cfgnamespace, 'USAGE')
 
 -- SQL :: IndexSchema :: 9.1
 SELECT x.objid,

@@ -585,16 +585,6 @@ void ServerModel::UpdateTablespaces(const std::vector<TablespaceModel>& incoming
   }
 }
 
-template <typename T>
-ObjectModel *SearchContents(std::vector<T>& container, Oid key)
-{
-  for (typename std::vector<T>::iterator iter = container.begin(); iter != container.end(); iter++) {
-    if ((*iter).oid == key)
-      return &(*iter);
-  }
-  return NULL;
-}
-
 ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)
 {
   switch (ref.GetObjectClass()) {

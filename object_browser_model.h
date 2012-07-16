@@ -358,6 +358,22 @@ public:
 
 private:
   static const SchemaMemberModel* TakePointer(const SchemaMemberModel& value) { return &value; }
+  template <typename InputIterator>
+  typename InputIterator::value_type *SearchContents(InputIterator first, InputIterator last, Oid key)
+  {
+    InputIterator iter = first;
+    while (iter != last) {
+      if ((*iter).oid == key)
+        return &(*iter);
+      ++iter;
+    }
+    return NULL;
+  }
+  template <typename Container>
+  typename Container::value_type *SearchContents(Container& container, Oid key)
+  {
+    return SearchContents(container.begin(), container.end(), key);
+  }
 };
 
 /**

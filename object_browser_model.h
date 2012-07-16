@@ -358,16 +358,22 @@ public:
 
 private:
   static const SchemaMemberModel* TakePointer(const SchemaMemberModel& value) { return &value; }
+  template <typename T>
+  class MatchOid {
+  public:
+    MatchOid(Oid oid) : oid(oid) {}
+    bool operator()(const T& elt) const
+    {
+      return elt.oid == oid;
+    }
+  private:
+    const Oid oid;
+  };
   template <typename InputIterator>
   typename InputIterator::value_type *SearchContents(InputIterator first, InputIterator last, Oid key)
   {
-    InputIterator iter = first;
-    while (iter != last) {
-      if ((*iter).oid == key)
-        return &(*iter);
-      ++iter;
-    }
-    return NULL;
+    InputIterator ptr = std::find_if(first, last, MatchOid<typename InputIterator::value_type>(key));
+    return (ptr != last) ? &(*ptr) : NULL;
   }
   template <typename Container>
   typename Container::value_type *SearchContents(Container& container, Oid key)

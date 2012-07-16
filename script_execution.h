@@ -19,6 +19,7 @@ class ScriptExecution {
 public:
   ScriptExecution(ScriptEditorPane *owner, wxCharBuffer buffer, unsigned length) :
     owner(owner), buffer(buffer),
+    queryBuffer(this->buffer.data()),
     lexer(this->buffer.data(), length),
     lastSqlPosition(0), queryBufferExecuted(false),
     rowsRetrieved(0), errorsEncountered(0)
@@ -55,9 +56,65 @@ public:
   void ProcessConnectionNotice(const PgError& error);
 
 private:
+  class QueryBuffer {
+  public:
+    QueryBuffer(const char *buffer) : buffer(buffer) {}
+    bool empty() const
+    {
+      return tokens.empty() || !NonEmptyTokenExists();
+    }
+    void clear()
+    {
+      tokens.clear();
+    }
+    void operator=(const ExecutionLexer::Token& t)
+    {
+      tokens.clear();
+      tokens.push_back(t);
+    }
+    void operator+=(const ExecutionLexer::Token& t)
+    {
+      tokens.push_back(t);
+    }
+    unsigned length() const
+    {
+      unsigned len = 0;
+      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+        len += (*iter).length;
+      }
+      return len;
+    }
+    operator std::string()
+    {
+      std::string str;
+      str.reserve(length());
+      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+        str.append(buffer + (*iter).offset, (*iter).length);
+      }
+      return str;
+    }
+    operator wxString()
+    {
+      std::string str = *this;
+      return wxString(str.c_str(), wxConvUTF8);
+    }
+
+  private:
+    const char * const buffer;
+    std::vector<ExecutionLexer::Token> tokens;
+    bool NonEmptyTokenExists() const
+    {
+      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
+        if ((*iter).length > 0)
+          return true;
+      }
+      return false;
+    }
+  };
+
   ScriptEditorPane *owner;
   wxCharBuffer buffer;
-  wxString queryBuffer;
+  QueryBuffer queryBuffer;
   ExecutionLexer lexer;
   unsigned lastSqlPosition;
   bool queryBufferExecuted;
@@ -95,14 +152,13 @@ private:
 
   void AppendSql(const ExecutionLexer::Token& token)
   {
-    wxString str = GetWXString(token);
     if (queryBuffer.empty() || queryBufferExecuted) {
       queryBufferExecuted = false;
-      queryBuffer = str;
+      queryBuffer = token;
       lastSqlPosition = token.offset;
     }
     else {
-      queryBuffer += GetWXString(token);
+      queryBuffer += token;
     }
   }
 

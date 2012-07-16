@@ -90,11 +90,11 @@ public:
   /**
    * Create work object
    */
-  ScriptQueryWork(wxEvtHandler *dest, const wxString &sql) : ScriptExecutionWork(dest), sql(sql) {}
+  ScriptQueryWork(wxEvtHandler *dest, const std::string &sql) : ScriptExecutionWork(dest), sql(sql) {}
 
   void DoWork();
 private:
-  wxString sql;
+  std::string sql;
 };
 
 class ScriptPutCopyDataWork : public ScriptExecutionWork {

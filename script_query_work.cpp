@@ -46,13 +46,12 @@ void ScriptExecutionWork::Result::ReadStatus(DatabaseConnection *db, PGconn *con
 void ScriptQueryWork::DoWork()
 {
   wxStopWatch stopwatch;
-  wxCharBuffer sqlBuffer = sql.utf8_str();
 
   output = new Result();
-  db->LogSql(sqlBuffer.data());
+  db->LogSql(sql.c_str());
   stopwatch.Start();
 
-  PGresult *rs = PQexecParams(conn, sqlBuffer.data(), 0, NULL, NULL, NULL, NULL, 0);
+  PGresult *rs = PQexecParams(conn, sql.c_str(), 0, NULL, NULL, NULL, NULL, 0);
   wxASSERT(rs != NULL);
 
   output->ReadStatus(db, conn, rs);

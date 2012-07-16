@@ -252,7 +252,7 @@ ScriptExecution::NextState ScriptExecution::PsqlPrintQueryBuffer(const wxString 
 
 ScriptExecution::NextState ScriptExecution::PsqlResetQueryBuffer(const wxString &parameters, const ExecutionLexer::Token &t)
 {
-  queryBuffer = wxEmptyString;
+  queryBuffer.clear();
   return NeedMore;
 }
 

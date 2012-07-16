@@ -319,29 +319,17 @@ void LoadDatabaseDescriptionsWork::DoManagedWork()
   }
 }
 
-template<typename T>
-void PutDescriptions(const std::map<unsigned long, wxString>& descriptions, std::vector<T>& objects, int& count)
-{
-  for (typename std::vector<T>::iterator iter = objects.begin(); iter != objects.end(); iter++) {
-    std::map<unsigned long, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
-    if (ptr != descriptions.end()) {
-      (*iter).description = (*ptr).second;
-      ++count;
-    }
-  }
-}
-
 void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel& model)
 {
   DatabaseModel *databaseModel = model.FindDatabase(databaseRef);
-  int count = 0;
-  PutDescriptions(descriptions, databaseModel->relations, count);
-  PutDescriptions(descriptions, databaseModel->functions, count);
-  PutDescriptions(descriptions, databaseModel->textSearchDictionaries, count);
-  PutDescriptions(descriptions, databaseModel->textSearchParsers, count);
-  PutDescriptions(descriptions, databaseModel->textSearchTemplates, count);
-  PutDescriptions(descriptions, databaseModel->textSearchConfigurations, count);
-  wxLogDebug(_T("Loaded %d/%lu descriptions"), count, descriptions.size());
+  unsigned count = 0;
+  count += PutDescriptions(databaseModel->relations.begin(), databaseModel->relations.end());
+  count += PutDescriptions(databaseModel->functions.begin(), databaseModel->functions.end());
+  count += PutDescriptions(databaseModel->textSearchDictionaries.begin(), databaseModel->textSearchDictionaries.end());
+  count += PutDescriptions(databaseModel->textSearchParsers.begin(), databaseModel->textSearchParsers.end());
+  count += PutDescriptions(databaseModel->textSearchTemplates.begin(), databaseModel->textSearchTemplates.end());
+  count += PutDescriptions(databaseModel->textSearchConfigurations.begin(), databaseModel->textSearchConfigurations.end());
+  wxLogDebug(_T("Loaded %u/%lu descriptions"), count, descriptions.size());
 }
 
 void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser& ob)

@@ -143,6 +143,11 @@ private:
     static std::vector<wxString> FindSubdirectories(const wxString& dir);
     static std::vector<wxString> FindExecutables(const wxString& dir);
     static const std::vector<wxString>& GetInterestingCommands();
+    template <typename Container>
+    bool Contains(const Container& sequence, const typename Container::value_type& key)
+    {
+      return find(sequence.begin(), sequence.end(), key) != sequence.end();
+    }
   };
 
   std::list<Installation> installations;

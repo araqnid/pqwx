@@ -109,24 +109,18 @@ int PgToolsRegistry::Installation::ParseVersion(const wxString& version)
   }
 }
 
-template <typename T>
-bool Contains(std::vector<T> const& sequence, T const key)
-{
-  return find(sequence.begin(), sequence.end(), key) != sequence.end();
-}
-
 void PgToolsRegistry::ScannerThread::ScanSuggestedLocation(Type type, const wxString& dir)
 {
   wxLogDebug(_T("Scanning suggested location: %s"), dir.c_str());
 
-  std::vector<wxString> firstLevelExecutables = FindExecutables(dir);
-  if (Contains<wxString>(firstLevelExecutables, _T("psql" EXEC_SUFFIX))) {
+  const std::vector<wxString> firstLevelExecutables = FindExecutables(dir);
+  if (Contains(firstLevelExecutables, _T("psql" EXEC_SUFFIX))) {
     AddInstallation(type, dir, dir);
     return;
   }
 
-  std::vector<wxString> firstLevelDirs = FindSubdirectories(dir);
-  if (Contains<wxString>(firstLevelDirs, _T("bin"))) {
+  const std::vector<wxString> firstLevelDirs = FindSubdirectories(dir);
+  if (Contains(firstLevelDirs, _T("bin"))) {
     AddInstallation(type, dir, dir + PATH_SEPARATOR + _T("bin"));
     return;
   }
@@ -134,14 +128,14 @@ void PgToolsRegistry::ScannerThread::ScanSuggestedLocation(Type type, const wxSt
   for (std::vector<wxString>::const_iterator iter = firstLevelDirs.begin(); iter != firstLevelDirs.end(); iter++) {
     wxString firstLevelDir = dir + PATH_SEPARATOR + *iter;
 
-    std::vector<wxString> secondLevelExecutables = FindExecutables(firstLevelDir);
-    if (Contains<wxString>(secondLevelExecutables, _T("psql" EXEC_SUFFIX))) {
+    const std::vector<wxString> secondLevelExecutables = FindExecutables(firstLevelDir);
+    if (Contains(secondLevelExecutables, _T("psql" EXEC_SUFFIX))) {
       AddInstallation(type, firstLevelDir, firstLevelDir);
       continue;
     }
 
-    std::vector<wxString> secondLevelDirs = FindSubdirectories(firstLevelDir);
-    if (Contains<wxString>(secondLevelDirs, _T("bin"))) {
+    const std::vector<wxString> secondLevelDirs = FindSubdirectories(firstLevelDir);
+    if (Contains(secondLevelDirs, _T("bin"))) {
       AddInstallation(type, firstLevelDir, firstLevelDir + PATH_SEPARATOR + _T("bin"));
     }
   }
@@ -173,7 +167,7 @@ void PgToolsRegistry::ScannerThread::AddInstallation(Type type, const wxString& 
   wxLogDebug(_T("Checking installation in %s (commands in %s)"), dir.c_str(), bindir.c_str());
 
   std::vector<wxString> executables = FindExecutables(bindir);
-  if (!Contains<wxString>(executables, _T("psql" EXEC_SUFFIX))) {
+  if (!Contains(executables, _T("psql" EXEC_SUFFIX))) {
     wxLogDebug(_T(" No psql"));
     return;
   }

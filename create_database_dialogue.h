@@ -68,26 +68,6 @@ private:
     const WorkCompleted crashHandler;
   };
 
-  class ListUsersWork : public Work {
-  public:
-    ListUsersWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListUsersComplete)
-    {
-      wxLogDebug(_T("%p: work to list users for owners dropdown"), this);
-    }
-    void DoManagedWork();
-    std::vector<wxString> result;
-  };
-
-  class ListTemplatesWork : public Work {
-  public:
-    ListTemplatesWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListTemplatesComplete)
-    {
-      wxLogDebug(_T("%p: work to list templates for dropdown"), this);
-    }
-    void DoManagedWork();
-    std::vector<wxString> result;
-  };
-
   class QualifiedName {
   public:
     QualifiedName(const wxString& schema, const wxString& name) : schema(schema), name(name) {}
@@ -95,14 +75,47 @@ private:
     wxString name;
   };
 
-  class ListCollationsWork : public Work {
+  template<typename T>
+  class Mapper {
   public:
-    ListCollationsWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest) : Work(READ_ONLY, databaseRef, dest, &CreateDatabaseDialogue::OnListCollationsComplete)
+    T operator()(const QueryResults::Row&);
+  };
+
+  template<class T>
+  class LoaderWork : public Work {
+  public:
+    LoaderWork(const ObjectModelReference& databaseRef, CreateDatabaseDialogue *dest, const wxString& queryName, WorkCompleted completionHandler) : Work(READ_ONLY, databaseRef, dest, completionHandler), queryName(queryName)
     {
-      wxLogDebug(_T("%p: work to list collations for dropdown"), this);
+      wxLogDebug(_T("%p: work to load things: %s"), this, queryName.c_str());
     }
-    void DoManagedWork();
-    std::vector<QualifiedName> result;
+    void DoManagedWork()
+    {
+      QueryResults rs = Query(queryName).List();
+      result.reserve(rs.size());
+      std::transform(rs.begin(), rs.end(), std::back_inserter(result), mapper);
+    }
+    std::vector<T> result;
+  private:
+    const wxString queryName;
+    Mapper<T> mapper;
+  };
+
+  class PopulateDropdown {
+  public:
+    PopulateDropdown(wxComboBox* target) : target(target) {}
+    void operator()(const wxString& str) const
+    {
+      target->Append(str);
+    }
+    void operator()(const QualifiedName& qname) const
+    {
+      if (qname.schema == _T("pg_catalog"))
+        target->Append(qname.name);
+      else
+        target->Append(qname.schema + _T('.') + qname.name);
+    }
+  private:
+    wxComboBox* const target;
   };
 
   class ExecuteScriptWork : public Work {

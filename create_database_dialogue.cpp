@@ -24,9 +24,9 @@ END_EVENT_TABLE()
 CreateDatabaseDialogue::CreateDatabaseDialogue(wxWindow *parent, WorkLauncher *launcher, ExecutionCallback *executionCallback) : wxDialog(), launcher(launcher), executionCallback(executionCallback), tabsNotebook(NULL)
 {
   InitXRC(parent);
-  launcher->DoWork(new ListUsersWork(launcher->GetDatabaseRef(), this));
-  launcher->DoWork(new ListTemplatesWork(launcher->GetDatabaseRef(), this));
-  launcher->DoWork(new ListCollationsWork(launcher->GetDatabaseRef(), this));
+  launcher->DoWork(new LoaderWork<wxString>(launcher->GetDatabaseRef(), this, _T("List users"), &CreateDatabaseDialogue::OnListUsersComplete));
+  launcher->DoWork(new LoaderWork<wxString>(launcher->GetDatabaseRef(), this, _T("List templates"), &CreateDatabaseDialogue::OnListTemplatesComplete));
+  launcher->DoWork(new LoaderWork<QualifiedName>(launcher->GetDatabaseRef(), this, _T("List collations"), &CreateDatabaseDialogue::OnListCollationsComplete));
   const std::vector<wxString>& encodings = GetPgEncodings();
   for (std::vector<wxString>::const_iterator iter = encodings.begin(); iter != encodings.end(); iter++) {
     encodingInput->Append(*iter);
@@ -164,62 +164,43 @@ void CreateDatabaseDialogue::OnWorkCrashed(wxCommandEvent& event)
   delete work;
 }
 
-void CreateDatabaseDialogue::ListUsersWork::DoManagedWork()
+template<>
+CreateDatabaseDialogue::QualifiedName CreateDatabaseDialogue::Mapper<CreateDatabaseDialogue::QualifiedName>::operator()(const QueryResults::Row& row)
 {
-  QueryResults rs = Query(_T("List users")).List();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-    result.push_back((*iter)[0]);
-  }
+  wxString schema = row[0];
+  wxString name = row[1];
+  return QualifiedName(schema, name);
+}
+
+template<>
+wxString CreateDatabaseDialogue::Mapper<wxString>::operator()(const QueryResults::Row& row)
+{
+  return row[0];
 }
 
 void CreateDatabaseDialogue::OnListUsersComplete(Work *work)
 {
-  ListUsersWork *listUsersWork = static_cast<ListUsersWork*>(work);
+  LoaderWork<wxString> *listUsersWork = static_cast<LoaderWork<wxString>*>(work);
   wxLogDebug(_T("Listing users complete"));
   const std::vector<wxString>& result = listUsersWork->result;
-  for (std::vector<wxString>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
-    ownerInput->Append(*iter);
-  }
-}
-
-void CreateDatabaseDialogue::ListTemplatesWork::DoManagedWork()
-{
-  QueryResults rs = Query(_T("List templates")).List();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-    result.push_back((*iter)[0]);
-  }
+  std::for_each(result.begin(), result.end(), PopulateDropdown(ownerInput));
 }
 
 void CreateDatabaseDialogue::OnListTemplatesComplete(Work *work)
 {
-  ListTemplatesWork *listTemplatesWork = static_cast<ListTemplatesWork*>(work);
+  LoaderWork<wxString> *listTemplatesWork = static_cast<LoaderWork<wxString>*>(work);
   wxLogDebug(_T("Listing templates complete"));
   const std::vector<wxString>& result = listTemplatesWork->result;
-  for (std::vector<wxString>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
-    templateInput->Append(*iter);
-  }
-}
-
-void CreateDatabaseDialogue::ListCollationsWork::DoManagedWork()
-{
-  QueryResults rs = Query(_T("List collations")).List();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
-    wxString schema = (*iter)[0];
-    wxString name = (*iter)[1];
-    result.push_back(QualifiedName(schema, name));
-  }
+  std::for_each(result.begin(), result.end(), PopulateDropdown(templateInput));
 }
 
 void CreateDatabaseDialogue::OnListCollationsComplete(Work *work)
 {
-  ListCollationsWork *listCollationsWork = static_cast<ListCollationsWork*>(work);
+  LoaderWork<QualifiedName> *listCollationsWork = static_cast<LoaderWork<QualifiedName>*>(work);
   wxLogDebug(_T("Listing collations complete"));
-
   const std::vector<QualifiedName>& result = listCollationsWork->result;
-  for (std::vector<QualifiedName>::const_iterator iter = result.begin(); iter != result.end(); iter++) {
-    collationInput->Append((*iter).name);
-    ctypeInput->Append((*iter).name);
-  }
+  std::for_each(result.begin(), result.end(), PopulateDropdown(collationInput));
+  std::for_each(result.begin(), result.end(), PopulateDropdown(ctypeInput));
 }
 
 // This is all rather nasty. We don't have a PGconn* object around if we're generating the script in the UI thread.

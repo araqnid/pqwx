@@ -127,6 +127,13 @@ private:
   {
     LoadThings(queryName, std::back_inserter(target), Mapper<typename Container::value_type>(*this));
   }
+  template<class T>
+  void LoadThings(const wxString& queryName, typename std::vector<T>& target)
+  {
+    QueryResults rows = Query(queryName).List();
+    target.reserve(rows.size());
+    std::transform(rows.begin(), rows.end(), std::back_inserter(target), Mapper<T>(*this));
+  }
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
 };

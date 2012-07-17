@@ -273,10 +273,10 @@ private:
   };
   std::map<Oid, Typeinfo> FetchTypes(const std::vector<Oid> &types1, const std::vector<Oid> &types2) {
     std::set<Oid> typeSet;
-    copy(types2.begin(), types2.end(),
-         copy(types1.begin(), types1.end(),
-              std::inserter(typeSet, typeSet.begin()))
-         );
+    std::copy(types2.begin(), types2.end(),
+              std::copy(types1.begin(), types1.end(),
+                        std::inserter(typeSet, typeSet.begin()))
+              );
     return FetchTypes(typeSet);
   }
   std::map<Oid, Typeinfo> FetchTypes(const std::set<Oid> &types);

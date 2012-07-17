@@ -30,7 +30,7 @@ const std::map<wxString, ScriptExecution::PsqlCommandHandler> ScriptExecution::p
 
 inline void ScriptExecution::ReportInternalError(const wxString &error, const wxString &command, unsigned scriptPosition)
 {
-  owner->GetOrCreateResultsBook()->ScriptInternalError(error, command, scriptPosition);
+  owner->GetOrCreateResultsBook()->ScriptInternalError(error, scriptPosition);
 }
 
 ScriptExecution::NextState ScriptExecution::ProcessExecution()
@@ -272,16 +272,16 @@ void ScriptExecution::ProcessQueryResult(ScriptQueryWork::Result *result)
 {
   if (result->status == PGRES_TUPLES_OK) {
     wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->size());
-    owner->GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, queryBuffer, lastSqlPosition);
+    owner->GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, lastSqlPosition);
     AddRows(result->data->size());
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());
-    owner->GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, queryBuffer, lastSqlPosition);
+    owner->GetOrCreateResultsBook()->ScriptCommandCompleted(result->statusTag, lastSqlPosition);
   }
   else if (result->status == PGRES_FATAL_ERROR) {
     wxLogDebug(_T("Got error: %s"), result->error.GetPrimary().c_str());
-    owner->GetOrCreateResultsBook()->ScriptError(result->error, queryBuffer, lastSqlPosition);
+    owner->GetOrCreateResultsBook()->ScriptError(result->error, lastSqlPosition);
     BumpErrors();
   }
 
@@ -293,7 +293,7 @@ void ScriptExecution::ProcessQueryResult(ScriptQueryWork::Result *result)
 
 void ScriptExecution::ProcessConnectionNotice(const PgError& error)
 {
-  owner->GetOrCreateResultsBook()->ScriptQueryNotice(error, queryBuffer, lastSqlPosition);
+  owner->GetOrCreateResultsBook()->ScriptQueryNotice(error, lastSqlPosition);
 }
 
 ScriptExecution::NextState ScriptExecution::PsqlQuitExecution(const wxString &parameters, const ExecutionLexer::Token &t)

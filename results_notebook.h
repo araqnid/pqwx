@@ -33,19 +33,19 @@ public:
   /**
    * Add command completion to messages.
    */
-  void ScriptCommandCompleted(const wxString& statusTag, const wxString &query, unsigned scriptPosition);
+  void ScriptCommandCompleted(const wxString& statusTag, unsigned scriptPosition);
   /**
    * Add a result set.
    */
-  void ScriptResultSet(const wxString &statusTag, const QueryResults &data, const wxString &query, unsigned scriptPosition);
+  void ScriptResultSet(const wxString &statusTag, const QueryResults &data, unsigned scriptPosition);
   /**
    * Add a server error.
    */
-  void ScriptError(const PgError &error, const wxString &query, unsigned scriptPosition);
+  void ScriptError(const PgError &error, unsigned scriptPosition);
   /**
    * Add an internal error.
    */
-  void ScriptInternalError(const wxString &error, const wxString &query, unsigned scriptPosition);
+  void ScriptInternalError(const wxString &error, unsigned scriptPosition);
   /**
    * Add a message output by a script using the echo command.
    */
@@ -53,7 +53,7 @@ public:
   /**
    * Add a notice message that occurred while executing a query.
    */
-  void ScriptQueryNotice(const PgError &notice, const wxString &query, unsigned scriptPosition);
+  void ScriptQueryNotice(const PgError &notice, unsigned scriptPosition);
   /**
    * Add a notice message that occurred asynchronously.
    */

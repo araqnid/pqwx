@@ -36,12 +36,12 @@ void ResultsNotebook::Setup()
   messagesPanel->SetSizer(displaySizer);
 }
 
-void ResultsNotebook::ScriptCommandCompleted(const wxString& statusTag, const wxString &query, unsigned scriptPosition)
+void ResultsNotebook::ScriptCommandCompleted(const wxString& statusTag, unsigned scriptPosition)
 {
   messagesDisplay->AppendToPage(_T("<font color='#000000'>") + statusTag + _T("</font><br>"));
 }
 
-void ResultsNotebook::ScriptResultSet(const wxString& statusTag, const QueryResults& data, const wxString& query, unsigned scriptPosition)
+void ResultsNotebook::ScriptResultSet(const wxString& statusTag, const QueryResults& data, unsigned scriptPosition)
 {
   wxWindowUpdateLocker noUpdates(this);
 
@@ -53,10 +53,10 @@ void ResultsNotebook::ScriptResultSet(const wxString& statusTag, const QueryResu
 
   addedResultSet = true;
 
-  ScriptCommandCompleted(statusTag, query, scriptPosition);
+  ScriptCommandCompleted(statusTag, scriptPosition);
 }
 
-void ResultsNotebook::ScriptError(const PgError& error, const wxString &query, unsigned scriptPosition)
+void ResultsNotebook::ScriptError(const PgError& error, unsigned scriptPosition)
 {
   wxWindowUpdateLocker noUpdates(this);
 
@@ -69,7 +69,7 @@ void ResultsNotebook::ScriptError(const PgError& error, const wxString &query, u
   SetSelection(0);
 }
 
-void ResultsNotebook::ScriptInternalError(const wxString& error, const wxString &query, unsigned scriptPosition)
+void ResultsNotebook::ScriptInternalError(const wxString& error, unsigned scriptPosition)
 {
   messagesDisplay->AppendToPage(_T("<font color='#ff0000'><b>") + error + _T("</b></font><br>"));
   addedError = true;
@@ -81,7 +81,7 @@ void ResultsNotebook::ScriptEcho(const wxString& message, unsigned scriptPositio
   messagesDisplay->AppendToPage(_T("<font color='#000088'>") + message + _T("</font><br>"));
 }
 
-void ResultsNotebook::ScriptQueryNotice(const PgError& notice, const wxString &query, unsigned scriptPosition)
+void ResultsNotebook::ScriptQueryNotice(const PgError& notice, unsigned scriptPosition)
 {
   wxWindowUpdateLocker noUpdates(this);
   AppendServerMessage(notice, _T("#0000ff"));

@@ -567,6 +567,28 @@ private:
   private:
     ServerModel * const server;
   };
+  template<class T>
+  class NameEquals {
+  public:
+    NameEquals(const wxString& name) : name(name) {}
+    bool operator()(const T& value) const
+    {
+      return value.name == name;
+    }
+  private:
+    const wxString name;
+  };
+  template<class T>
+  class OidEquals {
+  public:
+    OidEquals(const Oid oid) : oid(oid) {}
+    bool operator()(const T& value) const
+    {
+      return value.oid == oid;
+    }
+  private:
+    const Oid oid;
+  };
   friend class LoadServerWork;
   friend class DatabaseModel;
   friend class DropDatabaseWork;

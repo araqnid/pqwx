@@ -477,30 +477,21 @@ void ServerModel::DropDatabase(DatabaseModel *database)
 
 DatabaseModel *ServerModel::FindDatabase(const wxString &dbname)
 {
-  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter).name == dbname)
-      return &(*iter);
-  }
-  return NULL;
+  std::vector<DatabaseModel>::iterator ptr = std::find_if(databases.begin(), databases.end(), NameEquals<DatabaseModel>(dbname));
+  return ptr != databases.end() ? &(*ptr) : NULL;
 }
 
 DatabaseModel *ServerModel::FindDatabaseByOid(Oid oid)
 {
-  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter).oid == oid)
-      return &(*iter);
-  }
-  return NULL;
+  std::vector<DatabaseModel>::iterator ptr = std::find_if(databases.begin(), databases.end(), OidEquals<DatabaseModel>(oid));
+  return ptr != databases.end() ? &(*ptr) : NULL;
 }
 
 void ServerModel::RemoveDatabase(const wxString &dbname)
 {
-  for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter).name == dbname) {
-      databases.erase(iter);
-      return;
-    }
-  }
+  std::vector<DatabaseModel>::iterator ptr = std::find_if(databases.begin(), databases.end(), NameEquals<DatabaseModel>(dbname));
+  if (ptr != databases.end())
+    databases.erase(ptr);
 }
 
 ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref)

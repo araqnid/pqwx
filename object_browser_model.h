@@ -557,6 +557,16 @@ private:
   DatabaseModel *FindDatabaseByOid(Oid oid);
   void DropDatabase(DatabaseModel*);
   void RemoveDatabase(const wxString& dbname);
+  class AttachServer {
+  public:
+    AttachServer(ServerModel *server) : server(server) {}
+    void operator()(DatabaseModel& db) const
+    {
+      db.server = server;
+    }
+  private:
+    ServerModel * const server;
+  };
   friend class LoadServerWork;
   friend class DatabaseModel;
   friend class DropDatabaseWork;

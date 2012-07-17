@@ -541,10 +541,8 @@ void ServerModel::UpdateDatabases(const std::vector<DatabaseModel>& incoming)
 {
   databases.clear();
   databases.reserve(incoming.size());
-  for (std::vector<DatabaseModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-    databases.push_back(*iter);
-    databases.back().server = this;
-  }
+  std::copy(incoming.begin(), incoming.end(), std::back_inserter(databases));
+  std::for_each(databases.begin(), databases.end(), AttachServer(this));
 }
 
 void ServerModel::UpdateDatabase(const DatabaseModel& incoming)
@@ -571,18 +569,14 @@ void ServerModel::UpdateRoles(const std::vector<RoleModel>& incoming)
 {
   roles.clear();
   roles.reserve(incoming.size());
-  for (std::vector<RoleModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-    roles.push_back(*iter);
-  }
+  std::copy(incoming.begin(), incoming.end(), std::back_inserter(roles));
 }
 
 void ServerModel::UpdateTablespaces(const std::vector<TablespaceModel>& incoming)
 {
   tablespaces.clear();
   tablespaces.reserve(incoming.size());
-  for (std::vector<TablespaceModel>::const_iterator iter = incoming.begin(); iter != incoming.end(); iter++) {
-    tablespaces.push_back(*iter);
-  }
+  std::copy(incoming.begin(), incoming.end(), std::back_inserter(tablespaces));
 }
 
 ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)

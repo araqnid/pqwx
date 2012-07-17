@@ -78,20 +78,11 @@ private:
     }
     unsigned length() const
     {
-      unsigned len = 0;
-      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
-        len += (*iter).length;
-      }
-      return len;
+      return std::for_each(tokens.begin(), tokens.end(), AccumulateLength()).length;
     }
     operator std::string()
     {
-      std::string str;
-      str.reserve(length());
-      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
-        str.append(buffer + (*iter).offset, (*iter).length);
-      }
-      return str;
+      return std::for_each(tokens.begin(), tokens.end(), AccumulateContent(buffer, length())).str;
     }
     operator wxString()
     {
@@ -102,13 +93,37 @@ private:
   private:
     const char * const buffer;
     std::vector<ExecutionLexer::Token> tokens;
+    static bool TokenIsNonEmpty(const ExecutionLexer::Token& t)
+    {
+      return t.length > 0;
+    }
+    class AccumulateLength {
+    public:
+      AccumulateLength() : length(0) {}
+      void operator()(const ExecutionLexer::Token& t)
+      {
+        length += t.length;
+      }
+      unsigned length;
+    };
+    class AccumulateContent {
+    public:
+      AccumulateContent(const char* buffer) : buffer(buffer) {}
+      AccumulateContent(const char* buffer, unsigned length) : buffer(buffer)
+      {
+        str.reserve(length);
+      }
+      void operator()(const ExecutionLexer::Token& t)
+      {
+        str.append(buffer + t.offset, t.length);
+      }
+      std::string str;
+    private:
+      const char* const buffer;
+    };
     bool NonEmptyTokenExists() const
     {
-      for (std::vector<ExecutionLexer::Token>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++) {
-        if ((*iter).length > 0)
-          return true;
-      }
-      return false;
+      return std::find_if(tokens.begin(), tokens.end(), TokenIsNonEmpty) != tokens.end();
     }
   };
 

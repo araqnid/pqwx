@@ -688,6 +688,16 @@ public:
 
   static const int TIMER_MAINTAIN = 20000;
 private:
+  class ServerIdEquals {
+  public:
+    ServerIdEquals(const wxString& serverId) : serverId(serverId) {}
+    bool operator()(const ServerModel& server)
+    {
+      return server.Identification() == serverId;
+    }
+  private:
+    const wxString serverId;
+  };
   ServerModel *FindServerById(const wxString&);
   DatabaseModel *FindAdminDatabase(const wxString&);
   std::list<ServerModel> servers;

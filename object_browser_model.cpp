@@ -295,13 +295,8 @@ wxString ObjectModelReference::Identify() const
 
 ServerModel *ObjectBrowserModel::FindServerById(const wxString &serverId)
 {
-  for (std::list<ServerModel>::iterator iter = servers.begin(); iter != servers.end(); iter++) {
-    if ((*iter).Identification() == serverId) {
-      return &(*iter);
-    }
-  }
-
-  return NULL;
+  std::list<ServerModel>::iterator ptr = std::find_if(servers.begin(), servers.end(), ServerIdEquals(serverId));
+  return ptr != servers.end() ? &(*ptr) : NULL;
 }
 
 ObjectModel* ObjectBrowserModel::FindObject(const ObjectModelReference& ref)

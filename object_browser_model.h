@@ -718,10 +718,6 @@ private:
   friend class DatabaseModel;
 };
 
-static inline bool emptySchema(std::vector<RelationModel*> schemaRelations) {
-  return schemaRelations.size() == 1 && schemaRelations[0]->name.IsEmpty();
-}
-
 inline wxString DatabaseModel::Identification() const {
   return server->Identification() + _T(' ') + name;
 }

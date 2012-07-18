@@ -13,6 +13,7 @@ class wxComboBox;
 class wxNotebookEvent;
 
 #include "wx/dialog.h"
+#include "wx/ctrlsub.h"
 
 #include "object_browser_managed_work.h"
 #include "work_launcher.h"
@@ -100,22 +101,27 @@ private:
     Mapper<T> mapper;
   };
 
-  class PopulateDropdown {
+  class ItemContainerAppender : public std::iterator<std::output_iterator_tag, void, void, void, void> {
   public:
-    PopulateDropdown(wxComboBox* target) : target(target) {}
-    void operator()(const wxString& str) const
+    ItemContainerAppender(wxItemContainer* target) : target(target) {}
+    ItemContainerAppender& operator=(const wxString& value)
     {
-      target->Append(str);
+      target->Append(value);
+      return *this;
     }
-    void operator()(const QualifiedName& qname) const
+    ItemContainerAppender& operator=(const QualifiedName& qname)
     {
       if (qname.schema == _T("pg_catalog"))
         target->Append(qname.name);
       else
         target->Append(qname.schema + _T('.') + qname.name);
+      return *this;
     }
+    ItemContainerAppender& operator*() { return *this; }
+    ItemContainerAppender& operator++() { return *this; }
+    ItemContainerAppender& operator++(int) { return *this; }
   private:
-    wxComboBox* const target;
+    wxItemContainer* const target;
   };
 
   class ExecuteScriptWork : public Work {

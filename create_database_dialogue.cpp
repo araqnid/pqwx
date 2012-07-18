@@ -183,7 +183,7 @@ void CreateDatabaseDialogue::OnListUsersComplete(Work *work)
   LoaderWork<wxString> *listUsersWork = static_cast<LoaderWork<wxString>*>(work);
   wxLogDebug(_T("Listing users complete"));
   const std::vector<wxString>& result = listUsersWork->result;
-  std::for_each(result.begin(), result.end(), PopulateDropdown(ownerInput));
+  std::copy(result.begin(), result.end(), ItemContainerAppender(ownerInput));
 }
 
 void CreateDatabaseDialogue::OnListTemplatesComplete(Work *work)
@@ -191,7 +191,7 @@ void CreateDatabaseDialogue::OnListTemplatesComplete(Work *work)
   LoaderWork<wxString> *listTemplatesWork = static_cast<LoaderWork<wxString>*>(work);
   wxLogDebug(_T("Listing templates complete"));
   const std::vector<wxString>& result = listTemplatesWork->result;
-  std::for_each(result.begin(), result.end(), PopulateDropdown(templateInput));
+  std::copy(result.begin(), result.end(), ItemContainerAppender(templateInput));
 }
 
 void CreateDatabaseDialogue::OnListCollationsComplete(Work *work)
@@ -199,8 +199,8 @@ void CreateDatabaseDialogue::OnListCollationsComplete(Work *work)
   LoaderWork<QualifiedName> *listCollationsWork = static_cast<LoaderWork<QualifiedName>*>(work);
   wxLogDebug(_T("Listing collations complete"));
   const std::vector<QualifiedName>& result = listCollationsWork->result;
-  std::for_each(result.begin(), result.end(), PopulateDropdown(collationInput));
-  std::for_each(result.begin(), result.end(), PopulateDropdown(ctypeInput));
+  std::copy(result.begin(), result.end(), ItemContainerAppender(collationInput));
+  std::copy(result.begin(), result.end(), ItemContainerAppender(ctypeInput));
 }
 
 // This is all rather nasty. We don't have a PGconn* object around if we're generating the script in the UI thread.

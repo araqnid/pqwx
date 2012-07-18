@@ -23,7 +23,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     bool unlogged = tableDetail.ReadBool(8);
     sql << (unlogged ? _T("CREATE UNLOGGED TABLE ") : _T("CREATE TABLE ")) << tableName << _T("(\n");
     unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0)),
         type((*iter).ReadText(1));
       sql << _T("\t") << QuoteIdent(name) << _T(" ") << type;
@@ -56,7 +56,7 @@ void TableScriptWork::GenerateScript(OutputIterator output)
         alterSql.push_back(storageSql);
       }
 
-      if (n != (columns.size()-1)) sql << _T(',');
+      if (n != (columns.Rows().size()-1)) sql << _T(',');
       sql << _T("\n");
     }
     sql << _T(")");
@@ -74,19 +74,19 @@ void TableScriptWork::GenerateScript(OutputIterator output)
 
     AddDescription(output, _T("TABLE"), tableName, tableDetail[7]);
 
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++) {
       wxString description = (*iter).ReadText(10);
       if (!description.empty()) {
         *output++ = _T("COMMENT ON COLUMN ") + tableName + _T('.') + (*iter).ReadText(0) + _T(" IS ") + QuoteLiteral(description);
       }
     }
 
-    if (foreignKeys.size() > 0) {
+    if (foreignKeys.Rows().size() > 0) {
       wxString lastKeyName;
       wxString srcColumns;
       wxString dstColumns;
       const QueryResults::Row *lastKey = NULL;
-      for (QueryResults::const_iterator iter = foreignKeys.begin(); iter != foreignKeys.end(); iter++) {
+      for (QueryResults::rows_iterator iter = foreignKeys.Rows().begin(); iter != foreignKeys.Rows().end(); iter++) {
         wxString fkeyName = (*iter)[_T("conname")];
         if (!lastKeyName.IsEmpty() && fkeyName != lastKeyName) {
           GenerateForeignKey(output, tableName, srcColumns, dstColumns, *lastKey);
@@ -117,10 +117,10 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     wxString sql;
     sql << _T("SELECT ");
     unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
-      if (n != (columns.size()-1))
+      if (n != (columns.Rows().size()-1))
         sql << _T(",\n       ");
       else
         sql << _T("\n");
@@ -134,20 +134,20 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     wxString sql;
     sql << _T("INSERT INTO ") << tableName << _T("(\n");
     unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0));
       sql << _T("            ") << QuoteIdent(name);
-      if (n != (columns.size()-1))
+      if (n != (columns.Rows().size()-1))
         sql << _T(",\n");
       else
         sql << _T("\n");
     }
     sql << _T(") VALUES (\n");
     n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << _T("            <") << QuoteIdent(name) << _T(", ") << type << _T(">");
-      if (n != (columns.size()-1))
+      if (n != (columns.Rows().size()-1))
         sql << _T(",\n");
       else
         sql << _T("\n");
@@ -161,11 +161,11 @@ void TableScriptWork::GenerateScript(OutputIterator output)
     wxString sql;
     sql << _T("UPDATE ") << tableName << _T("\nSET ");
     unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0)), type((*iter).ReadText(1));
       sql << QuoteIdent(name) << _T(" = ")
           << _T("<") << QuoteIdent(name) << _T(", ") << type << _T(">");
-      if (n != (columns.size()-1))
+      if (n != (columns.Rows().size()-1))
         sql << _T(",\n    ");
       else
         sql << _T("\n");

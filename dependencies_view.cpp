@@ -110,7 +110,7 @@ void DependenciesView::LoadMoreDependenciesWork::DoManagedWork()
 {
   wxString queryName = dependenciesMode ? _T("Dependencies") : _T("Dependents");
   QueryResults rs = Query(queryName).OidParam(ref.GetObjectClass()).OidParam(ref.GetOid()).OidParam(ref.GetDatabase()).List();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+  for (QueryResults::rows_iterator iter = rs.Rows().begin(); iter != rs.Rows().end(); iter++) {
     DependencyModel dep;
     dep.deptype = (*iter).ReadText(0);
     dep.regclass = (*iter).ReadOid(1);

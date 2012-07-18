@@ -310,7 +310,7 @@ void LoadDatabaseWork::UpdateView(ObjectBrowser& ob)
 void LoadDatabaseDescriptionsWork::DoManagedWork()
 {
   QueryResults rs = Query(_T("Object Descriptions")).List();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+  for (QueryResults::rows_iterator iter = rs.Rows().begin(); iter != rs.Rows().end(); iter++) {
     unsigned long oid;
     wxString description;
     oid = (*iter).ReadOid(0);
@@ -367,7 +367,7 @@ void IndexDatabaseSchemaWork::DoManagedWork() {
   QueryResults rs = Query(_T("IndexSchema")).List();
   catalogueIndex = new CatalogueIndex();
   catalogueIndex->Begin();
-  for (QueryResults::const_iterator iter = rs.begin(); iter != rs.end(); iter++) {
+  for (QueryResults::rows_iterator iter = rs.Rows().begin(); iter != rs.Rows().end(); iter++) {
     Oid entityId = (*iter).ReadOid(0);
     wxString typeString = (*iter).ReadText(1);
     wxString symbol = (*iter).ReadText(2);
@@ -426,11 +426,11 @@ ColumnModel LoadRelationWork::ReadColumn(const QueryResults::Row& row)
 void LoadRelationWork::LoadIndices()
 {
   QueryResults indexRows = Query(_T("Indices")).OidParam(relationRef.GetOid()).List();
-  incoming.indices.reserve(indexRows.size());
+  incoming.indices.reserve(indexRows.Rows().size());
   IndexModel *lastIndex = NULL;
   std::vector<int> indexColumns;
   std::vector<int>::const_iterator indexColumnsIter;
-  for (QueryResults::const_iterator iter = indexRows.begin(); iter != indexRows.end(); iter++) {
+  for (QueryResults::rows_iterator iter = indexRows.Rows().begin(); iter != indexRows.Rows().end(); iter++) {
     wxString indexName = (*iter)[_T("relname")];
     if (lastIndex == NULL || lastIndex->name != indexName) {
       IndexModel index;

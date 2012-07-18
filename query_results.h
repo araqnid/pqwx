@@ -185,20 +185,13 @@ public:
     }
   }
 
-  /** Immutable iterator */
-  typedef std::vector<Row>::const_iterator const_iterator;
-  /** Start of iteration space */
-  const_iterator begin() const { return rows.begin(); }
-  /** End of iteration space */
-  const_iterator end() const { return rows.end(); }
+  typedef std::vector<Row>::const_iterator rows_iterator;
+  typedef std::vector<Field>::const_iterator fields_iterator;
+
   /**
-   * Gets row by row index.
+   * @return Rows
    */
-  const Row& operator[](int index) const { return rows[index]; }
-  /**
-   * @return Number of rows
-   */
-  unsigned size() const { return rows.size(); }
+  const std::vector<Row>& Rows() const { return rows; }
 
   /**
    * @return Fields (column descriptions)

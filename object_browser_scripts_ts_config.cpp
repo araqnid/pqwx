@@ -56,10 +56,10 @@ void TextSearchConfigurationScriptWork::GenerateMappings(OutputIterator output)
   QueryResults mapping = Query(_T("Text Search Configuration Mappings")).OidParam(cfgoid).List();
   wxString mappingSql;
   int lastTokenType = -1;
-  for (unsigned i = 0; i < mapping.size(); i++) {
-    int tokenType = mapping[i].ReadInt4(0);
-    wxString dictName = QuoteIdent(mapping[i].ReadText(1));
-    wxString dictSchemaName = QuoteIdent(mapping[i].ReadText(2));
+  for (unsigned i = 0; i < mapping.Rows().size(); i++) {
+    int tokenType = mapping.Rows()[i].ReadInt4(0);
+    wxString dictName = QuoteIdent(mapping.Rows()[i].ReadText(1));
+    wxString dictSchemaName = QuoteIdent(mapping.Rows()[i].ReadText(2));
     if (tokenType != lastTokenType) {
       if (!mappingSql.empty()) {
         *output++ = mappingSql;

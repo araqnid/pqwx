@@ -63,8 +63,8 @@ private:
   template<class OutputIterator, class UnaryOperator>
   void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
   {
-    QueryResults rows = Query(queryName).List();
-    std::transform(rows.begin(), rows.end(), output, mapper);
+    QueryResults rs = Query(queryName).List();
+    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
   }
   void ReadServer();
   void ReadCurrentRole();
@@ -119,8 +119,8 @@ private:
   template<class OutputIterator, class UnaryOperator>
   void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
   {
-    QueryResults rows = Query(queryName).List();
-    std::transform(rows.begin(), rows.end(), output, mapper);
+    QueryResults rs = Query(queryName).List();
+    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
   }
   template<class Container>
   void LoadThings(const wxString& queryName, Container& target)
@@ -130,9 +130,9 @@ private:
   template<class T>
   void LoadThings(const wxString& queryName, typename std::vector<T>& target)
   {
-    QueryResults rows = Query(queryName).List();
-    target.reserve(rows.size());
-    std::transform(rows.begin(), rows.end(), std::back_inserter(target), Mapper<T>(*this));
+    QueryResults rs = Query(queryName).List();
+    target.reserve(rs.Rows().size());
+    std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(target), Mapper<T>(*this));
   }
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
@@ -252,14 +252,14 @@ private:
   template<class UnaryOperator>
   void LoadThings(const wxString& queryName, UnaryOperator loader)
   {
-    QueryResults rows = Query(queryName).OidParam(relationRef.GetOid()).List();
-    std::for_each(rows.begin(), rows.end(), loader);
+    QueryResults rs = Query(queryName).OidParam(relationRef.GetOid()).List();
+    std::for_each(rs.Rows().begin(), rs.Rows().end(), loader);
   }
   template<class OutputIterator, class UnaryOperator>
   void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
   {
-    QueryResults rows = Query(queryName).OidParam(relationRef.GetOid()).List();
-    std::transform(rows.begin(), rows.end(), output, mapper);
+    QueryResults rs = Query(queryName).OidParam(relationRef.GetOid()).List();
+    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
   }
 };
 

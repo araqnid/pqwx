@@ -51,14 +51,14 @@ void DatabaseScriptWork::GenerateScript(OutputIterator output)
   if (mode != Drop) {
     PgAcl(row[6]).GenerateGrantStatements(output, ownerName, _T("DATABASE ") + QuoteIdent(databaseName), privilegeMap);
     QueryResults settingsRs = Query(_T("Database Settings")).OidParam(dboid).List();
-    for (unsigned i = 0; i < settingsRs.size(); i++) {
-      wxString role = settingsRs[i][0];
+    for (unsigned i = 0; i < settingsRs.Rows().size(); i++) {
+      wxString role = settingsRs.Rows()[i][0];
       wxString prefix;
       if (role.empty())
         prefix << _T("ALTER DATABASE ") << databaseName << _T(' ');
       else
         prefix << _T("ALTER ROLE ") << role << _T(" IN DATABASE ") << databaseName << _T(' ');
-      PgSettings(settingsRs[i][1]).GenerateSetStatements(output, this, prefix);
+      PgSettings(settingsRs.Rows()[i][1]).GenerateSetStatements(output, this, prefix);
     }
 
     AddDescription(output, _T("DATABASE"), databaseName, row[7]);

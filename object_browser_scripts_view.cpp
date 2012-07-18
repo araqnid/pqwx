@@ -38,10 +38,10 @@ void ViewScriptWork::GenerateScript(OutputIterator output)
     wxString sql;
     sql << _T("SELECT ");
     unsigned n = 0;
-    for (QueryResults::const_iterator iter = columns.begin(); iter != columns.end(); iter++, n++) {
+    for (QueryResults::rows_iterator iter = columns.Rows().begin(); iter != columns.Rows().end(); iter++, n++) {
       wxString name((*iter).ReadText(0));
       sql << QuoteIdent(name);
-      if (n != (columns.size()-1))
+      if (n != (columns.Rows().size()-1))
         sql << _T(",\n       ");
       else
         sql << _T("\n");

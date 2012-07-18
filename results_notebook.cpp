@@ -143,12 +143,12 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
   wxGrid *grid = new wxGrid(parent, wxID_ANY);
 
   const unsigned maxRowsForAutoSize = 500;
-  unsigned firstChunkSize = data.size() > maxRowsForAutoSize ? maxRowsForAutoSize : data.size();
+  unsigned firstChunkSize = data.Rows().size() > maxRowsForAutoSize ? maxRowsForAutoSize : data.Rows().size();
   grid->CreateGrid(firstChunkSize, data.Fields().size());
   grid->BeginBatch();
 
   unsigned columnIndex = 0;
-  for (std::vector<QueryResults::Field>::const_iterator iter = data.Fields().begin(); iter != data.Fields().end(); iter++, columnIndex++) {
+  for (QueryResults::fields_iterator iter = data.Fields().begin(); iter != data.Fields().end(); iter++, columnIndex++) {
     grid->SetColLabelValue(columnIndex, (*iter).GetName());
     switch ((*iter).GetType()) {
 #if 0
@@ -161,8 +161,8 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
 
   unsigned rowIndex = 0;
   const int fieldCount = (int) data.Fields().size();
-  QueryResults::const_iterator rowIter = data.begin();
-  for (; rowIter != data.end(); rowIter++, rowIndex++) {
+  QueryResults::rows_iterator rowIter = data.Rows().begin();
+  for (; rowIter != data.Rows().end(); rowIter++, rowIndex++) {
     if (rowIndex >= firstChunkSize) break;
     for (int columnIndex = 0; columnIndex < fieldCount; columnIndex++) {
       const wxString &value = (*rowIter)[columnIndex];
@@ -184,11 +184,11 @@ void ResultsNotebook::AddResultSet(wxPanel *parent, const QueryResults &data)
 
   grid->AutoSize();
 
-  if (rowIndex < data.size()) {
-    wxLogDebug(_T("Finished AutoSize(), adding %d more rows"), data.size() - rowIndex);
-    grid->AppendRows(data.size() - rowIndex);
+  if (rowIndex < data.Rows().size()) {
+    wxLogDebug(_T("Finished AutoSize(), adding %d more rows"), data.Rows().size() - rowIndex);
+    grid->AppendRows(data.Rows().size() - rowIndex);
 
-    for (; rowIter != data.end(); rowIter++, rowIndex++) {
+    for (; rowIter != data.Rows().end(); rowIter++, rowIndex++) {
       for (int columnIndex = 0; columnIndex < fieldCount; columnIndex++) {
         const wxString &value = (*rowIter)[columnIndex];
         switch (data.Fields()[columnIndex].GetType()) {

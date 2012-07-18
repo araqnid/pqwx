@@ -92,8 +92,8 @@ private:
     void DoManagedWork()
     {
       QueryResults rs = Query(queryName).List();
-      result.reserve(rs.size());
-      std::transform(rs.begin(), rs.end(), std::back_inserter(result), mapper);
+      result.reserve(rs.Rows().size());
+      std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(result), mapper);
     }
     std::vector<T> result;
   private:

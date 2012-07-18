@@ -34,7 +34,7 @@ void RoleScriptWork::GenerateScript(OutputIterator output)
     *output++ = sql;
 
     QueryResults memberships = Query(_T("Role Memberships")).OidParam(roloid).List();
-    for (QueryResults::const_iterator iter = memberships.begin(); iter != memberships.end(); iter++) {
+    for (QueryResults::rows_iterator iter = memberships.Rows().begin(); iter != memberships.Rows().end(); iter++) {
       const QueryResults::Row& membership = *iter;
       sql = wxEmptyString;
       sql << _T("GRANT ") << membership[0] << _T(" TO ") << name;
@@ -44,7 +44,7 @@ void RoleScriptWork::GenerateScript(OutputIterator output)
     }
 
     QueryResults dbSettingsSet = Query(_T("Role PerDatabase Settings")).OidParam(roloid).List();
-    for (QueryResults::const_iterator iter = dbSettingsSet.begin(); iter != dbSettingsSet.end(); iter++) {
+    for (QueryResults::rows_iterator iter = dbSettingsSet.Rows().begin(); iter != dbSettingsSet.Rows().end(); iter++) {
       const QueryResults::Row& dbSettings = *iter;
       sql = wxEmptyString;
       sql << _T("ALTER ROLE ") << name;

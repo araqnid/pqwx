@@ -75,8 +75,8 @@ public:
      */
     QueryResults::Row UniqueResult() {
       QueryResults rs = List();
-      wxASSERT(rs.size() == 1);
-      return rs[0];
+      wxASSERT(rs.Rows().size() == 1);
+      return rs.Rows()[0];
     }
  private:
     const DatabaseWork *owner;
@@ -171,8 +171,8 @@ public:
      */
     QueryResults::Row UniqueResult() {
       QueryResults rs = List();
-      wxASSERT(rs.size() == 1);
-      return rs[0];
+      wxASSERT(rs.Rows().size() == 1);
+      return rs.Rows()[0];
     }
 
  private:

@@ -271,9 +271,9 @@ ScriptExecution::NextState ScriptExecution::PsqlPrintMessage(const wxString &par
 void ScriptExecution::ProcessQueryResult(ScriptQueryWork::Result *result)
 {
   if (result->status == PGRES_TUPLES_OK) {
-    wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->size());
+    wxLogDebug(_T("%s (%u tuples)"), result->statusTag.c_str(), result->data->Rows().size());
     owner->GetOrCreateResultsBook()->ScriptResultSet(result->statusTag, *result->data, lastSqlPosition);
-    AddRows(result->data->size());
+    AddRows(result->data->Rows().size());
   }
   else if (result->status == PGRES_COMMAND_OK) {
     wxLogDebug(_T("%s (no tuples)"), result->statusTag.c_str());

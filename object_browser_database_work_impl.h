@@ -90,7 +90,8 @@ public:
    * @param databaseModel Database model to populate
    * @param expandAfter Expand tree item after populating
    */
-  LoadDatabaseWork(const ObjectModelReference& databaseRef, bool expandAfter) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), expandAfter(expandAfter) {
+  LoadDatabaseWork(const ObjectModelReference& databaseRef, bool expandAfter) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef), expandAfter(expandAfter)
+  {
     wxLogDebug(_T("%p: work to load schema"), this);
   }
 private:
@@ -138,7 +139,9 @@ private:
     std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(target), Mapper<T>(*this));
   }
   static const std::map<wxString, RelationModel::Type> relationTypeMap;
+  static std::map<wxString, RelationModel::Type> InitRelationTypeMap();
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
+  static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap();
 };
 
 /**
@@ -173,17 +176,20 @@ public:
    * @param database Database being indexed
    * @param completion Additional callback to notify when indexing completed
    */
-  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef) {
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef) : ObjectBrowserWork(databaseRef), databaseRef(databaseRef)
+  {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 
-  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) : ObjectBrowserWork(databaseRef, new CallCompletion(this, indexCompletion)), databaseRef(databaseRef) {
+  IndexDatabaseSchemaWork(const ObjectModelReference& databaseRef, IndexSchemaCompletionCallback *indexCompletion) : ObjectBrowserWork(databaseRef, new CallCompletion(this, indexCompletion)), databaseRef(databaseRef)
+  {
     wxLogDebug(_T("%p: work to index schema"), this);
   }
 private:
   const ObjectModelReference databaseRef;
   CatalogueIndex *catalogueIndex;
   static const std::map<wxString, CatalogueIndex::Type> typeMap;
+  static std::map<wxString, CatalogueIndex::Type> InitTypeMap();
   class CallCompletion : public CompletionCallback {
   public:
     CallCompletion(IndexDatabaseSchemaWork *owner, IndexSchemaCompletionCallback *indexCompletion) : owner(owner), indexCompletion(indexCompletion) {}

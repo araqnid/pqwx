@@ -174,7 +174,7 @@ void LoadServerWork::UpdateView(ObjectBrowser& ob)
  * Schema of a single database
  */
 
-static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
+std::map<wxString, RelationModel::Type> LoadDatabaseWork::InitRelationTypeMap()
 {
   std::map<wxString, RelationModel::Type> typemap;
   typemap[_T("r")] = RelationModel::TABLE;
@@ -185,7 +185,7 @@ static std::map<wxString, RelationModel::Type> InitRelationTypeMap()
 
 const std::map<wxString, RelationModel::Type> LoadDatabaseWork::relationTypeMap = InitRelationTypeMap();
 
-static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap()
+std::map<wxString, FunctionModel::Type> LoadDatabaseWork::InitFunctionTypeMap()
 {
   std::map<wxString, FunctionModel::Type> typemap;
   typemap[_T("f")] = FunctionModel::SCALAR;
@@ -354,7 +354,7 @@ void LoadDatabaseDescriptionsWork::UpdateView(ObjectBrowser& ob)
 /**
  * Compile database catalogue index.
  */
-static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
+std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::InitTypeMap()
 {
   std::map<wxString, CatalogueIndex::Type> typeMap;
   typeMap[_T("t")] = CatalogueIndex::TABLE;
@@ -376,7 +376,7 @@ static std::map<wxString, CatalogueIndex::Type> InitIndexerTypeMap()
   return typeMap;
 }
 
-const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitIndexerTypeMap();
+const std::map<wxString, CatalogueIndex::Type> IndexDatabaseSchemaWork::typeMap = InitTypeMap();
 
 void IndexDatabaseSchemaWork::DoManagedWork() {
   QueryResults rs = Query(_T("IndexSchema")).List();

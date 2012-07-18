@@ -319,6 +319,21 @@ void LoadDatabaseDescriptionsWork::DoManagedWork()
   }
 }
 
+template<typename InputIterator>
+unsigned LoadDatabaseDescriptionsWork::PutDescriptions(InputIterator iter, InputIterator last) const
+{
+  unsigned count = 0;
+  while (iter != last) {
+    std::map<Oid, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
+    if (ptr != descriptions.end()) {
+      (*iter).description = (*ptr).second;
+      ++count;
+    }
+    ++iter;
+  }
+  return count;
+}
+
 void LoadDatabaseDescriptionsWork::UpdateModel(ObjectBrowserModel& model)
 {
   DatabaseModel *databaseModel = model.FindDatabase(databaseRef);

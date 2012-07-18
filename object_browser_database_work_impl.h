@@ -156,19 +156,8 @@ private:
   const ObjectModelReference databaseRef;
   std::map<Oid, wxString> descriptions;
   template<typename InputIterator>
-  unsigned PutDescriptions(InputIterator iter, InputIterator last) const
-  {
-    unsigned count = 0;
-    while (iter != last) {
-      std::map<Oid, wxString>::const_iterator ptr = descriptions.find((*iter).oid);
-      if (ptr != descriptions.end()) {
-        (*iter).description = (*ptr).second;
-        ++count;
-      }
-      ++iter;
-    }
-    return count;
-  }
+  unsigned PutDescriptions(InputIterator iter, InputIterator last) const;
+
 protected:
   void DoManagedWork();
   void UpdateModel(ObjectBrowserModel& model);

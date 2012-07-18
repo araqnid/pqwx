@@ -60,11 +60,18 @@ private:
   std::vector<DatabaseModel> databases;
   std::vector<RoleModel> roles;
   std::vector<TablespaceModel> tablespaces;
-  template<class OutputIterator, class UnaryOperator>
-  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  template<class Container, class UnaryOperator>
+  void LoadThings(const wxString& queryName, Container output, UnaryOperator mapper)
   {
     QueryResults rs = Query(queryName).List();
-    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
+    std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(output), mapper);
+  }
+  template<class T, class UnaryOperator>
+  void LoadThings(const wxString& queryName, std::vector<T>& output, UnaryOperator mapper)
+  {
+    QueryResults rs = Query(queryName).List();
+    output.reserve(rs.Rows().size());
+    std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(output), mapper);
   }
   void ReadServer();
   void ReadCurrentRole();
@@ -116,19 +123,15 @@ private:
   const T& InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const;
   template<class T, class InputIterator>
   void PopulateInternalLookup(typename std::map<Oid, T>& table, InputIterator first, InputIterator last);
-  template<class OutputIterator, class UnaryOperator>
-  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  template<class T, class UnaryOperator>
+  void LoadThings(const wxString& queryName, std::vector<T>& target, UnaryOperator mapper)
   {
     QueryResults rs = Query(queryName).List();
-    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
-  }
-  template<class Container>
-  void LoadThings(const wxString& queryName, Container& target)
-  {
-    LoadThings(queryName, std::back_inserter(target), Mapper<typename Container::value_type>(*this));
+    target.reserve(rs.Rows().size());
+    std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(target), mapper);
   }
   template<class T>
-  void LoadThings(const wxString& queryName, typename std::vector<T>& target)
+  void LoadThings(const wxString& queryName, std::vector<T>& target)
   {
     QueryResults rs = Query(queryName).List();
     target.reserve(rs.Rows().size());
@@ -255,11 +258,12 @@ private:
     QueryResults rs = Query(queryName).OidParam(relationRef.GetOid()).List();
     std::for_each(rs.Rows().begin(), rs.Rows().end(), loader);
   }
-  template<class OutputIterator, class UnaryOperator>
-  void LoadThings(const wxString& queryName, OutputIterator output, UnaryOperator mapper)
+  template<class T, class UnaryOperator>
+  void LoadThings(const wxString& queryName, std::vector<T>& target, UnaryOperator mapper)
   {
     QueryResults rs = Query(queryName).OidParam(relationRef.GetOid()).List();
-    std::transform(rs.Rows().begin(), rs.Rows().end(), output, mapper);
+    target.reserve(rs.Rows().size());
+    std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(target), mapper);
   }
 };
 

@@ -20,9 +20,9 @@ void LoadServerWork::DoManagedWork()
 {
   ReadServer();
   ReadCurrentRole();
-  LoadThings(_T("Databases"), std::back_inserter(databases), ReadDatabase);
-  LoadThings(_T("Roles"), std::back_inserter(roles), ReadRole);
-  LoadThings(_T("Tablespaces"), std::back_inserter(tablespaces), ReadTablespace);
+  LoadThings(_T("Databases"), databases, ReadDatabase);
+  LoadThings(_T("Roles"), roles, ReadRole);
+  LoadThings(_T("Tablespaces"), tablespaces, ReadTablespace);
   std::sort(databases.begin(), databases.end(), ObjectModel::CollateByName);
   std::sort(roles.begin(), roles.end(), ObjectModel::CollateByName);
   std::sort(tablespaces.begin(), tablespaces.end(), ObjectModel::CollateByName);
@@ -218,8 +218,8 @@ void LoadDatabaseWork::PopulateInternalLookup(typename std::map<Oid, T>& table, 
 void LoadDatabaseWork::DoManagedWork() {
   incoming.oid = databaseRef.GetOid();
 
-  LoadThings(_T("Schemas"), std::back_inserter(incoming.schemas), ReadSchema);
-  LoadThings(_T("Extensions"), std::back_inserter(incoming.extensions), ReadExtension);
+  LoadThings(_T("Schemas"), incoming.schemas, ReadSchema);
+  LoadThings(_T("Extensions"), incoming.extensions, ReadExtension);
 
   PopulateInternalLookup(schemas, incoming.schemas.begin(), incoming.schemas.end());
   PopulateInternalLookup(extensions, incoming.extensions.begin(), incoming.extensions.end());
@@ -402,11 +402,11 @@ void IndexDatabaseSchemaWork::UpdateModel(ObjectBrowserModel& model)
  */
 void LoadRelationWork::DoManagedWork()
 {
-  LoadThings(_T("Columns"), std::back_inserter(incoming.columns), ReadColumn);
+  LoadThings(_T("Columns"), incoming.columns, ReadColumn);
   if (relationType == RelationModel::TABLE) {
     LoadIndices();
-    LoadThings(_T("Triggers"), std::back_inserter(incoming.triggers), ReadTrigger);
-    LoadThings(_T("Sequences"), std::back_inserter(incoming.sequences), ReadSequence);
+    LoadThings(_T("Triggers"), incoming.triggers, ReadTrigger);
+    LoadThings(_T("Sequences"), incoming.sequences, ReadSequence);
     LoadThings(_T("Constraints"), LoadConstraint(*this));
   }
 }

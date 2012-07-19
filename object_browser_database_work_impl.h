@@ -262,6 +262,13 @@ private:
     target.reserve(rs.Rows().size());
     std::transform(rs.Rows().begin(), rs.Rows().end(), std::back_inserter(target), mapper);
   }
+  class LinkSequence {
+  public:
+    LinkSequence(const DatabaseModel* db) : db(db) {}
+    void operator()(RelationModel& sequence) const;
+  private:
+    const DatabaseModel* const db;
+  };
 };
 
 /**

@@ -531,7 +531,7 @@ RelationModel LoadRelationWork::ReadSequence(const QueryResults::Row& row)
   RelationModel sequence;
   sequence.type = RelationModel::SEQUENCE;
   sequence.schema.oid = row.ReadOid(0);
-  sequence.schema.name = row.ReadText(1);
+  sequence.extension.oid = row.ReadOid(1);
   sequence.oid = row.ReadOid(2);
   sequence.name = row.ReadText(3);
   sequence.owningColumn = row.ReadInt4(4);
@@ -551,12 +551,28 @@ void LoadRelationWork::LoadConstraint::operator()(const QueryResults::Row& row)
 
 void LoadRelationWork::UpdateModel(ObjectBrowserModel& model)
 {
+  DatabaseModel *db = model.FindDatabase(relationRef.DatabaseRef());
   RelationModel *relationModel = model.FindRelation(relationRef);
   relationModel->columns = incoming.columns;
   relationModel->indices = incoming.indices;
   relationModel->triggers = incoming.triggers;
   relationModel->sequences = incoming.sequences;
   relationModel->checkConstraints = incoming.checkConstraints;
+
+  std::for_each(relationModel->sequences.begin(), relationModel->sequences.end(), LinkSequence(db));
+}
+
+void LoadRelationWork::LinkSequence::operator()(RelationModel& sequence) const
+{
+  const SchemaModel *schema = static_cast<const SchemaModel*>(db->FindObject(ObjectModelReference(*db, ObjectModelReference::PG_NAMESPACE, sequence.schema.oid)));
+  wxASSERT(schema != NULL);
+  sequence.schema = *schema;
+
+  if (sequence.extension.oid != InvalidOid) {
+    const ExtensionModel *extension = static_cast<const ExtensionModel*>(db->FindObject(ObjectModelReference(*db, ObjectModelReference::PG_EXTENSION, sequence.extension.oid)));
+    wxASSERT(extension != NULL);
+    sequence.extension = *extension;
+  }
 }
 
 void LoadRelationWork::UpdateView(ObjectBrowser& ob)

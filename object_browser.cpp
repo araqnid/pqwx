@@ -758,7 +758,12 @@ void ObjectBrowser::UpdateRelation(const ObjectModelReference& relationRef)
       const RelationModel& sequence = *seqIter;
       if (sequence.owningColumn != column.attnum) continue;
 
-      wxTreeItemId sequenceItem = AppendItem(columnItem, sequence.QualifiedName());
+      wxString sequenceName;
+      if (sequence.schema.name == _T("pg_catalog") || sequence.schema.name == relationModel->schema.name)
+        sequenceName = sequence.UnqualifiedName();
+      else
+        sequenceName = sequence.QualifiedName();
+      wxTreeItemId sequenceItem = AppendItem(columnItem, sequenceName);
       SetItemData(sequenceItem, new ModelReference(relationRef.DatabaseRef(), ObjectModelReference::PG_CLASS, relationModel->oid));
       SetItemImage(sequenceItem, img_sequence);
     }

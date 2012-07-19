@@ -591,6 +591,10 @@ const ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref) co
     return SearchContents(types, ref.GetOid());
   case ObjectModelReference::PG_OPERATOR:
     return SearchContents(operators, ref.GetOid());
+  case ObjectModelReference::PG_NAMESPACE:
+    return SearchContents(schemas, ref.GetOid());
+  case ObjectModelReference::PG_EXTENSION:
+    return SearchContents(extensions, ref.GetOid());
   default:
     return NULL;
   }

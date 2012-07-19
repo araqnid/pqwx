@@ -97,8 +97,17 @@ public:
 
   void SearchCatalogue();
 
+private:
+  class TextQueryControl : public wxTextCtrl {
+  public:
+    TextQueryControl(wxWindow *parent, wxWindowID id) : wxTextCtrl(parent,id) { }
+    void OnCharacterInput(wxKeyEvent& event);
+  private:
+    DECLARE_EVENT_TABLE();
+  };
+
 protected:
-  wxTextCtrl *queryInput;
+  TextQueryControl *queryInput;
   wxSimpleHtmlListBox *resultsCtrl;
   wxCheckBox *includeSystemInput;
 

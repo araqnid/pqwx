@@ -152,9 +152,30 @@ void ObjectFinder::OnClose(wxCloseEvent &event) {
   Destroy();
 }
 
+BEGIN_EVENT_TABLE(ObjectFinder::TextQueryControl, wxTextCtrl)
+  EVT_CHAR(TextQueryControl::OnCharacterInput)
+END_EVENT_TABLE()
+
+void ObjectFinder::TextQueryControl::OnCharacterInput(wxKeyEvent& event)
+{
+  if (event.GetKeyCode() == WXK_UP) {
+    wxLogDebug(_T("up!"));
+    return;
+  }
+  if (event.GetKeyCode() == WXK_DOWN) {
+    wxLogDebug(_T("down!"));
+    return;
+  }
+  event.Skip();
+}
+
 void ObjectFinder::Init(wxWindow *parent) {
   wxXmlResource::Get()->LoadDialog(this, parent, _T("ObjectFinder"));
-  queryInput = XRCCTRL(*this, "query", wxTextCtrl);
+  wxTextCtrl *dummyTextCtrl = XRCCTRL(*this, "query", TextQueryControl);
+  queryInput = new TextQueryControl(this, XRCID("query"));
+  GetSizer()->Replace(dummyTextCtrl, queryInput);
+  queryInput->MoveBeforeInTabOrder(dummyTextCtrl);
+  dummyTextCtrl->Destroy();
   includeSystemInput = XRCCTRL(*this, "includeSystem", wxCheckBox);
   // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
   wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
@@ -177,6 +198,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   iconMap[CatalogueIndex::TEXT_PARSER] = _T("icon_text_search_parser.png");
   iconMap[CatalogueIndex::TEXT_TEMPLATE] = _T("icon_text_search_template.png");
 }
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

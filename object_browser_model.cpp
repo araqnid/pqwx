@@ -545,6 +545,8 @@ void ServerModel::UpdateDatabase(const DatabaseModel& incoming)
       (*iter).textSearchParsers = incoming.textSearchParsers;
       (*iter).textSearchTemplates = incoming.textSearchTemplates;
       (*iter).textSearchConfigurations = incoming.textSearchConfigurations;
+      (*iter).types = incoming.types;
+      (*iter).operators = incoming.operators;
       return;
     }
   }
@@ -567,6 +569,11 @@ void ServerModel::UpdateTablespaces(const std::vector<TablespaceModel>& incoming
 
 ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)
 {
+  return const_cast<ObjectModel*>( ((const DatabaseModel*) this )->FindObject(ref) );
+}
+
+const ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref) const
+{
   switch (ref.GetObjectClass()) {
   case ObjectModelReference::PG_CLASS:
     return SearchContents(relations, ref.GetOid());
@@ -580,6 +587,10 @@ ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)
     return SearchContents(textSearchParsers, ref.GetOid());
   case ObjectModelReference::PG_TS_TEMPLATE:
     return SearchContents(textSearchTemplates, ref.GetOid());
+  case ObjectModelReference::PG_TYPE:
+    return SearchContents(types, ref.GetOid());
+  case ObjectModelReference::PG_OPERATOR:
+    return SearchContents(operators, ref.GetOid());
   default:
     return NULL;
   }
@@ -595,6 +606,8 @@ DatabaseModel::Divisions DatabaseModel::DivideSchemaMembers() const
   std::transform(textSearchParsers.begin(), textSearchParsers.end(), std::back_inserter(members), TakePointer);
   std::transform(textSearchTemplates.begin(), textSearchTemplates.end(), std::back_inserter(members), TakePointer);
   std::transform(textSearchConfigurations.begin(), textSearchConfigurations.end(), std::back_inserter(members), TakePointer);
+  std::transform(types.begin(), types.end(), std::back_inserter(members), TakePointer);
+  std::transform(operators.begin(), operators.end(), std::back_inserter(members), TakePointer);
 
   std::sort(members.begin(), members.end(), SchemaMemberModel::CollateByQualifiedName);
 

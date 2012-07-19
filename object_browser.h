@@ -191,8 +191,13 @@ private:
   void AppendTablespaceItems(const ServerModel*, wxTreeItemId parent, const std::vector<const TablespaceModel*> &database);
 
   void AppendDivision(const DatabaseModel *db, std::vector<const SchemaMemberModel*> &members, bool includeEmptySchemas, wxTreeItemId parentItem);
-  void AppendSchemaMembers(const ObjectModelReference& databaseRef, wxTreeItemId parent, bool createSchemaItem, const SchemaModel& schema, const std::vector<const SchemaMemberModel*> &members);
-  void AppendEmptySchema(const ObjectModelReference& databaseRef, wxTreeItemId parent, const SchemaModel& schema);
+  void AppendSchemaMembers(const DatabaseModel *db, wxTreeItemId parent, bool createSchemaItem, const SchemaModel& schema, const std::vector<const SchemaMemberModel*> &members);
+  void AppendEmptySchema(const DatabaseModel *db, wxTreeItemId parent, const SchemaModel& schema);
+  template<typename T>
+  void AppendSchemaMemberItems(const DatabaseModel *db, wxTreeItemId parent, bool qualifyNames, bool fold, const wxString& title, Oid objectClass, int img, const std::vector<const SchemaMemberModel*> &members);
+  template<typename T>
+  wxString FormatSchemaMemberItemName(const DatabaseModel *db, bool qualifyNames, const T& member);
+  wxString FormatOperandType(const DatabaseModel* db, const OperatorModel& op, Oid typeOid);
 
   void DivideSchemaMembers(std::vector<const SchemaMemberModel*> &members, std::vector<const SchemaMemberModel*> &userDivision, std::vector<const SchemaMemberModel*> &systemDivision, std::map<wxString, std::vector<const SchemaMemberModel*> > &extensionDivisions);
 

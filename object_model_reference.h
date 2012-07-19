@@ -72,6 +72,7 @@ public:
   static const Oid PG_EXTENSION = 3079;
   static const Oid PG_INDEX = 2610;
   static const Oid PG_NAMESPACE = 2615;
+  static const Oid PG_OPERATOR = 2617;
   static const Oid PG_PROC = 1255;
   static const Oid PG_ROLE = 1260;
   static const Oid PG_TABLESPACE = 1213;
@@ -80,6 +81,7 @@ public:
   static const Oid PG_TS_DICT = 3600;
   static const Oid PG_TS_PARSER = 3601;
   static const Oid PG_TS_TEMPLATE = 3764;
+  static const Oid PG_TYPE = 1247;
 private:
   wxString serverId;
   Oid database;

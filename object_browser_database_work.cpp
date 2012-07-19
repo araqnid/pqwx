@@ -198,6 +198,17 @@ std::map<wxString, FunctionModel::Type> LoadDatabaseWork::InitFunctionTypeMap()
 
 const std::map<wxString, FunctionModel::Type> LoadDatabaseWork::functionTypeMap = InitFunctionTypeMap();
 
+std::map<wxString, OperatorModel::Kind> LoadDatabaseWork::InitOperatorKindMap()
+{
+  std::map<wxString, OperatorModel::Kind> kindmap;
+  kindmap[_T("l")] = OperatorModel::LEFT_UNARY;
+  kindmap[_T("r")] = OperatorModel::RIGHT_UNARY;
+  kindmap[_T("b")] = OperatorModel::BINARY;
+  return kindmap;
+}
+
+const std::map<wxString, OperatorModel::Kind> LoadDatabaseWork::operatorKindMap = InitOperatorKindMap();
+
 template <class T>
 const T& LoadDatabaseWork::InternalLookup(const typename std::map<Oid, T>& table, Oid oid) const
 {
@@ -230,6 +241,8 @@ void LoadDatabaseWork::DoManagedWork() {
   LoadThings(_T("Text search parsers"), incoming.textSearchParsers);
   LoadThings(_T("Text search templates"), incoming.textSearchTemplates);
   LoadThings(_T("Text search configurations"), incoming.textSearchConfigurations);
+  LoadThings(_T("Types"), incoming.types);
+  LoadThings(_T("Operators"), incoming.operators);
 }
 
 SchemaModel LoadDatabaseWork::ReadSchema(const QueryResults::Row& row)
@@ -279,6 +292,24 @@ FunctionModel LoadDatabaseWork::Mapper<FunctionModel>::operator()(const QueryRes
   wxASSERT_MSG(functionTypeMap.count(type) > 0, type);
   func.type = functionTypeMap.find(type)->second;
   return func;
+}
+
+template<>
+OperatorModel LoadDatabaseWork::Mapper<OperatorModel>::operator()(const QueryResults::Row& row)
+{
+  OperatorModel obj;
+  obj.schema = Schema(row.ReadOid(0));
+  obj.extension = Extension(row.ReadOid(1));
+  obj.oid = row.ReadOid(2);
+  obj.name = row.ReadText(3);
+  obj.leftType = row.ReadOid(4);
+  obj.rightType = row.ReadOid(5);
+  obj.resultType = row.ReadOid(6);
+  wxString kind = row.ReadText(7);
+  wxASSERT_MSG(operatorKindMap.count(kind) > 0, kind);
+  obj.kind = operatorKindMap.find(kind)->second;
+
+  return obj;
 }
 
 template<typename T>

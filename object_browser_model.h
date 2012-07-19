@@ -221,6 +221,26 @@ public:
 };
 
 /**
+ * A data type.
+ */
+class TypeModel : public SchemaMemberModel {
+public:
+};
+
+/**
+ * An operator.
+ */
+class OperatorModel : public SchemaMemberModel {
+public:
+  enum Kind { LEFT_UNARY, RIGHT_UNARY, BINARY } kind;
+  Oid leftType;
+  Oid rightType;
+  Oid resultType;
+  bool HasLeftOperand() const { return kind == LEFT_UNARY || kind == BINARY; }
+  bool HasRightOperand() const { return kind == RIGHT_UNARY || kind == BINARY; }
+};
+
+/**
  * Some object that is a direct server member.
  */
 class ServerMemberModel : public ObjectModel {
@@ -278,6 +298,7 @@ public:
     return name == _T("postgres") || name == _T("template0") || name == _T("template1");
   }
   ObjectModel *FindObject(const ObjectModelReference& ref);
+  const ObjectModel *FindObject(const ObjectModelReference& ref) const;
   std::vector<SchemaModel> schemas;
   std::vector<ExtensionModel> extensions;
   std::vector<RelationModel> relations;
@@ -286,6 +307,8 @@ public:
   std::vector<TextSearchParserModel> textSearchParsers;
   std::vector<TextSearchTemplateModel> textSearchTemplates;
   std::vector<TextSearchConfigurationModel> textSearchConfigurations;
+  std::vector<TypeModel> types;
+  std::vector<OperatorModel> operators;
 
   /**
    * @return A string identifying this database, such as "[local] postgres"
@@ -370,13 +393,13 @@ private:
     const Oid oid;
   };
   template <typename InputIterator>
-  typename InputIterator::value_type *SearchContents(InputIterator first, InputIterator last, Oid key)
+  const typename InputIterator::value_type *SearchContents(InputIterator first, InputIterator last, Oid key) const
   {
     InputIterator ptr = std::find_if(first, last, MatchOid<typename InputIterator::value_type>(key));
     return (ptr != last) ? &(*ptr) : NULL;
   }
   template <typename Container>
-  typename Container::value_type *SearchContents(Container& container, Oid key)
+  const typename Container::value_type *SearchContents(Container& container, Oid key) const
   {
     return SearchContents(container.begin(), container.end(), key);
   }

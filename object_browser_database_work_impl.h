@@ -142,6 +142,8 @@ private:
   static std::map<wxString, RelationModel::Type> InitRelationTypeMap();
   static const std::map<wxString, FunctionModel::Type> functionTypeMap;
   static std::map<wxString, FunctionModel::Type> InitFunctionTypeMap();
+  static const std::map<wxString, OperatorModel::Kind> operatorKindMap;
+  static std::map<wxString, OperatorModel::Kind> InitOperatorKindMap();
 };
 
 /**

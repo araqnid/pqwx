@@ -329,6 +329,41 @@ SELECT cfgnamespace,
 FROM pg_ts_config
 WHERE has_schema_privilege(cfgnamespace, 'USAGE')
 
+-- SQL :: Types :: 9.1
+SELECT typnamespace,
+       pg_depend.refobjid AS extoid,
+       pg_type.oid, typname
+FROM pg_type
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_type'::regclass
+                         AND pg_depend.objid = pg_type.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+WHERE NOT typrelid > 0
+      AND NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
+
+-- SQL :: Types
+SELECT typnamespace,
+       NULL,
+       pg_type.oid, typname
+FROM pg_type
+WHERE NOT typrelid > 0
+      AND NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
+
+-- SQL :: Operators :: 9.1
+SELECT oprnamespace,
+       pg_depend.refobjid AS extoid,
+       pg_operator.oid, oprname,
+       oprleft, oprright, oprresult, oprkind
+FROM pg_operator
+     LEFT JOIN pg_depend ON pg_depend.classid = 'pg_operator'::regclass
+                         AND pg_depend.objid = pg_operator.oid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+
+-- SQL :: Operators
+SELECT oprnamespace,
+       NULL,
+       pg_operator.oid, oprname
+FROM pg_operator
+
 -- SQL :: IndexSchema :: 9.1
 SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'

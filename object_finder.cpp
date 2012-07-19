@@ -169,20 +169,20 @@ void ObjectFinder::TextQueryControl::OnCharacterInput(wxKeyEvent& event)
   event.Skip();
 }
 
-void ObjectFinder::MoveUp()
+void ObjectFinder::ResultsControl::MoveUp()
 {
-  int n = resultsCtrl->GetSelection();
+  int n = GetSelection();
   if (n == wxNOT_FOUND) return;
   if (n == 0) return;
-  resultsCtrl->SetSelection(n - 1);
+  SetSelection(n - 1);
 }
 
-void ObjectFinder::MoveDown()
+void ObjectFinder::ResultsControl::MoveDown()
 {
-  int n = resultsCtrl->GetSelection();
+  int n = GetSelection();
   if (n == wxNOT_FOUND) return;
-  if ((unsigned) n == (resultsCtrl->GetCount() - 1)) return;
-  resultsCtrl->SetSelection(n + 1);
+  if ((unsigned) n == (GetCount() - 1)) return;
+  SetSelection(n + 1);
 }
 
 void ObjectFinder::Init(wxWindow *parent) {
@@ -195,7 +195,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   includeSystemInput = XRCCTRL(*this, "includeSystem", wxCheckBox);
   // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
   wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
-  resultsCtrl = new wxSimpleHtmlListBox(this, Pqwx_ObjectFinderResults);
+  resultsCtrl = new ResultsControl(this, Pqwx_ObjectFinderResults);
   resultsCtrl->GetFileSystem().ChangePathTo(_T("memory:ObjectFinder"), true);
   GetSizer()->Replace(dummyResultsCtrl, resultsCtrl);
   resultsCtrl->MoveBeforeInTabOrder(dummyResultsCtrl);

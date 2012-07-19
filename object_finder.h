@@ -95,8 +95,8 @@ public:
   void OnClose(wxCloseEvent&);
   void OnIncludeSystem(wxCommandEvent& e) { SearchCatalogue(); }
 
-  void MoveUp();
-  void MoveDown();
+  void MoveUp() { resultsCtrl->MoveUp(); }
+  void MoveDown() { resultsCtrl->MoveDown(); }
 
   void SearchCatalogue();
 
@@ -110,9 +110,16 @@ private:
     DECLARE_EVENT_TABLE();
   };
 
+  class ResultsControl : public wxSimpleHtmlListBox {
+  public:
+    ResultsControl(ObjectFinder *owner, wxWindowID id) : wxSimpleHtmlListBox(owner,id) { }
+    void MoveUp();
+    void MoveDown();
+  };
+
 protected:
   TextQueryControl *queryInput;
-  wxSimpleHtmlListBox *resultsCtrl;
+  ResultsControl *resultsCtrl;
   wxCheckBox *includeSystemInput;
 
 private:

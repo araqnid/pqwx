@@ -730,6 +730,127 @@
       <label>P&amp;roperties</label>
     </object>
   </object>
+
+  <object class="wxMenu" name="OperatorMenu">
+    <object class="wxMenuItem" name="OperatorMenu_New">
+      <label>&amp;New Operator...</label>
+    </object>
+    <object class="wxMenu" name="OperatorMenu_Script">
+      <object class="wxMenu" name="OperatorMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="OperatorMenu_ScriptAlter">
+        <object class="wxMenuItem" name="OperatorMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="OperatorMenu_ScriptDrop">
+        <object class="wxMenuItem" name="OperatorMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="OperatorMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Operator as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="OperatorMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="OperatorMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="OperatorMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="OperatorMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
+  <object class="wxMenu" name="TypeMenu">
+    <object class="wxMenuItem" name="TypeMenu_New">
+      <label>&amp;New Type...</label>
+    </object>
+    <object class="wxMenu" name="TypeMenu_Script">
+      <object class="wxMenu" name="TypeMenu_ScriptCreate">
+        <label>&amp;CREATE to</label>
+        <object class="wxMenuItem" name="TypeMenu_ScriptCreateWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TypeMenu_ScriptCreateFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TypeMenu_ScriptCreateClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="TypeMenu_ScriptAlter">
+        <object class="wxMenuItem" name="TypeMenu_ScriptAlterWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TypeMenu_ScriptAlterFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TypeMenu_ScriptAlterClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;ALTER to</label>
+      </object>
+      <object class="wxMenu" name="TypeMenu_ScriptDrop">
+        <object class="wxMenuItem" name="TypeMenu_ScriptDropWindow">
+          <label>&amp;New query window</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="TypeMenu_ScriptDropFile">
+          <label>&amp;File...</label>
+        </object>
+        <object class="wxMenuItem" name="TypeMenu_ScriptDropClipboard">
+          <label>&amp;Clipboard</label>
+        </object>
+        <label>&amp;DROP to</label>
+      </object>
+      <label>&amp;Script Type as</label>
+    </object>
+    <object class="separator"/>
+    <object_ref name="TypeMenu_Schema" ref="SchemaMenu"/>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TypeMenu_ViewDependencies">
+      <label>View &amp;Dependencies...</label>
+    </object>
+    <object class="separator"/>
+    <object class="wxMenuItem" name="TypeMenu_Refresh">
+      <label>Re&amp;fresh</label>
+    </object>
+    <object class="wxMenuItem" name="TypeMenu_Properties">
+      <label>P&amp;roperties</label>
+    </object>
+  </object>
   <object class="wxMenu" name="IndexMenu">
     <object class="wxMenuItem" name="IndexMenu_New">
       <label>&amp;New Index...</label>

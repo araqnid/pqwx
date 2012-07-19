@@ -251,6 +251,12 @@ private:
   DECLARE_SCRIPT_HANDLERS(Tablespace, Create);
   DECLARE_SCRIPT_HANDLERS(Tablespace, Alter);
   DECLARE_SCRIPT_HANDLERS(Tablespace, Drop);
+  DECLARE_SCRIPT_HANDLERS(Operator, Create);
+  DECLARE_SCRIPT_HANDLERS(Operator, Alter);
+  DECLARE_SCRIPT_HANDLERS(Operator, Drop);
+  DECLARE_SCRIPT_HANDLERS(Type, Create);
+  DECLARE_SCRIPT_HANDLERS(Type, Alter);
+  DECLARE_SCRIPT_HANDLERS(Type, Drop);
 
   // context menus
   wxMenu *serverMenu;
@@ -268,6 +274,8 @@ private:
   wxMenu *indexMenu;
   wxMenu *roleMenu;
   wxMenu *tablespaceMenu;
+  wxMenu *operatorMenu;
+  wxMenu *typeMenu;
 
   // remember what was the context for a context menu
   ObjectModelReference contextMenuRef;

@@ -56,6 +56,7 @@ PQWX_SOURCES = \
 	object_browser_scripts_database.cpp \
 	object_browser_scripts_function.cpp \
 	object_browser_scripts_index.cpp \
+	object_browser_scripts_operator.cpp \
 	object_browser_scripts_role.cpp \
 	object_browser_scripts_schema.cpp \
 	object_browser_scripts_sequence.cpp \
@@ -65,6 +66,7 @@ PQWX_SOURCES = \
 	object_browser_scripts_ts_dict.cpp \
 	object_browser_scripts_ts_parser.cpp \
 	object_browser_scripts_ts_tmpl.cpp \
+	object_browser_scripts_type.cpp \
 	object_browser_scripts_view.cpp \
 	object_finder.cpp \
 	pg_tools_registry.cpp \

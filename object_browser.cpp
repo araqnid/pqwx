@@ -102,10 +102,17 @@ BEGIN_EVENT_TABLE(ObjectBrowser, wxTreeCtrl)
   BIND_SCRIPT_HANDLERS(Role, Create)
   BIND_SCRIPT_HANDLERS(Role, Alter)
   BIND_SCRIPT_HANDLERS(Role, Drop)
+  BIND_SCRIPT_HANDLERS(Operator, Create)
+  BIND_SCRIPT_HANDLERS(Operator, Alter)
+  BIND_SCRIPT_HANDLERS(Operator, Drop)
+  BIND_SCRIPT_HANDLERS(Type, Create)
+  BIND_SCRIPT_HANDLERS(Type, Alter)
+  BIND_SCRIPT_HANDLERS(Type, Drop)
 END_EVENT_TABLE()
 
 #define IMPLEMENT_SCRIPT_HANDLER(menu, mode, output, db, ref) \
 void ObjectBrowser::On##menu##MenuScript##mode##output(wxCommandEvent &event) { \
+  wxLogDebug(_T("Initiate %s script work for %s"), _T(#menu), ref.Identify().c_str()); \
   db->SubmitWork(new menu##ScriptWork(this, ref, ScriptWork::mode, ScriptWork::output)); \
 }
 
@@ -156,6 +163,12 @@ IMPLEMENT_SCRIPT_HANDLERS(TextSearchTemplate, Drop, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Create, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Alter, contextMenuRef)
 IMPLEMENT_SCRIPT_HANDLERS(TextSearchConfiguration, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Operator, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Operator, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Operator, Drop, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Type, Create, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Type, Alter, contextMenuRef)
+IMPLEMENT_SCRIPT_HANDLERS(Type, Drop, contextMenuRef)
 IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Create, contextMenuRef)
 IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Alter, contextMenuRef)
 IMPLEMENT_SERVER_SCRIPT_HANDLERS(Tablespace, Drop, contextMenuRef)
@@ -251,6 +264,8 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel& model, wxWindow *parent, wxWind
   indexMenu = wxXmlResource::Get()->LoadMenu(_T("IndexMenu"));
   roleMenu = wxXmlResource::Get()->LoadMenu(_T("RoleMenu"));
   tablespaceMenu = wxXmlResource::Get()->LoadMenu(_T("TablespaceMenu"));
+  operatorMenu = wxXmlResource::Get()->LoadMenu(_T("OperatorMenu"));
+  typeMenu = wxXmlResource::Get()->LoadMenu(_T("TypeMenu"));
   wxImageList *images = new wxImageList(13, 13, true);
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
@@ -1144,6 +1159,14 @@ void ObjectBrowser::OnItemRightClick(wxTreeEvent &event)
 
   case ObjectModelReference::PG_TS_CONFIG:
     OpenSchemaMemberMenu(textSearchConfigurationMenu, XRCID("TextSearchConfigurationMenu_Schema"), static_cast<const TextSearchConfigurationModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
+    break;
+
+  case ObjectModelReference::PG_OPERATOR:
+    OpenSchemaMemberMenu(operatorMenu, XRCID("OperatorMenu_Schema"), static_cast<const OperatorModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
+    break;
+
+  case ObjectModelReference::PG_TYPE:
+    OpenSchemaMemberMenu(typeMenu, XRCID("TypeMenu_Schema"), static_cast<const TypeModel*>(model.FindObject(*ref)), model.FindDatabase(ref->DatabaseRef()));
     break;
 
   case ObjectModelReference::PG_INDEX: {

@@ -337,7 +337,7 @@ FROM pg_type
      LEFT JOIN pg_depend ON pg_depend.classid = 'pg_type'::regclass
                          AND pg_depend.objid = pg_type.oid
                          AND pg_depend.refclassid = 'pg_extension'::regclass
-WHERE NOT typrelid > 0
+WHERE NOT (typrelid > 0 AND EXISTS (SELECT 1 FROM pg_class WHERE pg_class.oid = pg_type.typrelid AND pg_class.relkind <> 'c'))
       AND NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
 
 -- SQL :: Types
@@ -345,7 +345,7 @@ SELECT typnamespace,
        NULL,
        pg_type.oid, typname
 FROM pg_type
-WHERE NOT typrelid > 0
+WHERE NOT (typrelid > 0 AND EXISTS (SELECT 1 FROM pg_class WHERE pg_class.oid = pg_type.typrelid AND pg_class.relkind <> 'c'))
       AND NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
 
 -- SQL :: Operators :: 9.1
@@ -361,7 +361,8 @@ FROM pg_operator
 -- SQL :: Operators
 SELECT oprnamespace,
        NULL,
-       pg_operator.oid, oprname
+       pg_operator.oid, oprname,
+       oprleft, oprright, oprresult, oprkind
 FROM pg_operator
 
 -- SQL :: IndexSchema :: 9.1
@@ -409,7 +410,7 @@ FROM pg_namespace
                  WHERE -- exclude array types (create type "foo" implicity creates type "foo[]")
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
-                       AND NOT typrelid > 0
+                       AND NOT (typrelid > 0 AND EXISTS (SELECT 1 FROM pg_class WHERE pg_class.oid = pg_type.typrelid AND pg_class.relkind <> 'c'))
                        AND has_schema_privilege(typnamespace, 'USAGE')
                  -- extensions (9.1 onwards)
                  UNION ALL
@@ -514,7 +515,7 @@ FROM pg_namespace
                  WHERE -- exclude array types (create type "foo" implicity creates type "foo[]")
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
-                       AND NOT typrelid > 0
+                       AND NOT (typrelid > 0 AND EXISTS (SELECT 1 FROM pg_class WHERE pg_class.oid = pg_type.typrelid AND pg_class.relkind <> 'c'))
 		       AND has_schema_privilege(typnamespace, 'USAGE')
                  -- text search dictionaries
                  UNION ALL
@@ -601,7 +602,7 @@ FROM pg_namespace
                  WHERE -- exclude array types (create type "foo" implicity creates type "foo[]")
                        NOT (typname ~ '^_' AND typelem > 0 AND EXISTS (SELECT 1 FROM pg_type eltype WHERE eltype.oid = pg_type.typelem AND eltype.typarray = pg_type.oid))
                        -- exclude types that embody relations
-                       AND NOT typrelid > 0
+                       AND NOT (typrelid > 0 AND EXISTS (SELECT 1 FROM pg_class WHERE pg_class.oid = pg_type.typrelid AND pg_class.relkind <> 'c'))
                        AND has_schema_privilege(typnamespace, 'USAGE')
                 ) x ON pg_namespace.oid = x.nspoid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')

@@ -348,6 +348,36 @@ protected:
 };
 
 /**
+ * Produce operator scripts.
+ */
+class OperatorScriptWork : public ScriptWork {
+public:
+  OperatorScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), oproid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate operator configuration script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  const Oid oproid;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
+ * Produce type scripts.
+ */
+class TypeScriptWork : public ScriptWork {
+public:
+  TypeScriptWork(ObjectBrowser *view, const ObjectModelReference& ref, ScriptWork::Mode mode, ScriptWork::Output output) : ScriptWork(view, ref.DatabaseRef(), mode, output), typoid(ref.GetOid())
+  {
+    wxLogDebug(_T("%p: work to generate type configuration script: %s"), this, ref.Identify().c_str());
+  }
+private:
+  const Oid typoid;
+protected:
+  void GenerateScript(OutputIterator output);
+};
+
+/**
  * Produce tablespace scripts.
  */
 class TablespaceScriptWork : public ScriptWork {

@@ -250,6 +250,47 @@ FROM pg_ts_config_map
      JOIN pg_namespace dict_namespace ON dict_namespace.oid = pg_ts_dict.dictnamespace
 WHERE pg_ts_config_map.mapcfg = $1
 
+-- SQL :: Operator Detail
+SELECT oprname, opr_namespace.nspname, owner.rolname AS owner,
+       oprkind, oprcanmerge, oprcanhash,
+       lefttype.oid::regtype, righttype.oid::regtype, resulttype.oid::regtype,
+       oprcom::regoper, oprnegate::regoper,
+       oprcode::regprocedure, oprrest::regprocedure, oprjoin::regprocedure,
+       obj_description(pg_operator.oid)
+FROM pg_operator
+     JOIN pg_namespace opr_namespace ON opr_namespace.oid = pg_operator.oprnamespace
+     JOIN pg_roles owner ON owner.oid = pg_operator.oprowner
+     LEFT JOIN pg_type lefttype ON lefttype.oid = pg_operator.oprleft
+     LEFT JOIN pg_type righttype ON righttype.oid = pg_operator.oprright
+     LEFT JOIN pg_type resulttype ON resulttype.oid = pg_operator.oprresult
+WHERE pg_operator.oid = $1
+
+-- SQL :: Type Detail
+SELECT typname, typ_namespace.nspname, owner.rolname AS owner,
+       typcategory,
+       obj_description(pg_type.oid)
+FROM pg_type
+     JOIN pg_namespace typ_namespace ON typ_namespace.oid = pg_type.typnamespace
+     JOIN pg_roles owner ON owner.oid = pg_type.typowner
+WHERE pg_type.oid = $1
+
+-- SQL :: Enum Type Members
+SELECT enumlabel
+FROM pg_enum
+WHERE enumtypid = $1
+ORDER BY enumsortorder
+
+-- SQL :: Composite Type Attributes
+SELECT attname, format_type(atttypid, atttypmod),
+       collname, coll_namespace.nspname
+FROM pg_attribute
+     JOIN pg_type ON pg_attribute.attrelid = pg_type.typrelid
+     LEFT JOIN pg_collation ON pg_collation.oid = pg_attribute.attcollation AND pg_attribute.attcollation <> 100
+     LEFT JOIN pg_namespace coll_namespace ON coll_namespace.oid = pg_collation.collnamespace
+WHERE pg_type.oid = $1
+      AND NOT attisdropped
+ORDER BY attnum
+
 -- SQL :: Tablespace Detail :: 9.2
 SELECT spcname, owner.rolname AS owner,
        spcacl, pg_catalog.pg_tablespace_location(pg_tablespace.oid), spcoptions

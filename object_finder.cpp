@@ -159,14 +159,30 @@ END_EVENT_TABLE()
 void ObjectFinder::TextQueryControl::OnCharacterInput(wxKeyEvent& event)
 {
   if (event.GetKeyCode() == WXK_UP) {
-    wxLogDebug(_T("up!"));
+    owner->MoveUp();
     return;
   }
   if (event.GetKeyCode() == WXK_DOWN) {
-    wxLogDebug(_T("down!"));
+    owner->MoveDown();
     return;
   }
   event.Skip();
+}
+
+void ObjectFinder::MoveUp()
+{
+  int n = resultsCtrl->GetSelection();
+  if (n == wxNOT_FOUND) return;
+  if (n == 0) return;
+  resultsCtrl->SetSelection(n - 1);
+}
+
+void ObjectFinder::MoveDown()
+{
+  int n = resultsCtrl->GetSelection();
+  if (n == wxNOT_FOUND) return;
+  if ((unsigned) n == (resultsCtrl->GetCount() - 1)) return;
+  resultsCtrl->SetSelection(n + 1);
 }
 
 void ObjectFinder::Init(wxWindow *parent) {

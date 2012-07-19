@@ -95,14 +95,18 @@ public:
   void OnClose(wxCloseEvent&);
   void OnIncludeSystem(wxCommandEvent& e) { SearchCatalogue(); }
 
+  void MoveUp();
+  void MoveDown();
+
   void SearchCatalogue();
 
 private:
   class TextQueryControl : public wxTextCtrl {
   public:
-    TextQueryControl(wxWindow *parent, wxWindowID id) : wxTextCtrl(parent,id) { }
+    TextQueryControl(ObjectFinder *owner, wxWindowID id) : wxTextCtrl(owner,id), owner(owner) { }
     void OnCharacterInput(wxKeyEvent& event);
   private:
+    ObjectFinder * const owner;
     DECLARE_EVENT_TABLE();
   };
 

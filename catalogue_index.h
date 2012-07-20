@@ -214,8 +214,8 @@ public:
       }
       return result;
     }
-    int cardinality() const {
-      int result = 0;
+    unsigned cardinality() const {
+      unsigned result = 0;
       for (int i = NumWords() - 1; i >= 0; i--) {
         wxUint64 mask = 1;
         for (int j = 0; j < 64; j++) {

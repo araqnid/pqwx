@@ -62,24 +62,8 @@ public:
 
   /**
    * Create object finder, specifying catalogue index.
-   *
-   * This constructor is for a modal dialogue.
    */
-  ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue)
-    : wxDialog(), catalogue(catalogue), completion(NULL),
-      nonSystemFilter(catalogue->CreateNonSystemFilter()),
-      nonExtensionFilter(catalogue->CreateNonExtensionFilter()),
-      typesFilter(CreateTypesFilter(catalogue))
-  {
-    Init(parent);
-  }
-
-  /**
-   * Create object finder, specifying catalogue index.
-   *
-   * This constructor is for a non-modal dialogue.
-   */
-  ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue, Completion *callback)
+  ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue, Completion *callback = NULL)
     : wxDialog(), catalogue(catalogue), completion(callback),
       nonSystemFilter(catalogue->CreateNonSystemFilter()),
       nonExtensionFilter(catalogue->CreateNonExtensionFilter()),
@@ -88,8 +72,9 @@ public:
     Init(parent);
   }
 
-  ~ObjectFinder() {
-    delete completion;
+  virtual ~ObjectFinder()
+  {
+    if (completion != NULL) delete completion;
   }
 
   void OnQueryChanged(wxCommandEvent& e) { SearchCatalogue(); }

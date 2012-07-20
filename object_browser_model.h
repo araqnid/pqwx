@@ -383,6 +383,10 @@ public:
    */
   void SubmitWork(ObjectBrowserManagedWork *work);
 
+  /**
+   * Merge in contents from incoming data.
+   */
+  void MergeContents(const DatabaseModel& incoming);
 private:
   static const SchemaMemberModel* TakePointer(const SchemaMemberModel& value) { return &value; }
   template <typename T>

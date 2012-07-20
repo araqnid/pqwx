@@ -534,19 +534,9 @@ void ServerModel::UpdateDatabases(const std::vector<DatabaseModel>& incoming)
 void ServerModel::UpdateDatabase(const DatabaseModel& incoming)
 {
   for (std::vector<DatabaseModel>::iterator iter = databases.begin(); iter != databases.end(); iter++) {
-    if ((*iter).oid == incoming.oid) {
-      (*iter).loaded = true;
-      (*iter).catalogueIndex = NULL;
-      (*iter).schemas = incoming.schemas;
-      (*iter).extensions = incoming.extensions;
-      (*iter).relations = incoming.relations;
-      (*iter).functions = incoming.functions;
-      (*iter).textSearchDictionaries = incoming.textSearchDictionaries;
-      (*iter).textSearchParsers = incoming.textSearchParsers;
-      (*iter).textSearchTemplates = incoming.textSearchTemplates;
-      (*iter).textSearchConfigurations = incoming.textSearchConfigurations;
-      (*iter).types = incoming.types;
-      (*iter).operators = incoming.operators;
+    DatabaseModel& db = *iter;
+    if (db.oid == incoming.oid) {
+      db.MergeContents(incoming);
       return;
     }
   }
@@ -565,6 +555,22 @@ void ServerModel::UpdateTablespaces(const std::vector<TablespaceModel>& incoming
   tablespaces.clear();
   tablespaces.reserve(incoming.size());
   std::copy(incoming.begin(), incoming.end(), std::back_inserter(tablespaces));
+}
+
+void DatabaseModel::MergeContents(const DatabaseModel& incoming)
+{
+  loaded = true;
+  catalogueIndex = NULL;
+  schemas = incoming.schemas;
+  extensions = incoming.extensions;
+  relations = incoming.relations;
+  functions = incoming.functions;
+  textSearchDictionaries = incoming.textSearchDictionaries;
+  textSearchParsers = incoming.textSearchParsers;
+  textSearchTemplates = incoming.textSearchTemplates;
+  textSearchConfigurations = incoming.textSearchConfigurations;
+  types = incoming.types;
+  operators = incoming.operators;
 }
 
 ObjectModel *DatabaseModel::FindObject(const ObjectModelReference& ref)

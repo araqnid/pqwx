@@ -22,6 +22,7 @@ BEGIN_EVENT_TABLE(ObjectFinder, wxDialog)
   EVT_CLOSE(ObjectFinder::OnClose)
   EVT_LISTBOX_DCLICK(Pqwx_ObjectFinderResults, ObjectFinder::OnDoubleClickResult)
   EVT_CHECKBOX(XRCID("includeSystem"), ObjectFinder::OnIncludeSystem)
+  EVT_CHECKBOX(XRCID("includeExtensions"), ObjectFinder::OnIncludeExtensions)
 END_EVENT_TABLE()
 
 static wxRegEx schemaPattern(_T("^([a-zA-Z_][a-zA-Z0-9_]*)\\."));
@@ -30,12 +31,14 @@ void ObjectFinder::SearchCatalogue()
 {
   wxString query = queryInput->GetValue();
   bool includeSystem = includeSystemInput->GetValue();
+  bool includeExtensions = includeExtensionsInput->GetValue();
 
   resultsCtrl->Clear();
 
   CatalogueIndex::Filter filter(typesFilter);
 
   if (!includeSystem) filter &= nonSystemFilter;
+  if (!includeExtensions) filter &= nonExtensionFilter;
 
   if (!query.IsEmpty()) {
     if (schemaPattern.Matches(query)) {
@@ -200,6 +203,7 @@ void ObjectFinder::Init(wxWindow *parent) {
   queryInput->MoveBeforeInTabOrder(dummyTextCtrl);
   dummyTextCtrl->Destroy();
   includeSystemInput = XRCCTRL(*this, "includeSystem", wxCheckBox);
+  includeExtensionsInput = XRCCTRL(*this, "includeExtensions", wxCheckBox);
   // bodge-tastic... xrced doesn't support wxSimpleHtmlListBox
   wxListBox *dummyResultsCtrl = XRCCTRL(*this, "results", wxListBox);
   resultsCtrl = new ResultsControl(this, Pqwx_ObjectFinderResults);

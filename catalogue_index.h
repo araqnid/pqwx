@@ -250,6 +250,10 @@ public:
    */
   Filter CreateNonSystemFilter() const;
   /**
+   * Creates a filter that only matches documents that are not part of an extension.
+   */
+  Filter CreateNonExtensionFilter() const;
+  /**
    * Creates a filter that only matches documents representing the specified type.
    */
   Filter CreateTypeFilter(Type type) const;

@@ -35,6 +35,11 @@
         <border>4</border>
       </object>
       <object class="sizeritem">
+        <object class="wxCheckBox" name="includeExtensions">
+          <label>Search in &amp;extensions</label>
+        </object>
+      </object>
+      <object class="sizeritem">
         <object class="wxCheckBox" name="includeSystem">
           <label>Search in &amp;system catalogues</label>
         </object>

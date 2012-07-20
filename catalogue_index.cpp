@@ -196,12 +196,25 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
   return resultVector;
 }
 
-CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() const {
+CatalogueIndex::Filter CatalogueIndex::CreateNonSystemFilter() const
+{
   Filter filter(documents.size());
 
   int documentId = 0;
   for (std::vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
     if (!iter->system) filter.Include(documentId);
+  }
+
+  return filter;
+}
+
+CatalogueIndex::Filter CatalogueIndex::CreateNonExtensionFilter() const
+{
+  Filter filter(documents.size());
+
+  int documentId = 0;
+  for (std::vector<Document>::const_iterator iter = documents.begin(); iter != documents.end(); iter++, documentId++) {
+    if (iter->extension.empty()) filter.Include(documentId);
   }
 
   return filter;

@@ -68,7 +68,9 @@ public:
   ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue)
     : wxDialog(), catalogue(catalogue), completion(NULL),
       nonSystemFilter(catalogue->CreateNonSystemFilter()),
-      typesFilter(CreateTypesFilter(catalogue)) {
+      nonExtensionFilter(catalogue->CreateNonExtensionFilter()),
+      typesFilter(CreateTypesFilter(catalogue))
+  {
     Init(parent);
   }
 
@@ -80,7 +82,9 @@ public:
   ObjectFinder(wxWindow *parent, const CatalogueIndex *catalogue, Completion *callback)
     : wxDialog(), catalogue(catalogue), completion(callback),
       nonSystemFilter(catalogue->CreateNonSystemFilter()),
-      typesFilter(CreateTypesFilter(catalogue)) {
+      nonExtensionFilter(catalogue->CreateNonExtensionFilter()),
+      typesFilter(CreateTypesFilter(catalogue))
+  {
     Init(parent);
   }
 
@@ -93,6 +97,7 @@ public:
   void OnDoubleClickResult(wxCommandEvent&);
   void OnCancel(wxCommandEvent&);
   void OnClose(wxCloseEvent&);
+  void OnIncludeExtensions(wxCommandEvent& e) { SearchCatalogue(); }
   void OnIncludeSystem(wxCommandEvent& e) { SearchCatalogue(); }
 
   void MoveUp() { resultsCtrl->MoveUp(); }
@@ -121,11 +126,13 @@ protected:
   TextQueryControl *queryInput;
   ResultsControl *resultsCtrl;
   wxCheckBox *includeSystemInput;
+  wxCheckBox *includeExtensionsInput;
 
 private:
   const CatalogueIndex *catalogue;
   Completion *completion;
   const CatalogueIndex::Filter nonSystemFilter;
+  const CatalogueIndex::Filter nonExtensionFilter;
   const CatalogueIndex::Filter typesFilter;
   std::vector<CatalogueIndex::Result> results;
   void Init(wxWindow *parent);

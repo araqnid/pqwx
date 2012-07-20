@@ -7,6 +7,7 @@
 #ifndef __object_browser_database_work_impl_h
 #define __object_browser_database_work_impl_h
 
+#include "catalogue_index.h"
 #include "object_browser_work.h"
 #include "object_browser_model.h"
 

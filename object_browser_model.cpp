@@ -660,6 +660,12 @@ void DatabaseModel::LoadRelation(const ObjectModelReference& relationRef)
   SubmitWork(new LoadRelationWork(relation->type, relationRef));
 }
 
+DatabaseModel::~DatabaseModel()
+{
+  if (catalogueIndex != NULL)
+    delete catalogueIndex;
+}
+
 // Local Variables:
 // mode: c++
 // indent-tabs-mode: nil

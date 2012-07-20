@@ -7,7 +7,6 @@
 #ifndef __object_browser_model_h
 #define __object_browser_model_h
 
-#include "catalogue_index.h"
 #include "database_connection.h"
 #include "object_model_reference.h"
 
@@ -15,6 +14,7 @@ class RelationModel;
 class DatabaseModel;
 class ServerModel;
 class ObjectBrowser;
+class CatalogueIndex;
 
 class PQWXObjectBrowserModelEvent : public wxNotifyEvent {
 public:
@@ -283,10 +283,7 @@ public:
 class DatabaseModel : public ServerMemberModel {
 public:
   DatabaseModel() : loaded(false), server(NULL), catalogueIndex(NULL) {}
-  virtual ~DatabaseModel() {
-    if (catalogueIndex != NULL)
-      delete catalogueIndex;
-  }
+  virtual ~DatabaseModel();
   operator ObjectModelReference () const;
   bool isTemplate;
   wxString owner;

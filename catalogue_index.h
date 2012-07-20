@@ -220,7 +220,7 @@ public:
       }
       return result;
     }
-    bool IsEmpty() const {
+    bool empty() const {
       for (int i = NumWords() - 1; i >= 0; i--) {
         if (data[i]) return false;
       }

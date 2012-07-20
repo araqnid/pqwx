@@ -85,7 +85,7 @@ std::vector<CatalogueIndex::Result> CatalogueIndex::Search(const wxString &input
 #ifdef __WXDEBUG__
   wxStopWatch stopwatch;
 #endif
-  if (filter.IsEmpty()) return std::vector<CatalogueIndex::Result>();
+  if (filter.empty()) return std::vector<CatalogueIndex::Result>();
   std::vector<Token> tokens = Analyse(input);
   if (tokens.empty()) return std::vector<CatalogueIndex::Result>();
   std::vector< std::map<const DocumentPosition, const Occurrence*> > tokenMatches;

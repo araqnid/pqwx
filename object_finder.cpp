@@ -195,7 +195,8 @@ void ObjectFinder::ResultsControl::MoveDown()
   SetSelection(n + 1);
 }
 
-void ObjectFinder::Init(wxWindow *parent) {
+void ObjectFinder::Init(wxWindow *parent)
+{
   wxXmlResource::Get()->LoadDialog(this, parent, _T("ObjectFinder"));
   wxTextCtrl *dummyTextCtrl = XRCCTRL(*this, "query", TextQueryControl);
   queryInput = new TextQueryControl(this, XRCID("query"));
@@ -224,6 +225,10 @@ void ObjectFinder::Init(wxWindow *parent) {
   iconMap[CatalogueIndex::TEXT_DICTIONARY] = _T("icon_text_search_dictionary.png");
   iconMap[CatalogueIndex::TEXT_PARSER] = _T("icon_text_search_parser.png");
   iconMap[CatalogueIndex::TEXT_TEMPLATE] = _T("icon_text_search_template.png");
+
+  if (nonExtensionFilter.cardinality() == catalogue->DocumentCount()) {
+    includeExtensionsInput->Disable();
+  }
 }
 
 // Local Variables:

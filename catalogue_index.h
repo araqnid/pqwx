@@ -92,6 +92,11 @@ public:
   }
 
   /**
+   * @return The number of documents in the index.
+   */
+  unsigned DocumentCount() const { return documents.size(); }
+
+  /**
    * Catalogue search result.
    *
    * A search result consists of:

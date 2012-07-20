@@ -370,10 +370,12 @@ SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
        nspname || '.' || objname,
-       objdisambig
+       objdisambig,
+       pg_extension.extname
 FROM pg_namespace
      INNER JOIN (-- tables, views, sequences
-                 SELECT relnamespace AS nspoid,
+                 SELECT 'pg_class'::regclass AS classid,
+                        relnamespace AS nspoid,
                         pg_class.oid AS objid,
                         relname AS objname,
                         null AS objdisambig,
@@ -388,7 +390,8 @@ FROM pg_namespace
                        AND has_schema_privilege(relnamespace, 'USAGE')
                  -- functions
                  UNION ALL
-                 SELECT pronamespace AS nspoid,
+                 SELECT 'pg_proc'::regclass AS classid,
+                        pronamespace AS nspoid,
                         pg_proc.oid AS objid,
                         proname AS objname,
                         pg_get_function_arguments(pg_proc.oid) AS objdisambig,
@@ -401,7 +404,8 @@ FROM pg_namespace
                        AND has_schema_privilege(pronamespace, 'USAGE')
                  -- types
                  UNION ALL
-                 SELECT typnamespace AS nspoid,
+                 SELECT 'pg_type'::regclass AS classid,
+                        typnamespace AS nspoid,
                         pg_type.oid AS objid,
                         typname AS objname,
                         null AS objdisambig,
@@ -414,7 +418,8 @@ FROM pg_namespace
                        AND has_schema_privilege(typnamespace, 'USAGE')
                  -- extensions (9.1 onwards)
                  UNION ALL
-                 SELECT extnamespace AS nspoid,
+                 SELECT 'pg_extension'::regclass AS classid,
+                        extnamespace AS nspoid,
                         pg_extension.oid AS objid,
                         extname AS name,
                         null AS objdisambig,
@@ -423,7 +428,8 @@ FROM pg_namespace
                  WHERE has_schema_privilege(extnamespace, 'USAGE')
                  -- collations (9.1 onwards)
                  UNION ALL
-                 SELECT collnamespace AS nspoid,
+                 SELECT 'pg_collation'::regclass AS classid,
+                        collnamespace AS nspoid,
                         pg_collation.oid AS objid,
                         collname AS name,
                         null AS objdisambig,
@@ -432,7 +438,8 @@ FROM pg_namespace
                  WHERE has_schema_privilege(collnamespace, 'USAGE')
                  -- text search dictionaries
                  UNION ALL
-                 SELECT dictnamespace AS nspoid,
+                 SELECT 'pg_ts_dict'::regclass AS classid,
+                        dictnamespace AS nspoid,
                         pg_ts_dict.oid AS objid,
                         dictname AS objname,
                         null AS objdisambig,
@@ -441,7 +448,8 @@ FROM pg_namespace
                  WHERE has_schema_privilege(dictnamespace, 'USAGE')
                  -- text search parsers
                  UNION ALL
-                 SELECT prsnamespace AS nspoid,
+                 SELECT 'pg_ts_parser'::regclass AS classid,
+                        prsnamespace AS nspoid,
                         pg_ts_parser.oid AS objid,
                         prsname AS objname,
                         null AS objdisambig,
@@ -450,7 +458,8 @@ FROM pg_namespace
                  WHERE has_schema_privilege(prsnamespace, 'USAGE')
                  -- text search templates
                  UNION ALL
-                 SELECT tmplnamespace AS nspoid,
+                 SELECT 'pg_ts_template'::regclass AS classid,
+                        tmplnamespace AS nspoid,
                         pg_ts_template.oid AS objid,
                         tmplname AS objname,
                         null AS objdisambig,
@@ -459,7 +468,8 @@ FROM pg_namespace
                  WHERE has_schema_privilege(tmplnamespace, 'USAGE')
                  -- text search configurations
                  UNION ALL
-                 SELECT cfgnamespace AS nspoid,
+                 SELECT 'pg_ts_config'::regclass AS classid,
+                        cfgnamespace AS nspoid,
                         pg_ts_config.oid AS objid,
                         cfgname AS objname,
                         null AS objdisambig,
@@ -467,6 +477,10 @@ FROM pg_namespace
                  FROM pg_ts_config
                  WHERE has_schema_privilege(cfgnamespace, 'USAGE')
                 ) x ON pg_namespace.oid = x.nspoid
+     LEFT JOIN pg_depend ON pg_depend.classid = x.classid
+                         AND pg_depend.objid = x.objid
+                         AND pg_depend.refclassid = 'pg_extension'::regclass
+     LEFT JOIN pg_extension ON pg_extension.oid = pg_depend.refobjid
 WHERE NOT (nspname LIKE 'pg_%' AND nspname <> 'pg_catalog')
 ORDER BY 1, 2, 3
 
@@ -475,7 +489,8 @@ SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
        nspname || '.' || objname,
-       objdisambig
+       objdisambig,
+       NULL AS extname
 FROM pg_namespace
      INNER JOIN (-- tables, views, sequences
                  SELECT relnamespace AS nspoid,
@@ -562,7 +577,8 @@ SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
        nspname || '.' || objname,
-       objdisambig
+       objdisambig,
+       NULL AS extname
 FROM pg_namespace
      INNER JOIN (-- tables, views, sequences
                  SELECT relnamespace AS nspoid,
@@ -613,7 +629,8 @@ SELECT x.objid,
        objtype || CASE WHEN nspname LIKE 'pg_%' OR nspname = 'information_schema' THEN 'S'
                        ELSE '' END,
        nspname || '.' || objname,
-       objdisambig
+       objdisambig,
+       NULL AS extname
 FROM pg_namespace
      INNER JOIN (-- tables, views, sequences
                  SELECT relnamespace AS nspoid,

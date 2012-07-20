@@ -102,6 +102,13 @@ void ObjectFinder::SearchCatalogue()
     htmlList.Add(html);
   }
 
+  unsigned index = 0;
+  for (std::vector<CatalogueIndex::Result>::iterator iter = results.begin(); iter != results.end(); iter++, index++) {
+    const CatalogueIndex::Document* document = (*iter).document;
+    if (document->extension.empty()) continue;
+    htmlList[index] << _T(" <i>[") << document->extension << _T("]</i>");
+  }
+
   resultsCtrl->Append(htmlList);
   resultsCtrl->SetSelection(0);
 }

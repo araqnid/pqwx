@@ -57,12 +57,13 @@ public:
    */
   class Document {
   public:
-    Document(Oid entityId, Type entityType, bool system, const wxString& symbol, const wxString& disambig = wxEmptyString) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system) {}
+    Document(Oid entityId, Type entityType, bool system, const wxString& extension, const wxString& symbol, const wxString& disambig) : entityId(entityId), entityType(entityType), symbol(symbol), disambig(disambig), system(system), extension(extension) {}
     Oid entityId;
     Type entityType;
     wxString symbol;
     wxString disambig;
     bool system;
+    wxString extension;
   };
 
   /**

@@ -418,6 +418,7 @@ void IndexDatabaseSchemaWork::DoManagedWork() {
     wxString typeString = (*iter).ReadText(1);
     wxString symbol = (*iter).ReadText(2);
     wxString disambig = (*iter).ReadText(3);
+    wxString extension = (*iter).ReadText(4);
     bool systemObject;
     CatalogueIndex::Type entityType;
     if (typeString.Last() == _T('S')) {
@@ -431,7 +432,7 @@ void IndexDatabaseSchemaWork::DoManagedWork() {
       wxASSERT(typeMap.count(typeString) > 0);
       entityType = typeMap.find(typeString)->second;
     }
-    catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, symbol, disambig));
+    catalogueIndex->AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, extension, symbol, disambig));
   }
   catalogueIndex->Commit();
 }

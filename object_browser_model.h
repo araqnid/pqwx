@@ -269,6 +269,10 @@ public:
    * Called when schema index completed.
    */
   virtual void Completed(const CatalogueIndex& index) = 0;
+  /**
+   * Called when indexing schema crashed.
+   */
+  virtual void Crashed() {}
 };
 
 /**

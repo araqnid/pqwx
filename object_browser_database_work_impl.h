@@ -205,6 +205,7 @@ private:
     void OnCrash()
     {
       if (indexCompletion != NULL) {
+        indexCompletion->Crashed();
         delete indexCompletion;
       }
     }

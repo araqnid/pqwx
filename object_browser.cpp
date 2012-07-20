@@ -900,8 +900,14 @@ private:
 class OpenObjectFinderOnIndexSchemaCompletion : public IndexSchemaCompletionCallback {
 public:
   OpenObjectFinderOnIndexSchemaCompletion(ObjectBrowser& ob, const ObjectModelReference& databaseRef) : ob(ob), databaseRef(databaseRef) {}
-  void Completed(const CatalogueIndex& catalogue) {
+  void Completed(const CatalogueIndex& catalogue)
+  {
+    wxEndBusyCursor();
     ob.FindObject(databaseRef);
+  }
+  void Crashed()
+  {
+    wxEndBusyCursor();
   }
 private:
   ObjectBrowser& ob;
@@ -913,6 +919,7 @@ void ObjectBrowser::FindObject(const ServerConnection &server, const wxString &d
   wxASSERT(database != NULL);
 
   if (!database->loaded) {
+    wxBeginBusyCursor();
     database->Load(new OpenObjectFinderOnIndexSchemaCompletion(*this, *database));
     return;
   }

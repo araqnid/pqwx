@@ -140,10 +140,10 @@ public:
     model.AddPendingEvent(event);
   }
 
-  void OnConnectionFailed(const wxString& message)
+  void OnConnectionFailed(const PgError& error)
   {
     PQWXObjectBrowserModelEvent event(ref, PQWX_ObjectBrowserConnectionFailed);
-    event.SetString(message);
+    event.SetString(error.GetPrimary());
     model.AddPendingEvent(event);
   }
 

@@ -266,10 +266,10 @@ bool DatabaseConnection::WorkerThread::Connect() {
     return false;
   }
   else {
-    const char *errorMessage = PQerrorMessage(conn);
-    db->LogConnectFailed(errorMessage);
+    PgError err(conn);
+    db->LogConnectFailed(err);
     if (db->connectionCallback)
-      db->connectionCallback->OnConnectionFailed(wxString(errorMessage, wxConvUTF8));
+      db->connectionCallback->OnConnectionFailed(err);
     PQfinish(conn);
     return false;
   }
@@ -283,8 +283,8 @@ void DatabaseConnection::LogConnect() {
   wxLogDebug(_T("thr#%lx [%s] connected"), wxThread::GetCurrentId(), identification.c_str());
 }
 
-void DatabaseConnection::LogConnectFailed(const char *msg) {
-  wxLogDebug(_T("thr#%lx [%s] connection FAILED: %s"), wxThread::GetCurrentId(), identification.c_str(), wxString(msg, wxConvUTF8).c_str());
+void DatabaseConnection::LogConnectFailed(const PgError& error) {
+  wxLogDebug(_T("thr#%lx [%s] connection FAILED: %s"), wxThread::GetCurrentId(), identification.c_str(), error.GetPrimary().c_str());
 }
 
 void DatabaseConnection::LogConnectNeedsPassword() {

@@ -26,7 +26,7 @@ class DisconnectWork;
 class ConnectionCallback {
 public:
   virtual void OnConnection(bool usedPassword) = 0;
-  virtual void OnConnectionFailed(const wxString &message) = 0;
+  virtual void OnConnectionFailed(const PgError& error) = 0;
   virtual void OnConnectionNeedsPassword() = 0;
 };
 
@@ -144,7 +144,7 @@ public:
   /**
    * Logs a connection failure.
    */
-  void LogConnectFailed(const char *msg);
+  void LogConnectFailed(const PgError& error);
   /**
    * Logs an indication that connection failed due to no password.
    */

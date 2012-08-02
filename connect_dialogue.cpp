@@ -138,12 +138,12 @@ void ConnectDialogue::OnConnectionFinished(wxCommandEvent &event) {
     }
   }
   else if (connection->state == ConnectionWork::NEEDS_PASSWORD) {
-    wxLogError(_("You must enter a password to connect to this server."), connection->errorMessage.c_str());
+    wxLogError(_("You must enter a password to connect to this server."), connection->error.GetPrimary().c_str());
     connection->db->Dispose();
     delete connection->db;
   }
   else if (connection->state == ConnectionWork::FAILED) {
-    wxLogError(_("Connection to server failed.\n\n%s"), connection->errorMessage.c_str());
+    wxLogError(_("Connection to server failed.\n\n%s"), connection->error.GetPrimary().c_str());
     connection->db->Dispose();
     delete connection->db;
   }

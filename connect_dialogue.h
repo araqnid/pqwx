@@ -105,9 +105,9 @@ private:
       usedPassword = usedPassword_;
       notifyFinished();
     }
-    void OnConnectionFailed(const wxString &errorMessage_) {
+    void OnConnectionFailed(const PgError& error_) {
       state = FAILED;
-      errorMessage = errorMessage_;
+      error = error_;
       notifyFinished();
     }
     void OnConnectionNeedsPassword() {
@@ -115,7 +115,7 @@ private:
       notifyFinished();
     }
     enum { CONNECTED, FAILED, NEEDS_PASSWORD } state;
-    wxString errorMessage;
+    PgError error;
   private:
     void notifyFinished() {
       wxCommandEvent event(PQWX_ConnectionAttemptCompleted);

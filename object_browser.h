@@ -386,7 +386,7 @@ public:
 
   wxString GetDatabaseName() const
   {
-    return GetServerModel().GlobalDbName();
+    return GetDatabaseModel().name;
   }
 private:
   DatabaseModel& GetDatabaseModel() const

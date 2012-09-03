@@ -79,7 +79,7 @@ int TestCatalogueApp::OnRun() {
       wxASSERT_MSG(typeMap.count(parts[1]) > 0, parts[1]);
       entityType = typeMap[parts[1]];
     }
-    index.AddDocument(CatalogueIndex::Document(entityId, entityType, systemObject, parts[2], parts[3]));
+    index.AddDocument(CatalogueIndex::Document((Oid) entityId, entityType, systemObject, parts[2], parts[3]));
   } while (1);
   index.Commit();
 #ifdef PQWX_DEBUG_CATALOGUE_INDEX

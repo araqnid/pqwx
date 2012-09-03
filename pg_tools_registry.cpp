@@ -87,7 +87,7 @@ void PgToolsRegistry::ScannerThread::ScanForInstallations()
 int PgToolsRegistry::Installation::ParseVersion(const wxString& version)
 {
   static wxRegEx tripletPattern(_T("^([0-9]+)\\.([0-9]+)\\.([0-9]+)$"));
-  static wxRegEx dupletPattern(_T("^([0-9]+)\\.([0-9]+)(beta[0-9]+|devel)$"));
+  static wxRegEx dupletPattern(_T("^([0-9]+)\\.([0-9]+)(rc[0-9]+|beta[0-9]+|devel)$"));
   if (tripletPattern.Matches(version)) {
     long majorVersion;
     long minorVersion;
@@ -294,7 +294,7 @@ wxString PgToolsRegistry::ScannerThread::GetToolVersion(const wxString& toolExe,
       return wxEmptyString;
     }
     else {
-      static wxRegEx pattern(_T("^([^ ]+) .+ ([0-9]+\\.[0-9]+(\\.[0-9]+|beta[0-9]+|devel))$"), wxRE_NEWLINE);
+      static wxRegEx pattern(_T("^([^ ]+) .+ ([0-9]+\\.[0-9]+(\\.[0-9]+|rc[0-9]+|beta[0-9]+|devel))$"), wxRE_NEWLINE);
       if (pattern.Matches(output)) {
         wxString toolname = pattern.GetMatch(output, 1);
         wxString version = pattern.GetMatch(output, 2);

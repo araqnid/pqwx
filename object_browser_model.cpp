@@ -55,8 +55,10 @@ public:
 
     const PgQueryRelatedException* query = dynamic_cast<const PgQueryRelatedException*>(&e);
     if (query != NULL) {
-      if (query->IsFromNamedQuery())
-        work->crashMessage = _T("While running query \"") + query->GetQueryName() + _T("\":\n");
+      if (query->IsFromNamedQuery()) {
+        work->crashedQueryName = query->GetQueryName();
+        work->crashMessage = _T("While running query \"") + work->crashedQueryName + _T("\":\n");
+      }
       else
         work->crashMessage = _T("While running dynamic SQL:\n\n") + query->GetSql() + _T("\n\n");
       const PgQueryFailure* queryError = dynamic_cast<const PgQueryFailure*>(&e);
@@ -70,6 +72,7 @@ public:
         for (std::vector<wxString>::const_iterator iter = details.GetContext().begin(); iter != details.GetContext().end(); iter++) {
           work->crashMessage += _T("\nCONTEXT: ") + *iter;
         }
+        work->crashPgError.reset(new PgError(details));
       }
       else
         work->crashMessage += wxString(e.what(), wxConvUTF8);

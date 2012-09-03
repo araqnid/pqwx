@@ -7,6 +7,8 @@
 #ifndef __object_browser_managed_work_h
 #define __object_browser_managed_work_h
 
+#include <memory>
+
 #include "wx/event.h"
 
 #include "object_model_reference.h"
@@ -110,6 +112,8 @@ private:
   wxEvtHandler* const dest;
 
   wxString crashMessage;
+  wxString crashedQueryName;
+  std::auto_ptr<PgError> crashPgError;
   friend class ObjectBrowserDatabaseWork;
   friend class ObjectBrowserModel;
 };

@@ -109,7 +109,7 @@ private:
     {
       if (mode != ObjectBrowserManagedWork::NO_TRANSACTION) {
         if (mode == ObjectBrowserManagedWork::READ_ONLY)
-          work->DoCommand("BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY");
+          work->DoCommand("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
         else
           work->DoCommand("BEGIN");
         began = TRUE;

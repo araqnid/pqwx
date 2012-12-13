@@ -502,12 +502,13 @@ ObjectModel *ServerModel::FindObject(const ObjectModelReference& ref)
     return database->FindObject(ref);
 }
 
-void ServerModel::UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSLInfo* sslInfo_)
+void ServerModel::UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSLInfo* sslInfo_, ReplicationState replication_)
 {
   serverVersionString = serverVersionString_;
   serverVersion = serverVersion_;
   if (sslInfo != NULL) delete sslInfo;
   sslInfo = sslInfo_;
+  replication = replication_;
 }
 
 ServerModel::~ServerModel()

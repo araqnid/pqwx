@@ -290,7 +290,8 @@ private:
   static const int img_folder = 0;
   static const int img_server = 1;
   static const int img_server_encrypted = img_server + 1;
-  static const int img_database = img_server_encrypted + 1;
+  static const int img_server_replica = img_server_encrypted + 1;
+  static const int img_database = img_server_replica + 1;
   static const int img_table = img_database + 1;
   static const int img_unlogged_table = img_table + 1;
   static const int img_view = img_unlogged_table + 1;

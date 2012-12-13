@@ -270,6 +270,7 @@ ObjectBrowser::ObjectBrowser(ObjectBrowserModel& model, wxWindow *parent, wxWind
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_folder.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server_encrypted.png")));
+  images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_server_replica.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectBrowser/icon_database.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_table.png")));
   images->Add(StaticResources::LoadVFSImage(_T("memory:ObjectFinder/icon_unlogged_table.png")));
@@ -381,6 +382,9 @@ void ObjectBrowser::UpdateServer(const wxString& serverId, bool expandAfter) {
                    << _T(":") << sslInfo.Cipher()
                    << _T("]");
     SetItemImage(serverItem, img_server_encrypted);
+  }
+  if (serverModel->GetReplicationState() != ServerModel::NOT_REPLICA) {
+    SetItemImage(serverItem, img_server_replica);
   }
   SetItemText(serverItem, serverItemText);
 

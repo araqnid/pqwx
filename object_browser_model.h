@@ -432,6 +432,8 @@ class SSLInfo;
  */
 class ServerModel : public ObjectModel {
 public:
+  enum ReplicationState { NOT_REPLICA, REPLICATING, REPLICATION_PAUSED };
+
   /**
    * Create server model.
    */
@@ -451,7 +453,7 @@ public:
    * @param serverVersion_ Server version as an integer such as 90101
    * @param ssl SSL object (NULL if not SSL)
    */
-  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSLInfo* sslInfo_);
+  void UpdateServerParameters(const wxString& serverVersionString_, int serverVersion_, SSLInfo* sslInfo_, ReplicationState replication_);
 
   void UpdateDatabases(const std::vector<DatabaseModel>& incoming);
   void UpdateRoles(const std::vector<RoleModel>& incoming);
@@ -487,6 +489,10 @@ public:
    * @return SSL information from the initial connection
    */
   const SSLInfo& GetSSLInfo() const { return *sslInfo; }
+  /**
+   * @return State of whether server is recovering replication data or not
+   */
+  ReplicationState GetReplicationState() const { return replication; }
   /**
    * Gets a connection to some database.
    *
@@ -581,6 +587,7 @@ private:
   int serverVersion;
   wxString serverVersionString;
   SSLInfo *sslInfo;
+  ReplicationState replication;
   std::map<wxString, DatabaseConnection*> connections;
   DatabaseModel *FindDatabaseByOid(Oid oid);
   void DropDatabase(DatabaseModel*);

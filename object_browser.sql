@@ -16,6 +16,18 @@ SELECT rolcreatedb, rolcreaterole, rolsuper, rolname
 FROM pg_roles
 WHERE rolname = current_user
 
+-- SQL :: Replication state
+SELECT pg_current_xlog_location(),
+       NULL AS pg_last_xlog_receive_location,
+       NULL AS pg_last_xlog_replay_location,
+       NULL AS pg_is_xlog_replay_paused
+
+-- SQL :: Replication state :: 9.1
+SELECT CASE WHEN NOT pg_is_in_recovery() THEN pg_current_xlog_location() END AS pg_current_xlog_location,
+       pg_last_xlog_receive_location(),
+       pg_last_xlog_replay_location(),
+       CASE WHEN pg_is_in_recovery() THEN pg_is_xlog_replay_paused() END AS pg_is_xlog_replay_paused
+
 -- SQL :: Databases :: 8.2
 SELECT pg_database.oid, datname, datistemplate, datallowconn,
        has_database_privilege(pg_database.oid, 'connect') AS can_connect,

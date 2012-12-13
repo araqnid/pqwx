@@ -20,6 +20,7 @@ void LoadServerWork::DoManagedWork()
 {
   ReadServer();
   ReadCurrentRole();
+  ReadReplicationState();
   LoadThings(_T("Databases"), databases, ReadDatabase);
   LoadThings(_T("Roles"), roles, ReadRole);
   LoadThings(_T("Tablespaces"), tablespaces, ReadTablespace);
@@ -119,6 +120,18 @@ void LoadServerWork::ReadCurrentRole()
   rolename = row.ReadText(3);
 }
 
+void LoadServerWork::ReadReplicationState()
+{
+  QueryResults::Row row = Query(_T("Replication state")).UniqueResult();
+  if (!row.IsNull(0)) {
+    replication = ServerModel::NOT_REPLICA;
+  }
+  else {
+    bool paused = row.ReadBool(3);
+    replication = paused ? ServerModel::REPLICATION_PAUSED : ServerModel::REPLICATING;
+  }
+}
+
 DatabaseModel LoadServerWork::ReadDatabase(const QueryResults::Row& row)
 {
   DatabaseModel database;
@@ -155,7 +168,7 @@ TablespaceModel LoadServerWork::ReadTablespace(const QueryResults::Row& row)
 void LoadServerWork::UpdateModel(ObjectBrowserModel& model)
 {
   ServerModel *server = model.FindServer(serverId);
-  server->UpdateServerParameters(serverVersionString, serverVersion, sslInfo);
+  server->UpdateServerParameters(serverVersionString, serverVersion, sslInfo, replication);
   server->UpdateDatabases(databases);
   server->UpdateRoles(roles);
   server->UpdateTablespaces(tablespaces);

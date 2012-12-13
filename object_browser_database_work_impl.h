@@ -54,6 +54,7 @@ private:
   wxString serverVersionString;
   int serverVersion;
   SSLInfo *sslInfo;
+  ServerModel::ReplicationState replication;
   bool createDB;
   bool createUser;
   bool superuser;
@@ -76,6 +77,7 @@ private:
   }
   void ReadServer();
   void ReadCurrentRole();
+  void ReadReplicationState();
   static DatabaseModel ReadDatabase(const QueryResults::Row&);
   static RoleModel ReadRole(const QueryResults::Row&);
   static TablespaceModel ReadTablespace(const QueryResults::Row&);

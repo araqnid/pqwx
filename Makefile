@@ -34,7 +34,8 @@ VARIANT_CXXFLAGS = -ggdb
 endif
 
 WX_MODULES := stc xrc adv html xml core base
-WXRC := $(shell $(WX_CONFIG) --utility=wxrc)
+WX_CONFIG_FLAGS := --version=2.8
+WXRC := $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --utility=wxrc)
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)

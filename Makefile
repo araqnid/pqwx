@@ -39,7 +39,7 @@ WXRC := $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) --utility=wxrc)
 
 CXXFLAGS := $(LOCAL_CXXFLAGS) $(VARIANT_CXXFLAGS) -Wall -I$(shell $(PG_CONFIG) --includedir) $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --cxxflags $(WX_MODULES))
 LDFLAGS := $(LOCAL_LDFLAGS)
-LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --libs $(WX_MODULES))
+LIBS := -L$(shell $(PG_CONFIG) --libdir) -lpq $(shell $(WX_CONFIG) $(WX_CONFIG_FLAGS) $(VARIANT_WXCONFIG_FLAGS) --libs $(WX_MODULES)) -lssl -lcrypto
 XRC := rc/connect.xrc rc/main.xrc rc/object_finder.xrc rc/object_browser.xrc rc/dependencies_view.xrc rc/create_database.xrc rc/preferences.xrc
 PQWX_SOURCES = \
 	catalogue_index.cpp \
